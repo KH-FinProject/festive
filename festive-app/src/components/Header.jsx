@@ -2,6 +2,7 @@ import React from "react";
 import mainLogo from "../assets/festiveLogo.png";
 import searchbtn from "../assets/searchbtn.png";
 import "./HeaderFooter.css";
+import {Link} from "react-router-dom";
 
 function Header() {
   return (
@@ -32,12 +33,12 @@ function Header() {
         />
         <img src={searchbtn} className="search-btn" />
         <div className="weather-placeholder">날씨 API 자리</div>
-        <a href="#" className="nav-link hover-grow">
+        <Link to="/signin" className="nav-link hover-grow">
           Sign In
-        </a>
-        <a href="#" className="nav-link hover-grow">
+        </Link>
+        <Link to="/signup" className="nav-link hover-grow">
           Sign Up
-        </a>
+        </Link>
       </div>
     </header>
   );
