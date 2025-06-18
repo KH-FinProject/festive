@@ -2,6 +2,7 @@ import React from "react";
 import mainLogo from "../assets/festiveLogo.png";
 import searchbtn from "../assets/searchbtn.png";
 import "./HeaderFooter.css";
+import { Link } from "react-router-dom";
 
 function Header() {
   return (
@@ -18,11 +19,17 @@ function Header() {
           "AI 여행코스 추천",
           "고객센터",
           "부스참가신청",
-        ].map((item) => (
-          <a key={item} href="#" className="nav-link hover-grow">
-            {item}
-          </a>
-        ))}
+        ].map((item) =>
+          item === "와글와글" ? (
+            <Link key={item} to="/wagle" className="nav-link hover-grow">
+              {item}
+            </Link>
+          ) : (
+            <a key={item} href="#" className="nav-link hover-grow">
+              {item}
+            </a>
+          )
+        )}
       </nav>
       <div className="header-right">
         <input
