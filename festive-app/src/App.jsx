@@ -1,6 +1,7 @@
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import Signin from "./jcomponents/Signin/Signin.jsx";
 import Header from "./components/Header.jsx";
+import MainPage from "./scomponents/MainPage";
 import Footer from "./components/Footer.jsx";
 import SignUp1 from "./jcomponents/Signup/Signup1.jsx";
 
@@ -13,9 +14,10 @@ function App() {
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<SignUp1 />} />
       </Routes>
+      <MainPage />
       <Footer />
     </BrowserRouter>
   )
 }
 
-export default App
+export default App;
