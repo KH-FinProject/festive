@@ -19,11 +19,17 @@ function Header() {
           "AI 여행코스 추천",
           "고객센터",
           "부스참가신청",
-        ].map((item) => (
-          <a key={item} href="#" className="headernav-link hover-grow">
-            {item}
-          </a>
-        ))}
+        ].map((item) =>
+          item === "와글와글" ? (
+            <Link key={item} to="/wagle" className="nav-link hover-grow">
+              {item}
+            </Link>
+          ) : (
+            <a key={item} href="#" className="nav-link hover-grow">
+              {item}
+            </a>
+          )
+        )}
       </nav>
       <div className="headerheader-right">
         <input

@@ -1,0 +1,268 @@
+.wagle-board-container {
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 32px 0 0 0;
+  color: #222;
+  font-size: 1rem;
+  font-weight: 400;
+}
+.wagle-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  color: #222;
+}
+
+.notice-board {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 24px;
+}
+
+.notice-list {
+  margin-bottom: 24px;
+}
+
+.notice-item {
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  background: #f9f9f9;
+  color: #222;
+}
+
+.notice-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #222;
+}
+
+.notice-meta {
+  display: flex;
+  gap: 18px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.notice-likes,
+.notice-views {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notice-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.search-type {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  color: #222;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.search-input {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  font-size: 1rem;
+  background: #fff;
+  color: #222;
+  font-weight: 400;
+}
+
+.search-input::placeholder {
+  color: #888;
+  opacity: 1;
+}
+
+.search-btn {
+  background: #9dc4fe;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.search-btn:hover {
+  background: #7bb0f7;
+}
+
+.notice-board-outer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  margin: 0;
+}
+
+.notice-list {
+  width: 1160px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 60px;
+  box-sizing: border-box;
+}
+
+.special-notice {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 2px solid #9dc4fe;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fafdff 0%, #f3f8ff 100%);
+  width: 1160px;
+  height: 92.39px;
+  padding: 0 32px;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+.notice-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+  height: 40px;
+}
+
+.notice-badge {
+  background: #6ea8fe;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0 12px;
+  margin-right: 0;
+  display: flex;
+  align-items: center;
+  height: 28px;
+}
+
+.special-title {
+  color: #3266cc;
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.notice-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notice-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.98rem;
+  color: #555;
+}
+
+.notice-admin-badge {
+  background: #e3eafd;
+  color: #3266cc;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.special-meta {
+  color: #a68b5c;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.wagle-header {
+  width: 1160px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  margin-top: 30px;
+}
+
+.wagle-main-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 0;
+  line-height: 1.2;
+  letter-spacing: -1px;
+  border-bottom: 2px solid #222;
+  padding-bottom: 8px;
+  width: fit-content;
+  display: inline-block;
+}
+
+.wagle-sub-title {
+  font-size: 14px;
+  color: #999999;
+  font-weight: 400;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.wagle-location {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  color: #888;
+  gap: 4px;
+  margin-top: 33px;
+  margin-bottom: 0;
+}
+
+.wagle-location-home {
+  color: #888;
+  font-weight: 500;
+}
+
+.wagle-location-arrow {
+  font-size: 0.9em;
+  margin: 0 2px;
+}
+
+.wagle-location-current {
+  color: #3266cc;
+  font-weight: 600;
+}
+
+.wagle-divider {
+  width: 1160px;
+  height: 1px;
+  background: #e3e3e3;
+  margin: 52px 0 0 0;
+  border-radius: 2px;
+}
