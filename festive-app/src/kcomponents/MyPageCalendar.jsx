@@ -15,24 +15,6 @@ const FestiveWebsite = () => {
 
     return (
         <div className="page-container">
-            <header className="header">
-                <div className="header-content">
-                    <div className="logo">festive</div>
-                    <nav className="nav-links">
-                        <a href="#">이달의 축제</a>
-                        <a href="#">축제달력</a>
-                        <a href="#">지역별 축제</a>
-                        <a href="#">AI 여행코스 추천</a>
-                        <a href="#">고객센터</a>
-                        <a href="#">부스참가신청</a>
-                    </nav>
-                    <div className="weather-auth">
-                        <span className="weather">-7°C</span>
-                        <button>Sign In</button>
-                        <button>Sign Up</button>
-                    </div>
-                </div>
-            </header>
 
             <main className="main-content">
                 <aside className="sidebar">
@@ -98,24 +80,6 @@ const FestiveWebsite = () => {
                     </div>
                 </section>
             </main>
-
-            <footer className="footer">
-                <div className="footer-content">
-                    <div>
-                        <h3>FESTIVE</h3>
-                        <p>서울특별시 강서구 상암산업로 99, 월드컵사북</p>
-                        <p>이메일 : rkdlsrh811@gmail.com</p>
-                    </div>
-                    <div>
-                        <p>회사소개 | 개인정보처리방침 | 이용약관</p>
-                    </div>
-                    <div>
-                        <p className="tel">1588-1234</p>
-                        <p>09:00 ~ 18:00 (토요일, 공휴일 휴무)</p>
-                        <p className="copyright">Copyright © MEDIA DESIGNER</p>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 };

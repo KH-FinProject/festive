@@ -51,24 +51,6 @@ const MyPageMyComment = () => {
 
     return (
         <div className="page-container">
-            <header className="header">
-                <div className="header-content">
-                    <div className="logo">festive</div>
-                    <nav className="nav-links">
-                        <a href="#">이달의 축제</a>
-                        <a href="#">축제달력</a>
-                        <a href="#">지역별 축제</a>
-                        <a href="#">AI 여행코스 추천</a>
-                        <a href="#">고객센터</a>
-                        <a href="#">부스참가신청</a>
-                    </nav>
-                    <div className="weather-auth">
-                        <span className="weather">-7°C</span>
-                        <button>Sign In</button>
-                        <button>Sign Up</button>
-                    </div>
-                </div>
-            </header>
 
             <main className="main-content">
                 <aside className="sidebar">
@@ -140,42 +122,6 @@ const MyPageMyComment = () => {
 
                 </section>
             </main>
-
-            {/* Footer */}
-            <footer className="footer">
-                <div className="container">
-                    <div className="footer-content">
-                        <div className="footer-left">
-                            <div className="footer-logo">FESTIVE</div>
-                            <div className="footer-info">
-                                <p>서울특별시 강서구 양천로 99, 롯데마트 대방점 - 양천구</p>
-                                <p>이메일 : rhckdl01@gmail.com</p>
-                            </div>
-                        </div>
-                        <div className="footer-center">
-                            <div className="footer-links">
-                                <a href="#">회사소개</a>
-                                <a href="#">개인정보처리방침</a>
-                                <a href="#">이용약관</a>
-                            </div>
-                            <div className="footer-partners">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='30' viewBox='0 0 60 30'%3E%3Crect width='60' height='30' fill='%23e0e0e0'/%3E%3Ctext x='30' y='18' text-anchor='middle' font-size='8' fill='%23666'%3EOPENAPI%3C/text%3E%3C/svg%3E" alt="OpenAPI" />
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='30' viewBox='0 0 60 30'%3E%3Crect width='60' height='30' fill='%23e0e0e0'/%3E%3Ctext x='30' y='15' text-anchor='middle' font-size='6' fill='%23666'%3EFullCalendar%3C/text%3E%3C/svg%3E" alt="FullCalendar" />
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='30' viewBox='0 0 60 30'%3E%3Crect width='60' height='30' fill='%23e0e0e0'/%3E%3Ctext x='30' y='15' text-anchor='middle' font-size='8' fill='%23666'%3E기상청%3C/text%3E%3C/svg%3E" alt="기상청" />
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='30' viewBox='0 0 60 30'%3E%3Crect width='60' height='30' fill='%23e0e0e0'/%3E%3Ctext x='30' y='12' text-anchor='middle' font-size='6' fill='%23666'%3E한국관광공사%3C/text%3E%3C/svg%3E" alt="한국관광공사" />
-                            </div>
-                        </div>
-                        <div className="footer-right">
-                            <div className="contact-info">
-                                <div className="phone">1588-1234</div>
-                                <div className="hours">09:00 ~ 18:00(토요일, 공휴일 휴무)</div>
-                                <div className="lunch">11:30타임 ~ 점심 휴무 정보</div>
-                                <div className="copyright">Copyright © MEDIA DESIGHNER ALL RIGHTS RESERVED</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 };
