@@ -192,7 +192,7 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* hover:shadow-md */
 }
 
-.sns-btn .gsi-material-button-icon {
+.sns-btn .google-icon {
   height: 1.5rem;
   min-width: 20px;
   width: 1.5rem;
@@ -204,7 +204,7 @@
   background-color: #ffffff61;
 }
 
-.sns-btn:disabled .gsi-material-button-icon {
+.sns-btn:disabled .google-icon {
   opacity: 38%;
 }
 
