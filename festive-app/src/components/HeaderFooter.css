@@ -92,7 +92,8 @@
   font-family: "Arial", sans-serif;
   color: #333;
   max-width: 1920px;
-  margin: 50px auto;
+  margin: 0 auto;
+  margin-top: 2rem;
 }
 
 .footerfooter-left,
