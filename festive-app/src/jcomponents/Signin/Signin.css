@@ -1,0 +1,245 @@
+/* 로그인 컨테이너 */
+.login-container {
+  min-height: 100vh;
+  background-color: #f9fafb; /* bg-gray-50 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem; /* py-12 px-4 */
+}
+
+@media (min-width: 640px) {
+  .login-container {
+    padding-left: 1.5rem; /* sm:px-6 */
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .login-container {
+    padding-left: 2rem; /* lg:px-8 */
+    padding-right: 2rem;
+  }
+}
+
+.login-wrapper {
+  max-width: 28rem; /* max-w-md */
+  width: 100%;
+  margin: 0 auto;
+}
+
+.login-wrapper > * + * {
+  margin-top: 2rem; /* space-y-8 */
+}
+
+/* 로그인 카드 */
+.login-card {
+  background-color: #ffffff; /* bg-white */
+  border-radius: 1rem; /* rounded-2xl */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+  border: 1px solid #bfdbfe; /* border-blue-200 */
+  padding: 2rem; /* p-8 */
+}
+
+/* 헤더 */
+.login-header {
+  text-align: center; /* text-center */
+  margin-bottom: 2rem; /* mb-8 */
+}
+
+.login-title {
+  font-size: 1.5rem; /* text-2xl */
+  line-height: 2rem;
+  font-weight: 800; /* font-medium */
+  color: #60a5fa; /* text-blue-400 */
+  margin: 0;
+}
+
+/* 폼 */
+.login-form > * + * {
+  margin-top: 1.5rem; /* space-y-6 */
+}
+
+/* 입력 그룹 */
+.input-group {
+  display: block;
+}
+
+.input-label {
+  display: block; /* block */
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem;
+  font-weight: 700; /* font-medium */
+  color: #374151; /* text-gray-700 */
+  margin-bottom: 0.5rem; /* mb-2 */
+}
+
+.input-field {
+  width: 100%; /* w-full */
+  padding: 0.75rem 1rem; /* px-4 py-3 */
+  background-color: #f3f4f6; /* bg-gray-100 */
+  border: 1px solid #e5e7eb; /* border-gray-200 */
+  border-radius: 0.5rem; /* rounded-lg */
+  color: #374151; /* text-gray-700 */
+  box-sizing: border-box;
+  transition: all 0.15s ease-in-out;
+}
+
+.input-field:focus {
+  outline: none; /* focus:outline-none */
+  box-shadow: 0 0 0 2px #60a5fa; /* focus:ring-2 focus:ring-blue-400 */
+  border-color: transparent; /* focus:border-transparent */
+}
+
+.input-field::placeholder {
+  color: #6b7280; /* placeholder-gray-500 */
+}
+
+/* 찾기 링크 */
+.find-links {
+  text-align: center; /* text-center */
+}
+
+.find-links-content {
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem;
+  color: #6b7280; /* text-gray-500 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* space-x-2 */
+}
+
+.find-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.15s ease-in-out; /* transition-colors */
+}
+
+.find-link:hover {
+  color: #3b82f6; /* hover:text-blue-500 */
+}
+
+/* 버튼 그룹 */
+.button-group {
+  display: flex; /* flex */
+  gap: 0.75rem; /* space-x-3 */
+}
+
+.btn {
+  flex: 1; /* flex-1 */
+  padding: 0.75rem 1rem; /* py-3 px-4 */
+  border-radius: 0.5rem; /* rounded-lg */
+  font-weight: 500; /* font-medium */
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out; /* transition-colors */
+}
+
+.btn-signup {
+  background-color: #60a5fa; /* bg-blue-400 */
+  color: #ffffff; /* text-white */
+}
+
+.btn-signup:hover {
+  background-color: #3b82f6; /* hover:bg-blue-500 */
+}
+
+.btn-login {
+  background-color: #93c5fd; /* bg-blue-300 */
+  color: #ffffff; /* text-white */
+}
+
+.btn-login:hover {
+  background-color: #60a5fa; /* hover:bg-blue-400 */
+}
+
+/* SNS 섹션 */
+.sns-section {
+  margin-top: 2rem; /* mt-8 */
+}
+
+.sns-title {
+  text-align: center; /* text-center */
+  margin-bottom: 1rem; /* mb-4 */
+}
+
+.sns-title span {
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.25rem;
+  color: #6b7280; /* text-gray-500 */
+}
+
+.sns-buttons {
+  display: flex; /* flex */
+  justify-content: center; /* justify-center */
+  gap: 1rem; /* space-x-4 */
+}
+
+.sns-btn {
+  width: 3rem; /* w-12 */
+  height: 3rem; /* h-12 */
+  border-radius: 50%; /* rounded-full */
+  border: none;
+  cursor: pointer;
+  display: flex; /* flex */
+  align-items: center; /* items-center */
+  justify-content: center; /* justify-center */
+  transition: box-shadow 0.15s ease-in-out; /* transition-shadow */
+}
+
+.sns-btn:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* hover:shadow-md */
+}
+
+.sns-btn .gsi-material-button-icon {
+  height: 1.5rem;
+  min-width: 20px;
+  width: 1.5rem;
+  margin: 0;
+}
+
+.sns-btn:disabled {
+  cursor: default;
+  background-color: #ffffff61;
+}
+
+.sns-btn:disabled .gsi-material-button-icon {
+  opacity: 38%;
+}
+
+.sns-btn:not(:disabled):hover {
+  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+}
+
+.sns-naver {
+  background-color: #22c55e; /* bg-green-500 */
+  color: #ffffff; /* text-white */
+}
+
+.sns-naver span {
+  font-size: 1.5rem; /* text-lg */
+  line-height: 1.75rem;
+  font-weight: 900; /* font-bold */
+}
+
+.sns-kakao {
+  background-color: #FEE500;
+  color: #000000;
+}
+
+.kakao-icon {
+  width: 1.5rem; /* w-6 */
+  height: 1.5rem; /* h-6 */
+  border-radius: 0.5rem; /* rounded-lg */
+  display: flex; /* flex */
+  align-items: center; /* items-center */
+  justify-content: center; /* justify-center */
+}
+
+.kakao-icon .item {
+  color: #000000; /* text-yellow-400 */
+  font-size: 1.4rem; /* text-xs */
+  line-height: 1rem;
+}
