@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './MyPageWithdrawal.css';
 import './MyPageEditInfo.css';
+import MyPageSideBar from './MyPageSideBar';
 
 const MyPageEditInfo = () => {
     const [showEmailModal, setShowEmailModal] = useState(false);
@@ -8,44 +9,11 @@ const MyPageEditInfo = () => {
 
     return (
         <div className="page-container">
-            <header className="header">
-                <div className="header-content">
-                    <div className="logo">festive</div>
-                    <nav className="nav-links">
-                        <a href="#">이달의 축제</a>
-                        <a href="#">축제달력</a>
-                        <a href="#">지역별 축제</a>
-                        <a href="#">AI 여행코스 추천</a>
-                        <a href="#">고객센터</a>
-                        <a href="#">부스참가신청</a>
-                    </nav>
-                    <div className="weather-auth">
-                        <span className="weather">-7°C</span>
-                        <button>Sign In</button>
-                        <button>Sign Up</button>
-                    </div>
-                </div>
-            </header>
 
             <main className="main-content">
-                {/* Sidebar */}
-                <aside className="sidebar">
-                    <div className="profile">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E" alt="프로필" />
-                        <p>김성환</p>
-                    </div>
-                    <div className="menu-buttons">
-                        <button>프로필 수정</button>
-                        <button className="active">개인정보 수정</button>
-                        <button>비밀번호 수정</button>
-                        <button>내가 찜한 축제</button>
-                        <button>내가 쓴 게시글 및 댓글</button>
-                        <button>회원 탈퇴</button>
-                    </div>
-                </aside>
+                <MyPageSideBar />
 
-
-                <section className="withdrawal-section">
+                <section className="profile-main">
 
                     <div className="profile-header">
                         <h1>개인정보 수정</h1>
@@ -55,14 +23,15 @@ const MyPageEditInfo = () => {
                     {/* Content Area */}
 
                     <div className="password-content">
-                        <div className="form-group">
+                        <div className="password-form-row">
                             <label className="form-label">전화번호</label>
-                            <input type="text" className="form-input full-width" placeholder="010-0000-0000" />
+                            <input type="text" className="form-input full-width" placeholder="수정할 전화번호를 입력하세요." />
                         </div>
-                        <div className="form-group">
+                        <br />
+                        <div className="password-form-row">
                             <label className="form-label">이메일</label>
                             <div className="form-row">
-                                <input type="text" className="form-input" placeholder="이메일" />
+                                <input type="text" className="form-input" placeholder="수정할 이메일을 입력하세요." />
                                 <button
                                     className="form-button secondary"
                                     onClick={() => setShowEmailModal(true)}
@@ -72,31 +41,27 @@ const MyPageEditInfo = () => {
                             </div>
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">우편번호</label>
+                        <div className="password-form-row">
+                            <label className="form-label">주소</label>
                             <div className="form-row">
                                 <input type="text" className="form-input" placeholder="우편번호" />
                                 <button className="form-button secondary">주소 검색</button>
                             </div>
+                            <div className="form-row">
+                                <input type="text" className="form-input full-width" placeholder="주소" />
+                            </div>
+                            <div className="form-row">
+                                <input type="text" className="form-input full-width" placeholder="상세주소" />
+                            </div>
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">주소</label>
-                            <input type="text" className="form-input full-width" placeholder="주소" />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">상세주소</label>
-                            <input type="text" className="form-input full-width" placeholder="상세주소" />
-                        </div>
-
-                        <div className="form-group">
+                        <div className="password-form-row">
                             <label className="form-label">보안 확인</label>
                             <p className="form-note">*비밀번호 확인 후 정보 수정이 가능합니다.</p>
                             <input type="password" className="form-input full-width" placeholder="비밀번호" />
                         </div>
-
-                        <div className="password-form-buttons">
+                        <br />
+                        <div className="form-buttons">
                             <button className="submit-btn">수정하기</button>
                             <button className="cancel-btn">취소하기</button>
                         </div>
