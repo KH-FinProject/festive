@@ -1,9 +1,9 @@
 import {Route, Routes} from "react-router-dom";
-import MainPage from "./scomponents/mainPage.jsx";
+import MainPage from "./scomponents/mainPage/mainPage.jsx";
 import Signin from "./jcomponents/Signin/Signin.jsx";
 import SignUp1 from "./jcomponents/Signup/Signup1.jsx";
-import WaglePage from "./wagle/WaglePage.jsx";
-import WritePage from "./wagle/WritePage.jsx";
+import WaglePage from "./ycomponents/WaglePage.jsx";
+import WritePage from "./ycomponents/WritePage.jsx";
 import Find from "./jcomponents/FindId/Find.jsx";
 import FestivalMainPage from "./scomponents/monthFestive/This-month-festive.jsx";
 import WagleDetail from "./ycomponents/WagleDetail.jsx";
