@@ -7,7 +7,7 @@ import SignUp1 from "./jcomponents/Signup/Signup1.jsx";
 
 import WaglePage from "./ycomponents/WaglePage.jsx";
 import WritePage from "./ycomponents/WritePage.jsx";
-import MyPageEditPw from "./kcomponents/MyPageEditPw.jsx";
+import FestiveCalendar from "./kcomponents/FestiveCalendar.jsx";
 import WagleDetail from "./ycomponents/WagleDetail.jsx";
 import FestivalMainPage from "./scomponents/monthFestive/This-month-festive.jsx";
 
@@ -23,6 +23,7 @@ function App() {
         <Route path="/wagle" element={<WaglePage />} />
         <Route path="/wagle/write" element={<WritePage />} />
         <Route path="/wagle/:id" element={<WagleDetail />} />
+        <Route path="/calendar" element={<FestiveCalendar />} />
       </Routes>
       <Footer />
     </BrowserRouter>
