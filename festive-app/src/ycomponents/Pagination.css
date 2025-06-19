@@ -8,7 +8,7 @@
 
 .page-btn {
   background: #fff;
-  border: 1.5px solid #9dc4fe;
+  border: 1.5px solid #60a5fa;
   color: #3266cc;
   border-radius: 6px;
   width: 48px;
@@ -29,7 +29,7 @@
 
 .page-btn.active,
 .page-btn:hover {
-  background: #9dc4fe;
+  background: #60a5fa;
   color: #fff;
 }
 
