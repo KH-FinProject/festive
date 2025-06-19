@@ -7,7 +7,9 @@ import SignUp1 from "./jcomponents/Signup/Signup1.jsx";
 import WaglePage from "./ycomponents/WaglePage.jsx";
 import WritePage from "./ycomponents/WritePage.jsx";
 import MyPageEditPw from "./kcomponents/MyPageEditPw.jsx";
+import WagleDetail from "./ycomponents/WagleDetail.jsx";
 import FestivalMainPage from "./scomponents/monthFestive/This-month-festive.jsx";
+
 
 function App() {
   return (
@@ -20,7 +22,7 @@ function App() {
         <Route path="/this-month" element={<FestivalMainPage />} />
         <Route path="/wagle" element={<WaglePage />} />
         <Route path="/wagle/write" element={<WritePage />} />
-        <Route path="*" element={<Navigate to="/wagle" replace />} />
+        <Route path="/wagle/:id" element={<WagleDetail />} />
       </Routes>
       <Footer />
     </BrowserRouter>

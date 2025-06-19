@@ -53,3 +53,13 @@
   color: #3266cc;
   font-weight: 600;
 }
+
+.wagle-location-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s;
+}
+.wagle-location-link:hover {
+  color: #222;
+}

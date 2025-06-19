@@ -14,7 +14,7 @@ import Pagination from "./Pagination";
 import "./GeneralBoard.css";
 import { useNavigate } from "react-router-dom";
 
-const posts = [
+export const posts = [
   {
     id: 1205,
     title:
@@ -157,7 +157,7 @@ const posts = [
 
 const PAGE_SIZE = 7;
 
-function GeneralBoard() {
+function GeneralBoard({ hideTitle, hideWriteBtn }) {
   const [page, setPage] = useState(1);
   const totalPages = Math.ceil(posts.length / PAGE_SIZE);
   const pagedPosts = posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -174,12 +174,23 @@ function GeneralBoard() {
     }, 0);
   };
 
+  const handleItemClick = (id) => {
+    navigate(`/wagle/${id}`);
+    setTimeout(() => window.scrollTo(0, 0), 0);
+  };
+
   return (
     <div className="general-board-outer">
       <div className="general-board-container">
+        {/* 타이틀이 있다면 여기에 {!hideTitle && <div>타이틀</div>} 추가 가능 */}
         <div className="general-board-list">
           {pagedPosts.map((post) => (
-            <div className="general-board-item" key={post.id}>
+            <div
+              className="general-board-item"
+              key={post.id}
+              onClick={() => handleItemClick(post.id)}
+              style={{ cursor: "pointer" }}
+            >
               <div className="general-board-title">{`#${post.id} ${post.title}`}</div>
               <div className="general-board-meta">
                 <img
@@ -221,12 +232,14 @@ function GeneralBoard() {
               <FontAwesomeIcon icon={faSearch} />
             </button>
           </div>
-          <button
-            className="wagle-write-btn"
-            onClick={() => navigate("/wagle/write")}
-          >
-            글쓰기
-          </button>
+          {!hideWriteBtn && (
+            <button
+              className="wagle-write-btn"
+              onClick={() => navigate("/wagle/write")}
+            >
+              글쓰기
+            </button>
+          )}
         </div>
         <Pagination page={page} totalPages={totalPages} goToPage={goToPage} />
       </div>
