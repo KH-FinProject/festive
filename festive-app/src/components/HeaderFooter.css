@@ -167,3 +167,31 @@
     text-align: center;
   }
 }
+
+.header-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 5rem; /* 기존 searchbtn margin과 통일 */
+  white-space: nowrap;
+}
+
+.header-user-profile {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+
+.header-user-nickname {
+  font-weight: bold;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+  .header-user-info {
+    margin-right: 0;
+  }
+}
