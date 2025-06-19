@@ -15,25 +15,25 @@ function Header() {
           </a>
       </div>
       <nav className="headernav">
-        {[
-          "이달의 축제",
-          "축제달력",
-          "지역별 축제",
-          "와글와글",
-          "AI 여행코스 추천",
-          "고객센터",
-          "부스참가신청",
-        ].map((item) =>
-          item === "와글와글" ? (
-            <Link key={item} to="/wagle" className="headernav-link hover-grow">
-              {item}
-            </Link>
-          ) : (
-            <a key={item} href="#" className="headernav-link hover-grow">
-              {item}
-            </a>
-          )
-        )}
+          {[
+              { name: "이달의 축제", path: "/this-month" },
+              { name: "축제달력", path: "#" },
+              { name: "지역별 축제", path: "#" },
+              { name: "와글와글", path: "/wagle" },
+              { name: "AI 여행코스 추천", path: "#" },
+              { name: "고객센터", path: "#" },
+              { name: "부스참가신청", path: "#" },
+          ].map((item) =>
+              item.path !== "#" ? (
+                  <Link key={item.name} to={item.path} className="headernav-link hover-grow">
+                      {item.name}
+                  </Link>
+              ) : (
+                  <a key={item.name} href="#" className="headernav-link hover-grow">
+                      {item.name}
+                  </a>
+              )
+          )}
       </nav>
       <div className="headerheader-right">
         <input
