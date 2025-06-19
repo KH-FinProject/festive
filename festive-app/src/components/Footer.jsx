@@ -1,5 +1,5 @@
 import React from "react";
-import openapi from "../assets/openapi.png";
+import openapi from "../assets/openai.svg";
 import trip from "../assets/trip.png";
 import "./HeaderFooter.css";
 
