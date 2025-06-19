@@ -4,8 +4,8 @@ import Header from "./components/Header.jsx";
 import MainPage from "./scomponents/MainPage";
 import Footer from "./components/Footer.jsx";
 import SignUp1 from "./jcomponents/Signup/Signup1.jsx";
-import WaglePage from "./wagle/WaglePage";
-import WritePage from "./wagle/WritePage";
+import WaglePage from "./ycomponents/WaglePage.jsx";
+import WritePage from "./ycomponents/WritePage.jsx";
 import MyPageEditPw from "./kcomponents/MyPageEditPw.jsx";
 
 function App() {
