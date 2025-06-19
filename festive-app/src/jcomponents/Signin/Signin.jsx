@@ -71,11 +71,11 @@ const LoginForm = () => {
               {/* 아이디 찾기 | 비밀번호 찾기 링크 */}
               <div className="find-links">
                 <div className="find-links-content">
-                  <Link to="/find-id" className="find-link">
+                  <Link to="/find?tab=id" className="find-link">
                     아이디 찾기
                   </Link>
                   <span className="separator">|</span>
-                  <Link to="/find-password" className="find-link">
+                  <Link to="/find?tab=pw" className="find-link">
                     비밀번호 찾기
                   </Link>
                 </div>
