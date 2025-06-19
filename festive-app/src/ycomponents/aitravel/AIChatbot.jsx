@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./AIChatbot.css";
 import AItitle from "./AItitle";
-// import OpenAI from "openai";
+import OpenAI from "openai";
 
-// OpenAI 설정은 환경 변수나 백엔드를 통해 안전하게 처리해야 합니다
-// const openai = new OpenAI({
-//   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-//   dangerouslyAllowBrowser: true
-// });
+// OpenAI 설정
+const openai = new OpenAI({
+  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  dangerouslyAllowBrowser: true,
+});
 
-// 카카오맵 API 키는 나중에 환경변수로 설정
-const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
+// 카카오맵 API 키 환경변수 사용
+const KAKAO_MAP_API_KEY = import.meta.env.VITE_KAKAO_MAP_API_KEY;
 
 function AIChatbot() {
   const [messages, setMessages] = useState([]);
@@ -62,35 +62,47 @@ function AIChatbot() {
     setLoading(true);
 
     try {
-      // 임시 응답 사용
-      setTimeout(() => {
-        const botResponse = {
-          type: "bot",
-          content:
-            "현재 AI 응답 기능은 개발 중입니다. 대신 서울의 주요 관광지를 추천해드리겠습니다!",
-          locations: [
-            {
-              name: "서울시청",
-              lat: 37.566826,
-              lng: 126.9786567,
-            },
-            {
-              name: "덕수궁",
-              lat: 37.565861,
-              lng: 126.975194,
-            },
-            {
-              name: "경복궁",
-              lat: 37.579617,
-              lng: 126.977041,
-            },
-          ],
-        };
+      // OpenAI API 호출
+      const completion = await openai.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content:
+              "당신은 여행 코스를 추천해주는 AI 여행 플래너입니다. 사용자의 요청에 따라 서울의 관광지와 축제 정보를 추천해주세요.",
+          },
+          {
+            role: "user",
+            content: inputMessage,
+          },
+        ],
+        model: "gpt-3.5-turbo",
+      });
 
-        setMessages((prev) => [...prev, botResponse]);
-        updateMap(botResponse.locations);
-        setLoading(false);
-      }, 1000);
+      const botResponse = {
+        type: "bot",
+        content: completion.choices[0].message.content,
+        locations: [
+          {
+            name: "서울시청",
+            lat: 37.566826,
+            lng: 126.9786567,
+          },
+          {
+            name: "덕수궁",
+            lat: 37.565861,
+            lng: 126.975194,
+          },
+          {
+            name: "경복궁",
+            lat: 37.579617,
+            lng: 126.977041,
+          },
+        ],
+      };
+
+      setMessages((prev) => [...prev, botResponse]);
+      updateMap(botResponse.locations);
+      setLoading(false);
     } catch (error) {
       console.error("Error:", error);
       setMessages((prev) => [
