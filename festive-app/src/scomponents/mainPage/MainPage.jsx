@@ -1,11 +1,11 @@
 import React from "react";
-import mainMiddleImg from "../assets/mainMiddle.png";
+import mainMiddleImg from "../../assets/mainMiddle.png";
 import "./MainPage.css";
-import img9 from "../assets/temp/image 9.png";
-import img10 from "../assets/temp/image 10.png";
-import img11 from "../assets/temp/image 11.png";
-import img12 from "../assets/temp/image 12.png";
-import img13 from "../assets/temp/image 13.png";
+import img9 from "../../assets/temp/image 9.png";
+import img10 from "../../assets/temp/image 10.png";
+import img11 from "../../assets/temp/image 11.png";
+import img12 from "../../assets/temp/image 12.png";
+import img13 from "../../assets/temp/image 13.png";
 import VerticalSlider from "./VerticalSlider.jsx";
 
 function MainPage() {
