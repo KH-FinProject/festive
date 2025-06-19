@@ -32,7 +32,7 @@ const AppRoutes = () => {
       <Route path="/wagle/:id" element={<WagleDetail />} />
       <Route path="/this-month" element={<FestivalMainPage />} />
       <Route path="/ai-travel" element={<AITravelCourse />} />
-      {/* <Route path="/ai-travel/chat" element={<AIChatbot />} /> */}
+      <Route path="/ai-travel/chat" element={<AIChatbot />} />
       <Route path="/calendar" element={<FestiveCalendar />} />
       <Route path="/myPage/profile" element={<MyPageEditProfile />} />
       <Route path="/myPage/info" element={<MyPageEditInfo />} />
