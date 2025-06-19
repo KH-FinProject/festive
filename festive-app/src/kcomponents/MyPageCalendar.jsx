@@ -23,7 +23,7 @@ const FestiveWebsite = () => {
                         <p>김성환</p>
                     </div>
                     <div className="menu-buttons">
-                        <button>프로필 수정</button>
+                        <Link to="/mypage"><button>프로필 수정</button></Link>
                         <button>개인정보 수정</button>
                         <button>비밀번호 수정</button>
                         <button className="active">내가 찜한 축제</button>
