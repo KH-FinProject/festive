@@ -3,6 +3,7 @@ import mainLogo from "../assets/festiveLogo.png";
 import searchbtn from "../assets/searchbtn.png";
 import "./HeaderFooter.css";
 import { Link } from "react-router-dom";
+import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 
 function Header() {
     const isLoggedIn = false;
@@ -42,7 +43,9 @@ function Header() {
           placeholder="검색어를 입력해 주세요."
         />
         <img src={searchbtn} className="headersearch-btn" />
-        <div className="headerweather-placeholder">날씨 API 자리</div>
+        <div className="headerweather-placeholder">
+            <Weather />
+        </div>
           {isLoggedIn ? (
               <a href={"#"}>
               <div className="header-user-info">
