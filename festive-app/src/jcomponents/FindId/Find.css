@@ -1,0 +1,195 @@
+/* 아이디 찾기 컨테이너 */
+.find-container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .find-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .find-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.find-wrapper {
+  max-width: 28rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.find-wrapper > * + * {
+  margin-top: 2rem;
+}
+
+/* 아이디 찾기 카드 */
+.find-card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #bfdbfe;
+  padding: 2rem;
+}
+
+/* 탭 헤더 */
+.tab-header {
+  display: flex;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: #e5e7eb;
+  color: #6b7280;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+}
+
+.tab-button.active {
+  background-color: #60a5fa;
+  color: #ffffff;
+}
+
+.tab-button:hover:not(.active) {
+  background-color: #d1d5db;
+}
+
+/* 폼 */
+.find-form > * + * {
+  margin-top: 1.5rem;
+}
+
+/* 입력 그룹 */
+.find-input-group {
+  display: block;
+}
+
+.find-input-label {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.find-input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #374151;
+  box-sizing: border-box;
+  transition: all 0.15s ease-in-out;
+}
+
+.find-input-field:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #60a5fa;
+  border-color: transparent;
+}
+
+.find-input-field::placeholder {
+  color: #6b7280;
+}
+
+/* 인증번호 입력 그룹 */
+.auth-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.auth-input-wrapper {
+  flex: 1;
+}
+
+.auth-button {
+  padding: 0.75rem 1rem;
+  background-color: #60a5fa;
+  color: #ffffff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.auth-button:hover {
+  background-color: #93c5fd;
+}
+
+/* 버튼 그룹 */
+.find-button-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.find-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.find-btn-submit {
+  background-color: #60a5fa;
+  color: #ffffff;
+}
+
+.find-btn-submit:hover {
+  background-color: #93c5fd;
+}
+
+/* 추가 텍스트 */
+.additional-text {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 1rem;
+}
+
+/* 결과 섹션 */
+.find-result {
+  margin-top: 2rem;
+  padding: 2rem;
+  background-color: #60a5fa;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.result-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: #ffffff;
+  color: #374151;
+  border: none;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.result-button:hover {
+  background-color: #f3f4f6;
+}
