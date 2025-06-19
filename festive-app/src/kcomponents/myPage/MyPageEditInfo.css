@@ -279,67 +279,6 @@
     background: #e9ecef;
 }
 
-/* Footer Styles */
-.footer {
-    background: #2c3e50;
-    color: white;
-    padding: 40px 20px 20px;
-    margin-top: auto;
-}
-
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 40px;
-}
-
-.footer-left {
-    flex: 1;
-}
-
-.footer-logo {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 15px;
-}
-
-.footer-address,
-.footer-email {
-    font-size: 14px;
-    color: #bdc3c7;
-    line-height: 1.5;
-    margin-bottom: 5px;
-}
-
-.footer-center {
-    flex: 1;
-}
-
-.footer-links {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
-}
-
-.footer-links a {
-    color: #bdc3c7;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.footer-links a:hover {
-    color: white;
-}
-
-.footer-partners {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
 .partner-logo {
     background: #34495e;
     padding: 8px 12px;
