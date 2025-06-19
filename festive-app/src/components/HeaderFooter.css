@@ -6,7 +6,6 @@
   padding: 1rem 0;
   background-color: #fff;
   border-bottom: 1px solid #ddd;
-  font-family: "Arial", sans-serif;
   color: #333;
   max-width: 1920px;
   margin: 0 auto;
@@ -89,7 +88,6 @@
   font-size: 0.9rem;
   color: #666;
   gap: 2rem;
-  font-family: "Arial", sans-serif;
   color: #333;
   max-width: 1920px;
   margin: 0 auto;
@@ -126,7 +124,7 @@
 
 .footerapi-image-placeholder {
   width: 100px;
-  height: 40px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
