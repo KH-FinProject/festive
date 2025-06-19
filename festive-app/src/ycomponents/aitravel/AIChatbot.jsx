@@ -5,13 +5,12 @@ import AItitle from "./AItitle";
 
 // OpenAI 설정은 환경 변수나 백엔드를 통해 안전하게 처리해야 합니다
 // const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY,
+//   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
 //   dangerouslyAllowBrowser: true
 // });
 
-const KAKAO_MAP_API_KEY =
-    process.env.KAKAO_MAP_API_KEY || "YOUR_KAKAO_MAP_API_KEY";
-
+// 카카오맵 API 키는 나중에 환경변수로 설정
+const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
 function AIChatbot() {
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState("");
@@ -37,10 +36,48 @@ function AIChatbot() {
             });
         };
 
-        document.head.appendChild(script);
+    document.head.appendChild(script);
 
-        // 초기 웰컴 메시지
-        setMessages([
+    // 초기 웰컴 메시지
+    setMessages([
+      {
+        type: "bot",
+        content:
+          "안녕하세요! 저는 당신의 여행 코스를 추천해드리는 AI 여행 플래너입니다. 어떤 여행을 계획하고 계신가요? 축제나 관광지에 대해 자유롭게 물어보세요!",
+      },
+    ]);
+  }, []);
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    // 사용자 메시지 추가
+    const userMessage = {
+      type: "user",
+      content: inputMessage,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
+    setLoading(true);
+
+    try {
+      // 임시 응답 사용
+      setTimeout(() => {
+        const botResponse = {
+          type: "bot",
+          content:
+            "현재 AI 응답 기능은 개발 중입니다. 대신 서울의 주요 관광지를 추천해드리겠습니다!",
+          locations: [
+            {
+              name: "서울시청",
+              lat: 37.566826,
+              lng: 126.9786567,
+            },
+            {
+              name: "덕수궁",
+              lat: 37.565861,
+              lng: 126.975194,
+            },
             {
                 type: "bot",
                 content:
