@@ -6,35 +6,42 @@ import { Link } from "react-router-dom";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 
 function Header() {
-    const isLoggedIn = false;
-    const user = { nickname: "홍길동", profileImage: "https://via.placeholder.com/30" };
-    return (
+  const isLoggedIn = false;
+  const user = {
+    nickname: "홍길동",
+    profileImage: "https://via.placeholder.com/30",
+  };
+  return (
     <header className="header">
       <div className="headerlogo">
-          <a href="/">
-              <img src={mainLogo} alt="festive logo" />
-          </a>
+        <a href="/">
+          <img src={mainLogo} alt="festive logo" />
+        </a>
       </div>
       <nav className="headernav">
-          {[
-              { name: "이달의 축제", path: "/this-month" },
-              { name: "축제달력", path: "#" },
-              { name: "지역별 축제", path: "#" },
-              { name: "와글와글", path: "/wagle" },
-              { name: "AI 여행코스 추천", path: "#" },
-              { name: "고객센터", path: "#" },
-              { name: "부스참가신청", path: "#" },
-          ].map((item) =>
-              item.path !== "#" ? (
-                  <Link key={item.name} to={item.path} className="headernav-link hover-grow">
-                      {item.name}
-                  </Link>
-              ) : (
-                  <a key={item.name} href="#" className="headernav-link hover-grow">
-                      {item.name}
-                  </a>
-              )
-          )}
+        {[
+          { name: "이달의 축제", path: "/this-month" },
+          { name: "축제달력", path: "#" },
+          { name: "지역별 축제", path: "#" },
+          { name: "와글와글", path: "/wagle" },
+          { name: "AI 여행코스 추천", path: "/ai-travel" },
+          { name: "고객센터", path: "#" },
+          { name: "부스참가신청", path: "#" },
+        ].map((item) =>
+          item.path !== "#" ? (
+            <Link
+              key={item.name}
+              to={item.path}
+              className="headernav-link hover-grow"
+            >
+              {item.name}
+            </Link>
+          ) : (
+            <a key={item.name} href="#" className="headernav-link hover-grow">
+              {item.name}
+            </a>
+          )
+        )}
       </nav>
       <div className="headerheader-right">
         <input
