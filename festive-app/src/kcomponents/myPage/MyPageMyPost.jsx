@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './MyPageWithdrawal.css';
 import './MyPageMyPost.css';
+import MyPageSideBar from './MyPageSideBar';
 
 const MyPageMyPost = () => {
     const [posts] = useState([
@@ -52,20 +53,7 @@ const MyPageMyPost = () => {
         <div className="page-container">
 
             <main className="main-content">
-                <aside className="sidebar">
-                    <div className="profile">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E" alt="프로필" />
-                        <p>김성환</p>
-                    </div>
-                    <div className="menu-buttons">
-                        <button>프로필 수정</button>
-                        <button>개인정보 수정</button>
-                        <button>비밀번호 수정</button>
-                        <button>내가 찜한 축제</button>
-                        <button className="active">내가 쓴 게시글 및 댓글</button>
-                        <button>회원 탈퇴</button>
-                    </div>
-                </aside>
+                <MyPageSideBar />
 
                 <section className="withdrawal-section">
 
@@ -78,9 +66,9 @@ const MyPageMyPost = () => {
                     <div className="tabs">
                         <button className="tab active">게시글 7</button>
                         <button className="tab">댓글 22</button>
-                    </div>
 
-                    <br />
+                        <br />
+                    </div>
                     {/* Posts List */}
                     <div className="posts-list">
                         {posts.map((post, index) => (
