@@ -18,6 +18,36 @@
   padding: 3rem 1rem;
 }
 
+/* 정렬 옵션 */
+.sort-options {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.sort-option {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 0.25rem 0.5rem;
+}
+
+.sort-option:hover {
+  color: #60a5fa;
+}
+
+.sort-option.active {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.divider {
+  margin: 0 0.5rem;
+  color: #d1d5db;
+}
+
 /* 섹션 헤더 */
 .section-header {
   text-align: center;
@@ -161,6 +191,11 @@
     padding: 2rem 1rem;
   }
 
+  .sort-options {
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
   .section-header h2 {
     font-size: 1.5rem;
   }
@@ -179,6 +214,10 @@
 @media (max-width: 480px) {
   .festivals-section {
     padding: 1.5rem 0.75rem;
+  }
+
+  .sort-options {
+    font-size: 0.75rem;
   }
 
   .festival-info {

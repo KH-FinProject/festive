@@ -1,7 +1,4 @@
 /* Month-Slider.css - 충돌 방지 버전 */
-
-@import url('https://fonts.googleapis.com/css?family=Muli&display=swap');
-
 /* 슬라이더 컨테이너에만 적용되도록 스코프 제한 */
 .slider-container {
     display: flex;
@@ -35,7 +32,6 @@
 }
 
 .slider-container .panel h3 {
-    font-family: 'Muli', sans-serif;
     font-size: 24px;
     position: absolute;
     bottom: 20px;

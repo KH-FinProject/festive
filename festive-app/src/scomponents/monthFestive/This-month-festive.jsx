@@ -6,6 +6,7 @@ import ExpandingCards from "./Month-Slider.jsx";
 const FestivalMainPage = () => {
   // 축제 목록 상태
   const [festivals, setFestivals] = useState([]);
+  const [sortType, setSortType] = useState('date'); // 'date', 'distance', 'popularity'
 
   // 예시 축제 목록 데이터
   useEffect(() => {
@@ -100,6 +101,13 @@ const FestivalMainPage = () => {
     console.log('더 많은 축제 로드');
   };
 
+  // 정렬 옵션 변경 핸들러
+  const handleSortChange = (newSortType) => {
+    setSortType(newSortType);
+    // 실제로는 여기서 API 재호출하거나 정렬 로직 수행
+    console.log(`정렬 변경: ${newSortType}`);
+  };
+
   return (
       <>
         <Title />
@@ -111,42 +119,65 @@ const FestivalMainPage = () => {
 
           {/* 축제 목록 섹션 */}
           <section className="festivals-section">
+            {/* 정렬 옵션 */}
+            <div className="sort-options">
+              <span
+                  className={`sort-option ${sortType === 'date' ? 'active' : ''}`}
+                  onClick={() => handleSortChange('date')}
+              >
+                축제일순
+              </span>
+              <span className="divider">|</span>
+              <span
+                  className={`sort-option ${sortType === 'distance' ? 'active' : ''}`}
+                  onClick={() => handleSortChange('distance')}
+              >
+                거리순
+              </span>
+              <span className="divider">|</span>
+              <span
+                  className={`sort-option ${sortType === 'popularity' ? 'active' : ''}`}
+                  onClick={() => handleSortChange('popularity')}
+              >
+                인기순
+              </span>
+            </div>
 
             {/* 축제 그리드 */}
             <div className="festivals-grid">
               {festivals.map((festival) => (
-                <div
-                  key={festival.id}
-                  className="festival-card"
-                  onClick={() => handleFestivalClick(festival.id)}
-                >
-                  <div className="festival-image-container">
-                    <img
-                      src={festival.image}
-                      alt={festival.title}
-                      className="festival-image"
-                    />
-                    <div className={`festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
-                      {festival.status}
+                  <div
+                      key={festival.id}
+                      className="festival-card"
+                      onClick={() => handleFestivalClick(festival.id)}
+                  >
+                    <div className="festival-image-container">
+                      <img
+                          src={festival.image}
+                          alt={festival.title}
+                          className="festival-image"
+                      />
+                      <div className={`festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
+                        {festival.status}
+                      </div>
+                    </div>
+
+                    <div className="festival-info">
+                      <h3 className="festival-title">{festival.title}</h3>
+                      <p className="festival-location">
+                        <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        {festival.location}
+                      </p>
+                      <p className="festival-date">
+                        <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        {festival.date}
+                      </p>
                     </div>
                   </div>
-
-                  <div className="festival-info">
-                    <h3 className="festival-title">{festival.title}</h3>
-                    <p className="festival-location">
-                      <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                      </svg>
-                      {festival.location}
-                    </p>
-                    <p className="festival-date">
-                      <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                      </svg>
-                      {festival.date}
-                    </p>
-                  </div>
-                </div>
               ))}
             </div>
 
