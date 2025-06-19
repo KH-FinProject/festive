@@ -1,0 +1,66 @@
+/* AdminMain.css */
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 40px;
+  padding-left: 8px;
+}
+
+.main-section {
+  min-width: 754px;
+  height: 700px;
+  margin: 10px auto;
+  border: 1px solid #eeeeee;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-item {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+.item {
+  border: 1px solid #eeeeee;
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 200px;
+  height: 150px;
+  margin: 20px;
+  padding: 10px 15px;
+}
+.chart {
+  border: 1px solid #eeeeee;
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 700px;
+  height: 450px;
+  margin: 20px;
+  padding: 10px 15px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .main-section {
+    padding: 40px 30px;
+    max-width: 100%;
+  }
+
+  .page-title {
+    font-size: 20px;
+    margin-bottom: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-section {
+    padding: 30px 20px;
+  }
+}
