@@ -138,6 +138,7 @@
   font-size: 0.98rem;
   color: #555;
   margin: 18px 0 0 0;
+  position: relative;
 }
 .wagle-detail-meta .profile-img {
   width: 28px;
@@ -147,6 +148,23 @@
   display: inline-block;
   margin-right: 4px;
 }
+.wagle-detail-meta .report-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #e74c3c;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+.wagle-detail-meta .report-btn:hover {
+  color: #c0392b;
+}
 .wagle-detail-content {
   margin: 28px 0 0 0;
   font-size: 1.08rem;
@@ -155,12 +173,13 @@
   white-space: pre-line;
 }
 .wagle-detail-images {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 16px;
   margin: 28px 0 0 0;
 }
 .wagle-detail-images img {
-  width: 180px;
+  width: 100%;
   height: 120px;
   object-fit: cover;
   border-radius: 10px;
@@ -223,33 +242,88 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow: hidden;
 }
-.wagle-detail-comment-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
+.wagle-detail-comment-item {
   border-bottom: 1px solid #f0f0f0;
-  font-size: 0.98rem;
+  padding: 16px 0;
+  overflow: hidden;
+}
+.comment-main-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
-.wagle-detail-comment-list li.writer .comment-author {
-  color: #3266cc;
-  font-weight: 600;
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 .comment-author {
-  margin-right: 4px;
-}
-.comment-date {
-  color: #aaa;
-  font-size: 0.95em;
+  font-weight: 600;
+  color: #333;
   margin-right: 8px;
 }
+.comment-date {
+  color: #888;
+  font-size: 0.9em;
+}
+.comment-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.comment-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 0.9em;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.comment-btn:hover {
+  background: #f5f5f5;
+  color: #3266cc;
+}
 .comment-content {
-  color: #222;
-  flex: 1;
-  white-space: normal;
-  word-break: break-all;
+  color: #333;
+  line-height: 1.5;
+  margin: 8px 0 8px 48px;
+  white-space: pre-line;
+}
+/* 대댓글 스타일링 */
+.reply-row {
+  margin: 12px 0 0 48px;
+  padding: 12px 0 0 24px;
+  width: calc(100% - 48px);
+  box-sizing: border-box;
+}
+.reply-row .comment-main-row {
+  margin-bottom: 4px;
+  position: relative;
+}
+.reply-row .comment-main-row::before {
+  content: "└‣";
+  position: absolute;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #bbb;
+  font-size: 14px;
+}
+.reply-row .comment-content {
+  margin-left: 48px;
+  color: #444;
+  font-size: 0.98em;
+}
+.reply-row .comment-avatar {
+  width: 32px;
+  height: 32px;
 }
 .wagle-detail-bottom-list {
   margin-top: 48px;
@@ -268,49 +342,111 @@
   padding-left: 0;
 }
 @media (max-width: 1200px) {
-  .wagle-detail-sub-title {
-    max-width: 100%;
-    width: 100%;
-    padding-left: 12px;
-    padding-right: 12px;
+  .wagle-detail-container {
+    width: 90%;
+    max-width: 1160px;
+  }
+
+  .wagle-detail-main,
+  .wagle-detail-comments {
+    padding: 24px 20px;
   }
 }
-@media (max-width: 800px) {
-  .wagle-detail-sub-title {
-    max-width: 100vw;
-    width: 100vw;
-    padding-left: 4vw;
-    padding-right: 4vw;
-  }
-}
-@media (max-width: 600px) {
-  .wagle-detail-sub-title {
-    padding-left: 2vw;
-    padding-right: 2vw;
-  }
-}
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .wagle-detail-title-row {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    gap: 12px;
   }
+
   .wagle-detail-btns {
-    margin-top: 6px;
+    width: 100%;
+    justify-content: flex-end;
   }
-  .wagle-detail-title {
-    white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
+
+  .wagle-detail-meta {
+    flex-wrap: wrap;
+    gap: 12px;
   }
+
+  .wagle-detail-meta .report-btn {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .wagle-detail-comment-form {
+    flex-direction: column;
+  }
+
+  .wagle-detail-comment-form button {
+    width: 100%;
+  }
+
+  .comment-main-row {
+    flex-wrap: wrap;
+  }
+
+  .comment-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .comment-content {
+    margin-left: 0;
+  }
+
+  .reply-row {
+    margin-left: 24px;
+    padding-left: 16px;
+  }
+
+  .reply-row .comment-main-row::before {
+    left: -20px;
+    font-size: 12px;
+  }
+
+  .reply-row .comment-content {
+    margin-left: 0;
+  }
+}
+@media (max-width: 480px) {
+  .wagle-detail-images {
+    grid-template-columns: 1fr;
+  }
+
+  .wagle-detail-images img {
+    height: 200px;
+  }
+
   .wagle-detail-actions-bar {
     flex-direction: column;
     align-items: stretch;
-    gap: 8px;
   }
+
   .list-btn {
-    margin-left: 0;
     width: 100%;
+    justify-content: center;
+  }
+
+  .reply-row {
+    margin-left: 16px;
+    padding-left: 12px;
+  }
+
+  .reply-row .comment-main-row::before {
+    left: -16px;
+    font-size: 11px;
+  }
+
+  .comment-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .reply-row .comment-avatar {
+    width: 28px;
+    height: 28px;
   }
 }
 .wagle-detail-btns button:hover,
@@ -318,45 +454,137 @@
   background: #7bb0f7;
   color: #fff;
 }
-.comment-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
-}
-.comment-btn {
-  background: #60a5fa;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 5px 14px;
-  font-size: 0.98rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background 0.2s, color 0.2s;
-}
-.comment-btn:hover {
-  background: #7bb0f7;
-  color: #fff;
-}
-.comment-main-row {
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  z-index: 1000;
 }
-.comment-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  margin-right: 6px;
+
+.modal-content {
+  background: white;
+  padding: 0;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
   display: block;
-  object-fit: cover;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
 }
-.wagle-detail-comment-item.depth-1 {
-  margin-left: 36px;
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #333;
+  transition: border-color 0.2s;
 }
-.wagle-detail-comment-item.depth-2 {
-  margin-left: 72px;
+
+.form-group textarea {
+  height: 120px;
+  resize: vertical;
+  min-height: 120px;
 }
-.wagle-detail-comment-item.depth-3 {
-  margin-left: 108px;
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-footer button {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-footer .cancel-btn {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.modal-footer .cancel-btn:hover {
+  background: #eee;
+}
+
+.modal-footer .submit-btn {
+  background: #e74c3c;
+  border: 1px solid #e74c3c;
+  color: white;
+}
+
+.modal-footer .submit-btn:hover {
+  background: #c0392b;
+  border-color: #c0392b;
 }
