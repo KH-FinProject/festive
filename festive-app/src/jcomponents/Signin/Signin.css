@@ -117,7 +117,7 @@
 }
 
 .find-link:hover {
-  color: #3b82f6; /* hover:text-blue-500 */
+  color: #60a5fa; /* hover:text-blue-500 */
 }
 
 /* 버튼 그룹 */
@@ -142,16 +142,16 @@
 }
 
 .btn-signup:hover {
-  background-color: #3b82f6; /* hover:bg-blue-500 */
+  background-color: #93c5fd; /* hover:bg-blue-500 */
 }
 
 .btn-login {
-  background-color: #93c5fd; /* bg-blue-300 */
+  background-color: #60a5fa; /* bg-blue-300 */
   color: #ffffff; /* text-white */
 }
 
 .btn-login:hover {
-  background-color: #60a5fa; /* hover:bg-blue-400 */
+  background-color: #93c5fd; /* hover:bg-blue-400 */
 }
 
 /* SNS 섹션 */
@@ -192,7 +192,7 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* hover:shadow-md */
 }
 
-.sns-btn .gsi-material-button-icon {
+.sns-btn .google-icon {
   height: 1.5rem;
   min-width: 20px;
   width: 1.5rem;
@@ -204,7 +204,7 @@
   background-color: #ffffff61;
 }
 
-.sns-btn:disabled .gsi-material-button-icon {
+.sns-btn:disabled .google-icon {
   opacity: 38%;
 }
 
