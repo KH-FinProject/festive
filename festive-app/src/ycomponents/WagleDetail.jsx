@@ -6,13 +6,12 @@ import { posts } from "./GeneralBoard";
 import { notices } from "./NoticeBoard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faExclamation,
+  faTriangleExclamation,
   faHeart as faHeartSolid,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
-import NoticeBoard from "./NoticeBoard";
 import GeneralBoard from "./GeneralBoard";
-import Pagination from "./Pagination";
 
 const images = [
   // 실제로는 서버에서 받아온 이미지 URL 배열
@@ -62,9 +61,9 @@ const comments = [
   },
 ];
 
-function CommentItem({ comment, depth = 0 }) {
+function CommentItem({ comment }) {
   return (
-    <li className={`wagle-detail-comment-item depth-${depth}`}>
+    <li className="wagle-detail-comment-item">
       <div className="comment-main-row">
         <img
           className="comment-avatar"
@@ -80,14 +79,100 @@ function CommentItem({ comment, depth = 0 }) {
         </div>
       </div>
       <div className="comment-content">{comment.content}</div>
-      {comment.replies && comment.replies.length > 0 && (
-        <ul className="wagle-detail-comment-list replies">
-          {comment.replies.map((reply) => (
-            <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
-          ))}
-        </ul>
-      )}
+      {comment.replies &&
+        comment.replies.length > 0 &&
+        comment.replies.map((reply) => (
+          <div className="reply-row" key={reply.id}>
+            <div className="comment-main-row">
+              <img
+                className="comment-avatar"
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
+                alt="프로필"
+              />
+              <span className="comment-author">{reply.author}</span>
+              <span className="comment-date">{reply.date}</span>
+              <div className="comment-actions">
+                <button className="comment-btn">수정</button>
+                <button className="comment-btn">삭제</button>
+              </div>
+            </div>
+            <div className="comment-content">{reply.content}</div>
+          </div>
+        ))}
     </li>
+  );
+}
+
+// flat하게 댓글+답글을 한 배열로 만들어 렌더링
+function flattenComments(comments) {
+  const flat = [];
+  comments.forEach((comment) => {
+    flat.push({ ...comment, depth: 0 });
+    if (comment.replies && comment.replies.length > 0) {
+      comment.replies.forEach((reply) => {
+        flat.push({ ...reply, depth: 1 });
+      });
+    }
+  });
+  return flat;
+}
+
+function ReportModal({ isOpen, onClose, onSubmit }) {
+  const [target, setTarget] = useState("");
+  const [reason, setReason] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({ target, reason });
+    onClose();
+    setTarget("");
+    setReason("");
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h2>신고하기</h2>
+          <button className="modal-close" onClick={onClose}>
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="modal-body">
+            <div className="form-group">
+              <label>신고 대상</label>
+              <input
+                type="text"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                placeholder="신고 대상"
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>신고 사유</label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="신고 사유를 입력해주세요..."
+                required
+              />
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="cancel-btn" onClick={onClose}>
+              취소
+            </button>
+            <button type="submit" className="submit-btn">
+              신고
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -97,6 +182,15 @@ function WagleDetail() {
   const allPosts = [...posts, ...notices];
   const post = allPosts.find((p) => String(p.id) === String(id));
   const [liked, setLiked] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  // flat 구조로 변환
+  const flatComments = flattenComments(comments);
+
+  const handleReport = (reportData) => {
+    console.log("신고 데이터:", reportData);
+    // 여기에 신고 처리 로직 추가
+  };
 
   if (!post) {
     return (
@@ -132,7 +226,17 @@ function WagleDetail() {
             <span className="author">{post.author}</span>
             <span className="date">{post.date}</span>
             <span className="views">{post.views}</span>
-            <span className="comments">댓글 {comments.length}</span>
+            <span className="comments">댓글 {flatComments.length}</span>
+            <button
+              className="report-btn"
+              onClick={() => setIsReportModalOpen(true)}
+            >
+              <FontAwesomeIcon
+                icon={faTriangleExclamation}
+                style={{ marginRight: 4 }}
+              />
+              신고
+            </button>
           </div>
           <div className="wagle-detail-content">
             {/* 실제 본문은 post.content로 확장 가능 */}
@@ -154,13 +258,6 @@ function WagleDetail() {
                   style={{ marginRight: 4 }}
                 />{" "}
                 좋아요
-              </button>
-              <button className="report-btn">
-                <FontAwesomeIcon
-                  icon={faExclamation}
-                  style={{ marginRight: 4 }}
-                />{" "}
-                신고
               </button>
             </div>
             <button className="list-btn" onClick={() => navigate("/wagle")}>
@@ -184,6 +281,11 @@ function WagleDetail() {
           <div className="wagle-divider" />
           <GeneralBoard hideTitle={true} hideWriteBtn={true} />
         </div>
+        <ReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          onSubmit={handleReport}
+        />
       </div>
     </div>
   );

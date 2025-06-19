@@ -1,65 +1,38 @@
-.wagle-header {
-  width: 1160px;
-  margin: 0 auto;
+.title-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  box-sizing: border-box;
-  padding-top: 40px;
+  gap: 10px;
+  margin-bottom: 30px;
 }
 
-.wagle-main-title {
-  font-size: 32px;
-  font-weight: 800;
-  color: #222;
-  margin-bottom: 0;
-  line-height: 1.2;
-  letter-spacing: -1px;
-  border-bottom: 2px solid #222;
-  padding-bottom: 8px;
-  width: fit-content;
-  display: inline-block;
-}
-
-.wagle-sub-title {
-  font-size: 14px;
-  color: #999999;
-  font-weight: 400;
-  margin-top: 12px;
-  margin-bottom: 0;
-}
-
-.wagle-location {
+.title-navigation {
   display: flex;
   align-items: center;
-  font-size: 15px;
-  color: #888;
-  gap: 4px;
-  margin-top: 33px;
-  margin-bottom: 0;
+  gap: 8px;
+  color: #666;
+  font-size: 0.9rem;
 }
 
-.wagle-location-home {
-  color: #888;
-  font-weight: 500;
+.title-navigation a {
+  color: inherit;
+  text-decoration: none;
 }
 
-.wagle-location-arrow {
-  font-size: 0.9em;
-  margin: 0 2px;
+.title-navigation a:hover {
+  color: #333;
 }
 
-.wagle-location-current {
-  color: #3266cc;
-  font-weight: 600;
+.title-navigation .icon {
+  font-size: 0.8rem;
 }
 
-.wagle-location-link {
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  transition: color 0.2s;
+.title-main {
+  font-size: 2rem;
+  color: #333;
+  font-weight: bold;
 }
-.wagle-location-link:hover {
-  color: #222;
+
+.title-subtitle {
+  color: #666;
+  font-size: 1rem;
 }

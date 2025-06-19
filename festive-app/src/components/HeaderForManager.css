@@ -1,0 +1,17 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start; /* 이미 되어있지만 명확히 확인 */
+  padding: 1rem 0;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+  margin: 0 auto;
+}
+
+.headerlogo img {
+  height: 50px;
+  margin: 0 2.5rem;
+  cursor: pointer;
+}

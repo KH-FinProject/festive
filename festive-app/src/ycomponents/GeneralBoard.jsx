@@ -10,9 +10,9 @@ import {
   faAnglesRight,
   faPen,
 } from "@fortawesome/free-solid-svg-icons";
-import Pagination from "./Pagination";
 import "./GeneralBoard.css";
 import { useNavigate } from "react-router-dom";
+import Pagination, { usePagination } from "./Pagination";
 
 export const posts = [
   {
@@ -158,21 +158,14 @@ export const posts = [
 const PAGE_SIZE = 7;
 
 function GeneralBoard({ hideTitle, hideWriteBtn }) {
-  const [page, setPage] = useState(1);
-  const totalPages = Math.ceil(posts.length / PAGE_SIZE);
-  const pagedPosts = posts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const navigate = useNavigate();
+  const { currentPage, totalPages, goToPage, currentItems } = usePagination({
+    totalItems: posts.length,
+    pageSize: PAGE_SIZE,
+    initialPage: 1,
+  });
 
-  const goToPage = (p) => {
-    if (p < 1 || p > totalPages) return;
-    setPage(p);
-    setTimeout(() => {
-      const list = document.querySelector(".general-board-list");
-      if (list) {
-        list.scrollIntoView({ behavior: "auto", block: "start" });
-      }
-    }, 0);
-  };
+  const pagedPosts = currentItems(posts);
+  const navigate = useNavigate();
 
   const handleItemClick = (id) => {
     navigate(`/wagle/${id}`);
@@ -183,7 +176,7 @@ function GeneralBoard({ hideTitle, hideWriteBtn }) {
     <div className="general-board-outer">
       <div className="general-board-container">
         {/* 타이틀이 있다면 여기에 {!hideTitle && <div>타이틀</div>} 추가 가능 */}
-        <div className="general-board-list">
+        <div className="general-board-list paginated-list">
           {pagedPosts.map((post) => (
             <div
               className="general-board-item"
@@ -241,7 +234,12 @@ function GeneralBoard({ hideTitle, hideWriteBtn }) {
             </button>
           )}
         </div>
-        <Pagination page={page} totalPages={totalPages} goToPage={goToPage} />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          className="wagle-pagination"
+        />
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
+import React from "react";
 import { Route, Routes } from "react-router-dom";
 import MainPage from "./scomponents/mainPage/mainPage.jsx";
 import Signin from "./jcomponents/Signin/Signin.jsx";
-import SignUp1 from "./jcomponents/Signup/Signup1.jsx";
+import Signup from "./jcomponents/Signup/Signup.jsx";
 import WaglePage from "./ycomponents/WaglePage.jsx";
 import WritePage from "./ycomponents/WritePage.jsx";
 import Find from "./jcomponents/FindId/Find.jsx";
@@ -15,28 +16,33 @@ import MyPageCalendar from "./kcomponents/myPage/MyPageCalendar.jsx";
 import MyPageMyPost from "./kcomponents/myPage/MyPageMyPost.jsx";
 import MyPageMyComment from "./kcomponents/myPage/MyPageMyComment.jsx";
 import MyPageWithdrawal from "./kcomponents/myPage/MyPageWithdrawal.jsx";
+import AITravelCourse from "./ycomponents/aitravel/AITravelCourse.jsx";
+import AIChatbot from "./ycomponents/aitravel/AIChatbot";
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      <Route path="/" element={<MainPage />} />
-      <Route path="/signin" element={<Signin />} />
-      <Route path="/find" element={<Find />} />
-      <Route path="/signup" element={<SignUp1 />} />
-      <Route path="/wagle" element={<WaglePage />} />
-      <Route path="/wagle/write" element={<WritePage />} />
-      <Route path="/wagle/:id" element={<WagleDetail />} />
-      <Route path="/this-month" element={<FestivalMainPage />} />
-      <Route path="/calendar" element={<FestiveCalendar />} />
-      <Route path="/myPage/profile" element={<MyPageEditProfile />} />
-      <Route path="/myPage/info" element={<MyPageEditInfo />} />
-      <Route path="/myPage/pw" element={<MyPageEditPw />} />
-      <Route path="/myPage/mycalendar" element={<MyPageCalendar />} />
-      <Route path="/myPage/mypost" element={<MyPageMyPost />} />
-      <Route path="/myPage/mycomment" element={<MyPageMyComment />} />
-      <Route path="/myPage/withdrawal" element={<MyPageWithdrawal />} />
-    </Routes>
+
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/find" element={<Find />} />
+        <Route path="/signup/agreement" element={<Signup />} />
+        <Route path="/wagle" element={<WaglePage />} />
+        <Route path="/wagle/write" element={<WritePage />} />
+        <Route path="/wagle/:id" element={<WagleDetail />} />
+        <Route path="/this-month" element={<FestivalMainPage />} />
+        <Route path="/ai-travel" element={<AITravelCourse />} />
+        <Route path="/ai-travel/chat" element={<AIChatbot />} />
+        <Route path="/calendar" element={<FestiveCalendar />} />
+        <Route path="/myPage/profile" element={<MyPageEditProfile />} />
+        <Route path="/myPage/info" element={<MyPageEditInfo />} />
+        <Route path="/myPage/pw" element={<MyPageEditPw />} />
+        <Route path="/myPage/mycalendar" element={<MyPageCalendar />} />
+        <Route path="/myPage/mypost" element={<MyPageMyPost />} />
+        <Route path="/myPage/mycomment" element={<MyPageMyComment />} />
+        <Route path="/myPage/withdrawal" element={<MyPageWithdrawal />} />
+      </Routes>
   );
-}
+};
 
 export default AppRoutes;

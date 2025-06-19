@@ -3,8 +3,10 @@ import { Editor } from "@toast-ui/react-editor";
 import "@toast-ui/editor/dist/toastui-editor.css";
 import Title from "./Title";
 import "./WritePage.css";
+import { useNavigate } from "react-router-dom";
 
-function WritePage({ onCancel, onSubmit }) {
+function WritePage({ onSubmit }) {
+  const navigate = useNavigate();
   const editorRef = useRef();
   const [title, setTitle] = useState("");
 
@@ -15,6 +17,15 @@ function WritePage({ onCancel, onSubmit }) {
       onSubmit({ title, content });
     } else {
       console.log({ title, content });
+    }
+  };
+
+  const handleCancel = () => {
+    const confirmCancel = window.confirm(
+      "작성 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?"
+    );
+    if (confirmCancel) {
+      navigate("/wagle");
     }
   };
 
@@ -42,7 +53,7 @@ function WritePage({ onCancel, onSubmit }) {
             <button
               type="button"
               className="wagle-write-cancel"
-              onClick={onCancel}
+              onClick={handleCancel}
             >
               취소
             </button>
