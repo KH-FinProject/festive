@@ -5,12 +5,12 @@ import AItitle from "./AItitle";
 
 // OpenAI 설정은 환경 변수나 백엔드를 통해 안전하게 처리해야 합니다
 // const openai = new OpenAI({
-//   apiKey: process.env.OPENAI_API_KEY,
+//   apiKey: import.meta.env.VITE_OPENAI_API_KEY,
 //   dangerouslyAllowBrowser: true
 // });
 
-const KAKAO_MAP_API_KEY =
-  process.env.KAKAO_MAP_API_KEY || "YOUR_KAKAO_MAP_API_KEY";
+// 카카오맵 API 키는 나중에 환경변수로 설정
+const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
 
 function AIChatbot() {
   const [messages, setMessages] = useState([]);
@@ -62,7 +62,7 @@ function AIChatbot() {
     setLoading(true);
 
     try {
-      // OpenAI API 호출 대신 임시 응답 사용
+      // 임시 응답 사용
       setTimeout(() => {
         const botResponse = {
           type: "bot",
