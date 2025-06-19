@@ -1,0 +1,234 @@
+/* AdminApplicationStatus.css */
+
+.status-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.application-list {
+  margin-bottom: 40px;
+}
+
+.application-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.application-item:last-child {
+  border-bottom: none;
+}
+
+.application-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.category-badge {
+  margin-bottom: 8px;
+}
+
+.category {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #e8f0fe;
+  color: #1a73e8;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 12px;
+}
+
+.application-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 600px;
+}
+
+.application-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #333;
+}
+
+.applicant {
+  position: relative;
+}
+
+.applicant::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 2px;
+  background-color: #ccc;
+  border-radius: 50%;
+}
+
+.application-actions {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.btn-detail {
+  background-color: #f8f9fa;
+  color: #5f6368;
+  border: 1px solid #e1e4e8;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-detail:hover {
+  background-color: #e8eaed;
+  color: #333;
+}
+
+.btn-approve {
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-approve:hover:not(:disabled) {
+  background-color: #1557b0;
+}
+
+.btn-approve.approved {
+  background-color: #34a853;
+  cursor: default;
+}
+
+.btn-approve:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f3f4;
+}
+
+.pagination-btn {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  min-width: 36px;
+  text-align: center;
+}
+
+.pagination-btn:hover {
+  background-color: #f1f3f4;
+  color: #333;
+}
+
+.pagination-btn.active {
+  background-color: #4285f4;
+  color: white;
+}
+
+.pagination-btn.nav-btn {
+  font-size: 16px;
+  color: #999;
+}
+
+.pagination-btn.nav-btn:hover {
+  color: #333;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .application-status {
+    padding: 20px;
+  }
+
+  .status-content {
+    padding: 20px;
+  }
+
+  .application-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .application-info {
+    width: 100%;
+  }
+
+  .application-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+    max-width: none;
+  }
+
+  .application-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .btn-detail,
+  .btn-approve {
+    flex: 1;
+    text-align: center;
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .application-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-detail,
+  .btn-approve {
+    width: 100%;
+    max-width: none;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .pagination-btn {
+    min-width: 32px;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+}
