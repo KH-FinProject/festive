@@ -1,13 +1,11 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUserShield,
-  faChevronRight,
-  faHouse,
-} from "@fortawesome/free-solid-svg-icons";
+import { faUserShield } from "@fortawesome/free-solid-svg-icons";
+import Title from "./Title";
 import "./NoticeBoard.css";
+import { useNavigate } from "react-router-dom";
 
-const notices = [
+export const notices = [
   {
     id: 1,
     title: "안녕하세요 저는 공지입니다",
@@ -22,26 +20,19 @@ const notices = [
   },
 ];
 
-function NoticeBoard() {
+function NoticeBoard({ hideTitle }) {
+  const navigate = useNavigate();
   return (
     <div className="notice-board-outer">
-      <div className="wagle-header">
-        <div className="wagle-main-title">와글와글</div>
-        <div className="wagle-sub-title">
-          #축제 후기와 여러분의 의견을 자유롭게 나눌 수 있는 공간입니다.
-        </div>
-        <div className="wagle-location">
-          <span className="wagle-location-home">홈</span>
-          <FontAwesomeIcon
-            icon={faChevronRight}
-            className="wagle-location-arrow"
-          />
-          <span className="wagle-location-current">와글와글</span>
-        </div>
-      </div>
+      {!hideTitle && <Title />}
       <div className="notice-list">
         {notices.map((notice) => (
-          <div className="notice-item special-notice" key={notice.id}>
+          <div
+            className="notice-item special-notice"
+            key={notice.id}
+            onClick={() => navigate(`/wagle/${notice.id}`)}
+            style={{ cursor: "pointer" }}
+          >
             <div className="notice-row">
               <div className="notice-badge">공지</div>
               <div className="notice-title special-title">{notice.title}</div>

@@ -1,0 +1,47 @@
+body {
+  background: #fff;
+}
+
+.wagle-page-container {
+  max-width: 1160px;
+  width: 100%;
+  min-height: 100vh;
+  background: #fff;
+  padding-bottom: 40px;
+  margin: 0 auto;
+}
+
+.wagle-divider {
+  max-width: 1160px;
+  width: 100%;
+  height: 2px;
+  background: #e3e3e3;
+  margin: 24px auto 0 auto;
+  border-radius: 2px;
+}
+
+@media (max-width: 1200px) {
+  .wagle-page-container,
+  .wagle-divider {
+    max-width: 100%;
+    width: 100%;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+@media (max-width: 800px) {
+  .wagle-page-container,
+  .wagle-divider {
+    max-width: 100vw;
+    width: 100vw;
+    padding-left: 4vw;
+    padding-right: 4vw;
+  }
+}
+@media (max-width: 600px) {
+  .wagle-page-container,
+  .wagle-divider {
+    padding-left: 2vw;
+    padding-right: 2vw;
+  }
+}

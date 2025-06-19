@@ -122,7 +122,7 @@
 }
 
 .wagle-write-submit {
-  background: #9dc4fe;
+  background: #60a5fa;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -134,7 +134,7 @@
 }
 
 .wagle-write-submit:hover {
-  background: #7bb0f7;
+  background: #4a86e8;
 }
 
 /* Toast UI Editor 커스텀 최소화 */
