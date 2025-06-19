@@ -2,17 +2,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100vw;
+  width: 100%;
 }
 
 .general-board-container {
-  width: 1160px;
+  max-width: 1160px;
+  width: 100%;
   box-sizing: border-box;
 }
 
 .general-board-list {
   margin-bottom: 0;
-  margin-top: 76px;
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -27,7 +28,8 @@
   flex-direction: column;
   background: #f9f9f9;
   color: #222;
-  width: 1160px;
+  max-width: 100%;
+  width: 100%;
   height: 92.39px;
   justify-content: center;
   box-sizing: border-box;
@@ -59,7 +61,8 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  width: 1160px;
+  max-width: 1160px;
+  width: 100%;
   margin: 31px auto 0 auto;
   justify-content: space-between;
   gap: 0;
@@ -104,7 +107,7 @@
 }
 
 .wagle-search-btn {
-  background: #9dc4fe;
+  background: #60a5fa;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -130,7 +133,7 @@
 }
 
 .wagle-write-btn {
-  background: #9dc4fe;
+  background: #60a5fa;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -142,6 +145,10 @@
   height: 33px;
   white-space: nowrap;
   margin: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wagle-write-btn:hover {
@@ -158,7 +165,7 @@
 
 .page-btn {
   background: #fff;
-  border: 1.5px solid #9dc4fe;
+  border: 1.5px solid #60a5fa;
   color: #3266cc;
   border-radius: 6px;
   width: 48px;
@@ -179,7 +186,7 @@
 
 .page-btn.active,
 .page-btn:hover {
-  background: #9dc4fe;
+  background: #60a5fa;
   color: #fff;
 }
 
@@ -202,4 +209,51 @@
 
 .general-board-date {
   color: #999999;
+}
+
+@media (max-width: 1200px) {
+  .general-board-container,
+  .wagle-general-board-search-row,
+  .general-board-list {
+    max-width: 100%;
+    width: 100%;
+  }
+  .general-board-item {
+    padding: 0 12px;
+  }
+}
+
+@media (max-width: 800px) {
+  .general-board-container,
+  .wagle-general-board-search-row,
+  .general-board-list {
+    max-width: 100vw;
+    width: 100vw;
+    padding: 0 4vw;
+  }
+  .general-board-item {
+    padding: 0 4vw;
+    font-size: 0.98rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .general-board-container,
+  .wagle-general-board-search-row,
+  .general-board-list {
+    padding: 0 2vw;
+  }
+  .general-board-item {
+    padding: 0 2vw;
+    font-size: 0.92rem;
+    height: auto;
+  }
+  .wagle-search-type,
+  .wagle-search-input,
+  .wagle-search-btn,
+  .wagle-write-btn {
+    font-size: 0.95rem;
+    height: 28px;
+    padding: 4px 8px;
+  }
 }
