@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './Signup.css';
 
 const Signup = () => {
+  const [currentStep, setCurrentStep] = useState(1);
   const [agreements, setAgreements] = useState({
     terms: false,
     privacy: false,
@@ -10,66 +11,82 @@ const Signup = () => {
   });
   
   const handlePrev = () => {
-  
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
   };
   
   const handleNext = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
   
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <Agreements agreements={agreements} setAgreements={setAgreements} />;
+      case 2:
+        return <Inform />;
+      case 3:
+        return <Completion />;
+      default:
+        return <Agreements agreements={agreements} setAgreements={setAgreements} />;
+    }
   };
   
   return (
       <div className="signup-container">
         <div className="signup-wrapper">
-          
-          <ProgressSteps />
+          <ProgressSteps currentStep={currentStep} />
           
           {/* Main Content */}
           <div className="signup-content">
-            <Agreements agreements={agreements} setAgreements={setAgreements}/>
+            {renderCurrentStep()}
             
-            <Inform />
-            
-            <div className="button-group">
-              {/* prev Button */}
-              <button className="step-btn" onClick={handlePrev}>
-                이전
-              </button>
-              
-              {/* Next Button */}
-              <button className="step-btn" onClick={handleNext}>
-                다음
-              </button>
-            </div>
+            {currentStep < 3 && (
+                <div className="nav-buttons">
+                  {currentStep > 1 && (
+                      <button className="prev-btn" onClick={handlePrev}>
+                        이전
+                      </button>
+                  )}
+                  <button className="next-btn" onClick={handleNext}>
+                    {currentStep === 2 ? '회원가입' : '다음'}
+                  </button>
+                </div>
+            )}
           </div>
         </div>
       </div>
   );
-}
+};
 
-const ProgressSteps = () => {
+const ProgressSteps = ({ currentStep }) => {
+  const steps = [
+    { number: 1, label: '약관동의' },
+    { number: 2, label: '정보입력' },
+    { number: 3, label: '가입완료' }
+  ];
   
   return (
-    <div className="progress-steps">
-      <div className="step active">
-        <div className="step-number">1</div>
-        <div className="step-label">약관동의</div>
+      <div className="progress-steps">
+        {steps.map((step, index) => (
+            <React.Fragment key={step.number}>
+              <div className={`step ${currentStep >= step.number ? 'active' : ''}`}>
+                <div className="step-number">{step.number}</div>
+                <div className="step-label">{step.label}</div>
+              </div>
+              {index < steps.length - 1 && (
+                  <div className={`step-line ${currentStep === 3 ? 'zigzag-line' : ''}`}></div>
+              )}
+            </React.Fragment>
+        ))}
       </div>
-      <div className="step-line"></div>
-      <div className="step">
-        <div className="step-number">2</div>
-        <div className="step-label">정보입력</div>
-      </div>
-      <div className="step-line"></div>
-      <div className="step">
-        <div className="step-number">3</div>
-        <div className="step-label">가입완료</div>
-      </div>
-    </div>
-  )
-}
+  );
+};
 
-const Agreements = ({agreements, setAgreements}) => {
-  
+const Agreements = ({ agreements, setAgreements }) => {
   const [expandedSections, setExpandedSections] = useState({
     terms: false,
     privacy: false,
@@ -107,7 +124,7 @@ const Agreements = ({agreements, setAgreements}) => {
       id: 'terms',
       label: '이용약관',
       content: `제1조 (목적)
-본 약관은 축제 알림 및 소통 게시판 웹사이트(이하 “사이트”)가 제공하는 서비스의 이용과 관련하여
+본 약관은 축제 알림 및 소통 게시판 웹사이트(이하 "사이트")가 제공하는 서비스의 이용과 관련하여
 사이트와 회원 간의 권리·의무 및 책임사항을 규정합니다.
 
 제2조 (서비스의 제공)
@@ -180,7 +197,8 @@ const Agreements = ({agreements, setAgreements}) => {
   return (
       <>
         <h2 className="signup-title">약관동의</h2>
-        {sections.map((section, index) => (
+        <hr/>
+        {sections.map((section) => (
             <TermsSection
                 key={section.id}
                 label={section.label}
@@ -205,11 +223,10 @@ const Agreements = ({agreements, setAgreements}) => {
           </label>
         </div>
       </>
-  )
-}
+  );
+};
 
 const Inform = () => {
-  
   const [formData, setFormData] = useState({
     username: '',
     nickname: '',
@@ -247,196 +264,262 @@ const Inform = () => {
   };
   
   return (
-    <>
-      <h2 className="signup-title">정보입력</h2>
-      <p className="signup-subtitle">회원 가입을 위해 *표시는 필수로 입력해주세요</p>
-      
-      <form className="signup-form">
-        <div className="form-row">
-          <div className="form-group">
+      <>
+        <h2 className="signup-title">정보입력</h2>
+        <p className="signup-subtitle">회원 가입을 위해 *표시는 필수로 입력해주세요</p>
+        <hr/>
+        
+        <form className="signup-form">
+          <div className="user-form-row">
+            <div className="user-form-group">
+              <label className="form-label">
+                Username <span className="required">*</span>
+              </label>
+              <div className="form-input-group">
+                <input
+                    type="text"
+                    className="form-input"
+                    placeholder="이름"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange('username', e.target.value)}
+                />
+                <button
+                    type="button"
+                    className="action-btn"
+                    onClick={() => handleDuplicateCheck('username')}
+                >
+                  중복 확인
+                </button>
+              </div>
+            </div>
+            
+            <div className="user-form-group">
+              <label className="form-label">
+                Nickname <span className="required">*</span>
+              </label>
+              <div className="form-input-group">
+                <input
+                    type="text"
+                    className="form-input"
+                    placeholder="닉네임"
+                    value={formData.nickname}
+                    onChange={(e) => handleInputChange('nickname', e.target.value)}
+                />
+                <button
+                    type="button"
+                    className="action-btn"
+                    onClick={() => handleDuplicateCheck('nickname')}
+                >
+                  중복 확인
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="user-form-row">
+            <div className="user-form-group">
+              <label className="form-label">
+                Email address <span className="required">*</span>
+              </label>
+              <input
+                  type="email"
+                  className="form-input"
+                  placeholder="이메일 (비밀번호 찾기 등 본인 확인 용도)"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+              />
+            </div>
+            
+            <div className="user-form-group">
+              <label className="form-label">
+                Phone <span className="required">*</span>
+              </label>
+              <div className="form-input-group">
+                <input
+                    type="tel"
+                    className="form-input"
+                    placeholder="전화번호"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                />
+                <button
+                    type="button"
+                    className="action-btn"
+                    onClick={handleSmsVerification}
+                >
+                  SMS 인증
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="user-form-group">
             <label className="form-label">
-              Username <span className="required">*</span>
+              Auth key <span className="required">*</span>
             </label>
             <div className="form-input-group">
               <input
                   type="text"
                   className="form-input"
-                  placeholder="이름"
-                  value={formData.username}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
+                  placeholder="인증번호"
+                  value={formData.authKey}
+                  onChange={(e) => handleInputChange('authKey', e.target.value)}
               />
               <button
                   type="button"
                   className="action-btn"
-                  onClick={() => handleDuplicateCheck('username')}
+                  onClick={handleAuthKeyVerification}
+              >
+                인증 확인
+              </button>
+            </div>
+          </div>
+          
+          <div className="user-form-group">
+            <label className="form-label">
+              ID <span className="required">*</span>
+            </label>
+            <div className="form-input-group">
+              <input
+                  type="text"
+                  className="form-input"
+                  placeholder="아이디"
+                  value={formData.id}
+                  onChange={(e) => handleInputChange('id', e.target.value)}
+              />
+              <button
+                  type="button"
+                  className="action-btn"
+                  onClick={() => handleDuplicateCheck('id')}
               >
                 중복 확인
               </button>
             </div>
           </div>
           
-          <div className="form-group">
+          <div className="user-form-group">
             <label className="form-label">
-              Nickname <span className="required">*</span>
-            </label>
-            <div className="form-input-group">
-              <input
-                  type="text"
-                  className="form-input"
-                  placeholder="닉네임"
-                  value={formData.nickname}
-                  onChange={(e) => handleInputChange('nickname', e.target.value)}
-              />
-              <button
-                  type="button"
-                  className="action-btn"
-                  onClick={() => handleDuplicateCheck('nickname')}
-              >
-                중복 확인
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div className="form-row">
-          <div className="form-group">
-            <label className="form-label">
-              Email address <span className="required">*</span>
+              Password <span className="required">*</span>
             </label>
             <input
-                type="email"
+                type="password"
                 className="form-input"
-                placeholder="이메일 (비밀번호 찾기 등 본인 확인 용도)"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="비밀번호 (영어,숫자,특수문자(@,#,..) 6~20글자 사이로 입력해주세요.)"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
             />
           </div>
           
-          <div className="form-group">
+          <div className="user-form-group">
             <label className="form-label">
-              Phone <span className="required">*</span>
+              Password confirm <span className="required">*</span>
             </label>
-            <div className="form-input-group">
-              <input
-                  type="tel"
-                  className="form-input"
-                  placeholder="전화번호"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-              />
-              <button
-                  type="button"
-                  className="action-btn"
-                  onClick={handleSmsVerification}
-              >
-                SMS 인증
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">
-            Auth key <span className="required">*</span>
-          </label>
-          <div className="form-input-group">
             <input
-                type="text"
+                type="password"
                 className="form-input"
-                placeholder="인증번호"
-                value={formData.authKey}
-                onChange={(e) => handleInputChange('authKey', e.target.value)}
+                placeholder="비밀번호 확인"
+                value={formData.passwordConfirm}
+                onChange={(e) => handleInputChange('passwordConfirm', e.target.value)}
             />
-            <button
-                type="button"
-                className="action-btn"
-                onClick={handleAuthKeyVerification}
-            >
-              인증 확인
-            </button>
           </div>
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">
-            ID <span className="required">*</span>
-          </label>
-          <div className="form-input-group">
-            <input
-                type="text"
-                className="form-input"
-                placeholder="아이디"
-                value={formData.id}
-                onChange={(e) => handleInputChange('id', e.target.value)}
-            />
-            <button
-                type="button"
-                className="action-btn"
-                onClick={() => handleDuplicateCheck('id')}
-            >
-              중복 확인
-            </button>
-          </div>
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">
-            Password <span className="required">*</span>
-          </label>
-          <input
-              type="password"
-              className="form-input"
-              placeholder="비밀번호 (영어,숫자,특수문자(@,#,..) 6~20글자 사이로 입력해주세요.)"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-          />
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">
-            Password confirm <span className="required">*</span>
-          </label>
-          <input
-              type="password"
-              className="form-input"
-              placeholder="비밀번호 확인"
-              value={formData.passwordConfirm}
-              onChange={(e) => handleInputChange('passwordConfirm', e.target.value)}
-          />
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">Address</label>
-          <div className="address-group">
-            <div className="form-input-group">
+          
+          <div className="user-form-group">
+            <label className="form-label">Address</label>
+            <div className="address-group">
+              <div className="form-input-group">
+                <input
+                    type="text"
+                    className="form-input"
+                    placeholder="우편번호"
+                    value={formData.address}
+                    onChange={(e) => handleInputChange('address', e.target.value)}
+                    readOnly
+                />
+                <button
+                    type="button"
+                    className="action-btn"
+                    onClick={handleAddressSearch}
+                >
+                  우편번호 찾기
+                </button>
+              </div>
               <input
                   type="text"
-                  className="form-input"
-                  placeholder="우편번호"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  readOnly
+                  className="form-input full-width"
+                  placeholder="상세 주소"
+                  value={formData.detailAddress}
+                  onChange={(e) => handleInputChange('detailAddress', e.target.value)}
               />
-              <button
-                  type="button"
-                  className="action-btn"
-                  onClick={handleAddressSearch}
-              >
-                우편번호 찾기
-              </button>
             </div>
-            <input
-                type="text"
-                className="form-input full-width"
-                placeholder="상세 주소"
-                value={formData.detailAddress}
-                onChange={(e) => handleInputChange('detailAddress', e.target.value)}
-            />
+          </div>
+        </form>
+      </>
+  );
+};
+
+const Completion = () => {
+  const handleLoginRedirect = () => {
+    console.log('로그인 하러 가기');
+  };
+  
+  const path = '/src/assets/signup/';
+  const cards = [
+    {
+      img: 'ai.png',
+      title: 'AI 맞춤 여행정보 추천',
+      content: '당신의 취향과 일정에 맞는 축제 여행 코스를 AI가 똑똑하게 추천해드립니다. 개인별 선호도를 분석하여 최적의 루트를 제안합니다.'
+    },
+    {
+      img: 'local.png',
+      title: '지역별 상세 축제 정보',
+      content: '전국 각 지역의 크고 작은 축제들을 한눈에! 지역 특색이 담긴 다양한 축제 정보를 상세히 제공합니다.'
+    },
+    {
+      img: 'calendar.png',
+      title: '월별 축제 캘린더 & 검색',
+      content: '월별로 열리는 축제들을 캘린더로 확인하고, 원하는 타입이나 지역으로 쉽게 검색할 수 있습니다. 놓치고 싶지 않은 축제 일정을 확인 가능해요!'
+    }
+  ]
+  
+  return (
+      <>
+        <div className="completion-container">
+          
+          {/* Center Content */}
+          <div className="completion-content">
+            {/* Character Images */}
+            <div className="character">
+              <img src="/src/assets/signup/korean.png" alt="사물놀이 캐릭터" className="character-img" />
+            </div>
+            
+            <h2 className="completion-title">가입을 진심으로 환영합니다!</h2>
+            
+            {/* Feature Cards */}
+            <div className="feature-cards">
+              
+              {cards.map((card) => (
+                <div className="feature-card">
+                  <div className="feature-icon-wrapper">
+                    <img src={path + card.img} alt={card.img} className="feature-icon-img" />
+                  </div>
+                
+                  <div className="feature-content">
+                    <h3>{card.title}</h3>
+                    <p>{card.content}</p>
+                  </div>
+                </div>
+              ))}
+              
+            </div>
           </div>
         </div>
-      </form>
-    </>
-  )
-}
+        
+        {/* Login Button */}
+        <button className="login-btn" onClick={handleLoginRedirect}>
+          로그인 하러 가기
+        </button>
+      </>
+  );
+};
 
 export default Signup;
