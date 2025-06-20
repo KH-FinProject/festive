@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Search, Star } from "lucide-react";
 import "./AdminDeleteMember.css";
 import "./AdminCommon.css";
+import AdminSidebar from "./AdminSideBar";
 
 const AdminDeleteMember = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -140,86 +141,94 @@ const AdminDeleteMember = () => {
   );
 
   return (
-    <div className="content">
-      {/* Main Content */}
-      <main className="admin-main">
-        <div className="admin-header">
-          <h1 className="admin-title">회원 탈퇴 및 삭제</h1>
-        </div>
+    <div className="admin-management-container">
+      <div className="management-content">
+        {/* Sidebar */}
+        <AdminSidebar />
+        <div className="content">
+          {/* Main Content */}
+          <main className="admin-main">
+            <div className="admin-header">
+              <h1 className="admin-title">회원 탈퇴 및 삭제</h1>
+            </div>
 
-        {/* Search Section */}
-        <div className="admin-search-section">
-          <div className="admin-search-container">
-            <input
-              type="text"
-              placeholder="검색할 회원 입력"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="admin-search-input"
-            />
-            <button className="admin-search-button">
-              <Search className="admin-search-icon" />
-            </button>
-          </div>
-        </div>
-
-        {/* Member List Section */}
-        <div className="member-list-section">
-          <div className="admin-section-header">
-            <h2 className="admin-section-title">탈퇴 회원 정보</h2>
-          </div>
-
-          <div className="member-list-container">
-            <div className="member-list-header">
-              <div className="header-row">
-                <div className="header-cell checkbox-cell">
-                  <input
-                    type="checkbox"
-                    checked={selectedMembers.length === withdrawnMembers.length}
-                    onChange={handleSelectAll}
-                    className="member-checkbox"
-                  />
-                </div>
-                <div className="header-cell">아이디</div>
-                <div className="header-cell">이름</div>
-                <div className="header-cell">닉네임</div>
-                <div className="header-cell">탈퇴시간</div>
-                <div className="header-cell action-cell">삭제</div>
-                <div className="header-cell action-cell">복구</div>
+            {/* Search Section */}
+            <div className="admin-search-section">
+              <div className="admin-search-container">
+                <input
+                  type="text"
+                  placeholder="검색할 회원 입력"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="admin-search-input"
+                />
+                <button className="admin-search-button">
+                  <Search className="admin-search-icon" />
+                </button>
               </div>
             </div>
 
-            <div className="member-list-body">
-              {filteredMembers.map((member) => (
-                <div key={member.id} className="member-row">
-                  <div className="member-cell checkbox-cell">
-                    <input
-                      type="checkbox"
-                      checked={selectedMembers.includes(member.id)}
-                      onChange={() => handleCheckboxChange(member.id)}
-                      className="member-checkbox"
-                    />
-                  </div>
-                  <div className="member-cell">{member.userId}</div>
-                  <div className="member-cell">{member.name}</div>
-                  <div className="member-cell">{member.nickname}</div>
-                  <div className="member-cell">{member.withdrawalDate}</div>
-                  <div className="member-cell action-cell">
-                    <button className="action-button delete-button">
-                      삭제
-                    </button>
-                  </div>
-                  <div className="member-cell action-cell">
-                    <button className="action-button restore-button">
-                      복구
-                    </button>
+            {/* Member List Section */}
+            <div className="member-list-section">
+              <div className="admin-section-header">
+                <h2 className="admin-section-title">탈퇴 회원 정보</h2>
+              </div>
+
+              <div className="member-list-container">
+                <div className="member-list-header">
+                  <div className="header-row">
+                    <div className="header-cell checkbox-cell">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedMembers.length === withdrawnMembers.length
+                        }
+                        onChange={handleSelectAll}
+                        className="member-checkbox"
+                      />
+                    </div>
+                    <div className="header-cell">아이디</div>
+                    <div className="header-cell">이름</div>
+                    <div className="header-cell">닉네임</div>
+                    <div className="header-cell">탈퇴시간</div>
+                    <div className="header-cell action-cell">삭제</div>
+                    <div className="header-cell action-cell">복구</div>
                   </div>
                 </div>
-              ))}
+
+                <div className="member-list-body">
+                  {filteredMembers.map((member) => (
+                    <div key={member.id} className="member-row">
+                      <div className="member-cell checkbox-cell">
+                        <input
+                          type="checkbox"
+                          checked={selectedMembers.includes(member.id)}
+                          onChange={() => handleCheckboxChange(member.id)}
+                          className="member-checkbox"
+                        />
+                      </div>
+                      <div className="member-cell">{member.userId}</div>
+                      <div className="member-cell">{member.name}</div>
+                      <div className="member-cell">{member.nickname}</div>
+                      <div className="member-cell">{member.withdrawalDate}</div>
+                      <div className="member-cell action-cell">
+                        <button className="action-button delete-button">
+                          삭제
+                        </button>
+                      </div>
+                      <div className="member-cell action-cell">
+                        <button className="action-button restore-button">
+                          복구
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

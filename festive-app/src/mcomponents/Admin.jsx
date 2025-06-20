@@ -14,45 +14,19 @@ import AdminCustomerReply from "./AdminCustomerReply";
 import AdminCustomerReportDetail from "./AdminCustomerReportDetail";
 import AdminApplicationDetail from "./AdminApplicationDetail";
 
-function Admin() {
-  return (
-    <>
-      <HeaderForManager />
-      <BrowserRouter>
-        <div className="admin-management-container">
-          <div className="management-content">
-            {/* Sidebar */}
-            <AdminSidebar />
-            <Routes>
-              <Route path="/admin" element={<AdminMain />} />
-              <Route path="/admin/create" element={<AdminCreateAccount />} />
-              <Route path="/admin/users" element={<AdminDeleteMember />} />
-              <Route
-                path="/admin/customer"
-                element={<AdminCustomerService />}
-              />
-              <Route path="/admin/board" element={<AdminBoardManagement />} />
-              <Route
-                path="/admin/applications"
-                element={<AdminApplicationStatus />}
-              />
+const AdminRoutes = () => (
+  <Routes>
+    <Route path="/admin" element={<AdminMain />} />
+    <Route path="/admin/create" element={<AdminCreateAccount />} />
+    <Route path="/admin/users" element={<AdminDeleteMember />} />
+    <Route path="/admin/customer" element={<AdminCustomerService />} />
+    <Route path="/admin/board" element={<AdminBoardManagement />} />
+    <Route path="/admin/applications" element={<AdminApplicationStatus />} />
+    <Route path="/admin/write" element={<AdminBoardWrite />} />
+    <Route path="/admin/reply" element={<AdminCustomerReply />} />
+    <Route path="/admin/detail" element={<AdminCustomerReportDetail />} />
+    <Route path="/admin/appDetail" element={<AdminApplicationDetail />} />
+  </Routes>
+);
 
-              <Route path="/admin/write" element={<AdminBoardWrite />} />
-              <Route path="/admin/reply" element={<AdminCustomerReply />} />
-              <Route
-                path="/admin/detail"
-                element={<AdminCustomerReportDetail />}
-              />
-              <Route
-                path="/admin/appDetail"
-                element={<AdminApplicationDetail />}
-              />
-            </Routes>
-          </div>
-        </div>
-      </BrowserRouter>
-    </>
-  );
-}
-
-export default Admin;
+export default AdminRoutes;
