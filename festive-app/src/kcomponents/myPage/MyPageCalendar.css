@@ -102,11 +102,11 @@
 }
 
 .festival-btn {
-    background: #9DC4FE;
+    background: #60a5fa;
     border: none;
-    color: 25272B;
-    padding: 6px 16px;
-    border-radius: 6px;
+    color: white;
+    padding: 8px 18px;
+    border-radius: 20px;
     font-size: 12px;
     cursor: pointer;
     transition: background 0.2s;

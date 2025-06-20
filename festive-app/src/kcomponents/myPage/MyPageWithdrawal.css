@@ -46,22 +46,19 @@
 
 .notice-box li {
   margin-bottom: 1rem;
+  font-size: 15px;
 }
 
-.agree-box {
-  margin-top: 1rem;
+.notice-box p {
+  font-size: 13px;
+  font-weight: 200px;
 }
 
 .confirm-box {
   margin-top: 1.5rem;
 }
 
-.confirm-box h2 {
-  font-size: 1.1rem;
-  font-weight: bold;
-}
-
-.confirm-box .input-group {
+.confirm-box .mypage-input-group {
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
@@ -82,4 +79,40 @@
   font-weight: bold;
   border-radius: 0.375rem;
   cursor: pointer;
+}
+
+/* CSS 스타일 개선 */
+
+.agree-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.agree-checkbox-wrapper input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #60a5fa;
+  cursor: pointer;
+  transform: scale(1.2);
+}
+
+.agree-checkbox-wrapper label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #25272B;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.agree-checkbox-wrapper:hover label {
+  color: #60a5fa;
+}
+
+.agree-checkbox-wrapper input[type="checkbox"]:checked+label {
+  color: #60a5fa;
+  font-weight: 600;
 }

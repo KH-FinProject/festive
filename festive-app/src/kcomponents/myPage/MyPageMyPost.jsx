@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './MyPageWithdrawal.css';
 import './MyPageMyPost.css';
 import MyPageSideBar from './MyPageSideBar';
+import { Navigate, useNavigate } from 'react-router-dom';
+
 
 const MyPageMyPost = () => {
     const [posts] = useState([
@@ -48,6 +50,7 @@ const MyPageMyPost = () => {
     ]);
 
     const [currentPage, setCurrentPage] = useState(1);
+    const navigate = useNavigate();
 
     return (
         <div className="page-container">
@@ -60,12 +63,14 @@ const MyPageMyPost = () => {
                     {/* Content Area */}
                     <div className="profile-header">
                         <h1>내가 쓴 게시글 및 댓글</h1>
-                        <p>내가 쓴 게시글을 확인합니다.</p>
+                        <p>내가 쓴 게시글을 목록입니다.</p>
                     </div>
                     <br />
-                    <div className="tabs">
-                        <button className="tab active">게시글 7</button>
-                        <button className="tab">댓글 22</button>
+                    <div className="mypage-tabs">
+                        <button className="mypage-tab active">게시글 7</button>
+                        <button className="mypage-tab" onClick={() => navigate('/mypage/mycomment')}>
+                            댓글 22
+                        </button>
 
                         <br />
                     </div>

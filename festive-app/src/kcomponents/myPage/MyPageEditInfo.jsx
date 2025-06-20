@@ -40,6 +40,7 @@ const MyPageEditInfo = () => {
                                 </button>
                             </div>
                         </div>
+                        <br />
 
                         <div className="password-form-row">
                             <label className="form-label">주소</label>
@@ -54,14 +55,14 @@ const MyPageEditInfo = () => {
                                 <input type="text" className="form-input full-width" placeholder="상세주소" />
                             </div>
                         </div>
-
+                        <br />
                         <div className="password-form-row">
-                            <label className="form-label">보안 확인</label>
+                            <label className="form-label">본인 확인</label>
                             <p className="form-note">*비밀번호 확인 후 정보 수정이 가능합니다.</p>
                             <input type="password" className="form-input full-width" placeholder="비밀번호" />
                         </div>
                         <br />
-                        <div className="form-buttons">
+                        <div className="password-form-buttons">
                             <button className="submit-btn">수정하기</button>
                             <button className="cancel-btn">취소하기</button>
                         </div>
@@ -116,24 +117,6 @@ const MyPageEditInfo = () => {
 
                 </section>
             </main>
-
-            <footer className="footer">
-                <div className="footer-content">
-                    <div>
-                        <h3>FESTIVE</h3>
-                        <p>서울특별시 강서구 상암산업로 99, 월드컵사북</p>
-                        <p>이메일 : rkdlsrh811@gmail.com</p>
-                    </div>
-                    <div>
-                        <p>회사소개 | 개인정보처리방침 | 이용약관</p>
-                    </div>
-                    <div>
-                        <p className="tel">1588-1234</p>
-                        <p>09:00 ~ 18:00 (토요일, 공휴일 휴무)</p>
-                        <p className="copyright">Copyright © MEDIA DESIGNER</p>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 };
