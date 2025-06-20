@@ -1,7 +1,6 @@
 import React from "react";
 import mainLogo from "../assets/festiveLogo.png";
 import "./HeaderForManager.css";
-import { Link } from "react-router-dom";
 
 function HeaderForManager() {
     return (
