@@ -5,14 +5,14 @@
   min-height: calc(100vh - 200px);
 }
 
-.chat-map-container {
+.ai-chatbot-chat-map-container {
   display: flex;
   gap: 20px;
   margin-bottom: 30px;
   height: 600px;
 }
 
-.chat-section {
+.ai-chatbot-chat-section {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -23,14 +23,14 @@
   height: 100%;
 }
 
-.chat-messages {
+.ai-chatbot-chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
   scroll-behavior: smooth;
 }
 
-.message {
+.ai-chatbot-message {
   margin-bottom: 15px;
   display: flex;
   flex-direction: column;
@@ -38,17 +38,17 @@
   max-width: 80%;
 }
 
-.message.user {
+.ai-chatbot-message.user {
   align-items: flex-end;
   margin-left: auto;
 }
 
-.message.assistant {
+.ai-chatbot-message.assistant {
   align-items: flex-start;
   margin-right: auto;
 }
 
-.message-content {
+.ai-chatbot-message-content {
   padding: 12px 16px;
   border-radius: 12px;
   font-size: 14px;
@@ -57,22 +57,22 @@
   word-break: break-word;
 }
 
-.message.user .message-content {
+.ai-chatbot-message.user .ai-chatbot-message-content {
   background-color: #60a5fa;
   color: white;
 }
 
-.message.assistant .message-content {
+.ai-chatbot-message.assistant .ai-chatbot-message-content {
   background-color: #f8f9fa;
   color: #333;
 }
 
-.message-content.loading {
+.ai-chatbot-message-content.loading {
   background-color: #e9ecef;
   color: #666;
 }
 
-.chat-input {
+.ai-chatbot-chat-input {
   padding: 15px;
   background-color: #fff;
   border-top: 1px solid #e9ecef;
@@ -80,7 +80,7 @@
   gap: 10px;
 }
 
-.chat-input textarea {
+.ai-chatbot-chat-input textarea {
   flex: 1;
   padding: 12px;
   border: 1px solid #dee2e6;
@@ -90,7 +90,7 @@
   font-size: 14px;
 }
 
-.chat-input button {
+.ai-chatbot-chat-input button {
   padding: 0 24px;
   background-color: #60a5fa;
   color: white;
@@ -101,11 +101,11 @@
   font-weight: 500;
 }
 
-.chat-input button:hover {
+.ai-chatbot-chat-input button:hover {
   background-color: #3b82f6;
 }
 
-.map-section {
+.ai-chatbot-map-section {
   flex: 1;
   border-radius: 10px;
   overflow: hidden;
@@ -114,12 +114,12 @@
   min-width: 400px;
 }
 
-#kakao-map {
+.ai-chatbot-kakao-map {
   width: 100%;
   height: 100%;
 }
 
-.panel-header {
+.ai-chatbot-panel-header {
   background: #f8f9fa;
   color: #333;
   padding: 16px 20px;
@@ -131,7 +131,7 @@
   gap: 8px;
 }
 
-.panel-header::before {
+.ai-chatbot-panel-header::before {
   content: "";
   width: 4px;
   height: 20px;
@@ -139,26 +139,26 @@
   border-radius: 2px;
 }
 
-.ai-title {
+.ai-chatbot-title {
   font-size: 20px;
   margin: 0;
   color: #333;
 }
 
-.course-info {
+.ai-chatbot-course-info {
   background-color: #fff;
   border-radius: 10px;
   padding: 30px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.course-info h3 {
+.ai-chatbot-course-info h3 {
   font-size: 20px;
   margin-bottom: 20px;
   color: #333;
 }
 
-.course-notice {
+.ai-chatbot-course-notice {
   color: #666;
   font-size: 14px;
   line-height: 1.6;
@@ -168,11 +168,11 @@
   border-radius: 8px;
 }
 
-.course-section {
+.ai-chatbot-course-section {
   margin-bottom: 30px;
 }
 
-.course-section h4 {
+.ai-chatbot-course-section h4 {
   font-size: 18px;
   color: #60a5fa;
   margin-bottom: 15px;
@@ -181,7 +181,7 @@
   gap: 10px;
 }
 
-.course-section h4::before {
+.ai-chatbot-course-section h4::before {
   content: "";
   display: inline-block;
   width: 20px;
@@ -190,30 +190,30 @@
   border-radius: 50%;
 }
 
-.course-content ul {
+.ai-chatbot-course-content ul {
   list-style: none;
   padding: 0;
 }
 
-.course-content li {
+.ai-chatbot-course-content li {
   padding: 12px 0;
   border-bottom: 1px solid #e9ecef;
   color: #333;
   font-size: 14px;
 }
 
-.course-content li:last-child {
+.ai-chatbot-course-content li:last-child {
   border-bottom: none;
 }
 
-.button-group {
+.ai-chatbot-button-group {
   display: flex;
   gap: 10px;
   justify-content: center;
   margin-top: 30px;
 }
 
-.action-btn {
+.ai-chatbot-action-btn {
   padding: 10px 40px;
   background-color: #60a5fa;
   color: white;
@@ -224,11 +224,11 @@
   cursor: pointer;
 }
 
-.action-btn:hover {
+.ai-chatbot-action-btn:hover {
   background-color: #3b82f6;
 }
 
-.number-marker {
+.ai-chatbot-number-marker {
   position: relative;
   z-index: 1;
   cursor: pointer;
@@ -236,7 +236,7 @@
   animation: markerPop 0.3s ease-out;
 }
 
-.number-marker::after {
+.ai-chatbot-number-marker::after {
   content: "";
   position: absolute;
   bottom: -8px;
@@ -258,8 +258,7 @@
   }
 }
 
-/* 경로선 스타일 */
-.route-line {
+.ai-chatbot-route-line {
   stroke: #1a73e8;
   stroke-width: 3;
   stroke-linecap: round;
@@ -275,8 +274,7 @@
   }
 }
 
-/* 여행 정보 요약 섹션 */
-.travel-summary {
+.ai-chatbot-travel-summary {
   background-color: #fff;
   border-radius: 10px;
   padding: 30px;
@@ -298,7 +296,7 @@
   }
 }
 
-.travel-summary h3 {
+.ai-chatbot-travel-summary h3 {
   color: #333;
   font-size: 20px;
   margin-bottom: 20px;
@@ -309,32 +307,31 @@
   opacity: 0;
 }
 
-/* 그리드 레이아웃 */
-.travel-info-grid {
+.ai-chatbot-travel-info-grid {
   display: flex;
   flex-direction: column;
   gap: 30px;
   margin-bottom: 30px;
 }
 
-.festival-info,
-.course-timeline,
-.transportation-info {
+.ai-chatbot-festival-info,
+.ai-chatbot-course-timeline,
+.ai-chatbot-transportation-info {
   background-color: #fff;
   padding: 0;
   animation: fadeIn 0.4s ease-out forwards;
   opacity: 0;
 }
 
-.festival-info {
+.ai-chatbot-festival-info {
   animation-delay: 0.4s;
 }
 
-.course-timeline {
+.ai-chatbot-course-timeline {
   animation-delay: 0.6s;
 }
 
-.transportation-info {
+.ai-chatbot-transportation-info {
   animation-delay: 0.8s;
 }
 
@@ -349,7 +346,7 @@
   }
 }
 
-.festival-info p {
+.ai-chatbot-festival-info p {
   margin: 10px 0;
   font-size: 16px;
   color: #333;
@@ -357,21 +354,21 @@
   opacity: 0;
 }
 
-.festival-info p:nth-child(1) {
+.ai-chatbot-festival-info p:nth-child(1) {
   animation-delay: 0.5s;
 }
-.festival-info p:nth-child(2) {
+.ai-chatbot-festival-info p:nth-child(2) {
   animation-delay: 0.6s;
 }
-.festival-info p:nth-child(3) {
+.ai-chatbot-festival-info p:nth-child(3) {
   animation-delay: 0.7s;
 }
 
-.course-timeline {
+.ai-chatbot-course-timeline {
   margin-bottom: 0;
 }
 
-.course-item {
+.ai-chatbot-course-item {
   display: flex;
   align-items: flex-start;
   margin-bottom: 20px;
@@ -380,19 +377,19 @@
   opacity: 0;
 }
 
-.course-item:nth-child(1) {
+.ai-chatbot-course-item:nth-child(1) {
   animation-delay: 0.7s;
 }
-.course-item:nth-child(2) {
+.ai-chatbot-course-item:nth-child(2) {
   animation-delay: 0.8s;
 }
-.course-item:nth-child(3) {
+.ai-chatbot-course-item:nth-child(3) {
   animation-delay: 0.9s;
 }
-.course-item:nth-child(4) {
+.ai-chatbot-course-item:nth-child(4) {
   animation-delay: 1s;
 }
-.course-item:nth-child(5) {
+.ai-chatbot-course-item:nth-child(5) {
   animation-delay: 1.1s;
 }
 
@@ -407,11 +404,11 @@
   }
 }
 
-.course-item:last-child {
+.ai-chatbot-course-item:last-child {
   margin-bottom: 0;
 }
 
-.course-item:not(:last-child)::after {
+.ai-chatbot-course-item:not(:last-child)::after {
   content: "";
   position: absolute;
   left: 15px;
@@ -433,7 +430,7 @@
   }
 }
 
-.course-number {
+.ai-chatbot-course-number {
   width: 30px;
   height: 30px;
   background-color: #60a5fa;
@@ -459,12 +456,12 @@
   }
 }
 
-.course-content {
+.ai-chatbot-course-content {
   flex: 1;
   padding: 0 15px;
 }
 
-.course-time {
+.ai-chatbot-course-time {
   font-weight: bold;
   color: #60a5fa;
   margin-bottom: 5px;
@@ -473,7 +470,7 @@
   opacity: 0;
 }
 
-.course-activity {
+.ai-chatbot-course-activity {
   color: #333;
   font-size: 16px;
   animation: fadeIn 0.3s ease-out forwards;
@@ -481,11 +478,11 @@
   opacity: 0;
 }
 
-.transportation-info {
+.ai-chatbot-transportation-info {
   margin-bottom: 0;
 }
 
-.transportation-info p {
+.ai-chatbot-transportation-info p {
   margin: 10px 0;
   font-size: 16px;
   color: #333;
@@ -493,15 +490,14 @@
   opacity: 0;
 }
 
-.transportation-info p:nth-child(1) {
+.ai-chatbot-transportation-info p:nth-child(1) {
   animation-delay: 0.9s;
 }
-.transportation-info p:nth-child(2) {
+.ai-chatbot-transportation-info p:nth-child(2) {
   animation-delay: 1s;
 }
 
-/* 저장/공유 버튼 */
-.action-buttons {
+.ai-chatbot-action-buttons {
   display: flex;
   gap: 15px;
   margin-top: 30px;
@@ -511,7 +507,7 @@
   opacity: 0;
 }
 
-.action-btn {
+.ai-chatbot-action-btn {
   padding: 12px 24px;
   border: none;
   border-radius: 8px;
@@ -525,40 +521,38 @@
   opacity: 0;
 }
 
-.action-btn:hover {
+.ai-chatbot-action-btn:hover {
   background-color: #3b82f6;
   transform: translateY(-2px);
 }
 
-.save-btn {
+.ai-chatbot-save-btn {
   animation-delay: 1.3s;
 }
 
-.share-btn {
+.ai-chatbot-share-btn {
   animation-delay: 1.4s;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
-  .travel-info-grid {
+  .ai-chatbot-travel-info-grid {
     gap: 20px;
   }
 }
 
-strong {
+.ai-chatbot-strong {
   color: #60a5fa;
   margin-right: 8px;
 }
 
-/* 마커 스타일 통일 */
-.number-marker {
+.ai-chatbot-number-marker {
   background-color: #60a5fa !important;
 }
 
-.course-number {
+.ai-chatbot-course-number {
   background-color: #60a5fa;
 }
 
-.course-time {
+.ai-chatbot-course-time {
   color: #60a5fa;
 }
