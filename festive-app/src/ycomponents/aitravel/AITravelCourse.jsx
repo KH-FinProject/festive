@@ -5,32 +5,12 @@ import { useNavigate } from "react-router-dom";
 import "./AITravelCourse.css";
 import AItitle from "./AItitle";
 import ScrollToTop from "./ScrollToTop";
+import AISideMenu from "./AISideMenu";
 import image9 from "../../assets/temp/image 9.png";
 import image10 from "../../assets/temp/image 10.png";
 import image11 from "../../assets/temp/image 11.png";
 import image12 from "../../assets/temp/image 12.png";
 import image13 from "../../assets/temp/image 13.png";
-
-function SideMenu({ activeMenu, onMenuClick }) {
-  return (
-    <div className="side-menu">
-      <ul>
-        <li
-          className={activeMenu === "share" ? "active" : ""}
-          onClick={() => onMenuClick("share")}
-        >
-          여행코스 공유
-        </li>
-        <li
-          className={activeMenu === "myTravel" ? "active" : ""}
-          onClick={() => onMenuClick("myTravel")}
-        >
-          나만의 여행코스
-        </li>
-      </ul>
-    </div>
-  );
-}
 
 const AITravelCourse = () => {
   const [activeMenu, setActiveMenu] = useState("share");
@@ -177,7 +157,7 @@ const AITravelCourse = () => {
       </div>
 
       <div className="ai-travel__content-wrapper">
-        <SideMenu activeMenu={activeMenu} onMenuClick={handleMenuClick} />
+        <AISideMenu activeMenu={activeMenu} onMenuClick={handleMenuClick} />
 
         <div className="ai-travel__main-content">
           <div className="ai-travel__course-section">
