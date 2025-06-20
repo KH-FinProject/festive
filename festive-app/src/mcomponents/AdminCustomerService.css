@@ -88,7 +88,7 @@
   gap: 8px;
 }
 
-.action-btn {
+.admin-action-btn {
   padding: 8px 16px;
   border: 1px solid #dee2e6;
   border-radius: 6px;
@@ -98,32 +98,32 @@
   background: white;
 }
 
-.view-btn {
+.admin-view-btn {
   color: #6c757d;
   border-color: #dee2e6;
 }
 
-.view-btn:hover {
+.admin-view-btn:hover {
   background-color: #f8f9fa;
   border-color: #adb5bd;
 }
 
-.reply-btn {
+.admin-reply-btn {
   color: #4a90e2;
   border-color: #4a90e2;
 }
 
-.reply-btn:hover {
+.admin-reply-btn:hover {
   background-color: #4a90e2;
   color: white;
 }
 
-.process-btn {
+.admin-process-btn {
   color: #28a745;
   border-color: #28a745;
 }
 
-.process-btn:hover {
+.admin-process-btn:hover {
   background-color: #28a745;
   color: white;
 }
@@ -162,6 +162,24 @@
 .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 신고 디테일 버튼 */
+.report-action-btn {
+  flex: 1;
+  padding: 4px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.report-reply-btn {
+  flex: 1;
+  color: #4a90e2;
+  border-color: #4a90e2;
 }
 
 /* 반응형 디자인 */

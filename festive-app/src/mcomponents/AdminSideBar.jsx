@@ -1,5 +1,5 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
+import "./AdminCommon.css";
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -8,70 +8,71 @@ const AdminSidebar = () => {
     <aside className="management-sidebar">
       <div className="sidebar-section">
         <h3 className="sidebar-title">관리자 메인</h3>
-        <Link
+        <NavLink
           to="/admin"
-          className={`sidebar-item ${
-            location.pathname === "/admin" ? "active" : "inactive"
-          }`}
+          end
+          className={({ isActive }) =>
+            `sidebar-item ${isActive ? "active" : "inactive"}`
+          }
         >
           <span>메인 대시보드</span>
-        </Link>
+        </NavLink>
       </div>
 
       <div className="sidebar-section">
         <h3 className="sidebar-title">사용자 관리</h3>
-        <Link
+        <NavLink
           to="/admin/create"
-          className={`sidebar-item ${
-            location.pathname === "/admin/create" ? "active" : "inactive"
-          }`}
+          className={({ isActive }) =>
+            `sidebar-item ${isActive ? "active" : "inactive"}`
+          }
         >
           <span>관리자 계정생성</span>
-        </Link>
-        <Link
+        </NavLink>
+        <NavLink
           to="/admin/users"
-          className={`sidebar-item ${
-            location.pathname === "/admin/users" ? "active" : "inactive"
-          }`}
+          className={({ isActive }) =>
+            `sidebar-item ${isActive ? "active" : "inactive"}`
+          }
         >
           <span>회원 탈퇴 및 삭제</span>
-        </Link>
+        </NavLink>
       </div>
 
       <div className="sidebar-section">
         <h3 className="sidebar-title">콘텐츠 관리</h3>
-        <Link
+        <NavLink
           to="/admin/board"
-          className={`sidebar-item ${
-            location.pathname === "/admin/board" ? "active" : "inactive"
-          }`}
+          className={({ isActive }) =>
+            `sidebar-item ${isActive ? "active" : "inactive"}`
+          }
         >
           <span>게시물 관리</span>
-        </Link>
+        </NavLink>
       </div>
 
       <div className="sidebar-section">
         <h3 className="sidebar-title">고객 관리</h3>
-        <Link
+        <NavLink
           to="/admin/customer"
-          className={`sidebar-item ${
-            location.pathname === "/admin/customer" ? "active" : "inactive"
-          }`}
+          className={({ isActive }) =>
+            `sidebar-item ${isActive ? "active" : "inactive"}`
+          }
         >
           <span>고객센터 관리</span>
-        </Link>
+        </NavLink>
       </div>
 
       <div className="sidebar-section">
         <h3 className="sidebar-title">푸드트럭 및 플리마켓 신청 현황</h3>
-        <Link
+        <NavLink
           to="/admin/applications"
-          className={`sidebar-item ${
-            location.pathname === "/admin/applications" ? "active" : "inactive"
-          }`}
+          className={({ isActive }) =>
+            `sidebar-item ${isActive ? "active" : "inactive"}`
+          }
         >
           <span>신청 현황</span>
-        </Link>
+        </NavLink>
       </div>
     </aside>
   );

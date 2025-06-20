@@ -142,31 +142,31 @@ const AdminDeleteMember = () => {
   return (
     <div className="content">
       {/* Main Content */}
-      <main className="management-main">
-        <div className="page-header">
-          <h1 className="page-title">회원 탈퇴 및 삭제</h1>
+      <main className="admin-main">
+        <div className="admin-header">
+          <h1 className="admin-title">회원 탈퇴 및 삭제</h1>
         </div>
 
         {/* Search Section */}
-        <div className="search-section">
-          <div className="search-container">
+        <div className="admin-search-section">
+          <div className="admin-search-container">
             <input
               type="text"
               placeholder="검색할 회원 입력"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
+              className="admin-search-input"
             />
-            <button className="search-button">
-              <Search className="search-icon" />
+            <button className="admin-search-button">
+              <Search className="admin-search-icon" />
             </button>
           </div>
         </div>
 
         {/* Member List Section */}
         <div className="member-list-section">
-          <div className="section-header">
-            <h2 className="section-title">탈퇴 회원 정보</h2>
+          <div className="admin-section-header">
+            <h2 className="admin-section-title">탈퇴 회원 정보</h2>
           </div>
 
           <div className="member-list-container">

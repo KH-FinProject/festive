@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./AdminBoardManagement.css";
 import "./AdminCommon.css";
+import { Link, useLocation } from "react-router-dom";
 
 const AdminBoardManagement = () => {
   const [posts, setPosts] = useState([
@@ -108,9 +109,9 @@ const AdminBoardManagement = () => {
   };
 
   return (
-    <main className="management-main">
-      <div className="page-header">
-        <h1 className="page-title">게시판 관리</h1>
+    <main className="admin-main">
+      <div className="admin-header">
+        <h1 className="admin-title">게시판 관리</h1>
       </div>
 
       <div className="board-content">
@@ -156,7 +157,9 @@ const AdminBoardManagement = () => {
 
         <div className="board-actions">
           <div className="action-buttons">
-            <button className="btn-primary">공지 작성</button>
+            <Link to="/admin/write" className="btn-notice-write">
+              공지 작성
+            </Link>
             <button className="btn-secondary">삭제하기</button>
           </div>
         </div>

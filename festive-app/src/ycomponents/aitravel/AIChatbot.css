@@ -1,136 +1,564 @@
 .ai-chatbot-container {
-  width: 100%;
-  height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
-  box-sizing: border-box;
-  background-color: #f5f5f5;
+  min-height: calc(100vh - 200px);
 }
 
-.chat-interface {
+.chat-map-container {
   display: flex;
   gap: 20px;
-  height: calc(100vh - 200px);
-  margin-top: 20px;
+  margin-bottom: 30px;
+  height: 600px;
 }
 
-.map-container {
-  flex: 1;
-  height: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.chat-container {
+.chat-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  border-radius: 10px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
 }
 
-.messages {
+.chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  scroll-behavior: smooth;
 }
 
 .message {
-  margin-bottom: 16px;
+  margin-bottom: 15px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  max-width: 80%;
 }
 
 .message.user {
   align-items: flex-end;
+  margin-left: auto;
 }
 
-.message.bot {
+.message.assistant {
   align-items: flex-start;
+  margin-right: auto;
 }
 
 .message-content {
-  max-width: 70%;
   padding: 12px 16px;
   border-radius: 12px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .message.user .message-content {
-  background-color: #007aff;
+  background-color: #60a5fa;
   color: white;
 }
 
-.message.bot .message-content {
-  background-color: #e9ecef;
-  color: #212529;
-}
-
-.input-container {
-  display: flex;
-  padding: 16px;
+.message.assistant .message-content {
   background-color: #f8f9fa;
-  border-top: 1px solid #dee2e6;
+  color: #333;
 }
 
-.input-container input {
+.message-content.loading {
+  background-color: #e9ecef;
+  color: #666;
+}
+
+.chat-input {
+  padding: 15px;
+  background-color: #fff;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input textarea {
   flex: 1;
-  padding: 12px 16px;
+  padding: 12px;
   border: 1px solid #dee2e6;
-  border-radius: 24px;
-  margin-right: 12px;
+  border-radius: 8px;
+  resize: none;
+  height: 45px;
   font-size: 14px;
-  outline: none;
 }
 
-.input-container button {
+.chat-input button {
   padding: 0 24px;
-  background-color: #007aff;
+  background-color: #60a5fa;
   color: white;
   border: none;
-  border-radius: 24px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.input-container button:hover {
-  background-color: #0056b3;
+.chat-input button:hover {
+  background-color: #3b82f6;
 }
 
-.loading-dots {
+.map-section {
+  flex: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  min-width: 400px;
+}
+
+#kakao-map {
+  width: 100%;
+  height: 100%;
+}
+
+.panel-header {
+  background: #f8f9fa;
+  color: #333;
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  border-bottom: 1px solid #e0e0e0;
   display: flex;
-  gap: 4px;
-  padding: 8px;
+  align-items: center;
+  gap: 8px;
 }
 
-.loading-dots span {
-  width: 8px;
-  height: 8px;
-  background-color: #adb5bd;
+.panel-header::before {
+  content: "";
+  width: 4px;
+  height: 20px;
+  background: #0066cc;
+  border-radius: 2px;
+}
+
+.ai-title {
+  font-size: 20px;
+  margin: 0;
+  color: #333;
+}
+
+.course-info {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.course-info h3 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.course-notice {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.course-section {
+  margin-bottom: 30px;
+}
+
+.course-section h4 {
+  font-size: 18px;
+  color: #60a5fa;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-section h4::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: #60a5fa;
   border-radius: 50%;
-  animation: bounce 1.4s infinite ease-in-out;
 }
 
-.loading-dots span:nth-child(1) {
-  animation-delay: -0.32s;
+.course-content ul {
+  list-style: none;
+  padding: 0;
 }
 
-.loading-dots span:nth-child(2) {
-  animation-delay: -0.16s;
+.course-content li {
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+  color: #333;
+  font-size: 14px;
 }
 
-@keyframes bounce {
-  0%,
-  80%,
+.course-content li:last-child {
+  border-bottom: none;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.action-btn {
+  padding: 10px 40px;
+  background-color: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.action-btn:hover {
+  background-color: #3b82f6;
+}
+
+.number-marker {
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  transform-origin: center bottom;
+  animation: markerPop 0.3s ease-out;
+}
+
+.number-marker::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #1a73e8;
+}
+
+@keyframes markerPop {
+  0% {
+    transform: scale(0) translateY(20px);
+    opacity: 0;
+  }
   100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 경로선 스타일 */
+.route-line {
+  stroke: #1a73e8;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  stroke-dasharray: 5, 5;
+  animation: dashedLine 1s linear infinite;
+}
+
+@keyframes dashedLine {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* 여행 정보 요약 섹션 */
+.travel-summary {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.6s ease-out forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.travel-summary h3 {
+  color: #333;
+  font-size: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #60a5fa;
+  animation: fadeIn 0.4s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+/* 그리드 레이아웃 */
+.travel-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.festival-info,
+.course-timeline,
+.transportation-info {
+  background-color: #fff;
+  padding: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.festival-info {
+  animation-delay: 0.4s;
+}
+
+.course-timeline {
+  animation-delay: 0.6s;
+}
+
+.transportation-info {
+  animation-delay: 0.8s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.festival-info p {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.festival-info p:nth-child(1) {
+  animation-delay: 0.5s;
+}
+.festival-info p:nth-child(2) {
+  animation-delay: 0.6s;
+}
+.festival-info p:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+.course-timeline {
+  margin-bottom: 0;
+}
+
+.course-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  position: relative;
+  animation: slideIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.course-item:nth-child(1) {
+  animation-delay: 0.7s;
+}
+.course-item:nth-child(2) {
+  animation-delay: 0.8s;
+}
+.course-item:nth-child(3) {
+  animation-delay: 0.9s;
+}
+.course-item:nth-child(4) {
+  animation-delay: 1s;
+}
+.course-item:nth-child(5) {
+  animation-delay: 1.1s;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.course-item:last-child {
+  margin-bottom: 0;
+}
+
+.course-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 30px;
+  bottom: -10px;
+  width: 2px;
+  background-color: #60a5fa;
+  animation: growLine 0.6s ease-out forwards;
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+@keyframes growLine {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.course-number {
+  width: 30px;
+  height: 30px;
+  background-color: #60a5fa;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 15px;
+  position: relative;
+  z-index: 1;
+  animation: popIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  transform: scale(0);
+}
+
+@keyframes popIn {
+  from {
     transform: scale(0);
   }
-  40% {
+  to {
     transform: scale(1);
   }
+}
+
+.course-content {
+  flex: 1;
+  padding: 0 15px;
+}
+
+.course-time {
+  font-weight: bold;
+  color: #60a5fa;
+  margin-bottom: 5px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.course-activity {
+  color: #333;
+  font-size: 16px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.transportation-info {
+  margin-bottom: 0;
+}
+
+.transportation-info p {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.transportation-info p:nth-child(1) {
+  animation-delay: 0.9s;
+}
+.transportation-info p:nth-child(2) {
+  animation-delay: 1s;
+}
+
+/* 저장/공유 버튼 */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  justify-content: center;
+  animation: fadeIn 0.4s ease-out forwards;
+  animation-delay: 1.2s;
+  opacity: 0;
+}
+
+.action-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+  background-color: #60a5fa;
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.action-btn:hover {
+  background-color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.save-btn {
+  animation-delay: 1.3s;
+}
+
+.share-btn {
+  animation-delay: 1.4s;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .travel-info-grid {
+    gap: 20px;
+  }
+}
+
+strong {
+  color: #60a5fa;
+  margin-right: 8px;
+}
+
+/* 마커 스타일 통일 */
+.number-marker {
+  background-color: #60a5fa !important;
+}
+
+.course-number {
+  background-color: #60a5fa;
+}
+
+.course-time {
+  color: #60a5fa;
 }

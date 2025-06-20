@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./AdminCustomerService.css";
+import { useNavigate } from "react-router-dom";
 
 const AdminCustomerService = () => {
   const [inquiries] = useState([
@@ -41,12 +42,19 @@ const AdminCustomerService = () => {
   const [currentInquiryPage, setCurrentInquiryPage] = useState(1);
   const [currentApplicationPage, setCurrentApplicationPage] = useState(1);
 
+  const navigate = useNavigate();
   const handleReply = (id) => {
     console.log("답변하기:", id);
+    navigate("/admin/reply");
   };
 
   const handleProcess = (id) => {
     console.log("신고 처리:", id);
+  };
+
+  const handleReportDetail = (id) => {
+    console.log("내용보기:", id);
+    navigate("/admin/detail");
   };
 
   const renderPagination = (currentPage, setCurrentPage) => {
@@ -70,9 +78,9 @@ const AdminCustomerService = () => {
   };
 
   return (
-    <main className="management-main">
-      <div className="page-header">
-        <h1 className="page-title">고객센터 관리</h1>
+    <main className="admin-main">
+      <div className="admin-header">
+        <h1 className="admin-title">고객센터 관리</h1>
       </div>
       <div className="cs-content-wrapper">
         {/* 문의내역 섹션 */}
@@ -91,9 +99,11 @@ const AdminCustomerService = () => {
                   <span className="inquiry-date">{inquiry.date}</span>
                 </div>
                 <div className="inquiry-actions">
-                  <button className="action-btn view-btn">상세</button>
+                  <button className="admin-action-btn admin-view-btn">
+                    삭제
+                  </button>
                   <button
-                    className="action-btn reply-btn"
+                    className="admin-action-btn admin-reply-btn"
                     onClick={() => handleReply(inquiry.id)}
                   >
                     답변하기
@@ -122,12 +132,17 @@ const AdminCustomerService = () => {
                   <span className="report-date">{application.date}</span>
                 </div>
                 <div className="report-actions">
-                  <button className="action-btn view-btn">내용보기</button>
                   <button
-                    className="action-btn process-btn"
+                    className="admin-action-btn admin-view-btn"
+                    onClick={() => handleReportDetail(application.id)}
+                  >
+                    내용보기
+                  </button>
+                  <button
+                    className="admin-action-btn admin-process-btn"
                     onClick={() => handleProcess(application.id)}
                   >
-                    신고 처리
+                    신고 취소
                   </button>
                 </div>
               </div>

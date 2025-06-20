@@ -1,12 +1,12 @@
 .wagle-header {
-  width: 1160px;
+  width: 100%;
+  max-width: 1160px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   box-sizing: border-box;
-  padding-top: 40px;
-  padding-bottom: 40px;
+  padding: 40px 20px;
 }
 
 .wagle-main-title {
@@ -61,6 +61,7 @@
   text-underline-offset: 2px;
   transition: color 0.2s;
 }
+
 .wagle-location-link:hover {
   color: #222;
 }
@@ -86,17 +87,27 @@
   letter-spacing: -0.3px;
 }
 
+@media (max-width: 1200px) {
+  .wagle-header {
+    padding: 30px 20px;
+  }
+}
+
 @media (max-width: 768px) {
-  .ai-title-container {
-    padding: 30px 15px;
-    margin-bottom: 30px;
+  .wagle-header {
+    padding: 20px 15px;
   }
 
-  .ai-title-main {
-    font-size: 36px;
+  .wagle-main-title {
+    font-size: 28px;
   }
 
-  .ai-title-subtitle {
-    font-size: 16px;
+  .wagle-sub-title {
+    font-size: 13px;
+  }
+
+  .wagle-location {
+    font-size: 14px;
+    margin-top: 25px;
   }
 }
