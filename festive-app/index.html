@@ -1,37 +1,48 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Festive</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
 
-      html, body {
-        width: 100%;
-        height: 100%;
-        overflow-x: hidden; /* 가로 스크롤 방지 */
-      }
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" href="/logo.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Festive</title>
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" />
 
-      body {
-        font-family: 'Pretendard Variable', 'Noto Sans KR', sans-serif;
-        font-weight: 650;
-      }
+  <!-- fullcalendar 지현이가 추가함 -->
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/common@6.1.8/main.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css" rel="stylesheet" />
 
-      #root {
-        width: 100%;
-        min-height: 100vh;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      /* 가로 스크롤 방지 */
+    }
+
+    body {
+      font-family: 'Pretendard Variable', 'Noto Sans KR', sans-serif;
+      font-weight: 650;
+    }
+
+    #root {
+      width: 100%;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

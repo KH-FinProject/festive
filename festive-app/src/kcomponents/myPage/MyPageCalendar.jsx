@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './MyPageWithdrawal.css';
 import './MyPageCalendar.css';
 import MyPageSideBar from './MyPageSideBar';
+import Pagination from './Pagination';
 
 const FestiveWebsite = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -50,6 +51,8 @@ const FestiveWebsite = () => {
                                 </div>
                             ))}
                         </div>
+
+                        <Pagination />
 
                         {/* Pagination */}
                         <div className="pagination">

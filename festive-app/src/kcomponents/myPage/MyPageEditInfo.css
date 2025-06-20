@@ -59,8 +59,13 @@
     display: block;
     font-weight: 500;
     color: #333;
-    margin-bottom: 8px;
+    margin-bottom: 0px;
     font-size: 14px;
+}
+
+.info-form-row {
+    display: flex;
+    flex-direction: column;
 }
 
 .form-row {
@@ -228,8 +233,8 @@
     padding: 12px 20px;
     border: none;
     border-radius: 6px;
-    background: #9dc4fe;
-    color: #25272B;
+    background: #60a5fa;
+    color: white;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
@@ -261,8 +266,8 @@
 }
 
 .modal-button.primary {
-    background: #9dc4fe;
-    color: #25272B;
+    background: #60a5fa;
+    color: white;
 }
 
 .modal-button.primary:hover {

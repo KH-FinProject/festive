@@ -3,6 +3,7 @@ import { Search, Sun, Star, MessageCircle } from 'lucide-react';
 import './MyPageWithdrawal.css';
 import './MyPageMyComment.css';
 import MyPageSideBar from './MyPageSideBar';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const MyPageMyComment = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -50,6 +51,8 @@ const MyPageMyComment = () => {
         }
     ];
 
+    const navigate = useNavigate();
+
     return (
         <div className="page-container">
 
@@ -61,29 +64,33 @@ const MyPageMyComment = () => {
                     {/* Content Area */}
                     <div className="profile-header">
                         <h1>내가 쓴 게시글 및 댓글</h1>
-                        <p>내가 쓴 게시글을 확인합니다.</p>
+                        <p>내가 쓴 댓글 목록입니다.</p>
                     </div>
+                    <br />
+                    <div className="mypage-tabs">
+                        <button className="mypage-tab" onClick={() => navigate('/mypage/mypost')}>
+                            게시글 7
+                        </button>
+                        <button className="mypage-tab active">댓글 22</button>
 
-                    <div className="tabs">
-                        <button className="tab active">게시글 7</button>
-                        <button className="tab">댓글 22</button>
+                        <br />
                     </div>
                     <br />
                     {/* comments List */}
-                    <div className="comments-list">
+                    <div className="mypage-comments-list">
                         {posts.map((post) => (
-                            <div key={post.id} className="comment-item">
-                                <div className="comment-content">
-                                    <div className="comment-avatar">이</div>
-                                    <div className="comment-details">
-                                        <div className="comment-meta">
-                                            <span className="comment-author">{post.author}</span>
-                                            <span className="comment-date">{post.date}</span>
+                            <div key={post.id} className="mypage-comment-item">
+                                <div className="mypage-comment-content">
+                                    <div className="mypage-comment-avatar">이</div>
+                                    <div className="mypage-comment-details">
+                                        <div className="mypage-comment-meta">
+                                            <span className="mypage-comment-author">{post.author}</span>
+                                            <span className="mypage-comment-date">{post.date}</span>
                                         </div>
-                                        <p className="comment-text">{post.content}</p>
-                                        <div className="comment-actions">
-                                            <button className="comment-btn">수정</button>
-                                            <button className="comment-btn">삭제</button>
+                                        <p className="mypage-comment-text">{post.content}</p>
+                                        <div className="mypage-comment-actions">
+                                            <button className="mypage-comment-btn">수정</button>
+                                            <button className="mypage-comment-btn">삭제</button>
                                         </div>
                                     </div>
                                 </div>

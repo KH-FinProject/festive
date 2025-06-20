@@ -113,27 +113,27 @@
 }
 
 /* comments List Styles */
-.comments-list {
+.mypage-comments-list {
     border-top: 1px solid #e5e7eb;
 }
 
-.comment-item {
-    padding: 1.5rem;
+.mypage-comment-item {
+    padding: 1rem;
     border-bottom: 1px solid #e5e7eb;
     transition: background-color 0.2s;
 }
 
-.comment-item:hover {
+.mypage-comment-item:hover {
     background-color: #f9fafb;
 }
 
-.comment-content {
+.mypage-comment-content {
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
 }
 
-.comment-avatar {
+.mypage-comment-avatar {
     width: 32px;
     height: 32px;
     background-color: #9DC4FE;
@@ -146,61 +146,66 @@
     font-weight: 500;
 }
 
-.comment-details {
+.mypage-comment-details {
     flex: 1;
 }
 
-.comment-meta {
+.mypage-comment-meta {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.25rem;
 }
 
-.comment-author {
+.mypage-comment-author {
     font-weight: 500;
     color: #111827;
 }
 
-.comment-date {
+.mypage-comment-date {
     color: #6b7280;
     font-size: 14px;
 }
 
-.comment-text {
+.mypage-comment-text {
     color: #374151;
     font-size: 14px;
     margin-bottom: 0.5rem;
     line-height: 1.5;
 }
 
-.comment-actions {
+.mypage-comment-actions {
     display: flex;
     align-items: center;
+    justify-content: right;
     gap: 1rem;
     color: #6b7280;
     font-size: 14px;
 }
 
-.comment-action {
+.mypage-comment-action {
     display: flex;
     align-items: center;
     gap: 0.25rem;
 }
 
-.comment-action-icon {
+.mypage-comment-action-icon {
     width: 16px;
     height: 16px;
 }
 
-.comment-btn {
+.mypage-comment-btn {
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 20px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s;
     border: 1px solid #9DC4FE;
     background-color: white;
+}
+
+.mypage-comment-btn:hover {
+    background-color: rgb(234, 234, 234);
 }
 
 /* Pagination */

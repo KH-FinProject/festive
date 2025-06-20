@@ -46,15 +46,22 @@ const MyPageWithdrawal = () => {
               <li><strong>탈퇴 후 일정 기간 동일 계정으로 재가입이 제한될 수 있습니다.</strong></li>
             </ol>
             <div className="agree-box">
-              <input type="checkbox" id="agree" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-              <label htmlFor="agree">동의</label>
+              <div className="agree-checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  id="agree"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                />
+                <label htmlFor="agree">위 내용에 동의합니다</label>
+              </div>
             </div>
           </div>
 
           <div className="confirm-box">
-            <h2>본인확인</h2>
-            <p>*비밀번호를 확인 후 회원 탈퇴가 가능합니다.</p>
-            <div className="input-group">
+            <h4>본인확인</h4>
+            <h5>*비밀번호를 확인 후 회원 탈퇴가 가능합니다.</h5>
+            <div className="mypage-input-group">
               <input
                 type="password"
                 placeholder="비밀번호"
