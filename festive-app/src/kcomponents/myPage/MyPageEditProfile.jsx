@@ -28,7 +28,7 @@ const MyPageEditProfile = () => {
                 <section className="profile-main">
                     <div className="profile-header">
                         <h1>프로필 수정</h1>
-                        <p>현재 비밀번호가 일치하는 경우 새 비밀번호로 변경할 수 있습니다.</p>
+                        <p>프로필 사진 또는 닉네임을 수정할 수 있습니다.</p>
                     </div>
 
                     <div className="profile-content">
@@ -42,9 +42,9 @@ const MyPageEditProfile = () => {
                         </button>
 
                         <div className="form-section">
-                            <div className="form-row">
+                            <div className="mypage-form-row">
                                 <label>닉네임</label>
-                                <div className="input-group">
+                                <div className="mypage-input-group">
                                     <input
                                         type="text"
                                         name="name"

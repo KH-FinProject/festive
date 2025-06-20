@@ -4,6 +4,13 @@ import './FestiveCalendar.css';
 import { useEffect, useState } from 'react';
 import Title from './Title.jsx';
 
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid'; // 월간 보기
+import interactionPlugin from '@fullcalendar/interaction'; // 클릭 같은 기능 추가용
+
+// import '@fullcalendar/common/main.css';
+// import '@fullcalendar/daygrid/main.css';
+
 const FestiveCalendar = () => {
     // 축제 목록 상태
     const [festivals, setFestivals] = useState([]);
@@ -116,6 +123,12 @@ const FestiveCalendar = () => {
         // navigate(`/festival/${festivalId}`);
     };
 
+    // 이벤트 목록 샘플
+    const events = [
+        { title: '면접 연습', date: '2025-06-25' },
+        { title: '팀 회의', date: '2025-06-27' },
+    ];
+
     return (
         <div className="app-container">
 
@@ -129,18 +142,18 @@ const FestiveCalendar = () => {
                         <h2>일정 관리</h2>
                     </div>
                     <div className="calendar-container">
+
                         {/* FullCalendar API가 들어갈 자리 */}
-                        <div className="fullcalendar-placeholder">
-                            <p>FullCalendar API 연동 예정</p>
-                            <div className="calendar-mock">
-                                <div className="calendar-grid">
-                                    {[...Array(35)].map((_, i) => (
-                                        <div key={i} className="calendar-day">
-                                            {i > 6 && i < 32 ? i - 6 : ''}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                        <div style={{ width: '90%', margin: '30px auto' }}>
+                            <FullCalendar
+                                plugins={[dayGridPlugin, interactionPlugin]}
+                                initialView="dayGridMonth"
+                                locale="ko" // 한국어 달력 (원하면 locale 추가)
+                                events={events}
+                                dateClick={(info) => {
+                                    alert(`날짜를 클릭했습니다: ${info.dateStr}`);
+                                }}
+                            />
                         </div>
                     </div>
                 </aside>

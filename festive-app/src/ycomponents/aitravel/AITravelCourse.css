@@ -35,62 +35,6 @@
   position: relative;
 }
 
-.side-menu {
-  width: 200px;
-  position: absolute;
-  left: -240px;
-  top: 50px;
-}
-
-.side-menu .menu-title {
-  font-size: 20px;
-  font-weight: bold;
-  color: #333;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #eee;
-  margin-bottom: 15px;
-}
-
-.side-menu ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.side-menu li {
-  padding: 12px 0;
-  cursor: pointer;
-  margin-bottom: 16px;
-  font-size: 1.2rem;
-  font-weight: normal;
-  color: #333;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.side-menu li::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 2px;
-  width: 0;
-  background-color: #333;
-  transition: width 0.3s ease;
-}
-
-.side-menu li:hover::after {
-  width: 100%;
-}
-
-.side-menu li.active {
-  color: #333;
-}
-
-.side-menu li.active::after {
-  width: 100%;
-}
-
 .ai-travel__main-content {
   width: 100%;
 }
@@ -275,12 +219,6 @@
 }
 
 @media (max-width: 1440px) {
-  .side-menu {
-    position: static;
-    width: 200px;
-    padding-top: 50px;
-  }
-
   .ai-travel__content-wrapper {
     width: 100%;
     max-width: 1160px;
@@ -292,12 +230,6 @@
     max-width: 1160px;
   }
 
-  .side-menu li {
-    font-size: 1.1rem;
-    padding: 8px 0;
-    margin-bottom: 12px;
-  }
-
   .ai-travel__section-header h2 {
     font-size: 1.6rem;
   }
@@ -307,28 +239,6 @@
   .ai-travel__content-wrapper {
     flex-direction: column;
     padding: 0 20px;
-  }
-
-  .side-menu {
-    width: 100%;
-    position: static;
-    padding-top: 30px;
-  }
-
-  .side-menu ul {
-    display: flex;
-    gap: 20px;
-  }
-
-  .side-menu li {
-    flex: 1;
-    text-align: center;
-    margin-bottom: 0;
-    font-size: 1rem;
-  }
-
-  .side-menu li::after {
-    bottom: -4px;
   }
 
   .ai-travel__course-grid {
