@@ -482,17 +482,17 @@ const AIChatbot = () => {
     <>
       <AItitle currentPage="AI 여행코스 추천" />
       <div className="ai-chatbot-container">
-        <div className="chat-map-container">
-          <div className="chat-section">
-            <div className="chat-messages" ref={chatContainerRef}>
+        <div className="ai-chatbot-chat-map-container">
+          <div className="ai-chatbot-chat-section">
+            <div className="ai-chatbot-chat-messages" ref={chatContainerRef}>
               {messages.map((message, index) => (
                 <div
                   key={index}
-                  className={`message ${
+                  className={`ai-chatbot-message ${
                     message.role === "user" ? "user" : "assistant"
                   }`}
                 >
-                  <div className="message-content">
+                  <div className="ai-chatbot-message-content">
                     {message.content.split("\n").map((line, i) => (
                       <p key={i}>{line}</p>
                     ))}
@@ -500,8 +500,8 @@ const AIChatbot = () => {
                 </div>
               ))}
               {currentStreamMessage && (
-                <div className="message assistant">
-                  <div className="message-content">
+                <div className="ai-chatbot-message assistant">
+                  <div className="ai-chatbot-message-content">
                     {currentStreamMessage.split("\n").map((line, i) => (
                       <p key={i}>{line}</p>
                     ))}
@@ -509,15 +509,15 @@ const AIChatbot = () => {
                 </div>
               )}
               {loading && !currentStreamMessage && (
-                <div className="message assistant">
-                  <div className="message-content loading">
+                <div className="ai-chatbot-message assistant">
+                  <div className="ai-chatbot-message-content loading">
                     목적 여행 계획을 생성하는중...
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="chat-input">
+            <div className="ai-chatbot-chat-input">
               <textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
@@ -531,9 +531,10 @@ const AIChatbot = () => {
             </div>
           </div>
 
-          <div className="map-section">
+          <div className="ai-chatbot-map-section">
             <div
               id="kakao-map"
+              className="ai-chatbot-kakao-map"
               style={{
                 width: "100%",
                 height: "100%",
@@ -545,51 +546,58 @@ const AIChatbot = () => {
 
         {/* 여행 정보 요약 섹션 */}
         {travelInfo.festival.name && (
-          <div className="travel-summary">
-            <div className="travel-info-grid">
-              <div className="festival-info">
+          <div className="ai-chatbot-travel-summary">
+            <div className="ai-chatbot-travel-info-grid">
+              <div className="ai-chatbot-festival-info">
                 <h3>축제 정보</h3>
                 <p>
-                  <strong>축제명:</strong> {travelInfo.festival.name}
+                  <strong className="ai-chatbot-strong">축제명:</strong>{" "}
+                  {travelInfo.festival.name}
                 </p>
                 <p>
-                  <strong>기간:</strong> {travelInfo.festival.period}
+                  <strong className="ai-chatbot-strong">기간:</strong>{" "}
+                  {travelInfo.festival.period}
                 </p>
                 <p>
-                  <strong>장소:</strong> {travelInfo.festival.location}
+                  <strong className="ai-chatbot-strong">장소:</strong>{" "}
+                  {travelInfo.festival.location}
                 </p>
               </div>
 
-              <div className="course-timeline">
+              <div className="ai-chatbot-course-timeline">
                 <h3>추천 코스</h3>
                 {travelInfo.courses.map((course, index) => (
-                  <div key={index} className="course-item">
-                    <div className="course-number">{index + 1}</div>
-                    <div className="course-content">
-                      <div className="course-time">{course.time}</div>
-                      <div className="course-activity">{course.activity}</div>
+                  <div key={index} className="ai-chatbot-course-item">
+                    <div className="ai-chatbot-course-number">{index + 1}</div>
+                    <div className="ai-chatbot-course-content">
+                      <div className="ai-chatbot-course-time">
+                        {course.time}
+                      </div>
+                      <div className="ai-chatbot-course-activity">
+                        {course.activity}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="transportation-info">
+              <div className="ai-chatbot-transportation-info">
                 <h3>교통 안내</h3>
                 <p>
-                  <strong>가장 가까운 역:</strong>{" "}
+                  <strong className="ai-chatbot-strong">가장 가까운 역:</strong>{" "}
                   {travelInfo.transportation.nearestStation}
                 </p>
                 <p>
-                  <strong>추천 이동수단:</strong>{" "}
+                  <strong className="ai-chatbot-strong">추천 이동수단:</strong>{" "}
                   {travelInfo.transportation.recommendedMode}
                 </p>
               </div>
             </div>
 
             {/* 저장/공유 버튼 */}
-            <div className="action-buttons">
+            <div className="ai-chatbot-action-buttons">
               <button
-                className="action-btn save-btn"
+                className="ai-chatbot-action-btn ai-chatbot-save-btn"
                 onClick={() => {
                   // HTML to PDF 변환을 위한 준비
                   const content =
@@ -624,7 +632,7 @@ const AIChatbot = () => {
                 저장
               </button>
               <button
-                className="action-btn share-btn"
+                className="ai-chatbot-action-btn ai-chatbot-share-btn"
                 onClick={() => {
                   const shareText = `
 ${travelInfo.festival.name} 여행 계획
