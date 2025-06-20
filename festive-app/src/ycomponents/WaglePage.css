@@ -2,7 +2,6 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 .wagle-divider {
@@ -15,20 +14,12 @@
 
 /* 반응형 스타일 */
 @media (max-width: 768px) {
-  .wagle-page-container {
-    padding: 15px;
-  }
-
   .wagle-divider {
     margin: 30px 0;
   }
 }
 
 @media (max-width: 480px) {
-  .wagle-page-container {
-    padding: 10px;
-  }
-
   .wagle-divider {
     margin: 20px 0;
   }

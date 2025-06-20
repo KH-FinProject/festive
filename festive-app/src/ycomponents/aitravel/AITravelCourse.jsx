@@ -4,6 +4,7 @@ import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import "./AITravelCourse.css";
 import AItitle from "./AItitle";
+import ScrollToTop from "./ScrollToTop";
 import image9 from "../../assets/temp/image 9.png";
 import image10 from "../../assets/temp/image 10.png";
 import image11 from "../../assets/temp/image 11.png";
@@ -433,7 +434,6 @@ function AITravelCourse() {
   const [activeMenu, setActiveMenu] = useState("share");
   const [shareVisibleCount, setShareVisibleCount] = useState(6);
   const [myTravelVisibleCount, setMyTravelVisibleCount] = useState(6);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const navigate = useNavigate();
 
   // 스크롤 이벤트 핸들러
@@ -442,12 +442,6 @@ function AITravelCourse() {
     const scrollY = window.pageYOffset || document.documentElement.scrollTop;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
-
-    // 스크롤 위치가 200px 이상일 때 상단 이동 버튼 표시
-    const shouldShowButton = scrollY > 200;
-    if (shouldShowButton !== showScrollTop) {
-      setShowScrollTop(shouldShowButton);
-    }
 
     // 스크롤이 하단에서 100px 이내일 때 추가 로드
     if (documentHeight - (scrollY + windowHeight) < 100) {
@@ -464,25 +458,13 @@ function AITravelCourse() {
         );
       }
     }
-  }, [activeMenu, shareVisibleCount, myTravelVisibleCount, showScrollTop]);
-
-  // 컴포넌트 마운트 시 초기 스크롤 위치 확인
-  useEffect(() => {
-    handleScroll();
-  }, []);
+  }, [activeMenu, shareVisibleCount, myTravelVisibleCount]);
 
   // 스크롤 이벤트 리스너 등록
   useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
@@ -498,6 +480,7 @@ function AITravelCourse() {
     activeMenu === "share" ? sharedCourses : myTravelCourses;
   const visibleCount =
     activeMenu === "share" ? shareVisibleCount : myTravelVisibleCount;
+
   const visibleCourses = currentCourses.slice(0, visibleCount);
 
   return (
@@ -553,17 +536,7 @@ function AITravelCourse() {
         </div>
       </div>
 
-      {/* 위로 가기 버튼 */}
-      <button
-        className={`ai-travel__scroll-to-top ${
-          showScrollTop ? "visible" : "hidden"
-        }`}
-        onClick={scrollToTop}
-        aria-label="페이지 상단으로 이동"
-      >
-        <FontAwesomeIcon icon={faArrowUp} size="lg" />
-        <span>TOP</span>
-      </button>
+      <ScrollToTop />
     </div>
   );
 }

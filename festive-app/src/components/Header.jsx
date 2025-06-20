@@ -4,7 +4,6 @@ import searchbtn from "../assets/searchbtn.png";
 import "./HeaderFooter.css";
 import { Link } from "react-router-dom";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
-import ErrorBoundary from "./ErrorBoundary";
 
 function Header() {
   const isLoggedIn = false;
@@ -52,9 +51,7 @@ function Header() {
         />
         <img src={searchbtn} className="headersearch-btn" />
         <div className="headerweather-placeholder">
-          <ErrorBoundary>
-            <Weather />
-          </ErrorBoundary>
+          <Weather />
         </div>
         {isLoggedIn ? (
           <a href={"#"}>
