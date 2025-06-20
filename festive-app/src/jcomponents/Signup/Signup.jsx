@@ -257,7 +257,7 @@ const Inform = () => {
             <label className="form-label">
               Username <span className="required">*</span>
             </label>
-            <div className="input-group">
+            <div className="form-input-group">
               <input
                   type="text"
                   className="form-input"
@@ -279,7 +279,7 @@ const Inform = () => {
             <label className="form-label">
               Nickname <span className="required">*</span>
             </label>
-            <div className="input-group">
+            <div className="form-input-group">
               <input
                   type="text"
                   className="form-input"
@@ -316,7 +316,7 @@ const Inform = () => {
             <label className="form-label">
               Phone <span className="required">*</span>
             </label>
-            <div className="input-group">
+            <div className="form-input-group">
               <input
                   type="tel"
                   className="form-input"
@@ -339,7 +339,7 @@ const Inform = () => {
           <label className="form-label">
             Auth key <span className="required">*</span>
           </label>
-          <div className="input-group">
+          <div className="form-input-group">
             <input
                 type="text"
                 className="form-input"
@@ -361,7 +361,7 @@ const Inform = () => {
           <label className="form-label">
             ID <span className="required">*</span>
           </label>
-          <div className="input-group">
+          <div className="form-input-group">
             <input
                 type="text"
                 className="form-input"
@@ -408,7 +408,7 @@ const Inform = () => {
         <div className="form-group">
           <label className="form-label">Address</label>
           <div className="address-group">
-            <div className="input-group">
+            <div className="form-input-group">
               <input
                   type="text"
                   className="form-input"

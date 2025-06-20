@@ -293,12 +293,12 @@
   color: #9ca3af;
 }
 
-.input-group {
+.form-input-group {
   display: flex;
   gap: 0.5rem;
 }
 
-.input-group .form-input {
+.form-input-group .form-input {
   flex: 1;
 }
 
