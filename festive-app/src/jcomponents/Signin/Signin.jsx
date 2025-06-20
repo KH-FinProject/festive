@@ -131,7 +131,7 @@ const LoginForm = () => {
                   {/* KakaoTalk 로그인 */}
                   <button type="button" className="sns-btn sns-kakao">
                     <div className="kakao-icon">
-                      <FontAwesomeIcon className="item" icon={faComment} />
+                      <FontAwesomeIcon className="kakao-item" icon={faComment} />
                     </div>
                   </button>
                 </div>
