@@ -1,14 +1,14 @@
 /* Search Section */
-.search-section {
+.admin-search-section {
   margin-bottom: 32px;
 }
 
-.search-container {
+.admin-search-container {
   display: flex;
   position: relative;
 }
 
-.search-input {
+.admin-search-input {
   flex: 1;
   padding: 12px 16px;
   border: 2px solid #e5e5e5;
@@ -18,15 +18,15 @@
   transition: border-color 0.2s ease;
 }
 
-.search-input:focus {
+.admin-search-input:focus {
   border-color: #417dc5;
 }
 
-.search-input::placeholder {
+.admin-search-input::placeholder {
   color: #999;
 }
 
-.search-button {
+.admin-search-button {
   position: absolute;
   right: 8px;
   top: 50%;
@@ -39,11 +39,11 @@
   transition: background-color 0.2s ease;
 }
 
-.search-button:hover {
+.admin-search-button:hover {
   background: #f1f3f4;
 }
 
-.search-icon {
+.admin-search-icon {
   width: 16px;
   height: 16px;
   color: #666;
@@ -58,17 +58,16 @@
   overflow: hidden;
 }
 
-.section-header {
+.admin-section-header {
   padding: 24px 32px 24px 10px;
   border-bottom: 1px solid #f1f3f4;
 }
 
-.section-title {
+.admin-section-title {
   font-size: 20px;
-  font-weight: bold;
+  font-weight: 450;
   color: #333;
   margin: 0;
-  text-align: left;
 }
 
 /* Member List Container */
@@ -125,6 +124,7 @@
   align-items: center;
   border-bottom: 1px solid #f1f3f4;
   transition: background-color 0.2s ease;
+  font-weight: 450;
 }
 
 .member-row:hover {

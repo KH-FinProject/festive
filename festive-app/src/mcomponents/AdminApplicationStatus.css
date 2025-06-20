@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 0;
+  padding: 24px 10px;
   border-bottom: 1px solid #f1f3f4;
 }
 
@@ -102,9 +102,10 @@
 }
 
 .btn-approve {
-  background-color: #1a73e8;
-  color: white;
-  border: none;
+  background: white;
+  color: #4a90e2;
+  border-color: #4a90e2;
+  border: 1px solid #dee2e6;
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 14px;
@@ -115,11 +116,13 @@
 }
 
 .btn-approve:hover:not(:disabled) {
-  background-color: #1557b0;
+  background-color: #4a90e2;
+  color: white;
 }
 
 .btn-approve.approved {
-  background-color: #34a853;
+  background-color: #c42d2d;
+  color: white;
   cursor: default;
 }
 
@@ -167,6 +170,24 @@
 
 .pagination-btn.nav-btn:hover {
   color: #333;
+}
+
+/* 부스신청 디테일 버튼 */
+.app-action-btn {
+  flex: 1;
+  padding: 4px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.app-detail-btn {
+  flex: 1;
+  color: #4a90e2;
+  border-color: #4a90e2;
 }
 
 /* 반응형 디자인 */
