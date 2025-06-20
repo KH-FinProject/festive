@@ -25,13 +25,13 @@ const AppRoutes = () => {
       <Route path="/" element={<MainPage />} />
       <Route path="/signin" element={<Signin />} />
       <Route path="/find" element={<Find />} />
-      <Route path="/signup/agreement" element={<Signup />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/wagle" element={<WaglePage />} />
       <Route path="/wagle/write" element={<WritePage />} />
       <Route path="/wagle/:id" element={<WagleDetail />} />
       <Route path="/this-month" element={<FestivalMainPage />} />
       <Route path="/ai-travel" element={<AITravelCourse />} />
-      <Route path="/ai-travel/chat" element={<AIChatbot />} />
+      {/* <Route path="/ai-travel/chat" element={<AIChatbot />} /> */}
       <Route path="/calendar" element={<FestiveCalendar />} />
       <Route path="/mypage/profile" element={<MyPageEditProfile />} />
       <Route path="/mypage/info" element={<MyPageEditInfo />} />

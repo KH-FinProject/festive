@@ -35,7 +35,7 @@ const LoginForm = () => {
             {/* 로그인 폼 */}
             <div className="login-form">
               {/* ID 입력 필드 */}
-              <div className="input-group">
+              <div className="info-input-group">
                 <label htmlFor="id" className="input-label">
                   ID
                 </label>
@@ -52,7 +52,7 @@ const LoginForm = () => {
               </div>
               
               {/* 패스워드 입력 필드 */}
-              <div className="input-group">
+              <div className="info-input-group">
                 <label htmlFor="password" className="input-label">
                   Password
                 </label>
