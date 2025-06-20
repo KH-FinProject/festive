@@ -11,25 +11,6 @@ import { Map, MapMarker } from "react-kakao-maps-sdk";
 // 카카오맵 API 키는 나중에 환경변수로 설정
 const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
 
-const AIChatbot = () => {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        '안녕하세요! 축제 여행 계획을 도와드리겠습니다.\n예) "제주도 서귀포시 축제를 알려줘 박물관에서 보고 감귤 따러 사장님이 아닌데가서"\n주의사항 말씀을 보여줘!',
-    },
-  ]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const chatContainerRef = useRef(null);
-
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop =
-        chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -43,6 +24,7 @@ const AIChatbot = () => {
     setLoading(true);
 
     try {
+
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -196,5 +178,6 @@ const AIChatbot = () => {
     </div>
   );
 };
+
 
 export default AIChatbot;

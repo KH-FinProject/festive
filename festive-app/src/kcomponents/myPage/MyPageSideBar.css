@@ -1,11 +1,5 @@
 /* 전체 컨테이너 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.member-management-container {
+.mypage-container {
   display: flex;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     sans-serif;
@@ -13,10 +7,11 @@
   padding: 0;
   min-height: 100vh;
   color: #333;
+
 }
 
 /* Management Content */
-.management-content {
+.mypage-content {
   display: flex;
   max-width: 1200px;
   margin: 10px auto;
@@ -24,28 +19,21 @@
 }
 
 /* Sidebar */
-.management-sidebar {
-  width: 260px;
-  height: 670px;
+.mypage-sidebar {
+  width: 310px;
+  height: 650px;
   border: 1px solid #e5e5e5;
   margin: 0 10px;
   border-radius: 10px;
   overflow-y: auto;
 }
 
-.sidebar-section {
+.mypage-sidebar-section {
   margin-bottom: 32px;
   padding: 0 24px;
 }
 
-.sidebar-title {
-  text-align: left;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-}
-
-.sidebar-item {
+.mypage-sidebar-item {
   text-align: center;
   display: block;
   padding: 10px 16px;
@@ -55,31 +43,32 @@
   transition: all 0.2s ease;
 }
 
-.sidebar-item.inactive {
-  color: #333;
-  background: #f8f9fa;
+.mypage-sidebar-item.inactive {
+  color: #25272B;
+  background: #F0F0F0;
 }
 
-.sidebar-item.inactive:hover {
+.mypage-sidebar-item.inactive:hover {
   background: #e9ecef;
   color: #333;
 }
 
-.sidebar-item.active {
-  background: #9dc4fe;
+.mypage-sidebar-item.active {
+  background: #60a5fa;
   color: white;
   font-weight: 600;
 }
 
-.sidebar-item span {
+.mypage-sidebar-item span {
   font-size: 14px;
 }
 
-.sidebar-item:link,
+.mypage-sidebar-item:link,
 .sidebar-item:visited,
 .sidebar-item:hover,
 .sidebar-item:active {
   text-decoration: none;
+  color: inherit;
 }
 
 /* Main Content */
@@ -91,19 +80,48 @@
   border-radius: 10px;
   overflow-y: auto;
   min-width: 820px;
-  min-height: 780px;
+  min-height: 800px;
 }
 
-.page-header {
-  margin-bottom: 32px;
+
+/* 사이드 메뉴 */
+.sidebar {
+  width: 200px;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.page-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #333;
-  margin: 0;
+.profile {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.profile-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 9999px;
+  margin-bottom: 0.5rem;
+}
+
+.menu-buttons button {
+  display: block;
+  width: 100%;
+  background: #f3f4f6;
+  border: none;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
   text-align: left;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e5e5e5;
+  cursor: pointer;
+}
+
+.menu-buttons button:hover {
+  background: #e5e7eb;
+}
+
+.menu-buttons .active {
+  background-color: #60a5fa;
+  color: 25272B;
 }

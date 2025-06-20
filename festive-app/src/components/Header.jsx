@@ -21,7 +21,7 @@ function Header() {
       <nav className="headernav">
         {[
           { name: "이달의 축제", path: "/this-month" },
-          { name: "축제달력", path: "#" },
+          { name: "축제달력", path: "/calendar" },
           { name: "지역별 축제", path: "#" },
           { name: "와글와글", path: "/wagle" },
           { name: "AI 여행코스 추천", path: "/ai-travel" },

@@ -260,44 +260,8 @@
 /* 축제 목록 css */
 /* This-month-festive.css */
 
-.festival-main {
-    min-height: 100vh;
-}
-
-/* 슬라이더 컨테이너 */
-.slider-container {
-    width: 100%;
-    height: 60%;
-    margin-bottom: 2rem;
-}
-
-/* 축제 섹션 */
-.festivals-section {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 3rem 1rem;
-}
-
-/* 섹션 헤더 */
-.section-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.section-header h2 {
-    font-size: 1.875rem;
-    font-weight: bold;
-    color: #1f2937;
-    margin-bottom: 1rem;
-}
-
-.section-header p {
-    color: #6b7280;
-    font-size: 1rem;
-}
-
 /* 축제 그리드 */
-.festivals-grid {
+.calendar-festivals-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
@@ -305,7 +269,7 @@
 }
 
 /* 축제 카드 */
-.festival-card {
+.calendar-festival-card {
     background: white;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
@@ -314,31 +278,31 @@
     transition: all 0.3s ease;
 }
 
-.festival-card:hover {
+.calendar-festival-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
 /* 축제 이미지 컨테이너 */
-.festival-image-container {
+.calendar-festival-image-container {
     position: relative;
     height: 150px;
     overflow: hidden;
 }
 
-.festival-image {
+.calendar-festival-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
 }
 
-.festival-card:hover .festival-image {
+.calendar-festival-card:hover .calendar-festival-image {
     transform: scale(1.05);
 }
 
 /* 축제 상태 뱃지 */
-.festival-status {
+.calendar-festival-status {
     position: absolute;
     top: 1rem;
     right: 1rem;
@@ -349,20 +313,20 @@
     color: white;
 }
 
-.festival-status.active {
+.calendar-festival-status.active {
     background-color: #60a5fa;
 }
 
-.festival-status.upcoming {
+.calendar-festival-status.upcoming {
     background-color: #6b7280;
 }
 
 /* 축제 정보 */
-.festival-info {
+.calendar-festival-info {
     padding: 0.75rem;
 }
 
-.festival-title {
+.calendar-festival-title {
     font-size: 1rem;
     font-weight: bold;
     color: #1f2937;
@@ -372,8 +336,8 @@
     text-overflow: ellipsis;
 }
 
-.festival-location,
-.festival-date {
+.calendar-festival-location,
+.calendar-festival-date {
     display: flex;
     align-items: center;
     color: #6b7280;
@@ -381,38 +345,17 @@
     margin-bottom: 0.25rem;
 }
 
-.festival-location:last-child,
-.festival-date:last-child {
+.calendar-festival-location:last-child,
+.calendar-festival-date:last-child {
     margin-bottom: 0;
 }
 
 /* 아이콘 */
-.icon {
+.calendar-icon {
     width: 1rem;
     height: 1rem;
     margin-right: 0.25rem;
     flex-shrink: 0;
-}
-
-/* 더보기 버튼 컨테이너 */
-.load-more-container {
-    text-align: center;
-}
-
-.load-more-btn {
-    background-color: #60a5fa;
-    color: white;
-    font-weight: 500;
-    padding: 0.75rem 2rem;
-    border-radius: 0.5rem;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-size: 1rem;
-}
-
-.load-more-btn:hover {
-    background-color: #9DC4FE;
 }
 
 /* 반응형 디자인 */

@@ -1,0 +1,227 @@
+/* CustomerService.css */
+
+.section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  padding-left: 8px;
+}
+
+.inquiry-section,
+.report-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.inquiry-item,
+.report-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: #fff;
+  transition: box-shadow 0.2s ease;
+}
+
+.inquiry-item:hover,
+.report-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.inquiry-header,
+.report-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.inquiry-id,
+.report-id {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.inquiry-title,
+.report-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.inquiry-meta,
+.report-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 120px;
+  margin: 0 20px;
+}
+
+.inquiry-author,
+.report-author {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.inquiry-date,
+.report-date {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.inquiry-actions,
+.report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.view-btn {
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
+.view-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.reply-btn {
+  color: #4a90e2;
+  border-color: #4a90e2;
+}
+
+.reply-btn:hover {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.process-btn {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+.process-btn:hover {
+  background-color: #28a745;
+  color: white;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pagination-btn {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.pagination-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.pagination-btn.active {
+  background-color: #4a90e2;
+  border-color: #4a90e2;
+  color: white;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .customer-service-container {
+    padding: 20px;
+  }
+
+  .inquiry-item,
+  .report-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .inquiry-header,
+  .report-header {
+    justify-content: space-between;
+  }
+
+  .inquiry-meta,
+  .report-meta {
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 0;
+  }
+
+  .inquiry-actions,
+  .report-actions {
+    justify-content: center;
+  }
+
+  .page-title {
+    font-size: 20px;
+    margin-bottom: 30px;
+  }
+
+  .section-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .inquiry-section,
+  .report-section {
+    padding: 20px;
+  }
+
+  .inquiry-item,
+  .report-item {
+    padding: 15px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .pagination-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}

@@ -1,5 +1,5 @@
 // import React, { useState } from 'react';
-import './MyPageWithdrawal.css';
+import '../myPage/MyPageWithdrawal.css';
 import './FestiveCalendar.css';
 import { useEffect, useState } from 'react';
 import Title from './Title.jsx';
@@ -148,34 +148,34 @@ const FestiveCalendar = () => {
                 {/* Right Content Section */}
                 <section className="content-section">
                     {/* 축제 그리드 - 현재 페이지의 축제들만 표시 */}
-                    <div className="festivals-grid">
+                    <div className="calendar-festivals-grid">
                         {currentFestivals.map((festival) => (
                             <div
                                 key={festival.id}
-                                className="festival-card"
+                                className="calendar-festival-card"
                                 onClick={() => handleFestivalClick(festival.id)}
                             >
-                                <div className="festival-image-container">
+                                <div className="calendar-festival-image-container">
                                     <img
                                         src={festival.image}
                                         alt={festival.title}
-                                        className="festival-image"
+                                        className="calendar-festival-image"
                                     />
-                                    <div className={`festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
+                                    <div className={`calendar-festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
                                         {festival.status}
                                     </div>
                                 </div>
 
-                                <div className="festival-info">
-                                    <h3 className="festival-title">{festival.title}</h3>
-                                    <p className="festival-location">
+                                <div className="calendar-festival-info">
+                                    <h3 className="calendar-festival-title">{festival.title}</h3>
+                                    <p className="calendar-festival-location">
                                         <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                                         </svg>
                                         {festival.location}
                                     </p>
-                                    <p className="festival-date">
-                                        <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <p className="calendar-festival-date">
+                                        <svg className="calendar-icon" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                                         </svg>
                                         {festival.date}
