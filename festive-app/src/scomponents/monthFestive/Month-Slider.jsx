@@ -1,69 +1,50 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './Month-Slider.css';
 
-const ExpandingCards = () => {
-    // 패널 데이터
-    const panels = [
-        {
-            id: 1,
-            title: "Explore The World",
-            image:
-                "https://images.unsplash.com/photo-1558979158-65a1eaa08691?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-        },
-        {
-            id: 2,
-            title: "Wild Forest",
-            image:
-                "https://images.unsplash.com/photo-1572276596237-5db2c3e16c5d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-        },
-        {
-            id: 3,
-            title: "Sunny Beach",
-            image:
-                "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1353&q=80",
-        },
-        {
-            id: 4,
-            title: "City on Winter",
-            image:
-                "https://images.unsplash.com/photo-1551009175-8a68da93d5f9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1351&q=80",
-        },
-        {
-            id: 5,
-            title: "Mountains - Clouds",
-            image:
-                "https://images.unsplash.com/photo-1549880338-65ddcdfd017b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-        },
-    ];
+const ExpandingCards = ({ festivals = [] }) => {
+    const [activePanel, setActivePanel] = useState(0); // 인덱스 기반
 
-    // 활성 패널 상태
-    const [activePanel, setActivePanel] = useState(1);
-
-    // 자동 패널 변경 (4초마다)
+    // 자동 전환
     useEffect(() => {
+        if (!festivals.length) return;
+
         const interval = setInterval(() => {
-            setActivePanel((prev) => (prev % panels.length) + 1);
-        }, 4000); // 4초마다 다음 패널로 이동
+            setActivePanel((prev) => (prev + 1) % festivals.length);
+        }, 4000);
 
-        return () => clearInterval(interval); // 컴포넌트 언마운트 시 정리
-    }, [panels.length]);
+        return () => clearInterval(interval);
+    }, [festivals]);
 
-    // 패널 클릭 시 수동 전환
-    const handlePanelClick = (panelId) => {
-        setActivePanel(panelId);
+    const handlePanelClick = (index) => {
+        setActivePanel(index);
     };
 
     return (
         <div className="container">
-            {panels.map((panel) => (
+            {festivals.map((festival, index) => (
                 <div
-                    key={panel.id}
-                    className={`panel ${activePanel === panel.id ? 'active' : ''}`}
-                    style={{ backgroundImage: `url('${panel.image}')` }}
-                    onClick={() => handlePanelClick(panel.id)}
+                    key={festival.id}
+                    className={`panel ${index === activePanel ? 'active' : ''}`}
+                    style={{ backgroundImage: `url('${festival.image}')` }}
+                    onClick={() => handlePanelClick(index)}
                 >
-                    <h3>{panel.title}</h3>
+                    <div className="overlay">
+                        <h3 className="festival-title">{festival.title}</h3>
+                        <p className="festival-location">
+                            <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            {festival.location}
+                        </p>
+                        <p className="festival-date">
+                            <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                            </svg>
+                            {festival.date}
+                        </p>
+                    </div>
                 </div>
+
             ))}
         </div>
     );
