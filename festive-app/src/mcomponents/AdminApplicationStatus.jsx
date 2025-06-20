@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./AdminApplicationStatus.css";
+import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
+import AdminSidebar from "./AdminSideBar";
 
 const AdminApplicationStatus = () => {
   const [applications, setApplications] = useState([
@@ -91,54 +93,62 @@ const AdminApplicationStatus = () => {
   };
 
   return (
-    <main className="admin-main">
-      <div className="admin-header">
-        <h1 className="admin-title">신청 현황</h1>
-      </div>
+    <div className="admin-management-container">
+      <div className="management-content">
+        {/* Sidebar */}
+        <AdminSidebar />
+        <main className="admin-main">
+          <div className="admin-header">
+            <h1 className="admin-title">신청 현황</h1>
+          </div>
 
-      <div className="status-content">
-        <div className="application-list">
-          {applications.map((application) => (
-            <div key={application.id} className="application-item">
-              <div className="application-info">
-                <div className="category-badge">
-                  <span className="category">{application.category}</span>
-                </div>
-                <h3 className="application-title">{application.title}</h3>
-                <div className="application-meta">
-                  <span className="applicant">{application.applicant}</span>
-                  <span className="date">{application.date}</span>
-                </div>
-              </div>
+          <div className="status-content">
+            <div className="application-list">
+              {applications.map((application) => (
+                <div key={application.id} className="application-item">
+                  <div className="application-info">
+                    <div className="category-badge">
+                      <span className="category">{application.category}</span>
+                    </div>
+                    <h3 className="application-title">{application.title}</h3>
+                    <div className="application-meta">
+                      <span className="applicant">{application.applicant}</span>
+                      <span className="date">{application.date}</span>
+                    </div>
+                  </div>
 
-              <div className="application-actions">
-                <button
-                  className="btn-detail"
-                  onClick={() => handleGotoDetail(application.id)}
-                >
-                  내용보기
-                </button>
-                <button
-                  className={`btn-approve ${
-                    application.status === "approved" ? "approved" : ""
-                  }`}
-                  onClick={() => handleApprove(application.id)}
-                  disabled={application.status === "approved"}
-                >
-                  {application.status === "approved" ? "취소됨" : "신청 취소"}
-                </button>
-              </div>
+                  <div className="application-actions">
+                    <button
+                      className="btn-detail"
+                      onClick={() => handleGotoDetail(application.id)}
+                    >
+                      내용보기
+                    </button>
+                    <button
+                      className={`btn-approve ${
+                        application.status === "approved" ? "approved" : ""
+                      }`}
+                      onClick={() => handleApprove(application.id)}
+                      disabled={application.status === "approved"}
+                    >
+                      {application.status === "approved"
+                        ? "취소됨"
+                        : "신청 취소"}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <div className="pagination">
-          <button className="pagination-btn nav-btn">‹</button>
-          {renderPagination()}
-          <button className="pagination-btn nav-btn">›</button>
-        </div>
+            <div className="pagination">
+              <button className="pagination-btn nav-btn">‹</button>
+              {renderPagination()}
+              <button className="pagination-btn nav-btn">›</button>
+            </div>
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 };
 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./AdminBoardManagement.css";
 import "./AdminCommon.css";
 import { Link, useLocation } from "react-router-dom";
+import AdminSidebar from "./AdminSideBar";
 
 const AdminBoardManagement = () => {
   const [posts, setPosts] = useState([
@@ -109,68 +110,74 @@ const AdminBoardManagement = () => {
   };
 
   return (
-    <main className="admin-main">
-      <div className="admin-header">
-        <h1 className="admin-title">게시판 관리</h1>
-      </div>
+    <div className="admin-management-container">
+      <div className="management-content">
+        {/* Sidebar */}
+        <AdminSidebar />
+        <main className="admin-main">
+          <div className="admin-header">
+            <h1 className="admin-title">게시판 관리</h1>
+          </div>
 
-      <div className="board-content">
-        <div className="post-list">
-          {posts.map((post) => (
-            <div key={post.id} className="post-item">
-              <div className="checkbox-container">
-                <input
-                  type="checkbox"
-                  checked={post.checked}
-                  onChange={() => handleSelectPost(post.id)}
-                />
-              </div>
+          <div className="board-content">
+            <div className="post-list">
+              {posts.map((post) => (
+                <div key={post.id} className="post-item">
+                  <div className="checkbox-container">
+                    <input
+                      type="checkbox"
+                      checked={post.checked}
+                      onChange={() => handleSelectPost(post.id)}
+                    />
+                  </div>
 
-              <div className="post-badge">
-                <span
-                  className={`badge ${
-                    post.type === "공지" ? "notice" : "general"
-                  }`}
-                >
-                  {post.type}
-                </span>
-              </div>
+                  <div className="post-badge">
+                    <span
+                      className={`badge ${
+                        post.type === "공지" ? "notice" : "general"
+                      }`}
+                    >
+                      {post.type}
+                    </span>
+                  </div>
 
-              <div className="post-info">
-                {post.postNumber && (
-                  <span className="post-number">{post.postNumber}</span>
-                )}
-                <h3 className="post-title">{post.title}</h3>
-                <div className="post-meta">
-                  <span className="author">{post.author}</span>
-                  <span className="date">{post.date}</span>
+                  <div className="post-info">
+                    {post.postNumber && (
+                      <span className="post-number">{post.postNumber}</span>
+                    )}
+                    <h3 className="post-title">{post.title}</h3>
+                    <div className="post-meta">
+                      <span className="author">{post.author}</span>
+                      <span className="date">{post.date}</span>
+                    </div>
+                  </div>
+
+                  <div className="post-stats">
+                    <span className="views">+{post.views}</span>
+                    <span className="likes">♥{post.likes}</span>
+                  </div>
                 </div>
-              </div>
+              ))}
+            </div>
 
-              <div className="post-stats">
-                <span className="views">+{post.views}</span>
-                <span className="likes">♥{post.likes}</span>
+            <div className="board-actions">
+              <div className="action-buttons">
+                <Link to="/admin/write" className="btn-notice-write">
+                  공지 작성
+                </Link>
+                <button className="btn-secondary">삭제하기</button>
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="board-actions">
-          <div className="action-buttons">
-            <Link to="/admin/write" className="btn-notice-write">
-              공지 작성
-            </Link>
-            <button className="btn-secondary">삭제하기</button>
+            <div className="pagination">
+              <button className="pagination-btn nav-btn">‹</button>
+              {renderPagination()}
+              <button className="pagination-btn nav-btn">›</button>
+            </div>
           </div>
-        </div>
-
-        <div className="pagination">
-          <button className="pagination-btn nav-btn">‹</button>
-          {renderPagination()}
-          <button className="pagination-btn nav-btn">›</button>
-        </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 };
 

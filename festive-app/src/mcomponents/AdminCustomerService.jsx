@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "./AdminCustomerService.css";
+import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
+import AdminSidebar from "./AdminSideBar";
 
 const AdminCustomerService = () => {
   const [inquiries] = useState([
@@ -78,81 +80,95 @@ const AdminCustomerService = () => {
   };
 
   return (
-    <main className="admin-main">
-      <div className="admin-header">
-        <h1 className="admin-title">고객센터 관리</h1>
-      </div>
-      <div className="cs-content-wrapper">
-        {/* 문의내역 섹션 */}
-        <section className="inquiry-section">
-          <h2 className="section-title">문의내역</h2>
-
-          <div className="inquiry-list">
-            {inquiries.map((inquiry) => (
-              <div key={inquiry.id} className="inquiry-item">
-                <div className="inquiry-header">
-                  <span className="inquiry-id">#{inquiry.id}</span>
-                  <span className="inquiry-title">{inquiry.title}</span>
-                </div>
-                <div className="inquiry-meta">
-                  <span className="inquiry-author">{inquiry.author}</span>
-                  <span className="inquiry-date">{inquiry.date}</span>
-                </div>
-                <div className="inquiry-actions">
-                  <button className="admin-action-btn admin-view-btn">
-                    삭제
-                  </button>
-                  <button
-                    className="admin-action-btn admin-reply-btn"
-                    onClick={() => handleReply(inquiry.id)}
-                  >
-                    답변하기
-                  </button>
-                </div>
-              </div>
-            ))}
+    <div className="admin-management-container">
+      <div className="management-content">
+        {/* Sidebar */}
+        <AdminSidebar />
+        <main className="admin-main">
+          <div className="admin-header">
+            <h1 className="admin-title">고객센터 관리</h1>
           </div>
+          <div className="cs-content-wrapper">
+            {/* 문의내역 섹션 */}
+            <section className="inquiry-section">
+              <h2 className="section-title">문의내역</h2>
 
-          {renderPagination(currentInquiryPage, setCurrentInquiryPage)}
-        </section>
-
-        {/* 신고내역 섹션 */}
-        <section className="report-section">
-          <h2 className="section-title">신고내역</h2>
-
-          <div className="report-list">
-            {applications.map((application, index) => (
-              <div key={`${application.id}-${index}`} className="report-item">
-                <div className="report-header">
-                  <span className="report-id">#{application.id}</span>
-                  <span className="report-title">{application.title}</span>
-                </div>
-                <div className="report-meta">
-                  <span className="report-author">{application.author}</span>
-                  <span className="report-date">{application.date}</span>
-                </div>
-                <div className="report-actions">
-                  <button
-                    className="admin-action-btn admin-view-btn"
-                    onClick={() => handleReportDetail(application.id)}
-                  >
-                    내용보기
-                  </button>
-                  <button
-                    className="admin-action-btn admin-process-btn"
-                    onClick={() => handleProcess(application.id)}
-                  >
-                    신고 취소
-                  </button>
-                </div>
+              <div className="inquiry-list">
+                {inquiries.map((inquiry) => (
+                  <div key={inquiry.id} className="inquiry-item">
+                    <div className="inquiry-header">
+                      <span className="inquiry-id">#{inquiry.id}</span>
+                      <span className="inquiry-title">{inquiry.title}</span>
+                    </div>
+                    <div className="inquiry-meta">
+                      <span className="inquiry-author">{inquiry.author}</span>
+                      <span className="inquiry-date">{inquiry.date}</span>
+                    </div>
+                    <div className="inquiry-actions">
+                      <button className="admin-action-btn admin-view-btn">
+                        삭제
+                      </button>
+                      <button
+                        className="admin-action-btn admin-reply-btn"
+                        onClick={() => handleReply(inquiry.id)}
+                      >
+                        답변하기
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {renderPagination(currentApplicationPage, setCurrentApplicationPage)}
-        </section>
+              {renderPagination(currentInquiryPage, setCurrentInquiryPage)}
+            </section>
+
+            {/* 신고내역 섹션 */}
+            <section className="report-section">
+              <h2 className="section-title">신고내역</h2>
+
+              <div className="report-list">
+                {applications.map((application, index) => (
+                  <div
+                    key={`${application.id}-${index}`}
+                    className="report-item"
+                  >
+                    <div className="report-header">
+                      <span className="report-id">#{application.id}</span>
+                      <span className="report-title">{application.title}</span>
+                    </div>
+                    <div className="report-meta">
+                      <span className="report-author">
+                        {application.author}
+                      </span>
+                      <span className="report-date">{application.date}</span>
+                    </div>
+                    <div className="report-actions">
+                      <button
+                        className="admin-action-btn admin-view-btn"
+                        onClick={() => handleReportDetail(application.id)}
+                      >
+                        내용보기
+                      </button>
+                      <button
+                        className="admin-action-btn admin-process-btn"
+                        onClick={() => handleProcess(application.id)}
+                      >
+                        신고 취소
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {renderPagination(
+                currentApplicationPage,
+                setCurrentApplicationPage
+              )}
+            </section>
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 };
 

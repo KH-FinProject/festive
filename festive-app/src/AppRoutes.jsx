@@ -19,6 +19,7 @@ import MyPageMyComment from "./kcomponents/myPage/MyPageMyComment.jsx";
 import MyPageWithdrawal from "./kcomponents/myPage/MyPageWithdrawal.jsx";
 import AITravelCourse from "./ycomponents/aitravel/AITravelCourse.jsx";
 import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
+import AdminRoutes from "./mcomponents/Admin.jsx";
 
 const AppRoutes = () => {
   return (
