@@ -436,33 +436,44 @@ function AITravelCourse() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const navigate = useNavigate();
 
+  // 스크롤 이벤트 핸들러
   const handleScroll = useCallback(() => {
-    // 스크롤 위치가 500px 이상일 때 상단 이동 버튼 표시
-    setShowScrollTop(window.scrollY > 500);
+    // 스크롤 위치 계산
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
 
-    // 무한 스크롤 로직
-    const scrollHeight = document.documentElement.scrollHeight;
-    const scrollTop = window.scrollY;
-    const clientHeight = document.documentElement.clientHeight;
+    // 스크롤 위치가 200px 이상일 때 상단 이동 버튼 표시
+    const shouldShowButton = scrollY > 200;
+    if (shouldShowButton !== showScrollTop) {
+      setShowScrollTop(shouldShowButton);
+    }
 
-    if (scrollHeight - scrollTop - clientHeight < 200) {
+    // 스크롤이 하단에서 100px 이내일 때 추가 로드
+    if (documentHeight - (scrollY + windowHeight) < 100) {
       if (activeMenu === "share" && shareVisibleCount < sharedCourses.length) {
         setShareVisibleCount((prev) =>
-          Math.min(prev + 3, sharedCourses.length)
+          Math.min(prev + 6, sharedCourses.length)
         );
       } else if (
         activeMenu === "myTravel" &&
         myTravelVisibleCount < myTravelCourses.length
       ) {
         setMyTravelVisibleCount((prev) =>
-          Math.min(prev + 3, myTravelCourses.length)
+          Math.min(prev + 6, myTravelCourses.length)
         );
       }
     }
-  }, [activeMenu, shareVisibleCount, myTravelVisibleCount]);
+  }, [activeMenu, shareVisibleCount, myTravelVisibleCount, showScrollTop]);
 
+  // 컴포넌트 마운트 시 초기 스크롤 위치 확인
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+  }, []);
+
+  // 스크롤 이벤트 리스너 등록
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
@@ -475,12 +486,12 @@ function AITravelCourse() {
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
-    // 메뉴 변경 시 보여지는 개수 초기화
     if (menu === "share") {
       setShareVisibleCount(6);
     } else {
       setMyTravelVisibleCount(6);
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const currentCourses =
@@ -494,8 +505,8 @@ function AITravelCourse() {
       <AItitle />
 
       {/* 메인 배너 섹션 */}
-      <div className="main-banner">
-        <div className="banner-content">
+      <div className="ai-travel__main-banner">
+        <div className="ai-travel__banner-content">
           <h2>당신만을 위한 완벽한 여행이 시작됩니다.</h2>
           <p>
             더 이상 여행 계획 때문에 고민하지 마세요! 우리의
@@ -512,28 +523,28 @@ function AITravelCourse() {
         </div>
       </div>
 
-      <div className="content-wrapper">
+      <div className="ai-travel__content-wrapper">
         <SideMenu activeMenu={activeMenu} onMenuClick={handleMenuClick} />
 
-        <div className="main-content">
-          {/* 여행 코스 섹션 */}
-          <div className="course-section">
-            <div className="section-header">
+        <div className="ai-travel__main-content">
+          <div className="ai-travel__course-section">
+            <div className="ai-travel__section-header">
               <h2>
                 {activeMenu === "share" ? "여행코스 공유" : "나만의 여행코스"}
               </h2>
             </div>
-
-            <div className="course-grid">
+            <div className="ai-travel__course-grid">
               {visibleCourses.map((course) => (
-                <div key={course.id} className="course-card">
-                  <div className="course-image">
+                <div key={course.id} className="ai-travel__course-card">
+                  <div className="ai-travel__course-image">
                     <img src={course.image} alt={course.title} />
                   </div>
-                  <div className="course-info">
+                  <div className="ai-travel__course-info">
                     <h3>{course.title}</h3>
-                    <p className="date">{course.date}</p>
-                    <p className="location">{course.location}</p>
+                    <p className="ai-travel__course-date">{course.date}</p>
+                    <p className="ai-travel__course-location">
+                      {course.location}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -544,11 +555,13 @@ function AITravelCourse() {
 
       {/* 위로 가기 버튼 */}
       <button
-        className={`scroll-to-top ${showScrollTop ? "" : "hidden"}`}
+        className={`ai-travel__scroll-to-top ${
+          showScrollTop ? "visible" : "hidden"
+        }`}
         onClick={scrollToTop}
         aria-label="페이지 상단으로 이동"
       >
-        <FontAwesomeIcon icon={faArrowUp} />
+        <FontAwesomeIcon icon={faArrowUp} size="lg" />
         <span>TOP</span>
       </button>
     </div>
