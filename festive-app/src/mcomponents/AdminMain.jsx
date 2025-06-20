@@ -6,9 +6,9 @@ const AdminMain = () => {
   return (
     <div className="content">
       {/* Main Content */}
-      <main className="management-main">
-        <div className="page-header">
-          <h1 className="page-title">관리자 대시보드</h1>
+      <main className="admin-main">
+        <div className="admin-header">
+          <h1 className="admin-title">관리자 대시보드</h1>
         </div>
 
         <div className="main-section">

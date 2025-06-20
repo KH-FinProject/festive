@@ -2,103 +2,82 @@ import './This-month-festive.css';
 import {useEffect, useState} from "react";
 import Title from "./Title.jsx";
 import ExpandingCards from "./Month-Slider.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
 
 const FestivalMainPage = () => {
   // 축제 목록 상태
   const [festivals, setFestivals] = useState([]);
   const [sortType, setSortType] = useState('date'); // 'date', 'distance', 'popularity'
+  const [sliderFestivals, setSliderFestivals] = useState([]);
+  const [listFestivals, setListFestivals] = useState([]);
 
-  // 예시 축제 목록 데이터
+
   useEffect(() => {
-    // 실제로는 API 호출이 들어갈 부분
-    const mockFestivals = [
-      {
-        id: 1,
-        title: "서울 벚꽃축제",
-        location: "여의도 한강공원",
-        date: "2025.04.05 - 2025.04.15",
-        image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=300&h=200&fit=crop",
-        status: "진행중"
-      },
-      {
-        id: 2,
-        title: "부산 바다축제",
-        location: "해운대 해수욕장",
-        date: "2025.07.20 - 2025.07.25",
-        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300&h=200&fit=crop",
-        status: "예정"
-      },
-      {
-        id: 3,
-        title: "전주 한옥마을 축제",
-        location: "전주 한옥마을",
-        date: "2025.05.01 - 2025.05.07",
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
-        status: "진행중"
-      },
-      {
-        id: 4,
-        title: "제주 유채꽃축제",
-        location: "제주 성산일출봉",
-        date: "2025.04.10 - 2025.04.20",
-        image: "https://images.unsplash.com/photo-1539650116574-75c0c6d73c6e?w=300&h=200&fit=crop",
-        status: "진행중"
-      },
-      {
-        id: 5,
-        title: "경주 문화축제",
-        location: "경주 불국사",
-        date: "2025.09.15 - 2025.09.22",
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
-        status: "예정"
-      },
-      {
-        id: 6,
-        title: "강릉 커피축제",
-        location: "강릉 안목해변",
-        date: "2025.10.01 - 2025.10.07",
-        image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=200&fit=crop",
-        status: "예정"
-      },
-      {
-        id: 7,
-        title: "대구 치킨축제",
-        location: "대구 두류공원",
-        date: "2025.06.15 - 2025.06.20",
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&h=200&fit=crop",
-        status: "예정"
-      },
-      {
-        id: 8,
-        title: "인천 차이나타운 축제",
-        location: "인천 차이나타운",
-        date: "2025.08.10 - 2025.08.15",
-        image: "https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=300&h=200&fit=crop",
-        status: "예정"
-      },
-      {
-        id: 9,
-        title: "광주 김치축제",
-        location: "광주 국립아시아문화전당",
-        date: "2025.11.01 - 2025.11.07",
-        image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=200&fit=crop",
-        status: "예정"
+    const fetchFestivals = async () => {
+      try {
+        const today = new Date();
+        const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+
+        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=100&pageNo=1`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+        const items = data?.response?.body?.items?.item;
+
+        if (!items || !Array.isArray(items)) return;
+
+        const mapped = items.map((item) => {
+          const start = item.eventstartdate;
+          const end = item.eventenddate;
+          return {
+            id: item.contentid,
+            title: item.title,
+            location: item.addr1 || '장소 미정',
+            date: `${start?.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')}`,
+            image: item.firstimage || "https://via.placeholder.com/300x200?text=No+Image",
+            startDate: start,
+            status: getFestivalStatus(start, end)
+          };
+        });
+
+        // 날짜순 정렬
+        const sorted = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+        // 진행중 축제 중 5개 슬라이더용
+        const slider = sorted.filter(f => f.status === '진행중').slice(0, 5);
+
+        // 슬라이더 제외 나머지
+        const sliderIds = new Set(slider.map(f => f.id));
+        const list = sorted.filter(f => !sliderIds.has(f.id));
+
+        setSliderFestivals(slider);
+        setListFestivals(list);
+      } catch (error) {
+        console.error('축제 정보 로드 실패:', error);
       }
-    ];
-    setFestivals(mockFestivals);
+    };
+
+    fetchFestivals();
   }, []);
+
+
+
+  const getFestivalStatus = (start, end) => {
+    const now = new Date();
+    const startDate = new Date(`${start.slice(0,4)}-${start.slice(4,6)}-${start.slice(6,8)}`);
+    const endDate = new Date(`${end.slice(0,4)}-${end.slice(4,6)}-${end.slice(6,8)}`);
+
+    if (now < startDate) return '예정';
+    else if (now > endDate) return '종료';
+    else return '진행중';
+  };
 
   // 축제 클릭 핸들러
   const handleFestivalClick = (festivalId) => {
     // 실제로는 React Router로 상세페이지 이동
     console.log(`축제 ${festivalId} 상세페이지로 이동`);
     // navigate(`/festival/${festivalId}`);
-  };
-
-  // 더보기 버튼 클릭 핸들러
-  const handleLoadMore = () => {
-    // 더 많은 축제 로드 로직
-    console.log('더 많은 축제 로드');
   };
 
   // 정렬 옵션 변경 핸들러
@@ -114,7 +93,7 @@ const FestivalMainPage = () => {
         <div className="festival-main">
           {/* 슬라이더 공간 - 여기에 슬라이더 컴포넌트가 들어갈 예정 */}
           <div className="slider-container">
-            <ExpandingCards />
+            <ExpandingCards festivals={sliderFestivals} />
           </div>
 
           {/* 축제 목록 섹션 */}
@@ -145,7 +124,7 @@ const FestivalMainPage = () => {
 
             {/* 축제 그리드 */}
             <div className="festivals-grid">
-              {festivals.map((festival) => (
+              {listFestivals.map((festival) => (
                   <div
                       key={festival.id}
                       className="festival-card"
@@ -180,13 +159,8 @@ const FestivalMainPage = () => {
                   </div>
               ))}
             </div>
+            <ScrollToTop />
 
-            {/* 더보기 버튼 */}
-            <div className="load-more-container">
-              <button className="load-more-btn" onClick={handleLoadMore}>
-                더 많은 축제 보기
-              </button>
-            </div>
           </section>
         </div>
       </>

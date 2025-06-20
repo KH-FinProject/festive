@@ -61,6 +61,7 @@
   text-underline-offset: 2px;
   transition: color 0.2s;
 }
+
 .wagle-location-link:hover {
   color: #222;
 }

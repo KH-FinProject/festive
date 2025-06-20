@@ -1,28 +1,20 @@
 /* AdminCreateAccount.css */
 
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 40px;
-  padding-left: 8px;
-}
-
-.form-container {
+.admin-form-container {
   background: white;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 60px;
   max-width: 500px;
-  margin: 0 auto;
+  margin: 60px auto;
   text-align: center;
 }
 
-.form-header {
+.admin-form-header {
   margin-bottom: 50px;
 }
 
-.form-header h2 {
+.admin-form-header h2 {
   font-size: 32px;
   font-weight: 600;
   color: #666;
@@ -35,11 +27,11 @@
   gap: 30px;
 }
 
-.form-group {
+.admin-form-group {
   text-align: left;
 }
 
-.form-label {
+.admin-form-label {
   display: block;
   font-size: 14px;
   font-weight: 500;
@@ -47,7 +39,7 @@
   margin-bottom: 8px;
 }
 
-.form-input {
+.admin-form-input {
   width: 100%;
   padding: 14px 16px;
   border: 1px solid #e0e0e0;
@@ -58,20 +50,20 @@
   box-sizing: border-box;
 }
 
-.form-input:focus {
+.admin-form-input:focus {
   outline: none;
   border-color: #4a90e2;
   background-color: white;
 }
 
-.form-input::placeholder {
+.admin-form-input::placeholder {
   color: #999;
 }
 
-.submit-button {
+.admin-submit-button {
   width: 100%;
   padding: 16px;
-  background-color: #4a90e2;
+  background-color: #9dc4fe;
   color: white;
   border: none;
   border-radius: 8px;
@@ -82,11 +74,11 @@
   margin-top: 10px;
 }
 
-.submit-button:hover {
+.admin-submit-button:hover {
   background-color: #357abd;
 }
 
-.submit-button:active {
+.admin-submit-button:active {
   background-color: #2a5d94;
 }
 
@@ -96,23 +88,23 @@
     padding: 20px;
   }
 
-  .form-container {
+  .admin-form-container {
     padding: 40px 30px;
     max-width: 100%;
   }
 
-  .page-title {
+  .admin-page-title {
     font-size: 20px;
     margin-bottom: 30px;
   }
 
-  .form-header h2 {
+  .admin-form-header h2 {
     font-size: 28px;
   }
 }
 
 @media (max-width: 480px) {
-  .form-container {
+  .admin-form-container {
     padding: 30px 20px;
   }
 
@@ -120,7 +112,7 @@
     gap: 20px;
   }
 
-  .form-header {
+  .admin-form-header {
     margin-bottom: 30px;
   }
 }

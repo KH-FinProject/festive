@@ -69,7 +69,7 @@ function Header() {
                   <Link to="/signin" className="headernav-link hover-grow">
                       Sign In
                   </Link>
-                  <Link to="/signup" className="headernav-link hover-grow">
+                  <Link to="/signup/agreement" className="headernav-link hover-grow">
                       Sign Up
                   </Link>
               </>

@@ -9,7 +9,7 @@
 }
 
 .profile-header {
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .profile-header h1 {
@@ -84,23 +84,23 @@
     max-width: 400px;
 }
 
-.form-row {
-    margin-bottom: 20px;
+.mypage-form-row {
+    margin-bottom: 0px;
 }
 
-.form-row label {
+.mypage-form-row label {
     display: block;
     margin-bottom: 8px;
     font-weight: 500;
     color: #333;
 }
 
-.input-group {
+.mypage-input-group {
     display: flex;
     gap: 10px;
 }
 
-.input-group input {
+.mypage-input-group input {
     flex: 1;
     padding: 12px;
     border: 1px solid #ddd;
@@ -110,7 +110,7 @@
     transition: border-color 0.3s;
 }
 
-.input-group input:focus {
+.mypage-input-group input:focus {
     border-color: #9DC4FE;
 }
 
