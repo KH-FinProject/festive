@@ -9,6 +9,7 @@ function Header() {
   const isLoggedIn = false;
   const user = {
     nickname: "홍길동",
+    isAdmin: true,
     profileImage: "https://via.placeholder.com/30",
   };
   return (
@@ -27,6 +28,7 @@ function Header() {
           { name: "AI 여행코스 추천", path: "/ai-travel" },
           { name: "고객센터", path: "#" },
           { name: "부스참가신청", path: "#" },
+            ...(user.isAdmin ? [{ name: "관리자", path: "/admin" }] : [])
         ].map((item) =>
           item.path !== "#" ? (
             <Link
