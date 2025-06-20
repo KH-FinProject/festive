@@ -2,6 +2,7 @@ import './This-month-festive.css';
 import {useEffect, useState} from "react";
 import Title from "./Title.jsx";
 import ExpandingCards from "./Month-Slider.jsx";
+import ScrollToTop from "./ScrollToTop.jsx";
 
 const FestivalMainPage = () => {
   // 축제 목록 상태
@@ -158,6 +159,7 @@ const FestivalMainPage = () => {
                   </div>
               ))}
             </div>
+            <ScrollToTop />
 
           </section>
         </div>
