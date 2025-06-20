@@ -72,19 +72,6 @@
   color: #666;
 }
 
-.send-btn {
-  position: absolute;
-  right: -60px;
-  bottom: 0;
-  padding: 6px 12px;
-  background-color: #60a5fa;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
 .chat-input {
   padding: 15px;
   background-color: #fff;

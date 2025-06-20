@@ -7,7 +7,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      "%VITE_KAKAO_MAP_API_KEY%": JSON.stringify(env.VITE_KAKAO_MAP_API_KEY),
+      "process.env.VITE_KAKAO_MAP_API_KEY": JSON.stringify(
+        env.VITE_KAKAO_MAP_API_KEY
+      ),
+      VITE_KAKAO_MAP_API_KEY: JSON.stringify(env.VITE_KAKAO_MAP_API_KEY),
     },
   };
 });

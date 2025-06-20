@@ -11,6 +11,36 @@ import { Map, MapMarker } from "react-kakao-maps-sdk";
 // 카카오맵 API 키는 나중에 환경변수로 설정
 const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
 
+const AIChatbot = () => {
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        '안녕하세요! 축제 여행 계획을 도와드리겠습니다.\n예) "제주도 서귀포시 축제를 알려줘 박물관에서 보고 감귤 따러 사장님이 아닌데가서"\n주의사항 말씀을 보여줘!',
+    },
+  ]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isMapReady, setIsMapReady] = useState(false);
+  const chatContainerRef = useRef(null);
+
+  useEffect(() => {
+    const initializeKakaoMap = async () => {
+      if (window.kakao && window.kakao.maps) {
+        await window.kakao.maps.load();
+        setIsMapReady(true);
+      }
+    };
+    initializeKakaoMap();
+  }, []);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -24,7 +54,6 @@ const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
     setLoading(true);
 
     try {
-
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -95,9 +124,6 @@ const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
                     <p key={i}>{line}</p>
                   ))}
                 </div>
-                {message.role === "user" && (
-                  <button className="send-btn">전송</button>
-                )}
               </div>
             ))}
             {loading && (
@@ -121,13 +147,15 @@ const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
         </div>
 
         <div className="map-section">
-          <Map
-            center={{ lat: 37.5665, lng: 126.978 }}
-            style={{ width: "100%", height: "100%" }}
-            level={3}
-          >
-            <MapMarker position={{ lat: 37.5665, lng: 126.978 }} />
-          </Map>
+          {isMapReady && (
+            <Map
+              center={{ lat: 37.5665, lng: 126.978 }}
+              style={{ width: "100%", height: "100%" }}
+              level={3}
+            >
+              <MapMarker position={{ lat: 37.5665, lng: 126.978 }} />
+            </Map>
+          )}
         </div>
       </div>
 
@@ -178,6 +206,5 @@ const KAKAO_MAP_API_KEY = "YOUR_KAKAO_MAP_API_KEY";
     </div>
   );
 };
-
 
 export default AIChatbot;

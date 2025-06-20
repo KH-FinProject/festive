@@ -4,6 +4,7 @@ import searchbtn from "../assets/searchbtn.png";
 import "./HeaderFooter.css";
 import { Link } from "react-router-dom";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
+import ErrorBoundary from "./ErrorBoundary";
 
 function Header() {
   const isLoggedIn = false;
@@ -51,29 +52,31 @@ function Header() {
         />
         <img src={searchbtn} className="headersearch-btn" />
         <div className="headerweather-placeholder">
+          <ErrorBoundary>
             <Weather />
+          </ErrorBoundary>
         </div>
-          {isLoggedIn ? (
-              <a href={"#"}>
-              <div className="header-user-info">
-                  <img
-                      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
-                      alt="프로필"
-                      className="header-user-profile"
-                  />
-                  <span className="header-user-nickname">{user.nickname}</span>
-              </div>
-              </a>
-          ) : (
-              <>
-                  <Link to="/signin" className="headernav-link hover-grow">
-                      Sign In
-                  </Link>
-                  <Link to="/signup/agreement" className="headernav-link hover-grow">
-                      Sign Up
-                  </Link>
-              </>
-          )}
+        {isLoggedIn ? (
+          <a href={"#"}>
+            <div className="header-user-info">
+              <img
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
+                alt="프로필"
+                className="header-user-profile"
+              />
+              <span className="header-user-nickname">{user.nickname}</span>
+            </div>
+          </a>
+        ) : (
+          <>
+            <Link to="/signin" className="headernav-link hover-grow">
+              Sign In
+            </Link>
+            <Link to="/signup/agreement" className="headernav-link hover-grow">
+              Sign Up
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );
