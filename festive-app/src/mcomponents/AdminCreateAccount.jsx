@@ -15,25 +15,25 @@ const AdminCreateAccount = () => {
   return (
     <div className="content">
       {/* Main Content */}
-      <main className="management-main">
-        <div className="page-header">
-          <h1 className="page-title">관리자 계정생성</h1>
+      <main className="admin-main">
+        <div className="admin-header">
+          <h1 className="admin-title">관리자 계정생성</h1>
         </div>
 
-        <div className="form-container">
-          <div className="form-header">
+        <div className="admin-form-container">
+          <div className="admin-form-header">
             <h2>Festive</h2>
           </div>
 
           <form className="admin-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">
+            <div className="admin-form-group">
+              <label htmlFor="email" className="admin-form-label">
                 이메일
               </label>
               <input
                 type="email"
                 id="email"
-                className="form-input"
+                className="admin-form-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="이메일을 입력하세요"
@@ -41,14 +41,14 @@ const AdminCreateAccount = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
+            <div className="admin-form-group">
+              <label htmlFor="password" className="admin-form-label">
                 비밀번호
               </label>
               <input
                 type="password"
                 id="password"
-                className="form-input"
+                className="admin-form-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="비밀번호를 입력하세요"
@@ -56,7 +56,7 @@ const AdminCreateAccount = () => {
               />
             </div>
 
-            <button type="submit" className="submit-button">
+            <button type="submit" className="admin-submit-button">
               비밀번호 받기
             </button>
           </form>

@@ -8,29 +8,50 @@ import AdminBoardManagement from "./AdminBoardManagement";
 import AdminApplicationStatus from "./AdminApplicationStatus";
 
 import "./AdminCommon.css";
+import HeaderForManager from "./HeaderForManager";
+import AdminBoardWrite from "./AdminBoardWrite";
+import AdminCustomerReply from "./AdminCustomerReply";
+import AdminCustomerReportDetail from "./AdminCustomerReportDetail";
+import AdminApplicationDetail from "./AdminApplicationDetail";
 
 function Admin() {
   return (
-    <BrowserRouter>
-      <div className="member-management-container">
-        <div className="management-content">
-          {/* Sidebar */}
-          <AdminSidebar />
-          <Routes>
-            <Route path="/" element={<AdminMain />} />
-            <Route path="/admin" element={<AdminMain />} />
-            <Route path="/admin/create" element={<AdminCreateAccount />} />
-            <Route path="/admin/users" element={<AdminDeleteMember />} />
-            <Route path="/admin/customer" element={<AdminCustomerService />} />
-            <Route path="/admin/board" element={<AdminBoardManagement />} />
-            <Route
-              path="/admin/applications"
-              element={<AdminApplicationStatus />}
-            />
-          </Routes>
+    <>
+      <HeaderForManager />
+      <BrowserRouter>
+        <div className="admin-management-container">
+          <div className="management-content">
+            {/* Sidebar */}
+            <AdminSidebar />
+            <Routes>
+              <Route path="/admin" element={<AdminMain />} />
+              <Route path="/admin/create" element={<AdminCreateAccount />} />
+              <Route path="/admin/users" element={<AdminDeleteMember />} />
+              <Route
+                path="/admin/customer"
+                element={<AdminCustomerService />}
+              />
+              <Route path="/admin/board" element={<AdminBoardManagement />} />
+              <Route
+                path="/admin/applications"
+                element={<AdminApplicationStatus />}
+              />
+
+              <Route path="/admin/write" element={<AdminBoardWrite />} />
+              <Route path="/admin/reply" element={<AdminCustomerReply />} />
+              <Route
+                path="/admin/detail"
+                element={<AdminCustomerReportDetail />}
+              />
+              <Route
+                path="/admin/appDetail"
+                element={<AdminApplicationDetail />}
+              />
+            </Routes>
+          </div>
         </div>
-      </div>
-    </BrowserRouter>
+      </BrowserRouter>
+    </>
   );
 }
 

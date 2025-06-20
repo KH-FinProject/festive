@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./AdminApplicationStatus.css";
+import { useNavigate } from "react-router-dom";
 
 const AdminApplicationStatus = () => {
   const [applications, setApplications] = useState([
@@ -83,10 +84,16 @@ const AdminApplicationStatus = () => {
     return pages;
   };
 
+  // 상세보기 페이지로 이동
+  const navigate = useNavigate();
+  const handleGotoDetail = (id) => {
+    navigate("/admin/appDetail");
+  };
+
   return (
-    <main className="management-main">
-      <div className="page-header">
-        <h1 className="page-title">신청 현황</h1>
+    <main className="admin-main">
+      <div className="admin-header">
+        <h1 className="admin-title">신청 현황</h1>
       </div>
 
       <div className="status-content">
@@ -107,7 +114,7 @@ const AdminApplicationStatus = () => {
               <div className="application-actions">
                 <button
                   className="btn-detail"
-                  onClick={() => console.log("내용보기", application.id)}
+                  onClick={() => handleGotoDetail(application.id)}
                 >
                   내용보기
                 </button>
@@ -118,7 +125,7 @@ const AdminApplicationStatus = () => {
                   onClick={() => handleApprove(application.id)}
                   disabled={application.status === "approved"}
                 >
-                  {application.status === "approved" ? "승인됨" : "신청 취소"}
+                  {application.status === "approved" ? "취소됨" : "신청 취소"}
                 </button>
               </div>
             </div>
