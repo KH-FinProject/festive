@@ -1,7 +1,7 @@
 // Weather.jsx
 import { useEffect, useState } from "react";
 
-const Weather = ({ iconSize = 30 }) => {
+const Weather = ({ iconSize = 50 }) => {
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState(null);
 
