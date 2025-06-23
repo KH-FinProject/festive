@@ -5,7 +5,7 @@ import Signin from "./jcomponents/Signin/Signin.jsx";
 import Signup from "./jcomponents/Signup/Signup.jsx";
 import WaglePage from "./ycomponents/wagle/WaglePage.jsx";
 import WritePage from "./ycomponents/wagle/WritePage.jsx";
-import Find from "./jcomponents/FindId/Find.jsx";
+import Find from "./jcomponents/Find/Find.jsx";
 import FestivalMainPage from "./scomponents/monthFestive/This-month-festive.jsx";
 import WagleDetail from "./ycomponents/wagle/WagleDetail.jsx";
 import FestiveCalendar from "./kcomponents/festiveCalendar/FestiveCalendar.jsx";
@@ -20,6 +20,7 @@ import AITravelCourse from "./ycomponents/aitravel/AITravelCourse.jsx";
 import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
 import AdminRoutes from "./mcomponents/Admin.jsx";
 import Booth from "./scomponents/booth/Booth.jsx";
+import LocalFestive from "./jcomponents/localFestive/LocalFestive.jsx";
 
 const AppRoutes = () => {
   return (
