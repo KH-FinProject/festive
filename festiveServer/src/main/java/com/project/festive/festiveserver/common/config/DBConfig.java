@@ -1,0 +1,65 @@
+package com.project.festive.festiveserver.common.config;
+
+import javax.sql.DataSource;
+
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import lombok.RequiredArgsConstructor;
+
+@Configuration
+@Profile("local")
+@RequiredArgsConstructor
+public class DBConfig {
+  
+  private final ApplicationContext applicationContext;
+
+  @Bean
+  @ConfigurationProperties(prefix = "spring.datasource.hikari")
+  public HikariConfig hikariConfig() {
+    return new HikariConfig();
+  }
+
+  @Bean
+  public DataSource dataSource(HikariConfig hikariConfig) {
+
+    DataSource dataSource = new HikariDataSource(hikariConfig);
+
+    return dataSource;
+  }
+
+  @Bean
+  public SqlSessionFactory sessionFactory(DataSource dataSource) throws Exception{
+	
+	  SqlSessionFactoryBean sessionFactoryBean = new SqlSessionFactoryBean();
+		
+	  sessionFactoryBean.setDataSource(dataSource);
+		
+	  sessionFactoryBean.setMapperLocations(applicationContext.getResources("classpath:/mappers/**.xml"));
+	  sessionFactoryBean.setTypeAliasesPackage("com.project.festive.festiveserver");
+		
+	  sessionFactoryBean.setConfigLocation(applicationContext.getResource("classpath:mybatis-config.xml"));
+	
+	  return sessionFactoryBean.getObject();
+  }
+	
+  @Bean
+  public SqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sessionFactory) {
+	  return new SqlSessionTemplate(sessionFactory);
+  }
+	
+  @Bean
+  public DataSourceTransactionManager dataSourceTransactionManager(DataSource dataSource) {
+	  return new DataSourceTransactionManager(dataSource);
+  }
+}
