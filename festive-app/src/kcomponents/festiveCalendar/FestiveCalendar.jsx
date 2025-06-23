@@ -22,6 +22,12 @@ const FestiveCalendar = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentFestivals = selectedDateFestivals.slice(startIndex, startIndex + itemsPerPage);
 
+    // 페이지 번호 버튼을 그룹화하여 5개씩만 보여주기
+    const pageGroupSize = 5;
+    const pageGroupStart = Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize + 1;
+    const pageGroupEnd = Math.min(pageGroupStart + pageGroupSize - 1, totalPages);
+
+
 
     useEffect(() => {
         const today = new Date();
@@ -298,75 +304,109 @@ const FestiveCalendar = () => {
                         </div>
                     )}
 
-                    <div className="calendar-festivals-grid">
-                        {currentFestivals.map((festival) => (
-                            <div
-                                key={festival.id}
-                                className="calendar-festival-card"
-                                onClick={() => handleFestivalClick(festival.id)}
-                            >
-                                <div className="calendar-festival-image-container">
-                                    <img
-                                        src={festival.image}
-                                        alt={festival.title}
-                                        className="calendar-festival-image"
-                                    />
-                                    <div className={`calendar-festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
-                                        {festival.status}
+                    <div>
+                        {/* 카드 그리드와 페이지네이션을 같은 div로 묶는다 */}
+                        <div className="calendar-festivals-grid">
+                            {currentFestivals.map((festival) => (
+                                <div
+                                    key={festival.id}
+                                    className="calendar-festival-card"
+                                    onClick={() => handleFestivalClick(festival.id)}
+                                >
+                                    <div className="calendar-festival-image-container">
+                                        <img
+                                            src={festival.image}
+                                            alt={festival.title}
+                                            className="calendar-festival-image"
+                                        />
+                                        <div className={`calendar-festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
+                                            {festival.status}
+                                        </div>
+                                    </div>
+
+                                    <div className="calendar-festival-info">
+                                        <h3 className="calendar-festival-title">{festival.title}</h3>
+                                        <p className="calendar-festival-location">
+                                            <span className="icon-wrapper">
+                                                <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                                </svg>
+                                            </span>
+                                            <span className="location-text">{festival.location}</span>
+                                        </p>
+
+                                        <p className="calendar-festival-date">
+                                            <svg className="calendar-icon" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                            </svg>
+                                            {festival.date}
+                                        </p>
                                     </div>
                                 </div>
-
-                                <div className="calendar-festival-info">
-                                    <h3 className="calendar-festival-title">{festival.title}</h3>
-                                    <p className="calendar-festival-location">
-                                        <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                        </svg>
-                                        {festival.location}
-                                    </p>
-                                    <p className="calendar-festival-date">
-                                        <svg className="calendar-icon" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                                        </svg>
-                                        {festival.date}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {totalPages > 1 && (
-                        <div className="pagination-container">
-                            <button
-                                className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage === 1}
-                            >
-                                이전
-                            </button>
-
-                            <div className="pagination-numbers">
-                                {[...Array(totalPages)].map((_, index) => (
-                                    <button
-                                        key={index + 1}
-                                        className={`pagination-number ${currentPage === index + 1 ? 'active' : ''}`}
-                                        onClick={() => handlePageChange(index + 1)}
-                                    >
-                                        {index + 1}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <button
-                                className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === totalPages}
-                            >
-                                다음
-                            </button>
+                            ))}
                         </div>
-                    )}
+
+                        {/* 바로 아래에 페이지네이션 표시 */}
+                        {totalPages > 1 && (
+                            <div className="pagination-container">
+
+                                {/* 맨 처음으로 */}
+                                <button
+                                    className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                                    onClick={() => handlePageChange(1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    &laquo;
+                                </button>
+
+                                {/* 이전 그룹 */}
+                                <button
+                                    className={`pagination-btn ${pageGroupStart === 1 ? 'disabled' : ''}`}
+                                    onClick={() => handlePageChange(pageGroupStart - 1)}
+                                    disabled={pageGroupStart === 1}
+                                >
+                                    &lsaquo;
+                                </button>
+
+                                {/* 현재 그룹 페이지 번호 출력 */}
+                                <div className="pagination-numbers">
+                                    {Array.from({ length: pageGroupEnd - pageGroupStart + 1 }, (_, idx) => {
+                                        const pageNumber = pageGroupStart + idx;
+                                        return (
+                                            <button
+                                                key={pageNumber}
+                                                className={`pagination-number ${currentPage === pageNumber ? 'active' : ''}`}
+                                                onClick={() => handlePageChange(pageNumber)}
+                                            >
+                                                {pageNumber}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* 다음 그룹 */}
+                                <button
+                                    className={`pagination-btn ${pageGroupEnd === totalPages ? 'disabled' : ''}`}
+                                    onClick={() => handlePageChange(pageGroupEnd + 1)}
+                                    disabled={pageGroupEnd === totalPages}
+                                >
+                                    &rsaquo;
+                                </button>
+
+                                {/* 맨 끝으로 */}
+                                <button
+                                    className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                                    onClick={() => handlePageChange(totalPages)}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    &raquo;
+                                </button>
+                            </div>
+                        )}
+
+                    </div>
                 </section>
+
             </main>
         </div>
     );

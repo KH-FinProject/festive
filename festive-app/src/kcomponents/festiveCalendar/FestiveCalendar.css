@@ -190,7 +190,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
-    margin-bottom: 3rem;
+    /* margin-bottom: 3rem; */
 }
 
 /* 축제 카드 */
@@ -261,16 +261,39 @@
     text-overflow: ellipsis;
 }
 
-.calendar-festival-location,
-.calendar-festival-date {
+.calendar-festival-location {
     display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    color: #6b7280;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.location-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* 최대 두 줄 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2em;
+    max-height: 2.4em;
+}
+
+.icon-wrapper {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.calendar-festival-date {
+    /* display: flex; */
     align-items: center;
     color: #6b7280;
     font-size: 0.8rem;
     margin-bottom: 0.25rem;
 }
 
-.calendar-festival-location:last-child,
 .calendar-festival-date:last-child {
     margin-bottom: 0;
 }
@@ -412,4 +435,60 @@
 .fc-event,
 .fc-event * {
     color: black !important;
+}
+
+/* 페이지네이션 전체 영역 정렬 */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    /* margin: 20px auto 0; */
+    flex-wrap: wrap;
+}
+
+/* 숫자 버튼 및 이전/다음/처음/끝 버튼 공통 스타일 */
+.pagination-btn,
+.pagination-number {
+    padding: 8px 8px;
+    margin: 2px;
+    border: none;
+    border-radius: 8px;
+    background-color: #f1f1f1;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    width: 30px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 마우스 호버 시 효과 */
+.pagination-btn:hover:not(.disabled),
+.pagination-number:hover:not(.active) {
+    background-color: #ddd;
+}
+
+/* 현재 선택된 페이지 */
+.pagination-number.active {
+    background-color: #60a5fa;
+    /* Tailwind 'blue-500' */
+    color: white;
+    font-weight: bold;
+}
+
+/* 비활성화된 버튼 */
+.pagination-btn.disabled {
+    background-color: #e2e2e2;
+    color: #aaa;
+    cursor: default;
+}
+
+/* 숫자 버튼 그룹 */
+.pagination-numbers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
 }
