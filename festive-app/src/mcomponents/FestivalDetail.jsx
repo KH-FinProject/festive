@@ -33,7 +33,6 @@ const FestivalDetail = () => {
 
   // 슬라이더
   const FestivalSwiper = () => {
-    console.log(festivalImg);
     return (
       <Swiper
         slidesPerView={3} // 기본 3장씩
@@ -51,7 +50,7 @@ const FestivalDetail = () => {
       >
         {festivalImg.map((img, idx) => (
           <SwiperSlide key={idx}>
-            <img src={img.smallimageurl} alt={`slide-${idx}`} />
+            <img src={img.originimgurl} alt={`slide-${idx}`} />
           </SwiperSlide>
         ))}
       </Swiper>
@@ -80,6 +79,7 @@ const FestivalDetail = () => {
   const fetchFestivalImg = async () => {
     try {
       const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+      const contentId = "";
 
       const url = `https://apis.data.go.kr/B551011/KorService2/detailImage2?serviceKey=${serviceKey}&MobileApp=Festive&MobileOS=ETC&_type=json&contentId=3113671&imageYN=Y`;
 
@@ -103,8 +103,6 @@ const FestivalDetail = () => {
 
       setPosterImg(poster);
       setFestivalImg(subImgs);
-
-      console.log(poster);
     } catch (error) {
       console.error("축제 이미지 정보 로드 실패:", error);
     }
@@ -154,7 +152,7 @@ const FestivalDetail = () => {
               <FestivalSwiper />
             </div>
 
-            {/* Festival Details */}
+            {/* Festival Details 축제 상세설명*/}
             <div className="festival-details">
               <p>{festival.overview}</p>
             </div>
