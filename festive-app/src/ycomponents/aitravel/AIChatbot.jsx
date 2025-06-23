@@ -2123,13 +2123,11 @@ const AIChatbot = () => {
         customOverlay.setMap(map);
         map._overlays.push(customOverlay);
 
-        // 장소명 표시 (마커 아래) - 좌표 정확성 표시 포함
+        // 장소명 표시 (마커 아래) - 실제 주소 표시
         const coordinateStatus = isRealCoordinate ? "📍" : "⚠️";
-        const coordinateTooltip = isRealCoordinate
-          ? "정확한 위치"
-          : "대략적 위치";
 
-        const infoContent = `
+        // 초기 정보창 내용 (주소 로딩 중)
+        let infoContent = `
           <div style="
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid #ddd;
@@ -2145,7 +2143,7 @@ const AIChatbot = () => {
           ">
             ${coordinateStatus} ${loc.name || `장소 ${index + 1}`}
             <div style="font-size: 10px; color: #666; font-weight: normal; margin-top: 2px;">
-              ${coordinateTooltip}
+              주소 확인중...
             </div>
           </div>
         `;
@@ -2158,6 +2156,61 @@ const AIChatbot = () => {
 
         infoOverlay.setMap(map);
         map._overlays.push(infoOverlay);
+
+        // Geocoder를 사용해서 좌표를 주소로 변환
+        if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
+          const geocoder = new window.kakao.maps.services.Geocoder();
+
+          geocoder.coord2Address(loc.lng, loc.lat, (result, status) => {
+            let addressText = isRealCoordinate ? "정확한 위치" : "대략적 위치";
+
+            if (status === window.kakao.maps.services.Status.OK) {
+              const address = result[0];
+              if (address.road_address) {
+                // 도로명 주소가 있으면 도로명 주소 사용
+                addressText = address.road_address.address_name;
+              } else if (address.address) {
+                // 지번 주소 사용
+                addressText = address.address.address_name;
+              }
+
+              // 주소가 너무 길면 줄임
+              if (addressText.length > 30) {
+                const parts = addressText.split(" ");
+                if (parts.length > 3) {
+                  addressText = parts.slice(-3).join(" "); // 뒤의 3개 부분만 표시
+                } else {
+                  addressText = addressText.substring(0, 30) + "...";
+                }
+              }
+            }
+
+            // 주소 정보를 포함한 새로운 내용으로 업데이트
+            const updatedInfoContent = `
+              <div style="
+                background: rgba(255, 255, 255, 0.95);
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 8px 12px;
+                font-size: 12px;
+                font-weight: bold;
+                color: #333;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+                max-width: 200px;
+                word-break: keep-all;
+                text-align: center;
+              ">
+                ${coordinateStatus} ${loc.name || `장소 ${index + 1}`}
+                <div style="font-size: 10px; color: #666; font-weight: normal; margin-top: 2px;">
+                  ${addressText}
+                </div>
+              </div>
+            `;
+
+            // 기존 오버레이의 내용을 업데이트
+            infoOverlay.setContent(updatedInfoContent);
+          });
+        }
 
         bounds.extend(position);
       });
