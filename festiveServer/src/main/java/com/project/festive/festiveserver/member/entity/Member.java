@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,6 +31,7 @@ import lombok.Setter;
 @Table(name = "MEMBER")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Member {
@@ -46,7 +48,7 @@ public class Member {
 
 	@Column(nullable = false)
 	private String memberName;
-	
+
 	@Column(unique = true, nullable = false) // DB 컬럼 속성 지정. 중복 불가, null 불가
 	private String email;
 
@@ -54,7 +56,7 @@ public class Member {
 	private String password; // 암호화된 비밀번호 저장
 
 	@Column(nullable = false) 
-	private String name;
+	private String socialId;
 
 	@Column(nullable = false)
 	private String role;

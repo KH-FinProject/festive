@@ -46,16 +46,14 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
         } else {
             return null;
         }
-        
-        
 
-        //추후 작성
-        String memberName = oAuth2Response.getProvider() + " " + oAuth2Response.getProviderId();
+        String socialId = oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId();
         
         Member member = new Member();
-        member.setMemberName(memberName);
-        member.setName(oAuth2Response.getName());
-        member.setRole("ROLE_MEMBER");
+        member.setMemberName(oAuth2Response.getName());
+        member.setEmail(oAuth2Response.getEmail());
+        member.setSocialId(socialId);
+        member.setRole("USER");
         
         return new CustomOAuth2User(member);
     }

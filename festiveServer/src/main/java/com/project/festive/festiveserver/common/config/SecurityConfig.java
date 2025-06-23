@@ -9,7 +9,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
+import com.project.festive.festiveserver.util.JwtUtil;
 
 @Configuration
 @EnableWebSecurity
@@ -20,9 +22,14 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomSuccessHandler customSuccessHandler;
+    private final JwtUtil jwtUtil;
     
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
+
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JwtUtil jwtUtil) {
         this.customOAuth2UserService = customOAuth2UserService;
+        this.customSuccessHandler = customSuccessHandler;
+        this.jwtUtil = jwtUtil;
     }
     
     @Bean
@@ -38,7 +45,7 @@ public class SecurityConfig {
         .formLogin(auth -> auth
         .loginPage("/login")  // 커스텀 로그인 페이지
         .loginProcessingUrl("/auth/login")  // 로그인 처리 URL
-        .defaultSuccessUrl("/")  // 로그인 성공 시 리다이렉트
+        .defaultSuccessUrl("http://localhost:5173/")  // 로그인 성공 시 리다이렉트
         .failureUrl("/error"))  // 로그인 실패 시
         
         //HTTP Basic 인증 방식 disable
@@ -47,7 +54,8 @@ public class SecurityConfig {
         //oauth2
         .oauth2Login(oauth2 -> oauth2
         .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
-        .userService(customOAuth2UserService)))
+        .userService(customOAuth2UserService))
+        .successHandler(customSuccessHandler))
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth

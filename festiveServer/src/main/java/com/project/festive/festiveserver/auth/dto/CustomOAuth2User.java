@@ -1,20 +1,20 @@
 package com.project.festive.festiveserver.auth.dto;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-import com.project.festive.festiveserver.member.entity.Member;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import com.project.festive.festiveserver.member.dto.MemberDto;
 
 public class CustomOAuth2User implements OAuth2User {
     
-    private final Member member;
+    private final MemberDto memberDto;
     
-    public CustomOAuth2User(Member member) {
-        this.member = member;
+    public CustomOAuth2User(MemberDto memberDto) {
+        this.memberDto = memberDto;
     }
     
     @Override
@@ -30,7 +30,7 @@ public class CustomOAuth2User implements OAuth2User {
         collection.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return member.getRole();
+                return memberDto.getRole();
             }
         });
         
@@ -39,10 +39,22 @@ public class CustomOAuth2User implements OAuth2User {
     
     @Override
     public String getName() {
-        return member.getName();
+        return memberDto.getMemberName();
     }
-    
-    public String getMemberName() {
-        return member.getMemberName();
+
+    public Long getMemberNo() {
+        return memberDto.getMemberNo();
+    }
+
+    public String getEmail() {
+        return memberDto.getEmail();
+    }
+
+    public String getRole() {
+        return memberDto.getRole();
+    }
+
+    public String getSocialId() {
+        return memberDto.getSocialId();
     }
 }
