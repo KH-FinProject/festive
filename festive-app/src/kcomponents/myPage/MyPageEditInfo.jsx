@@ -5,7 +5,52 @@ import MyPageSideBar from './MyPageSideBar';
 
 const MyPageEditInfo = () => {
     const [showEmailModal, setShowEmailModal] = useState(false);
-    // const [selectedMenu, setSelectedMenu] = useState('개인정보 수정');
+    const [currentEmail, setCurrentEmail] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [currentEmailDomain, setCurrentEmailDomain] = useState('');
+    const [newEmailDomain, setNewEmailDomain] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState({ carrier: '', middle: '', last: '' });
+    const [address, setAddress] = useState({ city: '', district: '', detail: '', zipcode: '' });
+
+    // 이메일 도메인 옵션
+    const emailDomains = [
+        { value: '', label: '선택하세요' },
+        { value: 'gmail.com', label: 'gmail.com' },
+        { value: 'naver.com', label: 'naver.com' },
+        { value: 'hanmail.net', label: 'hanmail.net' },
+        { value: 'daum.net', label: 'daum.net' },
+        { value: 'yahoo.com', label: 'yahoo.com' },
+        { value: 'hotmail.com', label: 'hotmail.com' },
+        { value: 'outlook.com', label: 'outlook.com' },
+        { value: 'custom', label: '직접입력' }
+    ];
+
+    // 통신사 옵션
+    const phoneCarriers = [
+        { value: '', label: '선택' },
+        { value: '010', label: '010' },
+        { value: '011', label: '011' },
+        { value: '016', label: '016' },
+        { value: '017', label: '017' },
+        { value: '018', label: '018' },
+        { value: '019', label: '019' }
+    ];
+
+    const handleCurrentEmailDomainChange = (e) => {
+        const value = e.target.value;
+        setCurrentEmailDomain(value);
+        if (value !== 'custom') {
+            setCurrentEmail(currentEmail.split('@')[0] + (value ? '@' + value : ''));
+        }
+    };
+
+    const handleNewEmailDomainChange = (e) => {
+        const value = e.target.value;
+        setNewEmailDomain(value);
+        if (value !== 'custom') {
+            setNewEmail(newEmail.split('@')[0] + (value ? '@' + value : ''));
+        }
+    };
 
     return (
         <div className="page-container">
@@ -25,13 +70,79 @@ const MyPageEditInfo = () => {
                     <div className="password-content">
                         <div className="password-form-row">
                             <label className="form-label">전화번호</label>
-                            <input type="text" className="form-input full-width" placeholder="수정할 전화번호를 입력하세요." />
+                            <div className="phone-input-container">
+                                <select
+                                    className="form-input phone-carrier"
+                                    value={phoneNumber.carrier}
+                                    onChange={(e) => setPhoneNumber({ ...phoneNumber, carrier: e.target.value })}
+                                >
+                                    {phoneCarriers.map(carrier => (
+                                        <option key={carrier.value} value={carrier.value}>
+                                            {carrier.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <span className="phone-separator">-</span>
+                                <input
+                                    type="text"
+                                    className="form-input phone-middle"
+                                    placeholder="0000"
+                                    maxLength="4"
+                                    style={{ width: '100px' }}
+                                    value={phoneNumber.middle}
+                                    onChange={(e) => setPhoneNumber({ ...phoneNumber, middle: e.target.value })}
+                                />
+                                <span className="phone-separator">-</span>
+                                <input
+                                    type="text"
+                                    className="form-input phone-last"
+                                    placeholder="0000"
+                                    maxLength="4"
+                                    style={{ width: '100px' }}
+                                    value={phoneNumber.last}
+                                    onChange={(e) => setPhoneNumber({ ...phoneNumber, last: e.target.value })}
+                                />
+                            </div>
                         </div>
                         <br />
                         <div className="password-form-row">
                             <label className="form-label">이메일</label>
                             <div className="form-row">
-                                <input type="text" className="form-input" placeholder="수정할 이메일을 입력하세요." />
+                                <div className="email-input-container">
+                                    <input
+                                        type="text"
+                                        className="form-input email-local"
+                                        placeholder="이메일 아이디"
+                                        onChange={(e) => {
+                                            const localPart = e.target.value;
+                                            const domain = currentEmailDomain === 'custom' ? currentEmail.split('@')[1] || '' : currentEmailDomain;
+                                            setCurrentEmail(localPart + (domain ? '@' + domain : ''));
+                                        }}
+                                    />
+                                    <span className="email-separator">@</span>
+                                    <select
+                                        className="form-input email-domain-select"
+                                        value={currentEmailDomain}
+                                        onChange={handleCurrentEmailDomainChange}
+                                    >
+                                        {emailDomains.map(domain => (
+                                            <option key={domain.value} value={domain.value}>
+                                                {domain.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {currentEmailDomain === 'custom' && (
+                                        <input
+                                            type="text"
+                                            className="form-input email-custom-domain"
+                                            placeholder="도메인 입력"
+                                            onChange={(e) => {
+                                                const localPart = currentEmail.split('@')[0] || '';
+                                                setCurrentEmail(localPart + '@' + e.target.value);
+                                            }}
+                                        />
+                                    )}
+                                </div>
                                 <button
                                     className="form-button secondary"
                                     onClick={() => setShowEmailModal(true)}
@@ -45,14 +156,32 @@ const MyPageEditInfo = () => {
                         <div className="password-form-row">
                             <label className="form-label">주소</label>
                             <div className="form-row">
-                                <input type="text" className="form-input" placeholder="우편번호" />
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="우편번호"
+                                    value={address.zipcode}
+                                    onChange={(e) => setAddress({ ...address, zipcode: e.target.value })}
+                                />
                                 <button className="form-button secondary">주소 검색</button>
                             </div>
                             <div className="form-row">
-                                <input type="text" className="form-input full-width" placeholder="주소" />
+                                <input
+                                    type="text"
+                                    className="form-input full-width"
+                                    placeholder="주소"
+                                    value={address.detail}
+                                    onChange={(e) => setAddress({ ...address, detail: e.target.value })}
+                                />
                             </div>
                             <div className="form-row">
-                                <input type="text" className="form-input full-width" placeholder="상세주소" />
+                                <input
+                                    type="text"
+                                    className="form-input full-width"
+                                    placeholder="상세주소"
+                                    value={address.detail}
+                                    onChange={(e) => setAddress({ ...address, detail: e.target.value })}
+                                />
                             </div>
                         </div>
                         <br />
@@ -87,17 +216,48 @@ const MyPageEditInfo = () => {
                                     <br />
                                     <div className="current-email-section">
                                         <div className="email-input-group">
-                                            <label>현재 이메일</label>
-                                            <input type="email" className="email-input" />
-                                        </div>
-                                        <div className="email-input-group">
-                                            <label>변경할 이메일</label>
-                                            <input type="email" className="email-input" />
+                                            <label>수정할 이메일</label>
+                                            <div className="email-input-container modal-email">
+                                                <input
+                                                    type="text"
+                                                    className="email-input email-local"
+                                                    placeholder="아이디"
+                                                    style={{ width: '104.5px' }}
+                                                    onChange={(e) => {
+                                                        const localPart = e.target.value;
+                                                        const domain = newEmailDomain === 'custom' ? newEmail.split('@')[1] || '' : newEmailDomain;
+                                                        setNewEmail(localPart + (domain ? '@' + domain : ''));
+                                                    }}
+                                                />
+                                                <span className="email-separator">@</span>
+                                                <select
+                                                    className="email-input email-domain-select"
+                                                    value={newEmailDomain}
+                                                    onChange={handleNewEmailDomainChange}
+                                                >
+                                                    {emailDomains.map(domain => (
+                                                        <option key={domain.value} value={domain.value}>
+                                                            {domain.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {newEmailDomain === 'custom' && (
+                                                    <input
+                                                        type="text"
+                                                        className="email-input email-custom-domain"
+                                                        placeholder="도메인 입력"
+                                                        onChange={(e) => {
+                                                            const localPart = newEmail.split('@')[0] || '';
+                                                            setNewEmail(localPart + '@' + e.target.value);
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
                                             <button className="verify-btn">인증</button>
                                         </div>
                                         <div className="email-input-group">
                                             <label>이메일 인증키</label>
-                                            <input type="text" className="email-input" />
+                                            <input type="text" className="email-input" placeholder="인증번호를 입력하세요" />
                                             <button className="confirm-btn">확인</button>
                                         </div>
                                     </div>

@@ -1,166 +1,303 @@
-// import React, { useState } from 'react';
 import '../myPage/MyPageWithdrawal.css';
 import './FestiveCalendar.css';
 import { useEffect, useState } from 'react';
 import Title from './Title.jsx';
 
 import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid'; // 월간 보기
-import interactionPlugin from '@fullcalendar/interaction'; // 클릭 같은 기능 추가용
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
-// import '@fullcalendar/common/main.css';
-// import '@fullcalendar/daygrid/main.css';
+function formatDate(yyyymmdd) {
+    return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
+}
 
 const FestiveCalendar = () => {
-    // 축제 목록 상태
     const [festivals, setFestivals] = useState([]);
+    const [selectedDateFestivals, setSelectedDateFestivals] = useState([]);
+    const [clickedDate, setClickedDate] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 4; // 페이지당 4개씩 표시
+    const itemsPerPage = 4;
 
-    // 페이지네이션 계산
-    const totalPages = Math.ceil(festivals.length / itemsPerPage);
+    const totalPages = Math.ceil(selectedDateFestivals.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentFestivals = festivals.slice(startIndex, startIndex + itemsPerPage);
+    const currentFestivals = selectedDateFestivals.slice(startIndex, startIndex + itemsPerPage);
 
-    // 예시 축제 목록 데이터
+
     useEffect(() => {
-        // 실제로는 API 호출이 들어갈 부분
-        const mockFestivals = [
-            {
-                id: 1,
-                title: "서울 벚꽃축제",
-                location: "여의도 한강공원",
-                date: "2025.04.05 - 2025.04.15",
-                image: "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=300&h=200&fit=crop",
-                status: "진행중"
-            },
-            {
-                id: 2,
-                title: "부산 바다축제",
-                location: "해운대 해수욕장",
-                date: "2025.07.20 - 2025.07.25",
-                image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300&h=200&fit=crop",
-                status: "예정"
-            },
-            {
-                id: 3,
-                title: "전주 한옥마을 축제",
-                location: "전주 한옥마을",
-                date: "2025.05.01 - 2025.05.07",
-                image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
-                status: "진행중"
-            },
-            {
-                id: 4,
-                title: "제주 유채꽃축제",
-                location: "제주 성산일출봉",
-                date: "2025.04.10 - 2025.04.20",
-                image: "https://images.unsplash.com/photo-1539650116574-75c0c6d73c6e?w=300&h=200&fit=crop",
-                status: "진행중"
-            },
-            {
-                id: 5,
-                title: "경주 문화축제",
-                location: "경주 불국사",
-                date: "2025.09.15 - 2025.09.22",
-                image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=200&fit=crop",
-                status: "예정"
-            },
-            {
-                id: 6,
-                title: "강릉 커피축제",
-                location: "강릉 안목해변",
-                date: "2025.10.01 - 2025.10.07",
-                image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=200&fit=crop",
-                status: "예정"
-            },
-            {
-                id: 7,
-                title: "대구 치킨축제",
-                location: "대구 두류공원",
-                date: "2025.06.15 - 2025.06.20",
-                image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300&h=200&fit=crop",
-                status: "예정"
-            },
-            {
-                id: 8,
-                title: "인천 차이나타운 축제",
-                location: "인천 차이나타운",
-                date: "2025.08.10 - 2025.08.15",
-                image: "https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=300&h=200&fit=crop",
-                status: "예정"
-            },
-            {
-                id: 9,
-                title: "광주 김치축제",
-                location: "광주 국립아시아문화전당",
-                date: "2025.11.01 - 2025.11.07",
-                image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300&h=200&fit=crop",
-                status: "예정"
-            }
-        ];
-        setFestivals(mockFestivals);
+        const today = new Date();
+        const yyyymmdd = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const filterDate = today.toISOString().slice(0, 10);
+        fetchFestivalEventsByDate(yyyymmdd, filterDate);
     }, []);
 
-    // handlePageChange 함수를 App 컴포넌트에 추가
+    async function fetchFestivalEventsByDate(dateStr, filterDate) {
+
+        const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+
+        try {
+            const response = await fetch(
+                `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=19960205&arrange=A&numOfRows=10000&pageNo=1`
+            );
+            const result = await response.json();
+            const items = result.response.body.items.item || [];
+
+            const today = new Date();
+            const filterTarget = new Date(filterDate);
+
+            const festivalCards = items.map((item, idx) => {
+                const start = new Date(formatDate(item.eventstartdate));
+                const end = item.eventenddate ? new Date(formatDate(item.eventenddate)) : start;
+
+                let status = '예정';
+                if (today >= start && today <= end) {
+                    status = '진행중';
+                } else if (today > end) {
+                    status = '종료';
+                }
+
+                return {
+                    id: item.contentid || idx + 1,
+                    title: item.title,
+                    location: item.addr1 || '미정',
+                    date: `${formatDate(item.eventstartdate)} - ${formatDate(item.eventenddate)}`,
+                    image: item.firstimage || 'https://via.placeholder.com/300x200?text=No+Image',
+                    status,
+                    startDate: formatDate(item.eventstartdate),
+                    endDate: item.eventenddate ? formatDate(item.eventenddate) : formatDate(item.eventstartdate),
+                };
+            });
+
+            // 시작 날짜순 정렬 추가
+            // festivalCards.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+            festivalCards.sort((a, b) => {
+                const statusPriority = {
+                    '진행중': 1,
+                    '예정': 2,
+                    '종료': 3,
+                };
+
+                const aPriority = statusPriority[a.status];
+                const bPriority = statusPriority[b.status];
+
+                // 상태 우선순위 비교
+                if (aPriority !== bPriority) {
+                    return aPriority - bPriority;
+                }
+
+                // 상태 같으면 시작일 최신순 정렬 (내림차순)
+                return new Date(b.startDate) - new Date(a.startDate);
+            });
+
+
+            const filteredFestivals = festivalCards.filter((festival) => {
+                const start = new Date(festival.startDate);
+                const end = new Date(festival.endDate);
+                return filterTarget >= start && filterTarget <= end;
+            });
+
+            setFestivals(festivalCards);
+            setSelectedDateFestivals(filteredFestivals);
+        } catch (error) {
+            console.error('축제 데이터 로딩 실패:', error);
+        }
+    }
+
+    const handleDateClick = (info) => {
+        const clicked = info.dateStr;
+
+        setClickedDate(clicked);
+        fetchFestivalEventsByDate(clicked.replace(/-/g, ''), clicked);
+        setCurrentPage(1);
+    };
+
+    const groupedByDate = {};
+    festivals.forEach((festival) => {
+        const start = new Date(festival.startDate);
+        const end = new Date(festival.endDate);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const key = d.toISOString().split('T')[0];
+            groupedByDate[key] = (groupedByDate[key] || 0) + 1;
+        }
+    });
+
     const handlePageChange = (pageNumber) => {
-        // 페이지 번호가 유효한 범위 내에 있는지 확인
         if (pageNumber >= 1 && pageNumber <= totalPages) {
             setCurrentPage(pageNumber);
-
-            // 페이지 변경 시 스크롤을 맨 위로 이동 (선택사항)
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            // window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
-    // 축제 클릭 핸들러
     const handleFestivalClick = (festivalId) => {
-        // 실제로는 React Router로 상세페이지 이동
         console.log(`축제 ${festivalId} 상세페이지로 이동`);
-        // navigate(`/festival/${festivalId}`);
     };
 
-    // 이벤트 목록 샘플
-    const events = [
-        { title: '면접 연습', date: '2025-06-25' },
-        { title: '팀 회의', date: '2025-06-27' },
-    ];
+    const handleDatesSet = (arg) => {
+        const calendarDate = arg.start;
+        const today = new Date();
+
+        if (
+            calendarDate.getFullYear() === today.getFullYear() &&
+            calendarDate.getMonth() === today.getMonth()
+        ) {
+            const yyyymmdd = today.toISOString().slice(0, 10).replace(/-/g, '');
+            const filterDate = today.toISOString().slice(0, 10);
+            fetchFestivalEventsByDate(yyyymmdd, filterDate);
+
+            // 클릭된 날짜를 오늘 날짜로 설정
+            setClickedDate(today.toISOString().slice(0, 10));
+            setCurrentPage(1);
+        }
+    };
+
+    const handleEventClick = (info) => {
+        // 이벤트가 클릭된 날짜 정보 가져오기
+        const clickedDate = info.event.startStr;
+
+        // handleDateClick과 동일한 로직 실행
+        setClickedDate(clickedDate);
+        fetchFestivalEventsByDate(clickedDate.replace(/-/g, ''), clickedDate);
+        setCurrentPage(1);
+
+        // 이벤트 기본 동작 방지 (페이지 이동 등)
+        info.jsEvent.preventDefault();
+    };
+
+    function formatKoreanDate(dateStr) {
+        const [year, month, day] = dateStr.split('-');
+        return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
+    }
+
+    // FestiveCalendar.jsx에서 수정할 부분
+
+    // 1. 색상을 결정하는 함수 추가
+    function getEventColor(count) {
+        // 각 구간별 색상 분류
+        const lowRanges = [
+            [0, 10], [31, 40], [61, 70], [91, 100]
+        ];
+        const mediumRanges = [
+            [11, 20], [41, 50], [71, 80], [101, 110]
+        ];
+        const highRanges = [
+            [21, 30], [51, 60], [81, 90], [111, 120]
+        ];
+
+        // low 범위 확인
+        for (const [min, max] of lowRanges) {
+            if (count >= min && count <= max) {
+                return 'skyblue';
+            }
+        }
+
+        // medium 범위 확인
+        for (const [min, max] of mediumRanges) {
+            if (count >= min && count <= max) {
+                return 'lightseagreen';
+            }
+        }
+
+        // high 범위 확인
+        for (const [min, max] of highRanges) {
+            if (count >= min && count <= max) {
+                return 'orange';
+            }
+        }
+
+        // 정의되지 않은 범위는 기본값 (121개 이상 등)
+        return 'lightgray';
+    }
+
+    // 2. groupedCalendarEvents 생성 부분 수정
+    const groupedCalendarEvents = Object.entries(groupedByDate).map(([date, count]) => ({
+        title: `${count}개`,
+        date,
+        backgroundColor: getEventColor(count), // 배경색 추가
+        borderColor: getEventColor(count),     // 테두리색 추가
+        textColor: 'black'                     // 텍스트 색상 유지
+    }));
+
+    // 2. getEventClassNames 함수 추가 (eventClassNames에서 사용할 함수)
+    function getEventClassNames(count) {
+        // 각 구간별 클래스명 분류
+        const lowRanges = [
+            [0, 10], [41, 50], [81, 90], [121, 130], [161, 170], [201, 210]
+        ];
+        const mediumoneRanges = [
+            [11, 20], [51, 60], [91, 100], [131, 140], [171, 180], [211, 220]
+        ];
+        const mediumtwoRanges = [
+            [21, 30], [61, 70], [101, 110], [141, 150], [181, 190], [221, 230]
+        ];
+        const highRanges = [
+            [31, 40], [71, 80], [111, 120], [151, 160], [191, 200], [231, 240]
+        ];
+
+        // low 범위 확인
+        for (const [min, max] of lowRanges) {
+            if (count >= min && count <= max) {
+                return 'festival-low';
+            }
+        }
+
+        // medium 범위 확인
+        for (const [min, max] of mediumoneRanges) {
+            if (count >= min && count <= max) {
+                return 'festival-mediumone';
+            }
+        }
+
+        for (const [min, max] of mediumtwoRanges) {
+            if (count >= min && count <= max) {
+                return 'festival-mediumtwo';
+            }
+        }
+
+        // high 범위 확인
+        for (const [min, max] of highRanges) {
+            if (count >= min && count <= max) {
+                return 'festival-high';
+            }
+        }
+
+        // 정의되지 않은 범위는 기본값
+        return 'festival-default';
+    }
+
+
+
 
     return (
         <div className="app-container">
-
             <Title />
-
-            {/* Main Content */}
             <main className="main-content">
-                {/* Left Calendar Section */}
                 <aside className="calendar-section">
-                    <div className="calendar-header">
-                        <h2>일정 관리</h2>
-                    </div>
                     <div className="calendar-container">
-
-                        {/* FullCalendar API가 들어갈 자리 */}
                         <div style={{ width: '90%', margin: '30px auto' }}>
                             <FullCalendar
                                 plugins={[dayGridPlugin, interactionPlugin]}
                                 initialView="dayGridMonth"
-                                locale="ko" // 한국어 달력 (원하면 locale 추가)
-                                events={events}
-                                dateClick={(info) => {
-                                    alert(`날짜를 클릭했습니다: ${info.dateStr}`);
+                                locale="ko"
+                                events={groupedCalendarEvents}
+                                dateClick={handleDateClick}
+                                datesSet={handleDatesSet}
+                                eventClick={handleEventClick}
+                                eventClassNames={(arg) => {
+                                    const countMatch = arg.event.title.match(/(\d+)개/);
+                                    const count = countMatch ? parseInt(countMatch[1]) : 0;
+                                    return getEventClassNames(count);
                                 }}
                             />
                         </div>
                     </div>
                 </aside>
 
-                {/* Right Content Section */}
                 <section className="content-section">
-                    {/* 축제 그리드 - 현재 페이지의 축제들만 표시 */}
+                    {clickedDate && (
+                        <div className="selected-date-heading">
+                            <h2>{formatKoreanDate(clickedDate)}의 축제</h2>
+                        </div>
+                    )}
+
                     <div className="calendar-festivals-grid">
                         {currentFestivals.map((festival) => (
                             <div
@@ -198,7 +335,6 @@ const FestiveCalendar = () => {
                         ))}
                     </div>
 
-                    {/* 페이지네이션 */}
                     {totalPages > 1 && (
                         <div className="pagination-container">
                             <button
