@@ -1,6 +1,6 @@
 /* 전체 컨테이너 */
 .festival-container {
-  max-width: 1200px;
+  max-width: 1920;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     sans-serif;
   margin: 0 auto;
@@ -14,20 +14,16 @@
   height: 300px; /* 필요한 높이 설정!! */
   overflow: hidden; /* 넘치는 이미지 잘라내기!!!!! */
   position: relative;
-  padding: 20px 0;
+  margin: 0 auto;
 }
 .thumbnail-section img {
   width: 100%;
-  /*  object-fit: cover; /* 선택사항 */
 }
-/* 
-.thumbnail-content {
-} */
 
 /* Main Content */
 .fes-detail-main-content {
   max-width: 1200px;
-  margin: 0 10%;
+  margin: 0 auto;
   padding: 0 20px;
 }
 
@@ -39,10 +35,6 @@
   margin: 40px 0;
 }
 
-/* Left Content */
-/* .left-content {
-}
- */
 .festival-description p,
 h2 {
   display: flex;
@@ -99,33 +91,35 @@ h2 {
 }
 
 /* Festival Images */
-.festival-images {
-  margin: 32px 0;
+.swiper {
+  width: 1200px;
+  height: 320px;
 }
 
-.image-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+.swiper-slide {
+  text-align: center;
+  font-size: 18px;
+
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.festival-image {
-  height: 200px;
-  border-radius: 8px;
+.swiper-slide img {
+  display: block;
+  width: 380px;
+  height: 285px;
+  object-fit: fill;
+  border-radius: 10px;
 }
 
-.image-1 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.swiper {
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.image-2 {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.image-3 {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
+/* 축제 상세 부분 */
 .festival-details {
   margin: 50px 0;
 }
@@ -143,10 +137,9 @@ h2 {
   margin: 32px 0;
 }
 
-.poster-image {
+.poster-image img {
   width: 375px;
   height: 460px;
-  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
   border-radius: 8px;
   display: flex;
   align-items: center;
