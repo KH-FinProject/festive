@@ -27,9 +27,11 @@ const getFestivalStatus = (start, end) => {
 
 const FestivalDetail = () => {
   const [festival, setFestival] = useState([]);
+  const [festivalDetail, setFestivalDetail] = useState([]);
   const [festivalImg, setFestivalImg] = useState([]);
   const [posterImg, setPosterImg] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [eventState, setEventState] = useState("");
 
   // 슬라이더
   const FestivalSwiper = () => {
@@ -75,6 +77,28 @@ const FestivalDetail = () => {
     }
   };
 
+  // 축제 소개 정보 불러오기
+  const fetchFestivalDetail = async () => {
+    try {
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+
+      const url = `https://apis.data.go.kr/B551011/KorService2/detailIntro2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&_type=json&contentId=3113671&contentTypeId=15`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+      const item = data?.response?.body?.items?.item;
+
+      if (!item) return;
+      setFestivalDetail(item[0]);
+      setEventState(
+        getFestivalStatus(item[0].eventstartdate, item[0].eventenddate)
+      );
+      console.log(eventState);
+    } catch (error) {
+      console.error("축제 소개 정보 로드 실패:", error);
+    }
+  };
+
   // 축제 이미지 정보 불러오기
   const fetchFestivalImg = async () => {
     try {
@@ -111,13 +135,20 @@ const FestivalDetail = () => {
   useEffect(() => {
     fetchFestivals();
     fetchFestivalImg();
+    fetchFestivalDetail();
   }, []);
 
   useEffect(() => {
-    if (festival != null && festivalImg != null && posterImg != null) {
+    if (
+      festival != null &&
+      festivalDetail != null &&
+      festivalImg != null &&
+      posterImg != null &&
+      eventState != null
+    ) {
       setIsLoading(false);
     }
-  }, [festival, festivalImg, posterImg]);
+  }, [festival, festivalDetail, festivalImg, posterImg, eventState]);
 
   if (isLoading) {
     <h1>Loading...</h1>;
@@ -136,14 +167,17 @@ const FestivalDetail = () => {
               {/* <p>강원 한우, 저도 먹고싶습니다. 배고프네요</p> */}
               <h1 className="festival-name">{festival.title}</h1>
               <div className="festival-badge">
-                <span className="badge-button">진행중</span>
+                <span className="badge-button">{eventState}</span>
                 <div className="headerweather-placeholder">
                   <Weather />
                 </div>
               </div>
               <div className="festival-date">
                 <Calendar className="icon" />
-                <span>2025.06.13 ~ 2025.06.15</span>
+                <span>
+                  {festivalDetail.eventstartdate} ~{" "}
+                  {festivalDetail.eventenddate}
+                </span>
               </div>
             </div>
 
@@ -165,27 +199,30 @@ const FestivalDetail = () => {
               <div className="festival-info-card">
                 <div className="info-header">
                   <h3>행사일시</h3>
-                  <span className="date-range">2025.06.13 ~ 2025.06.15</span>
+                  <span className="date-range">
+                    {festivalDetail.eventstartdate} ~{" "}
+                    {festivalDetail.eventenddate}
+                  </span>
                 </div>
 
                 <div className="info-item">
                   <h4>장소</h4>
                   <p>
-                    강원특별자치도 춘천시 석사동 11 (석사동) 춘천시민 종합
-                    체육관
+                    {festival.addr1}
+                    {festival.addr2}
                   </p>
                 </div>
 
                 <div className="info-item">
                   <h4>입장료</h4>
-                  <p>축제 입장 무료</p>
+                  <p>{festivalDetail?.usetimefestival}</p>
                 </div>
 
                 <div className="info-item">
                   <h4>개최지</h4>
                   <p>
-                    강원특별자치도한우(강원도), 춘천시한우농협(춘천시),
-                    한국축산연구소(강원대), 춘천시, 홍천군
+                    {festivalDetail?.sponsor1}
+                    {festivalDetail?.sponsor2}
                   </p>
                 </div>
 
@@ -193,7 +230,7 @@ const FestivalDetail = () => {
                   <h4>연락처</h4>
                   <p className="contact">
                     <Phone className="phone-icon" />
-                    033-242-1625
+                    {festivalDetail?.sponsor1tel}
                   </p>
                 </div>
               </div>
