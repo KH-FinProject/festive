@@ -24,9 +24,25 @@ public class NaverResponse implements OAuth2Response {
     public String getEmail() {
         return attribute.get("email").toString();
     }
+
+    @Override
+    public String getEmailVerified() {
+        return attribute.get("email_verified").toString();
+    }
     
     @Override
     public String getName() {
         return attribute.get("name").toString();
     }
+
+    @Override
+    public String getNickname() {
+        return attribute.get("nickname").toString();
+    }
+
+    @Override
+    public String getProfileImage() {
+        return attribute.get("profile_image").toString();
+    }
+
 }

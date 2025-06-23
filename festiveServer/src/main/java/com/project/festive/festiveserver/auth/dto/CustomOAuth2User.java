@@ -7,12 +7,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import com.project.festive.festiveserver.member.entity.Member;
+
 public class CustomOAuth2User implements OAuth2User {
     
-    private final UserDTO userDTO;
+    private final Member member;
     
-    public CustomOAuth2User(UserDTO userDTO) {
-        this.userDTO = userDTO;
+    public CustomOAuth2User(Member member) {
+        this.member = member;
     }
     
     @Override
@@ -28,7 +30,7 @@ public class CustomOAuth2User implements OAuth2User {
         collection.add(new GrantedAuthority() {
             @Override
             public String getAuthority() {
-                return userDTO.getRole();
+                return member.getRole();
             }
         });
         
@@ -37,10 +39,10 @@ public class CustomOAuth2User implements OAuth2User {
     
     @Override
     public String getName() {
-        return userDTO.getName();
+        return member.getName();
     }
     
-    public String getUsername() {
-        return userDTO.getUsername();
+    public String getMemberName() {
+        return member.getMemberName();
     }
 }

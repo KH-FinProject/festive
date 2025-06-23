@@ -5,10 +5,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /*
  * @Entity 
@@ -27,14 +29,24 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "MEMBER")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Member {
 
 	@Id // 해당 필드를 기본 키(primary key) 로 지정
-	@GeneratedValue(strategy = GenerationType.IDENTITY) // 기본 키 생성을 데이터베이스에 위임하는 전략을 설정
+	@SequenceGenerator(
+		name = "member_seq",
+		sequenceName = "SEQ_MEMBER_NO",
+		allocationSize = 1
+	)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, 
+	generator = "member_seq") // 기본 키 생성을 데이터베이스에 위임하는 전략을 설정
 	private Long memberNo;
 
+	@Column(nullable = false)
+	private String memberName;
+	
 	@Column(unique = true, nullable = false) // DB 컬럼 속성 지정. 중복 불가, null 불가
 	private String email;
 
@@ -43,4 +55,8 @@ public class Member {
 
 	@Column(nullable = false) 
 	private String name;
+
+	@Column(nullable = false)
+	private String role;
+
 }

@@ -1,14 +1,10 @@
 package com.project.festive.festiveserver.auth.controller;
 
-import com.project.festive.festiveserver.auth.dto.LoginRequest;
-import com.project.festive.festiveserver.auth.dto.LoginResponse;
-import com.project.festive.festiveserver.auth.service.AuthService;
-import com.project.festive.festiveserver.member.entity.Member;
-import com.project.festive.festiveserver.util.JwtUtil;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +14,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.WebUtils;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import com.project.festive.festiveserver.auth.dto.LoginRequest;
+import com.project.festive.festiveserver.auth.dto.LoginResponse;
+import com.project.festive.festiveserver.auth.service.AuthService;
+import com.project.festive.festiveserver.member.entity.Member;
+import com.project.festive.festiveserver.util.JwtUtil;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
