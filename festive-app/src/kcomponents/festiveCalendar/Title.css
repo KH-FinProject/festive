@@ -1,4 +1,4 @@
-.wagle-header {
+.calendar-header {
   width: 1160px;
   margin: 0 auto;
   display: flex;
@@ -8,7 +8,7 @@
   padding-top: 40px;
 }
 
-.wagle-main-title {
+.calendar-main-title {
   font-size: 32px;
   font-weight: 800;
   color: #222;
@@ -21,7 +21,7 @@
   display: inline-block;
 }
 
-.wagle-sub-title {
+.calendar-sub-title {
   font-size: 14px;
   color: #999999;
   font-weight: 400;
