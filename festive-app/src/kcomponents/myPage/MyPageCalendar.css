@@ -40,10 +40,14 @@
     font-size: 14px;
 }
 
-.content-body {
-    display: flex;
-    gap: 30px;
+.mycalendar-wrapper {
+    width: 800px;
 }
+
+.calendar-wrapper .fc {
+    height: 100% !important;
+}
+
 
 /* Calendar Section */
 .calendar-section {

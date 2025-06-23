@@ -4,6 +4,11 @@ import './MyPageCalendar.css';
 import MyPageSideBar from './MyPageSideBar';
 import Pagination from './Pagination';
 
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid'; // 월간 보기
+import interactionPlugin from '@fullcalendar/interaction'; // 클릭 같은 기능 추가용
+
+
 const FestiveWebsite = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -28,18 +33,21 @@ const FestiveWebsite = () => {
                         <p>내가 찜한 축제 목록입니다.</p>
                     </div>
 
-                    <div className="content-body">
-                        {/* Calendar Section */}
-                        <div className="calendar-section">
-                            <div id="calendar-container">
-                                {/* FullCalendar will be mounted here */}
-                                <div className="calendar-placeholder">
-                                    <p>FullCalendar API가 여기에 들어갑니다</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="mycalendar-wrapper">
+                        <FullCalendar
+                            plugins={[dayGridPlugin, interactionPlugin]}
+                            initialView="dayGridMonth"
+                            events={[
+                                { title: '스터디 모임', date: '2025-06-22' },
+                                { title: '프로젝트 회의', date: '2025-06-24' },
+                            ]}
+                            dateClick={(info) => {
+                                alert(`날짜 클릭: ${info.dateStr}`);
+                            }}
+                        />
                     </div>
 
+                    <br /><br />
                     {/* Festival List Section - Moved below calendar */}
                     <div className="festival-list-section">
                         <h2>내가 찜한 축제</h2>
