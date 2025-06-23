@@ -18,46 +18,47 @@ const VerticalSlider = () => {
       title: "이달의 축제",
       description: "Festive와 함께 이달의 축제를 만나보세요",
       bgColor: "#FFB3BA",
-      bgImage: "https://images.unsplash.com/photo-1522383225653-ed111181a951?...",
+      bgImage:
+        "https://images.unsplash.com/photo-1522383225653-ed111181a951?...",
       path: "/this-month",
     },
     {
       title: "축제달력",
       description: "한눈에 보는 전국 축제일정!",
       bgColor: "#E6B88A",
-      bgImage: "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?...",
+      bgImage: "/src/assets/calendar.png",
       path: "/calendar",
     },
     {
       title: "지역별 축제",
       description: "지역별로 다양한 축제를 즐겨보세요",
       bgColor: "#E8D48F",
-      bgImage: "https://images.unsplash.com/photo-1507041957456-9c397ce39c97?...",
-      path: "#",
+      bgImage:
+        "https://korean.visitkorea.or.kr/kfes/resources/img/2023FestivalMap.jpg",
+      path: "/festival/local",
     },
     {
       title: "와글와글",
       description: "즐거운 사람들, 생생한 현장의 이야기와 사진들!",
       bgColor: "#9BC49B",
-      bgImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?...",
+      bgImage: "/src/assets/wagle.png",
       path: "/wagle",
     },
     {
       title: "AI 여행코스 추천",
       description: "당신만을 위한 맞춤형 축제 여행 코스를 AI가 추천해드려요",
       bgColor: "#8BB8E8",
-      bgImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?...",
+      bgImage: "/src/assets/AiTravel.png",
       path: "/ai-travel",
     },
     {
       title: "부스 참가신청",
-      description: "나만의 브랜드를 지금 바로 신청하고 참가해보세요",
+      description: "축제를 함께할 플리마켓·푸드트럭 부스를 모집합니다!",
       bgColor: "#C08BE8",
-      bgImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?...",
-      path: "#",
+      bgImage: "/src/assets/boothImg.jpg",
+      path: "/booth",
     },
   ];
-
 
   const changeSlide = (direction) => {
     if (direction === "up") {
@@ -87,18 +88,18 @@ const VerticalSlider = () => {
         }}
       >
         {slides
-            .slice() // 원본 배열을 변경하지 않기 위해 복사
-            .reverse()
-            .map((slide, index) => (
+          .slice() // 원본 배열을 변경하지 않기 위해 복사
+          .reverse()
+          .map((slide, index) => (
             <div
-                key={index}
-                style={{ backgroundColor: slide.bgColor, cursor: "pointer" }}
-                onClick={() => handleSlideClick(slide.path)}
+              key={index}
+              style={{ backgroundColor: slide.bgColor, cursor: "pointer" }}
+              onClick={() => handleSlideClick(slide.path)}
             >
               <h1>{slide.title}</h1>
               <p>{slide.description}</p>
             </div>
-        ))}
+          ))}
       </div>
 
       {/* 오른쪽 이미지 슬라이드 */}
@@ -109,16 +110,15 @@ const VerticalSlider = () => {
         }}
       >
         {slides.map((slide, index) => (
-                <div
-                    key={index}
-                    style={{
-                      backgroundImage: `url('${slide.bgImage}')`,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => handleSlideClick(slide.path)}
-                ></div>
-            ))}
-
+          <div
+            key={index}
+            style={{
+              backgroundImage: `url('${slide.bgImage}')`,
+              cursor: "pointer",
+            }}
+            onClick={() => handleSlideClick(slide.path)}
+          ></div>
+        ))}
       </div>
 
       {/*/!* 컨트롤 버튼 *!/*/}
