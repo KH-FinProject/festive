@@ -20,6 +20,7 @@ import MyPageWithdrawal from "./kcomponents/myPage/MyPageWithdrawal.jsx";
 import AITravelCourse from "./ycomponents/aitravel/AITravelCourse.jsx";
 import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
 import AdminRoutes from "./mcomponents/Admin.jsx";
+import Booth from "./scomponents/booth/Booth.jsx";
 
 const AppRoutes = () => {
   return (
@@ -43,6 +44,7 @@ const AppRoutes = () => {
       <Route path="/mypage/mypost" element={<MyPageMyPost />} />
       <Route path="/mypage/mycomment" element={<MyPageMyComment />} />
       <Route path="/mypage/withdrawal" element={<MyPageWithdrawal />} />
+      <Route path="/booth" element={<Booth />} />
     </Routes>
   );
 };
