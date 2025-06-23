@@ -22,7 +22,19 @@ const LoginForm = () => {
     e.preventDefault();
     console.log('로그인 시도:', formData);
   };
-  
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
+  };
+
+  const handleNaverLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/naver`;
+  };
+
+  const handleKakaoLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/kakao`;
+  };
+
   return (
       <div className="login-container">
         <div className="login-wrapper">
@@ -106,7 +118,7 @@ const LoginForm = () => {
                 
                 <div className="sns-buttons">
                   {/* Google 로그인 */}
-                  <button className="sns-btn sns-google">
+                  <button className="sns-btn sns-google" onClick={handleGoogleLogin}>
                       <div className="google-icon">
                         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"
                              style={{display: "block"}}>
@@ -124,14 +136,14 @@ const LoginForm = () => {
                   </button>
                   
                   {/* Naver 로그인 */}
-                  <button type="button" className="sns-btn sns-naver">
+                  <button type="button" className="sns-btn sns-naver" onClick={handleNaverLogin}>
                     <span>N</span>
                   </button>
                   
                   {/* KakaoTalk 로그인 */}
-                  <button type="button" className="sns-btn sns-kakao">
+                  <button type="button" className="sns-btn sns-kakao" onClick={handleKakaoLogin}>
                     <div className="kakao-icon">
-                      <FontAwesomeIcon className="item" icon={faComment} />
+                      <FontAwesomeIcon className="kakao-item" icon={faComment} />
                     </div>
                   </button>
                 </div>
