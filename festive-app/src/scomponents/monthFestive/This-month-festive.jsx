@@ -1,22 +1,23 @@
-import './This-month-festive.css';
-import {useEffect, useState} from "react";
+import "./This-month-festive.css";
+import { useEffect, useState } from "react";
 import Title from "./Title.jsx";
 import ExpandingCards from "./Month-Slider.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
+import { useNavigate } from "react-router-dom";
 
 const FestivalMainPage = () => {
   // 축제 목록 상태
   const [festivals, setFestivals] = useState([]);
-  const [sortType, setSortType] = useState('date'); // 'date', 'distance', 'popularity'
+  const [sortType, setSortType] = useState("date"); // 'date', 'distance', 'popularity'
   const [sliderFestivals, setSliderFestivals] = useState([]);
   const [listFestivals, setListFestivals] = useState([]);
-
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFestivals = async () => {
       try {
         const today = new Date();
-        const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, '');
+        const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
 
         const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=100&pageNo=1`;
@@ -33,51 +34,60 @@ const FestivalMainPage = () => {
           return {
             id: item.contentid,
             title: item.title,
-            location: item.addr1 || '장소 미정',
-            date: `${start?.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')}`,
-            image: item.firstimage || "https://via.placeholder.com/300x200?text=No+Image",
+            location: item.addr1 || "장소 미정",
+            date: `${start?.replace(
+              /(\d{4})(\d{2})(\d{2})/,
+              "$1.$2.$3"
+            )} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
+            image:
+              item.firstimage ||
+              "https://via.placeholder.com/300x200?text=No+Image",
             startDate: start,
-            status: getFestivalStatus(start, end)
+            status: getFestivalStatus(start, end),
           };
         });
 
         // 날짜순 정렬
-        const sorted = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
+        const sorted = mapped.sort((a, b) =>
+          a.startDate.localeCompare(b.startDate)
+        );
 
         // 진행중 축제 중 5개 슬라이더용
-        const slider = sorted.filter(f => f.status === '진행중').slice(0, 5);
+        const slider = sorted.filter((f) => f.status === "진행중").slice(0, 5);
 
         // 슬라이더 제외 나머지
-        const sliderIds = new Set(slider.map(f => f.id));
-        const list = sorted.filter(f => !sliderIds.has(f.id));
+        const sliderIds = new Set(slider.map((f) => f.id));
+        const list = sorted.filter((f) => !sliderIds.has(f.id));
 
         setSliderFestivals(slider);
         setListFestivals(list);
       } catch (error) {
-        console.error('축제 정보 로드 실패:', error);
+        console.error("축제 정보 로드 실패:", error);
       }
     };
 
     fetchFestivals();
   }, []);
 
-
-
   const getFestivalStatus = (start, end) => {
     const now = new Date();
-    const startDate = new Date(`${start.slice(0,4)}-${start.slice(4,6)}-${start.slice(6,8)}`);
-    const endDate = new Date(`${end.slice(0,4)}-${end.slice(4,6)}-${end.slice(6,8)}`);
+    const startDate = new Date(
+      `${start.slice(0, 4)}-${start.slice(4, 6)}-${start.slice(6, 8)}`
+    );
+    const endDate = new Date(
+      `${end.slice(0, 4)}-${end.slice(4, 6)}-${end.slice(6, 8)}`
+    );
 
-    if (now < startDate) return '예정';
-    else if (now > endDate) return '종료';
-    else return '진행중';
+    if (now < startDate) return "예정";
+    else if (now > endDate) return "종료";
+    else return "진행중";
   };
 
   // 축제 클릭 핸들러
   const handleFestivalClick = (festivalId) => {
     // 실제로는 React Router로 상세페이지 이동
     console.log(`축제 ${festivalId} 상세페이지로 이동`);
-    // navigate(`/festival/${festivalId}`);
+    navigate(`/festival/detail/${festivalId}`);
   };
 
   // 정렬 옵션 변경 핸들러
@@ -88,82 +98,105 @@ const FestivalMainPage = () => {
   };
 
   return (
-      <>
-        <Title />
-        <div className="festival-main">
-          {/* 슬라이더 공간 - 여기에 슬라이더 컴포넌트가 들어갈 예정 */}
-          <div className="slider-container">
-            <ExpandingCards festivals={sliderFestivals} />
+    <>
+      <Title />
+      <div className="festival-main">
+        {/* 슬라이더 공간 - 여기에 슬라이더 컴포넌트가 들어갈 예정 */}
+        <div className="slider-container">
+          <ExpandingCards festivals={sliderFestivals} />
+        </div>
+
+        {/* 축제 목록 섹션 */}
+        <section className="festivals-section">
+          {/* 정렬 옵션 */}
+          <div className="sort-options">
+            <span
+              className={`sort-option ${sortType === "date" ? "active" : ""}`}
+              onClick={() => handleSortChange("date")}
+            >
+              축제일순
+            </span>
+            <span className="divider">|</span>
+            <span
+              className={`sort-option ${
+                sortType === "distance" ? "active" : ""
+              }`}
+              onClick={() => handleSortChange("distance")}
+            >
+              거리순
+            </span>
+            <span className="divider">|</span>
+            <span
+              className={`sort-option ${
+                sortType === "popularity" ? "active" : ""
+              }`}
+              onClick={() => handleSortChange("popularity")}
+            >
+              인기순
+            </span>
           </div>
 
-          {/* 축제 목록 섹션 */}
-          <section className="festivals-section">
-            {/* 정렬 옵션 */}
-            <div className="sort-options">
-              <span
-                  className={`sort-option ${sortType === 'date' ? 'active' : ''}`}
-                  onClick={() => handleSortChange('date')}
+          {/* 축제 그리드 */}
+          <div className="festivals-grid">
+            {listFestivals.map((festival) => (
+              <div
+                key={festival.id}
+                className="festival-card"
+                onClick={() => handleFestivalClick(festival.id)}
               >
-                축제일순
-              </span>
-              <span className="divider">|</span>
-              <span
-                  className={`sort-option ${sortType === 'distance' ? 'active' : ''}`}
-                  onClick={() => handleSortChange('distance')}
-              >
-                거리순
-              </span>
-              <span className="divider">|</span>
-              <span
-                  className={`sort-option ${sortType === 'popularity' ? 'active' : ''}`}
-                  onClick={() => handleSortChange('popularity')}
-              >
-                인기순
-              </span>
-            </div>
-
-            {/* 축제 그리드 */}
-            <div className="festivals-grid">
-              {listFestivals.map((festival) => (
+                <div className="festival-image-container">
+                  <img
+                    src={festival.image}
+                    alt={festival.title}
+                    className="festival-image"
+                  />
                   <div
-                      key={festival.id}
-                      className="festival-card"
-                      onClick={() => handleFestivalClick(festival.id)}
+                    className={`festival-status ${
+                      festival.status === "진행중" ? "active" : "upcoming"
+                    }`}
                   >
-                    <div className="festival-image-container">
-                      <img
-                          src={festival.image}
-                          alt={festival.title}
-                          className="festival-image"
-                      />
-                      <div className={`festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
-                        {festival.status}
-                      </div>
-                    </div>
-
-                    <div className="festival-info">
-                      <h3 className="festival-title">{festival.title}</h3>
-                      <p className="festival-location">
-                        <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                        {festival.location}
-                      </p>
-                      <p className="festival-date">
-                        <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        {festival.date}
-                      </p>
-                    </div>
+                    {festival.status}
                   </div>
-              ))}
-            </div>
-            <ScrollToTop />
+                </div>
 
-          </section>
-        </div>
-      </>
+                <div className="festival-info">
+                  <h3 className="festival-title">{festival.title}</h3>
+                  <p className="festival-location">
+                    <svg
+                      className="icon"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {festival.location}
+                  </p>
+                  <p className="festival-date">
+                    <svg
+                      className="icon"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {festival.date}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <ScrollToTop />
+        </section>
+      </div>
+    </>
   );
 };
 

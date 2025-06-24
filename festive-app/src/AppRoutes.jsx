@@ -21,6 +21,7 @@ import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
 import AdminRoutes from "./mcomponents/Admin.jsx";
 import Booth from "./scomponents/booth/Booth.jsx";
 import LocalFestive from "./jcomponents/LocalFestive/LocalFestive.jsx";
+import FestivalDetail from "./mcomponents/FestivalDetail";
 
 const AppRoutes = () => {
   return (
@@ -47,6 +48,10 @@ const AppRoutes = () => {
         <Route path="/mypage/withdrawal" element={<MyPageWithdrawal />} />
         <Route path="/booth" element={<Booth />} />
         <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route
+          path="/festival/detail/:contentId"
+          element={<FestivalDetail />}
+        />
       </Routes>
     </>
   );

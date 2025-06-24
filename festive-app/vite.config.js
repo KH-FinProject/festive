@@ -41,6 +41,14 @@ export default defineConfig({
           });
         },
       },
+
+      /* 전기차충전소 API 충전시 CORS policy 에러로 추가 : 미애 */
+      "/kepco-api": {
+        target: "https://bigdata.kepco.co.kr",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/kepco-api/, ""),
+        secure: true,
+      },
     },
   },
   define: {
