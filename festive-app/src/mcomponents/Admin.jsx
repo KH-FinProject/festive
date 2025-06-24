@@ -24,7 +24,10 @@ const AdminRoutes = () => (
     <Route path="/admin/applications" element={<AdminApplicationStatus />} />
     <Route path="/admin/write" element={<AdminBoardWrite />} />
     <Route path="/admin/reply" element={<AdminCustomerReply />} />
-    <Route path="/admin/detail" element={<AdminCustomerReportDetail />} />
+    <Route
+      path="/admin/report-detail/:reportNo"
+      element={<AdminCustomerReportDetail />}
+    />
     <Route path="/admin/appDetail" element={<AdminApplicationDetail />} />
   </Routes>
 );

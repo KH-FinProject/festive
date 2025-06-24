@@ -51,7 +51,7 @@ public class SecurityConfig {
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/", "/signup", "/login", "/auth/**", "/oauth2/**").permitAll()
+        .requestMatchers("/", "/signup", "/login", "/auth/**", "/oauth2/**", "/api/reports/**").permitAll()
         .anyRequest().authenticated())
         
         //세션 설정 : STATELESS

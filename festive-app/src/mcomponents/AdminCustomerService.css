@@ -13,7 +13,7 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 10px;
+  padding: 30px;
   margin-bottom: 20px;
 }
 
@@ -128,8 +128,13 @@
   color: white;
 }
 
-/* 페이지네이션 */
-.pagination {
+/* 새로운 페이지네이션 스타일 - 기존 pagination 클래스와 구분 */
+.custom-pagination {
+  margin-top: 30px;
+}
+
+/* 기존 페이지네이션 스타일 제거하고 새로운 스타일 적용 */
+.pagination-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -138,19 +143,25 @@
 }
 
 .pagination-btn {
-  padding: 8px 12px;
+  min-width: 40px;
+  height: 40px;
   border: 1px solid #dee2e6;
-  border-radius: 6px;
+  border-radius: 8px;
   background: white;
   color: #6c757d;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.pagination-btn:hover {
+.pagination-btn:hover:not(:disabled) {
   background-color: #f8f9fa;
-  border-color: #adb5bd;
+  border-color: #4a90e2;
+  color: #4a90e2;
 }
 
 .pagination-btn.active {
@@ -160,8 +171,14 @@
 }
 
 .pagination-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  background-color: #f8f9fa;
+}
+
+.pagination-btn.nav {
+  padding: 0 12px;
+  font-size: 16px;
 }
 
 /* 신고 디테일 버튼 */
@@ -182,9 +199,19 @@
   border-color: #4a90e2;
 }
 
+/* 페이지네이트된 리스트 스타일 */
+.paginated-list {
+  min-height: 200px; /* 페이지 전환 시 레이아웃 유지 */
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .customer-service-container {
+    padding: 20px;
+  }
+
+  .inquiry-section,
+  .report-section {
     padding: 20px;
   }
 
@@ -220,12 +247,23 @@
   .section-title {
     font-size: 18px;
   }
+
+  .pagination-container {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px) {
   .inquiry-section,
   .report-section {
-    padding: 20px;
+    padding: 15px;
   }
 
   .inquiry-item,
@@ -233,13 +271,18 @@
     padding: 15px;
   }
 
-  .pagination {
-    flex-wrap: wrap;
-    gap: 4px;
+  .pagination-container {
+    gap: 2px;
   }
 
   .pagination-btn {
-    padding: 6px 10px;
+    min-width: 32px;
+    height: 32px;
     font-size: 12px;
+  }
+
+  .pagination-btn.nav {
+    padding: 0 8px;
+    font-size: 14px;
   }
 }

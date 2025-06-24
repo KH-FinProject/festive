@@ -20,7 +20,7 @@ import AITravelCourse from "./ycomponents/aitravel/AITravelCourse.jsx";
 import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
 import AdminRoutes from "./mcomponents/Admin.jsx";
 import Booth from "./scomponents/booth/Booth.jsx";
-import LocalFestive from "./jcomponents/localFestive/LocalFestive.jsx";
+import LocalFestive from "./jcomponents/LocalFestive/LocalFestive.jsx";
 
 const AppRoutes = () => {
   return (
