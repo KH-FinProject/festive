@@ -120,6 +120,7 @@ public class JwtFilter extends OncePerRequestFilter {
     return path.contains("/favicon.ico") ||
            path.contains("/static/") ||
            path.contains("/css/") ||
+           path.startsWith("/admin/") || // 나중에 로그인 다 구현되면 빼기
            path.contains("/js/") ||
            path.contains("/images/") ||
            path.contains("/assets/") ||

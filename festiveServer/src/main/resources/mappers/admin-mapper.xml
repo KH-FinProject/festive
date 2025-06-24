@@ -1,34 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="edu.kh.project.admin.model.mapper.AdminMapper">
+<mapper namespace="com.project.festive.festiveserver.admin.model.mapper.AdminMapper">
 
 	
 	<!-- 관리자 이메일 중복 검사 -->
 	<select id="checkEmail">
 		SELECT COUNT(*) FROM "MEMBER"
-		WHERE MEMBER_EMAIL = #{email}
-		AND AUTHORITY = 2
+		WHERE EMAIL = #{email}
 	</select>
 	
 	<insert id="createAdminAccount">
-	INSERT INTO "MEMBER" VALUES(
-	6,
-	#{email},
-	#{id},
-	#{id},
-	#{name},
-	#{nickname},
-	NULL,
-	#{email},
-	#{password},
-	NULL,
-	SYSDATE,
-	DEFAULT,
-	NULL,
-	'ADMIN',
-	NULL,
-	0
-	)
-	</insert>
+  INSERT INTO "MEMBER" (
+    MEMBER_NO,
+    NAME,
+    EMAIL,
+    PASSWORD,
+    ROLE,
+    ENROLL_DATE,
+    MEMBER_DEL_FL,
+    SANCTION_COUNT
+  ) VALUES (
+    61,
+    #{name},
+    #{email},
+    #{password},
+    'ADMIN',
+    SYSDATE,
+    'N',
+    0
+  )
+</insert>
+
 	
 </mapper>
