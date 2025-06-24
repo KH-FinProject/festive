@@ -9,6 +9,7 @@ import {
   faTriangleExclamation,
   faHeart as faHeartSolid,
   faTimes,
+  faFlag,
 } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import GeneralBoard from "./GeneralBoard";
@@ -61,7 +62,7 @@ const comments = [
   },
 ];
 
-function CommentItem({ comment }) {
+function CommentItem({ comment, onReport }) {
   return (
     <li className="wagle-detail-comment-item">
       <div className="comment-main-row">
@@ -76,6 +77,19 @@ function CommentItem({ comment }) {
           <button className="comment-btn">수정</button>
           <button className="comment-btn">삭제</button>
           <button className="comment-btn">답글</button>
+          <button
+            className="comment-btn report-btn"
+            onClick={() =>
+              onReport({
+                type: 1, // 댓글
+                targetId: comment.id,
+                targetAuthor: comment.author,
+                content: comment.content,
+              })
+            }
+          >
+            <FontAwesomeIcon icon={faFlag} />
+          </button>
         </div>
       </div>
       <div className="comment-content">{comment.content}</div>
@@ -94,6 +108,19 @@ function CommentItem({ comment }) {
               <div className="comment-actions">
                 <button className="comment-btn">수정</button>
                 <button className="comment-btn">삭제</button>
+                <button
+                  className="comment-btn report-btn"
+                  onClick={() =>
+                    onReport({
+                      type: 1, // 댓글
+                      targetId: reply.id,
+                      targetAuthor: reply.author,
+                      content: reply.content,
+                    })
+                  }
+                >
+                  <FontAwesomeIcon icon={faFlag} />
+                </button>
               </div>
             </div>
             <div className="comment-content">{reply.content}</div>
@@ -117,15 +144,41 @@ function flattenComments(comments) {
   return flat;
 }
 
-function ReportModal({ isOpen, onClose, onSubmit }) {
-  const [target, setTarget] = useState("");
+function ReportModal({ isOpen, onClose, onSubmit, reportData }) {
   const [reason, setReason] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({ target, reason });
+
+    try {
+      const reportPayload = {
+        memberNo: 1, // 실제로는 로그인된 사용자 ID
+        reporterNo: 1, // 실제로는 로그인된 사용자 ID
+        reportReason: reason,
+        reportType: reportData.type, // 0: 게시글, 1: 댓글
+        reportBoardNo: reportData.targetId,
+      };
+
+      const response = await fetch("http://localhost:8080/api/reports", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reportPayload),
+      });
+
+      if (response.ok) {
+        alert("신고가 성공적으로 접수되었습니다.");
+        onSubmit(reportPayload);
+      } else {
+        alert("신고 접수에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("신고 처리 중 오류:", error);
+      alert("신고 처리 중 오류가 발생했습니다.");
+    }
+
     onClose();
-    setTarget("");
     setReason("");
   };
 
@@ -146,19 +199,28 @@ function ReportModal({ isOpen, onClose, onSubmit }) {
               <label>신고 대상</label>
               <input
                 type="text"
-                value={target}
-                onChange={(e) => setTarget(e.target.value)}
-                placeholder="신고 대상"
-                required
+                value={reportData?.targetAuthor || ""}
+                readOnly
+                className="readonly-input"
               />
             </div>
             <div className="form-group">
-              <label>신고 사유</label>
+              <label>신고 대상 내용</label>
+              <textarea
+                value={reportData?.content || ""}
+                readOnly
+                className="readonly-textarea"
+                rows="3"
+              />
+            </div>
+            <div className="form-group">
+              <label>신고 사유 *</label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="신고 사유를 입력해주세요..."
                 required
+                rows="4"
               />
             </div>
           </div>
@@ -183,13 +245,19 @@ function WagleDetail() {
   const post = allPosts.find((p) => String(p.id) === String(id));
   const [liked, setLiked] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [currentReportData, setCurrentReportData] = useState(null);
 
   // flat 구조로 변환
   const flatComments = flattenComments(comments);
 
   const handleReport = (reportData) => {
-    console.log("신고 데이터:", reportData);
-    // 여기에 신고 처리 로직 추가
+    setCurrentReportData(reportData);
+    setIsReportModalOpen(true);
+  };
+
+  const handleReportSubmit = (reportPayload) => {
+    console.log("신고 처리 완료:", reportPayload);
+    // 추가 처리 로직이 있다면 여기에 구현
   };
 
   if (!post) {
@@ -229,7 +297,14 @@ function WagleDetail() {
             <span className="comments">댓글 {flatComments.length}</span>
             <button
               className="report-btn"
-              onClick={() => setIsReportModalOpen(true)}
+              onClick={() =>
+                handleReport({
+                  type: 0, // 게시글
+                  targetId: post.id,
+                  targetAuthor: post.author,
+                  content: post.title,
+                })
+              }
             >
               <FontAwesomeIcon
                 icon={faTriangleExclamation}
@@ -273,7 +348,7 @@ function WagleDetail() {
           </form>
           <ul className="wagle-detail-comment-list">
             {comments.map((c) => (
-              <CommentItem key={c.id} comment={c} />
+              <CommentItem key={c.id} comment={c} onReport={handleReport} />
             ))}
           </ul>
         </div>
@@ -284,7 +359,8 @@ function WagleDetail() {
         <ReportModal
           isOpen={isReportModalOpen}
           onClose={() => setIsReportModalOpen(false)}
-          onSubmit={handleReport}
+          onSubmit={handleReportSubmit}
+          reportData={currentReportData}
         />
       </div>
     </div>
