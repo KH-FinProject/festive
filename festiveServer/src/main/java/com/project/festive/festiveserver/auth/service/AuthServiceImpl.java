@@ -42,8 +42,8 @@ public class AuthServiceImpl implements AuthService {
 			throw new RuntimeException("비밀번호가 일치하지 않습니다.");
 		}
 
-		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail());
-		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail());
+		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
+		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
 
 		Date expirationDate = jwtUtil.getExpirationDate(refreshToken);
 		LocalDateTime localExpirationDate = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
