@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './MyPageWithdrawal.css';
 import './MyPageEditInfo.css';
 import MyPageSideBar from './MyPageSideBar';
@@ -11,6 +11,15 @@ const MyPageEditInfo = () => {
     const [newEmailDomain, setNewEmailDomain] = useState('');
     const [phoneNumber, setPhoneNumber] = useState({ carrier: '', middle: '', last: '' });
     const [address, setAddress] = useState({ city: '', district: '', detail: '', zipcode: '' });
+
+    const [timeLeft, setTimeLeft] = useState(0); // 초 단위
+    const timerRef = useRef(null);
+
+
+    const [generatedCode, setGeneratedCode] = useState('');
+    const [inputCode, setInputCode] = useState('');
+    const [isVerified, setIsVerified] = useState(false);
+
 
     // 이메일 도메인 옵션
     const emailDomains = [
@@ -51,6 +60,76 @@ const MyPageEditInfo = () => {
             setNewEmail(newEmail.split('@')[0] + (value ? '@' + value : ''));
         }
     };
+
+    const handlePostCode = () => {
+        new window.daum.Postcode({
+            oncomplete: function (data) {
+                const { zonecode, address } = data;
+                setAddress(prev => ({
+                    ...prev,
+                    zipcode: zonecode,
+                    detail: address
+                }));
+            }
+        }).open();
+    };
+
+    const generateVerificationCode = () => {
+        if (!newEmail || !newEmail.includes('@')) {
+            alert('이메일을 올바르게 입력해주세요.');
+            return;
+        }
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        setGeneratedCode(code);
+        setIsVerified(false);
+        setInputCode('');
+        setTimeLeft(300); // 5분
+
+        alert(`테스트용 인증번호: ${code}`);
+
+        if (timerRef.current) {
+            clearInterval(timerRef.current);
+        }
+
+        timerRef.current = setInterval(() => {
+            setTimeLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(timerRef.current);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+
+    const handleCodeVerify = () => {
+        if (timeLeft === 0) {
+            alert('인증 시간이 만료되었습니다.');
+            return;
+        }
+
+        if (inputCode === generatedCode) {
+            alert('인증 성공!');
+            setIsVerified(true);
+            clearInterval(timerRef.current); // 인증 성공 시 타이머 중지
+        } else {
+            alert('인증번호가 일치하지 않습니다.');
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, []);
+
+
+
+
 
     return (
         <div className="page-container">
@@ -161,9 +240,14 @@ const MyPageEditInfo = () => {
                                     className="form-input"
                                     placeholder="우편번호"
                                     value={address.zipcode}
-                                    onChange={(e) => setAddress({ ...address, zipcode: e.target.value })}
+                                    readOnly
                                 />
-                                <button className="form-button secondary">주소 검색</button>
+                                <button
+                                    className="form-button secondary"
+                                    onClick={handlePostCode}
+                                >
+                                    주소 검색
+                                </button>
                             </div>
                             <div className="form-row">
                                 <input
@@ -171,7 +255,7 @@ const MyPageEditInfo = () => {
                                     className="form-input full-width"
                                     placeholder="주소"
                                     value={address.detail}
-                                    onChange={(e) => setAddress({ ...address, detail: e.target.value })}
+                                    readOnly
                                 />
                             </div>
                             <div className="form-row">
@@ -179,10 +263,11 @@ const MyPageEditInfo = () => {
                                     type="text"
                                     className="form-input full-width"
                                     placeholder="상세주소"
-                                    value={address.detail}
-                                    onChange={(e) => setAddress({ ...address, detail: e.target.value })}
+                                    value={address.extra || ''}
+                                    onChange={(e) => setAddress({ ...address, extra: e.target.value })}
                                 />
                             </div>
+
                         </div>
                         <br />
                         <div className="password-form-row">
@@ -253,13 +338,31 @@ const MyPageEditInfo = () => {
                                                     />
                                                 )}
                                             </div>
-                                            <button className="verify-btn">인증</button>
+                                            <button className="verify-btn" onClick={generateVerificationCode}>인증</button>
+
                                         </div>
                                         <div className="email-input-group">
                                             <label>이메일 인증키</label>
-                                            <input type="text" className="email-input" placeholder="인증번호를 입력하세요" />
-                                            <button className="confirm-btn">확인</button>
+                                            <input
+                                                type="text"
+                                                className="email-input"
+                                                placeholder="인증번호를 입력하세요"
+                                                value={inputCode}
+                                                onChange={(e) => setInputCode(e.target.value)}
+                                            />
+                                            <button className="confirm-btn" onClick={handleCodeVerify}>확인</button>
+
                                         </div>
+                                        {timeLeft > 0 && !isVerified && (
+                                            <p style={{ color: 'red', fontSize: '13px' }}>
+                                                <span style={{ marginLeft: '115px' }}>
+                                                    남은 시간: {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:
+                                                    {String(timeLeft % 60).padStart(2, '0')}
+                                                </span>
+                                            </p>
+
+                                        )}
+
                                     </div>
                                 </div>
                                 <div className="modal-actions">

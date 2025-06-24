@@ -66,7 +66,7 @@ const FestiveCalendar = () => {
                     title: item.title,
                     location: item.addr1 || '미정',
                     date: `${formatDate(item.eventstartdate)} - ${formatDate(item.eventenddate)}`,
-                    image: item.firstimage || 'https://via.placeholder.com/300x200?text=No+Image',
+                    image: item.firstimage || '/logo.png',
                     status,
                     startDate: formatDate(item.eventstartdate),
                     endDate: item.eventenddate ? formatDate(item.eventenddate) : formatDate(item.eventstartdate),
@@ -270,8 +270,6 @@ const FestiveCalendar = () => {
     }
 
 
-
-
     return (
         <div className="app-container">
             <Title />
@@ -319,6 +317,8 @@ const FestiveCalendar = () => {
                                             alt={festival.title}
                                             className="calendar-festival-image"
                                         />
+
+
                                         <div className={`calendar-festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
                                             {festival.status}
                                         </div>
