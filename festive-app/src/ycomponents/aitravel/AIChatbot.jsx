@@ -22,35 +22,35 @@ const ASSISTANT_INSTRUCTIONS = `
 [지역 소개] (2줄)
 [추천 코스]
 1. **시간** - 장소명
-   위치정보: @location:[위도,경도] @day:1
+   @location:[위도,경도] @day:1
    포인트: 특별한 매력
 
 **몇박몇일 여행의 경우 (1박2일, 2박3일 등):**
 [지역 소개] (2줄)
 [Day 1 코스]
 1. **오전 09:00** - 장소명
-   위치정보: @location:[위도,경도] @day:1
+   @location:[위도,경도] @day:1
    포인트: 특별한 매력
 
 2. **오후 12:00** - 장소명
-   위치정보: @location:[위도,경도] @day:1
+   @location:[위도,경도] @day:1
    포인트: 특별한 매력
 
 3. **오후 15:00** - 장소명
-   위치정보: @location:[위도,경도] @day:1
+   @location:[위도,경도] @day:1
    포인트: 특별한 매력
 
 [Day 2 코스]
 1. **오전 09:00** - 장소명
-   위치정보: @location:[위도,경도] @day:2
+   @location:[위도,경도] @day:2
    포인트: 특별한 매력
 
 2. **오후 12:00** - 장소명
-   위치정보: @location:[위도,경도] @day:2
+   @location:[위도,경도] @day:2
    포인트: 특별한 매력
 
 3. **오후 15:00** - 장소명
-   위치정보: @location:[위도,경도] @day:2
+   @location:[위도,경도] @day:2
    포인트: 특별한 매력
 
 [맛집 추천] 대표 맛집과 특산물
@@ -2019,6 +2019,7 @@ const AIChatbot = () => {
       }
 
       console.log("마커 및 거리 표시 업데이트 시작 - locations:", locations);
+      console.log("현재 travelInfo:", travelInfo);
 
       // 기존 오버레이들 제거
       if (map._overlays) {
@@ -2041,9 +2042,15 @@ const AIChatbot = () => {
         default: "#607D8B", // 회색 (기본)
       };
 
-      // 각 위치에 day별 색상의 마커 생성
+      // 각 위치에 day별 색상의 마커 생성 (겹침 방지 처리)
       locations.forEach((loc, index) => {
-        const position = new window.kakao.maps.LatLng(loc.lat, loc.lng);
+        // 마커 겹침 방지를 위한 약간의 좌표 조정
+        const offsetLat = ((index % 3) - 1) * 0.0001; // -0.0001, 0, 0.0001
+        const offsetLng = ((Math.floor(index / 3) % 3) - 1) * 0.0001;
+        const position = new window.kakao.maps.LatLng(
+          loc.lat + offsetLat,
+          loc.lng + offsetLng
+        );
 
         // Day별 색상 결정
         const dayColor = dayColors[loc.day] || dayColors.default;
@@ -2053,28 +2060,35 @@ const AIChatbot = () => {
         const markerColor = isRealCoordinate ? dayColor : "#95a5a6"; // day별 색상 vs 회색
         const borderColor = isRealCoordinate ? "white" : "#7f8c8d";
 
+        // Day별 마커 번호 계산 (각 Day별로 1부터 시작)
+        const dayLocations = locations.filter((l) => l.day === loc.day);
+        const dayIndex =
+          dayLocations.findIndex(
+            (l) => l.lat === loc.lat && l.lng === loc.lng
+          ) + 1;
+
         const markerContent = `
           <div style="
             background: ${markerColor};
             color: white;
             border-radius: 50%;
-            width: 35px;
-            height: 35px;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 9px;
             border: 2px solid ${borderColor};
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             position: relative;
             flex-direction: column;
           ">
-            <div style="font-size: 8px; line-height: 1;">D${loc.day || 1}</div>
-            <div style="font-size: 12px; line-height: 1;">${index + 1}</div>
+            <div style="font-size: 7px; line-height: 1;">D${loc.day || 1}</div>
+            <div style="font-size: 10px; line-height: 1;">${dayIndex}</div>
             ${
               !isRealCoordinate
-                ? '<div style="position: absolute; top: -2px; right: -2px; background: orange; width: 8px; height: 8px; border-radius: 50%; border: 1px solid white;"></div>'
+                ? '<div style="position: absolute; top: -2px; right: -2px; background: orange; width: 6px; height: 6px; border-radius: 50%; border: 1px solid white;"></div>'
                 : ""
             }
           </div>
@@ -2089,26 +2103,44 @@ const AIChatbot = () => {
         customOverlay.setMap(map);
         map._overlays.push(customOverlay);
 
-        // 장소명 표시 (마커 아래)
-        // 초기 정보창 내용
+        // 해당 위치의 활동 정보 찾기
+        let activityInfo = loc.name || `장소 ${dayIndex}`;
+        if (travelInfo.courses && travelInfo.courses.length > 0) {
+          // 같은 Day와 순서에 해당하는 코스 찾기
+          const matchingCourse = travelInfo.courses.find(
+            (course) =>
+              course.day === loc.day &&
+              course.activity &&
+              (course.activity.includes(loc.name) ||
+                loc.name.includes(course.activity.split(" ")[0]))
+          );
+
+          if (matchingCourse) {
+            activityInfo = matchingCourse.activity;
+          }
+        }
+
+        // 장소명과 활동 정보 표시
         let infoContent = `
           <div style="
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 8px 12px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             color: #333;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            max-width: 200px;
+            max-width: 180px;
             word-break: keep-all;
             text-align: center;
+            line-height: 1.3;
           ">
-            ${loc.name || `장소 ${index + 1}`}
-            <div style="font-size: 10px; color: #666; font-weight: normal; margin-top: 2px;">
-              주소 확인중...
-            </div>
+            ${
+              activityInfo.length > 25
+                ? activityInfo.substring(0, 25) + "..."
+                : activityInfo
+            }
           </div>
         `;
 
@@ -2149,25 +2181,27 @@ const AIChatbot = () => {
               }
             }
 
-            // 주소 정보를 포함한 새로운 내용으로 업데이트
+            // 활동 정보 계속 표시 (주소 정보 제거)
             const updatedInfoContent = `
               <div style="
                 background: rgba(255, 255, 255, 0.95);
                 border: 1px solid #ddd;
                 border-radius: 8px;
                 padding: 8px 12px;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: bold;
                 color: #333;
                 box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-                max-width: 200px;
+                max-width: 180px;
                 word-break: keep-all;
                 text-align: center;
+                line-height: 1.3;
               ">
-                ${loc.name || `장소 ${index + 1}`}
-                <div style="font-size: 10px; color: #666; font-weight: normal; margin-top: 2px;">
-                  ${addressText}
-                </div>
+                ${
+                  activityInfo.length > 25
+                    ? activityInfo.substring(0, 25) + "..."
+                    : activityInfo
+                }
               </div>
             `;
 
@@ -2370,7 +2404,7 @@ const AIChatbot = () => {
     } catch (error) {
       console.error("❌ 마커 및 거리 표시 중 오류:", error);
     }
-  }, [locations]);
+  }, [locations, travelInfo]);
 
   const processResponse = (response) => {
     console.log("원본 응답:", response);
@@ -2444,17 +2478,23 @@ const AIChatbot = () => {
         const regionMatch = response.match(/\[지역 소개\]\s*(.*?)(?=\[|$)/s);
         const regionInfo = regionMatch ? regionMatch[1].trim() : "";
 
-        // 메인 축제 정보를 Tour API 데이터에서 추출
+        // 메인 축제 정보를 Tour API 데이터에서 추출 - TourAPI 데이터 우선
         let festivalInfo = {
-          name: `${currentRegion || "추천"} 여행코스`,
-          period: "여행 기간에 따라 조정 가능",
-          location: regionInfo || `${currentRegion || "추천"} 지역`,
+          name: "여행코스 조회중...",
+          period: "기간 조회중...",
+          location: "위치 조회중...",
           image: null,
           description: null,
           phone: null,
         };
 
-        // currentFestivalData에서 중심 축제 찾기 - 항상 축제 정보 표시
+        // currentFestivalData에서 중심 축제 찾기 - 실제 축제 데이터 우선 표시
+        console.log("🎪 currentFestivalData 상태:", currentFestivalData);
+        console.log(
+          "🎪 currentFestivalData 길이:",
+          currentFestivalData?.length
+        );
+
         if (currentFestivalData && currentFestivalData.length > 0) {
           // 현재 진행중이거나 예정된 축제 우선 선택
           let mainFestival = currentFestivalData.find((festival) => {
@@ -2489,7 +2529,10 @@ const AIChatbot = () => {
             mainFestival = currentFestivalData[0];
           }
 
-          console.log("메인 축제 선택:", mainFestival.title);
+          console.log("🎯 메인 축제 선택:", mainFestival?.title);
+          console.log("🖼️ 축제 이미지:", mainFestival?.firstimage);
+          console.log("📅 축제 시작일:", mainFestival?.eventstartdate);
+          console.log("📅 축제 종료일:", mainFestival?.eventenddate);
 
           festivalInfo = {
             name: mainFestival.title || `${currentRegion || "추천"} 대표 축제`,
@@ -2514,12 +2557,66 @@ const AIChatbot = () => {
             description: mainFestival.overview || null,
             phone: mainFestival.tel || null,
           };
+
+          console.log("✅ 최종 축제 정보:", festivalInfo);
         } else {
-          // Tour API 데이터가 없는 경우에도 기본 정보 제공
-          festivalInfo.name = `${currentRegion || "추천"} 지역 여행`;
-          festivalInfo.description = `${
-            currentRegion || "이"
-          } 지역의 대표적인 관광지와 맛집을 둘러보는 여행코스입니다.`;
+          // Tour API 데이터가 없는 경우 샘플 축제 데이터 제공
+          console.log("❌ TourAPI 데이터 없음 - 샘플 축제 데이터 사용");
+
+          // 지역별 샘플 축제 데이터
+          const sampleFestivals = {
+            서울: {
+              name: "서울 빛초롱 축제",
+              period: "2024.12.01 - 2024.12.31",
+              image:
+                "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+            },
+            부산: {
+              name: "부산 국제영화제",
+              period: "2024.10.01 - 2024.10.10",
+              image:
+                "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400",
+            },
+            전주: {
+              name: "전주 한옥마을 축제",
+              period: "2024.11.01 - 2024.11.15",
+              image:
+                "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+            },
+            제주: {
+              name: "제주 유채꽃 축제",
+              period: "2024.04.01 - 2024.04.30",
+              image:
+                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
+            },
+            경주: {
+              name: "경주 벚꽃축제",
+              period: "2024.04.01 - 2024.04.15",
+              image:
+                "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400",
+            },
+            강릉: {
+              name: "강릉 커피축제",
+              period: "2024.10.01 - 2024.10.05",
+              image:
+                "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400",
+            },
+          };
+
+          const currentRegionName = currentRegion || "서울";
+          const sampleData =
+            sampleFestivals[currentRegionName] || sampleFestivals["서울"];
+
+          festivalInfo = {
+            name: sampleData.name,
+            period: sampleData.period,
+            location: `${currentRegionName} 일대`,
+            image: sampleData.image,
+            description: `${currentRegionName} 지역의 대표적인 축제입니다.`,
+            phone: "관련 문의: 지역 관광청",
+          };
+
+          console.log("🎪 샘플 축제 정보 설정:", festivalInfo);
         }
 
         console.log("축제 정보:", festivalInfo);
@@ -2616,11 +2713,13 @@ const AIChatbot = () => {
         console.log("추출된 위치 없음");
       }
 
-      // 위치 정보 텍스트 제거 (day 정보 포함)
-      cleanResponse = response.replace(
-        /@location:\s*\[\d+\.\d+\s*,\s*\d+\.\d+\]\s*@day:\d+/g,
-        ""
-      );
+      // 위치 정보 텍스트 제거 (day 정보 포함) - "위치정보:" 포함해서 제거
+      cleanResponse = response
+        .replace(
+          /위치정보:\s*@location:\s*\[\d+\.\d+\s*,\s*\d+\.\d+\]\s*@day:\d+/g,
+          ""
+        )
+        .replace(/@location:\s*\[\d+\.\d+\s*,\s*\d+\.\d+\]\s*@day:\d+/g, "");
     } catch (error) {
       console.error("위치 정보 처리 중 오류:", error);
     }
@@ -2786,8 +2885,16 @@ const AIChatbot = () => {
       // 1단계: Tour API 데이터 조회 (새로운 검색)
       console.log("🔍 새로운 Tour API 데이터 조회 시작");
       festivalDataPromise = fetchFestivalData(inputMessage).then((data) => {
-        console.log(`✅ 새로운 검색 완료: ${data.length}개 축제`);
-        setCurrentFestivalData(data);
+        console.log(`✅ 새로운 검색 완료: ${data?.length || 0}개 축제`);
+        console.log("🎪 가져온 축제 데이터:", data);
+
+        if (data && data.length > 0) {
+          setCurrentFestivalData(data);
+          console.log("✅ currentFestivalData 설정 완료");
+        } else {
+          console.log("❌ TourAPI에서 데이터를 가져오지 못함");
+          setCurrentFestivalData([]);
+        }
 
         // 새로운 지역 설정
         const areaCode = extractAreaCode(inputMessage);
@@ -2797,7 +2904,7 @@ const AIChatbot = () => {
           console.log("📍 새로운 지역 설정:", regionName);
         }
 
-        return data;
+        return data || [];
       });
     } else {
       // 기존 데이터 재사용
@@ -3079,49 +3186,30 @@ ${prompt}`,
                   </div>
                 )}
 
-                <p>
-                  <strong className="ai-chatbot-strong">축제명:</strong>{" "}
-                  {travelInfo.festival.name}
-                </p>
-                <p>
-                  <strong className="ai-chatbot-strong">기간:</strong>{" "}
-                  {travelInfo.festival.period}
-                </p>
-                <p>
-                  <strong className="ai-chatbot-strong">장소:</strong>{" "}
-                  {travelInfo.festival.location}
-                </p>
-
-                {/* 연락처 */}
-                {travelInfo.festival.phone && (
-                  <p>
-                    <strong className="ai-chatbot-strong">연락처:</strong>{" "}
-                    {travelInfo.festival.phone}
+                <div className="ai-chatbot-festival-title">
+                  <h3
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "bold",
+                      color: "#333",
+                      marginBottom: "8px",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    {travelInfo.festival.name}
+                  </h3>
+                </div>
+                <div className="ai-chatbot-festival-date">
+                  <p
+                    style={{
+                      fontSize: "14px",
+                      color: "#666",
+                      marginBottom: "0",
+                    }}
+                  >
+                    {travelInfo.festival.period}
                   </p>
-                )}
-
-                {/* 축제 설명 */}
-                {travelInfo.festival.description && (
-                  <div className="ai-chatbot-festival-description">
-                    <strong className="ai-chatbot-strong">축제 소개:</strong>
-                    <p
-                      style={{
-                        marginTop: "5px",
-                        fontSize: "14px",
-                        lineHeight: "1.5",
-                        color: "#666",
-                        maxHeight: "100px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {travelInfo.festival.description.length > 150
-                        ? travelInfo.festival.description.substring(0, 150) +
-                          "..."
-                        : travelInfo.festival.description}
-                    </p>
-                  </div>
-                )}
+                </div>
               </div>
 
               <div className="ai-chatbot-course-timeline">
@@ -3170,8 +3258,7 @@ ${prompt}`,
                             <div
                               className="ai-chatbot-course-number"
                               style={{
-                                backgroundColor:
-                                  dayColors[parseInt(day)] || dayColors.default,
+                                backgroundColor: "#60a5fa",
                               }}
                             >
                               {index + 1}
