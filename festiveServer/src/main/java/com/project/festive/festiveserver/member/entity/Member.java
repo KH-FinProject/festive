@@ -37,6 +37,7 @@ import lombok.Setter;
 public class Member {
 
 	@Id // 해당 필드를 기본 키(primary key) 로 지정
+	@Column(name = "MEMBER_NO")
 	@SequenceGenerator(
 		name = "member_seq",
 		sequenceName = "SEQ_MEMBER_NO",
@@ -46,19 +47,28 @@ public class Member {
 	generator = "member_seq") // 기본 키 생성을 데이터베이스에 위임하는 전략을 설정
 	private Long memberNo;
 
-	@Column(nullable = false)
-	private String memberName;
+	@Column(name = "ID", nullable = true) // OAuth2 사용자의 경우 ID가 없을 수 있음
+	private String id;
 
-	@Column(unique = true, nullable = false) // DB 컬럼 속성 지정. 중복 불가, null 불가
+	@Column(name = "NICKNAME", nullable = true)
+	private String nickname;
+
+	@Column(name = "NAME", nullable = false)
+	private String name;
+
+	@Column(name = "EMAIL", unique = true, nullable = false) // DB 컬럼 속성 지정. 중복 불가, null 불가
 	private String email;
 
-	@Column(nullable = false) //  null 불가
+	@Column(name = "PASSWORD", nullable = true) // OAuth2 사용자의 경우 비밀번호가 없을 수 있음
 	private String password; // 암호화된 비밀번호 저장
 
-	@Column(nullable = false) 
+	@Column(name = "PROFILE_IMAGE", nullable = true)
+	private String profileImage;
+
+	@Column(name = "SOCIAL_ID", nullable = false) 
 	private String socialId;
 
-	@Column(nullable = false)
+	@Column(name = "ROLE", nullable = false)
 	private String role;
 
 }

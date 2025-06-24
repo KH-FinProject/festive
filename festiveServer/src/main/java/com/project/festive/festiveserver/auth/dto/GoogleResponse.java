@@ -22,27 +22,26 @@ public class GoogleResponse implements OAuth2Response {
     
     @Override
     public String getEmail() {
-        return attribute.get("email").toString();
-    }
-
-    @Override
-    public String getEmailVerified() {
-        return attribute.get("email_verified").toString();
+        Object value = attribute.get("email");
+        return value != null ? value.toString() : "";
     }
     
     @Override
     public String getName() {
-        return attribute.get("name").toString();
+        Object value = attribute.get("name");
+        return value != null ? value.toString() : "";
     }
 
     @Override
     public String getNickname() {
-        return attribute.get("nickname").toString();
+        Object value = attribute.get("nickname");
+        return value != null ? value.toString() : "";
     }
 
     @Override
     public String getProfileImage() {
-        return attribute.get("picture").toString();
+        Object value = attribute.get("picture");
+        return value != null ? value.toString() : "";
     }
 
 }

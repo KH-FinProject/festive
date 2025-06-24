@@ -8,8 +8,6 @@ public interface OAuth2Response {
     String getProviderId();
     //이메일
     String getEmail();
-    //이메일 인증 여부
-    String getEmailVerified();
     //사용자 실명 (설정한 이름)
     String getName();
     //사용자 닉네임

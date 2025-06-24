@@ -14,10 +14,12 @@ import lombok.Setter;
 public class MemberDto {
 
   private Long memberNo;
-  private String memberName;
+  private String id;
+  private String name;
   private String email;
   private String nickname;
   private String password;
+  private String profileImage;
   private String socialId;
   private String role;
 }

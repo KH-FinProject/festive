@@ -3,18 +3,22 @@ package com.project.festive.festiveserver.common.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
+import com.project.festive.festiveserver.filter.JwtFilter;
 import com.project.festive.festiveserver.util.JwtUtil;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true) // 메서드 레벨 보안 활성화
 public class SecurityConfig {
     
     // bcrypt 사용을 위한 Bean 등록
@@ -41,12 +45,12 @@ public class SecurityConfig {
         // CSRF(Cross-Site Request Forgery) 보호를 비활성화
         .csrf(auth -> auth.disable())
         
-        //formLogin 활성화
-        .formLogin(auth -> auth
-        .loginPage("/login")  // 커스텀 로그인 페이지
-        .loginProcessingUrl("/auth/login")  // 로그인 처리 URL
-        .defaultSuccessUrl("http://localhost:5173/")  // 로그인 성공 시 리다이렉트
-        .failureUrl("/error"))  // 로그인 실패 시
+        // JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
+        // formLogin, oauth2Login 모두에 JWT 필터가 적용됨
+        .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+        
+        // formLogin 비활성화 (사용자 지정 로그인 사용)
+        .formLogin(auth -> auth.disable())
         
         //HTTP Basic 인증 방식 disable
         .httpBasic(auth -> auth.disable())
@@ -59,7 +63,10 @@ public class SecurityConfig {
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/", "/signup", "/login", "/auth/**", "/oauth2/**").permitAll()
+        .requestMatchers("/", "/favicon.ico", "/static/**", "/css/**", "/js/**", "/images/**", "/assets/**", "/error", "/actuator/**").permitAll()
+        .requestMatchers("/signup", "/login", "/auth/**", "/oauth2/**").permitAll()
+        .requestMatchers("/myPage/**").authenticated() // 인증된 사용자만 접근
+        .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
         .anyRequest().authenticated())
         
         //세션 설정 : STATELESS
