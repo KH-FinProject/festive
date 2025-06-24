@@ -1,0 +1,249 @@
+.customer-center-page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.customer-center-outer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.customer-center-container {
+  max-width: 1160px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.customer-center-search-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  max-width: 1160px;
+  width: 100%;
+  margin: 31px auto 0 auto;
+  justify-content: space-between;
+  gap: 0;
+}
+
+.customer-center-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.customer-search-type {
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  color: #222;
+  font-size: 1rem;
+  font-weight: 400;
+  width: 113px;
+  height: 33px;
+}
+
+.customer-search-input {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid #d0d0d0;
+  font-size: 1rem;
+  background: #fff;
+  color: #222;
+  font-weight: 400;
+  height: 33px;
+  box-sizing: border-box;
+  width: 300px;
+}
+
+.customer-search-input::placeholder {
+  color: #888;
+  opacity: 1;
+}
+
+.customer-search-btn {
+  background: #60a5fa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+  font-weight: 500;
+  height: 33px;
+}
+
+.customer-search-btn:hover {
+  background: #7bb0f7;
+}
+
+.customer-write-btn {
+  background: #60a5fa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 22px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  height: 33px;
+  white-space: nowrap;
+  margin: 0;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.customer-write-btn:hover {
+  background: #7bb0f7;
+}
+
+.customer-board-list {
+  margin-bottom: 0;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-sizing: border-box;
+}
+
+.customer-board-item {
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 0 32px;
+  display: flex;
+  flex-direction: column;
+  background: #f9f9f9;
+  color: #222;
+  max-width: 100%;
+  width: 100%;
+  height: 92.39px;
+  justify-content: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.customer-board-item:hover {
+  background: #f0f0f0;
+}
+
+.customer-board-title {
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #25272b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-board-meta {
+  display: flex;
+  gap: 18px;
+  font-size: 0.95rem;
+  color: #555;
+  align-items: center;
+}
+
+.customer-profile-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.customer-board-author {
+  color: #666;
+  font-weight: 500;
+}
+
+.customer-board-date {
+  color: #999;
+}
+
+.customer-board-likes,
+.customer-board-views {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+}
+
+.general-board-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin: 24px 0 0 0;
+}
+
+@media (max-width: 1200px) {
+  .customer-center-container,
+  .customer-center-search-row {
+    max-width: 95%;
+    padding: 0 20px;
+  }
+
+  .customer-board-item {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 800px) {
+  .customer-center-container,
+  .customer-center-search-row {
+    max-width: 95%;
+    padding: 0 16px;
+  }
+
+  .customer-board-item {
+    padding: 0 16px;
+    height: auto;
+    min-height: 80px;
+  }
+
+  .customer-center-search-row {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .customer-center-search-bar {
+    width: 100%;
+  }
+
+  .customer-search-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .customer-center-container,
+  .customer-center-search-row {
+    max-width: 95%;
+    padding: 0 12px;
+  }
+
+  .customer-board-item {
+    padding: 0 12px;
+  }
+
+  .customer-search-type,
+  .customer-search-input,
+  .customer-search-btn {
+    height: 36px;
+  }
+}

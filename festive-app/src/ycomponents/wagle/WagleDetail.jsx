@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import GeneralBoard from "./GeneralBoard";
+import NoticeBoard from "./NoticeBoard";
 
 const images = [
   // 실제로는 서버에서 받아온 이미지 URL 배열
@@ -245,7 +246,9 @@ function WagleDetail() {
   const post = allPosts.find((p) => String(p.id) === String(id));
   const [liked, setLiked] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [currentReportData, setCurrentReportData] = useState(null);
+
+  // 공지사항인지 확인 (notices 배열에 있는 게시글인지 체크)
+  const isNotice = notices.some((notice) => String(notice.id) === String(id));
 
   // flat 구조로 변환
   const flatComments = flattenComments(comments);
@@ -294,24 +297,21 @@ function WagleDetail() {
             <span className="author">{post.author}</span>
             <span className="date">{post.date}</span>
             <span className="views">{post.views}</span>
-            <span className="comments">댓글 {flatComments.length}</span>
-            <button
-              className="report-btn"
-              onClick={() =>
-                handleReport({
-                  type: 0, // 게시글
-                  targetId: post.id,
-                  targetAuthor: post.author,
-                  content: post.title,
-                })
-              }
-            >
-              <FontAwesomeIcon
-                icon={faTriangleExclamation}
-                style={{ marginRight: 4 }}
-              />
-              신고
-            </button>
+            {!isNotice && (
+              <span className="comments">댓글 {flatComments.length}</span>
+            )}
+            {!isNotice && (
+              <button
+                className="report-btn"
+                onClick={() => setIsReportModalOpen(true)}
+              >
+                <FontAwesomeIcon
+                  icon={faTriangleExclamation}
+                  style={{ marginRight: 4 }}
+                />
+                신고
+              </button>
+            )}
           </div>
           <div className="wagle-detail-content">
             {/* 실제 본문은 post.content로 확장 가능 */}
@@ -340,21 +340,27 @@ function WagleDetail() {
             </button>
           </div>
         </div>
-        <div className="wagle-detail-comments">
-          <div className="wagle-detail-comments-title">댓글</div>
-          <form className="wagle-detail-comment-form">
-            <input type="text" placeholder="댓글을 남겨주세요..." />
-            <button type="submit">댓글 작성</button>
-          </form>
-          <ul className="wagle-detail-comment-list">
-            {comments.map((c) => (
-              <CommentItem key={c.id} comment={c} onReport={handleReport} />
-            ))}
-          </ul>
-        </div>
+        {!isNotice && (
+          <div className="wagle-detail-comments">
+            <div className="wagle-detail-comments-title">댓글</div>
+            <form className="wagle-detail-comment-form">
+              <input type="text" placeholder="댓글을 남겨주세요..." />
+              <button type="submit">댓글 작성</button>
+            </form>
+            <ul className="wagle-detail-comment-list">
+              {comments.map((c) => (
+                <CommentItem key={c.id} comment={c} />
+              ))}
+            </ul>
+          </div>
+        )}
         <div className="wagle-detail-bottom-list">
           <div className="wagle-divider" />
-          <GeneralBoard hideTitle={true} hideWriteBtn={true} />
+          {isNotice ? (
+            <NoticeBoard hideTitle={true} />
+          ) : (
+            <GeneralBoard hideTitle={true} hideWriteBtn={true} />
+          )}
         </div>
         <ReportModal
           isOpen={isReportModalOpen}

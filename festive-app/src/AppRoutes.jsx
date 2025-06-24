@@ -21,6 +21,9 @@ import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
 import AdminRoutes from "./mcomponents/Admin.jsx";
 import Booth from "./scomponents/booth/Booth.jsx";
 import LocalFestive from "./jcomponents/LocalFestive/LocalFestive.jsx";
+import CustomerCenter from "./ycomponents/customerCenter/CustomerCenter.jsx";
+import CustomerWrite from "./ycomponents/customerCenter/CustomerWrite.jsx";
+import CustomerDetail from "./ycomponents/customerCenter/CustomerDetail.jsx";
 
 const AppRoutes = () => {
   return (
@@ -46,7 +49,9 @@ const AppRoutes = () => {
         <Route path="/mypage/mycomment" element={<MyPageMyComment />} />
         <Route path="/mypage/withdrawal" element={<MyPageWithdrawal />} />
         <Route path="/booth" element={<Booth />} />
-        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="/customer-center" element={<CustomerCenter />} />
+        <Route path="/customer-center/write" element={<CustomerWrite />} />
+        <Route path="/customer-center/:id" element={<CustomerDetail />} />
       </Routes>
     </>
   );
