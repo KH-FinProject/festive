@@ -25,7 +25,6 @@ import LocalFestive from "./jcomponents/LocalFestive/LocalFestive.jsx";
 const AppRoutes = () => {
   return (
     <>
-      <AdminRoutes />
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/signin" element={<Signin />} />
@@ -47,6 +46,7 @@ const AppRoutes = () => {
         <Route path="/mypage/mycomment" element={<MyPageMyComment />} />
         <Route path="/mypage/withdrawal" element={<MyPageWithdrawal />} />
         <Route path="/booth" element={<Booth />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
       </Routes>
     </>
   );

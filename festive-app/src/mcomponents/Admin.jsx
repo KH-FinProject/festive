@@ -16,19 +16,16 @@ import AdminApplicationDetail from "./AdminApplicationDetail";
 
 const AdminRoutes = () => (
   <Routes>
-    <Route path="/admin" element={<AdminMain />} />
-    <Route path="/admin/create" element={<AdminCreateAccount />} />
-    <Route path="/admin/users" element={<AdminDeleteMember />} />
-    <Route path="/admin/customer" element={<AdminCustomerService />} />
-    <Route path="/admin/board" element={<AdminBoardManagement />} />
-    <Route path="/admin/applications" element={<AdminApplicationStatus />} />
-    <Route path="/admin/write" element={<AdminBoardWrite />} />
-    <Route path="/admin/reply" element={<AdminCustomerReply />} />
-    <Route
-      path="/admin/report-detail/:reportNo"
-      element={<AdminCustomerReportDetail />}
-    />
-    <Route path="/admin/appDetail" element={<AdminApplicationDetail />} />
+    <Route path="" element={<AdminMain />} />
+    <Route path="create" element={<AdminCreateAccount />} />
+    <Route path="users" element={<AdminDeleteMember />} />
+    <Route path="customer" element={<AdminCustomerService />} />
+    <Route path="board" element={<AdminBoardManagement />} />
+    <Route path="applications" element={<AdminApplicationStatus />} />
+    <Route path="write" element={<AdminBoardWrite />} />
+    <Route path="reply" element={<AdminCustomerReply />} />
+    <Route path="report-detail/:reportNo" element={<AdminCustomerReportDetail />} />
+    <Route path="appDetail" element={<AdminApplicationDetail />} />
   </Routes>
 );
 
