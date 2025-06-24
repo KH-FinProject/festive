@@ -21,11 +21,17 @@
 /* Sidebar */
 .mypage-sidebar {
   width: 310px;
-  height: 650px;
+  /* 고정 너비 */
+  min-height: 100vh;
+  /* 화면 높이 꽉 차게 */
   border: 1px solid #e5e5e5;
-  margin: 0 10px;
   border-radius: 10px;
   overflow-y: auto;
+  position: sticky;
+  /* 스크롤 시 고정 */
+  top: 0;
+  flex-shrink: 0;
+  /* 사이드바 줄어들지 않게 */
 }
 
 .mypage-sidebar-section {

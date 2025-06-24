@@ -1,6 +1,5 @@
-import { MapPin, Calendar, Phone, Star, ChevronRight } from "lucide-react";
+import { Calendar, Phone, Star, ChevronRight, MapPin } from "lucide-react";
 import "./FestivalDetail.css";
-import test from "../assets/IMG_0860.jpg";
 import Weather from "./../scomponents/weatherAPI/WeatherAPI";
 
 // 슬라이더
@@ -10,6 +9,12 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { useEffect, useState } from "react";
+
+// 카카오맵
+import KakaoMap from "./KakaoMap";
+// 전기차 충전소
+import EVChargeApi from "./EVChargeApi";
+import { useParams } from "react-router-dom";
 
 const getFestivalStatus = (start, end) => {
   const now = new Date();
@@ -32,6 +37,7 @@ const FestivalDetail = () => {
   const [posterImg, setPosterImg] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [eventState, setEventState] = useState("");
+  const { contentId } = useParams();
 
   // 슬라이더
   const FestivalSwiper = () => {
@@ -39,8 +45,8 @@ const FestivalDetail = () => {
       <Swiper
         slidesPerView={3} // 기본 3장씩
         spaceBetween={30}
-        loop={true} // 반복
-        navigation={false}
+        loop={false} // 반복
+        navigation={false} // 양 사이드 화살표
         pagination={{ clickable: true }}
         modules={[Navigation, Pagination]}
         className="mySwiper"
@@ -64,7 +70,7 @@ const FestivalDetail = () => {
     try {
       const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
 
-      const url = `http://apis.data.go.kr/B551011/KorService2/detailCommon2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&contentId=3113671`;
+      const url = `http://apis.data.go.kr/B551011/KorService2/detailCommon2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&contentId=${contentId}`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -82,7 +88,7 @@ const FestivalDetail = () => {
     try {
       const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
 
-      const url = `https://apis.data.go.kr/B551011/KorService2/detailIntro2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&_type=json&contentId=3113671&contentTypeId=15`;
+      const url = `https://apis.data.go.kr/B551011/KorService2/detailIntro2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&_type=json&contentId=${contentId}&contentTypeId=15`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -103,9 +109,8 @@ const FestivalDetail = () => {
   const fetchFestivalImg = async () => {
     try {
       const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
-      const contentId = "";
 
-      const url = `https://apis.data.go.kr/B551011/KorService2/detailImage2?serviceKey=${serviceKey}&MobileApp=Festive&MobileOS=ETC&_type=json&contentId=3113671&imageYN=Y`;
+      const url = `https://apis.data.go.kr/B551011/KorService2/detailImage2?serviceKey=${serviceKey}&MobileApp=Festive&MobileOS=ETC&_type=json&contentId=${contentId}&imageYN=Y`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -123,7 +128,12 @@ const FestivalDetail = () => {
 
       // 축제 포스터
       const poster = mapped.find((img) => img.imgname.includes("포스터"));
-      const subImgs = mapped.filter((img) => img !== poster);
+      let subImgs;
+      if (poster != null) {
+        subImgs = mapped.filter((img) => img !== poster);
+      } else {
+        subImgs = mapped;
+      }
 
       setPosterImg(poster);
       setFestivalImg(subImgs);
@@ -143,12 +153,11 @@ const FestivalDetail = () => {
       festival != null &&
       festivalDetail != null &&
       festivalImg != null &&
-      posterImg != null &&
       eventState != null
     ) {
       setIsLoading(false);
     }
-  }, [festival, festivalDetail, festivalImg, posterImg, eventState]);
+  }, [festival, festivalDetail, festivalImg, eventState]);
 
   if (isLoading) {
     <h1>Loading...</h1>;
@@ -164,7 +173,6 @@ const FestivalDetail = () => {
           {/* Content Section */}
           <div className="content-wrapper">
             <div className="festival-description">
-              {/* <p>강원 한우, 저도 먹고싶습니다. 배고프네요</p> */}
               <h1 className="festival-name">{festival.title}</h1>
               <div className="festival-badge">
                 <span className="badge-button">{eventState}</span>
@@ -194,7 +202,9 @@ const FestivalDetail = () => {
             {/* Event Poster */}
             <div className="event-poster">
               <div className="poster-image">
-                <img src={posterImg.originimgurl}></img>
+                {posterImg && (
+                  <img src={posterImg.originimgurl} alt="포스터 이미지" />
+                )}
               </div>
               <div className="festival-info-card">
                 <div className="info-header">
@@ -206,7 +216,7 @@ const FestivalDetail = () => {
                 </div>
 
                 <div className="info-item">
-                  <h4>장소</h4>
+                  <h3>장소</h3>
                   <p>
                     {festival.addr1}
                     {festival.addr2}
@@ -214,12 +224,12 @@ const FestivalDetail = () => {
                 </div>
 
                 <div className="info-item">
-                  <h4>입장료</h4>
+                  <h3>입장료</h3>
                   <p>{festivalDetail?.usetimefestival}</p>
                 </div>
 
                 <div className="info-item">
-                  <h4>개최지</h4>
+                  <h3>개최지</h3>
                   <p>
                     {festivalDetail?.sponsor1}
                     {festivalDetail?.sponsor2}
@@ -227,7 +237,7 @@ const FestivalDetail = () => {
                 </div>
 
                 <div className="info-item">
-                  <h4>연락처</h4>
+                  <h3>연락처</h3>
                   <p className="contact">
                     <Phone className="phone-icon" />
                     {festivalDetail?.sponsor1tel}
@@ -244,9 +254,7 @@ const FestivalDetail = () => {
               찾아가기
             </h3>
             <div className="map-container">
-              <div className="map-placeholder">
-                <p>지도 API 영역</p>
-              </div>
+              <KakaoMap center={{ lat: festival.mapy, lng: festival.mapx }} />
             </div>
           </section>
 
@@ -268,7 +276,10 @@ const FestivalDetail = () => {
                   근처 전기차충전소 충전소
                 </h4>
                 <div className="transport-map">
-                  <p>충전소 지도 API 영역</p>
+                  {/*  <EVChargeApi
+                    metroCode={festival.lDongRegnCd}
+                    cityCode={festival.lDongSignguCd}
+                  /> */}
                 </div>
               </div>
             </div>
