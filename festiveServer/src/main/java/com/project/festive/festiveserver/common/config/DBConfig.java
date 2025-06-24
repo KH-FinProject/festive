@@ -35,13 +35,24 @@ public class DBConfig {
     return new HikariConfig();
   }
 
+//  @Bean
+//  public DataSource dataSource(HikariConfig hikariConfig) {
+//
+//    DataSource dataSource = new HikariDataSource(hikariConfig);
+//
+//    return dataSource;
+//  }
+  
   @Bean
-  public DataSource dataSource(HikariConfig hikariConfig) {
-
-    DataSource dataSource = new HikariDataSource(hikariConfig);
-
-    return dataSource;
+  public DataSource dataSource() {
+      HikariDataSource dataSource = new HikariDataSource();
+      dataSource.setDriverClassName("oracle.jdbc.OracleDriver");
+      dataSource.setJdbcUrl("jdbc:oracle:thin:@localhost:1521:xe");
+      dataSource.setUsername("festiveTest");
+      dataSource.setPassword("test1234");
+      return dataSource;
   }
+
 
   @Bean
   public SqlSessionFactory sessionFactory(DataSource dataSource) throws Exception{
