@@ -17,7 +17,6 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,25 +33,6 @@ public class DBConfig {
   public HikariConfig hikariConfig() {
     return new HikariConfig();
   }
-
-//  @Bean
-//  public DataSource dataSource(HikariConfig hikariConfig) {
-//
-//    DataSource dataSource = new HikariDataSource(hikariConfig);
-//
-//    return dataSource;
-//  }
-  
-  @Bean
-  public DataSource dataSource() {
-      HikariDataSource dataSource = new HikariDataSource();
-      dataSource.setDriverClassName("oracle.jdbc.OracleDriver");
-      dataSource.setJdbcUrl("jdbc:oracle:thin:@localhost:1521:xe");
-      dataSource.setUsername("festiveTest");
-      dataSource.setPassword("test1234");
-      return dataSource;
-  }
-
 
   @Bean
   public SqlSessionFactory sessionFactory(DataSource dataSource) throws Exception{

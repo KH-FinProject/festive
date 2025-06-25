@@ -18,7 +18,7 @@ import com.project.festive.festiveserver.auth.dto.LoginRequest;
 import com.project.festive.festiveserver.auth.dto.LoginResponse;
 import com.project.festive.festiveserver.auth.service.AuthService;
 import com.project.festive.festiveserver.member.entity.Member;
-import com.project.festive.festiveserver.util.JwtUtil;
+import com.project.festive.festiveserver.common.util.JwtUtil;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
