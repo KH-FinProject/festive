@@ -18,4 +18,17 @@ public interface AuthService {
 	void logout(Long memberNo);
 
 	int updatePasswordByMemberNo(Long memberNo, String string);
+	
+	/**
+	 * 만료된 리프레시 토큰들을 삭제합니다.
+	 * @return 삭제된 토큰의 개수
+	 */
+	int deleteExpiredRefreshTokens();
+	
+	/**
+	 * 특정 회원의 리프레시 토큰이 유효한지 확인합니다.
+	 * @param memberNo 회원 번호
+	 * @return 토큰이 존재하고 만료되지 않았으면 true, 그렇지 않으면 false
+	 */
+	boolean isRefreshTokenValid(Long memberNo);
 }

@@ -243,7 +243,7 @@
 }
 
 .step-btn:hover {
-  background-color: #3b82f6;
+  background-color: #9DC4FE;
 }
 
 .step-btn:disabled {
@@ -269,6 +269,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  position: relative;
 }
 
 .form-label {
@@ -278,7 +279,9 @@
 }
 
 .required {
-  color: #ef4444;
+  color: #ff4444;
+  font-weight: bold;
+  margin-left: 4px;
 }
 
 .form-input {
@@ -303,6 +306,7 @@
 .form-input-group {
   display: flex;
   gap: 0.5rem;
+  position: relative;
 }
 
 .form-input-group .form-input {
@@ -323,7 +327,7 @@
 }
 
 .action-btn:hover {
-  background-color: #3b82f6;
+  background-color: #9DC4FE;
 }
 
 .address-group {
@@ -504,11 +508,12 @@
   cursor: pointer;
   margin-top: 2rem;
   transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: center;
 }
 
 .login-btn:hover {
   background-color: #9DC4FE;
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(157, 196, 254, 0.4);
 }
 
@@ -571,4 +576,89 @@
   .feature-card:nth-child(2) .feature-content {
     text-align: center;
   }
+}
+
+/* 필수 체크박스 스타일 */
+.checkbox-label input[type="checkbox"]:required:invalid {
+  border-color: #ff4444;
+}
+
+.checkbox-label input[type="checkbox"]:required:valid {
+  border-color: #4CAF50;
+}
+
+/* 중복 확인 상태 스타일 */
+.form-input.available {
+  background-color: #f8fff8;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%2310b981" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7.629 15.71a1 1 0 0 1-1.415 0l-4.243-4.242a1 1 0 1 1 1.415-1.415l3.536 3.535 7.071-7.07a1 1 0 1 1 1.414 1.414l-7.778 7.778z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.2em 1.2em;
+  padding-right: 2.2em;
+  border-color: #d1d5db;
+}
+
+.form-input.unavailable,
+.form-input.error {
+  border-color: #ff4444;
+  background-color: #fff8f8;
+}
+
+.status-message {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  min-height: 1.2em;
+  display: block;
+}
+
+.status-message.success {
+  color: #10b981;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 2;
+  background: #fff;
+  padding: 0 0.25em;
+  white-space: nowrap;
+}
+
+.status-message.error {
+  color: #ef4444;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 2;
+  background: #fff;
+  padding: 0 0.25em;
+  white-space: nowrap;
+}
+
+.user-form-group .validation-error {
+  order: 3;
+}
+
+.user-form-group .status-message {
+  order: 2;
+}
+
+/* input 아래에 항상 공간 확보 */
+.user-form-group .form-input,
+.user-form-group .form-input-group {
+  margin-bottom: 0.25rem;
+}
+
+.validation-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  display: block;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 2;
+  background: #fff;
+  padding: 0 0.25em;
+  white-space: nowrap;
 }

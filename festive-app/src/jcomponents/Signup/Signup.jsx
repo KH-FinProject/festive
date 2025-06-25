@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import axiosAPI from "../../api/axiosAPI";
+import { useDebounce } from '../../hooks/useDebounce';
 import './Signup.css';
+import { Link } from 'react-router-dom';
 
 const Signup = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -17,6 +20,17 @@ const Signup = () => {
   };
   
   const handleNext = () => {
+    // 필수 약관 동의 확인
+    if (currentStep === 1) {
+      const requiredAgreements = ['terms', 'privacy'];
+      const allRequiredChecked = requiredAgreements.every(key => agreements[key]);
+      
+      if (!allRequiredChecked) {
+        alert('필수 약관에 동의해주세요.');
+        return;
+      }
+    }
+    
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
@@ -123,6 +137,7 @@ const Agreements = ({ agreements, setAgreements }) => {
     {
       id: 'terms',
       label: '이용약관',
+      required: true,
       content: `제1조 (목적)
 본 약관은 축제 알림 및 소통 게시판 웹사이트(이하 "사이트")가 제공하는 서비스의 이용과 관련하여
 사이트와 회원 간의 권리·의무 및 책임사항을 규정합니다.
@@ -143,6 +158,7 @@ const Agreements = ({ agreements, setAgreements }) => {
     {
       id: 'privacy',
       label: '개인정보의 수집범위',
+      required: true,
       content: `사이트는 회원가입 및 서비스 이용을 위해 다음과 같은 개인정보를 수집합니다:
 - 필수 수집항목: 이름(닉네임), 이메일 주소, 비밀번호
 - 선택 수집항목: 프로필 이미지, 관심 축제 지역/카테고리
@@ -151,6 +167,7 @@ const Agreements = ({ agreements, setAgreements }) => {
     {
       id: 'marketing',
       label: '개인정보의 수집 및 이용 목적',
+      required: false,
       content: `수집한 개인정보는 다음의 목적을 위해 사용됩니다:
 1. 회원 관리: 가입의사 확인, 이용자 식별, 탈퇴 의사 확인 등
 2. 서비스 제공: 축제 알림, 게시판 글 작성 및 댓글 기능 제공 등
@@ -160,6 +177,7 @@ const Agreements = ({ agreements, setAgreements }) => {
     {
       id: 'location',
       label: '개인정보의 보유기간 및 이용기간',
+      required: false,
       content: `회원 탈퇴 시: 즉시 삭제 (단, 관련 법령에 따라 일정 기간 보존되는 정보 제외)
 전자상거래 기록 보존 (해당 시):
 계약/청약철회/결제 기록: 5년
@@ -168,7 +186,7 @@ const Agreements = ({ agreements, setAgreements }) => {
     }
   ];
   
-  const TermsSection = ({ label, content, checked, onChange, expanded, onToggle }) => {
+  const TermsSection = ({ label, content, checked, onChange, expanded, onToggle, required }) => {
     return (
         <div className="terms-section">
           <div className="terms-header">
@@ -177,9 +195,10 @@ const Agreements = ({ agreements, setAgreements }) => {
                   type="checkbox"
                   checked={checked}
                   onChange={onChange}
+                  required={required}
               />
               <span className="checkmark"></span>
-              {label}
+              {label} {required && <span className="required">*</span>}
             </label>
             <button className="toggle-btn" onClick={onToggle}>
               상세
@@ -207,11 +226,12 @@ const Agreements = ({ agreements, setAgreements }) => {
                 onChange={() => handleAgreementChange(section.id)}
                 expanded={expandedSections[section.id] || false}
                 onToggle={() => handleToggleExpand(section.id)}
+                required={section.required}
             />
         ))}
         
         <div className="bottom-notice">
-          <p>이용약관, 개인정보의 수집법위, 개인정보의 수집 및 이용 목적, 개인정보의 보유기간 및 이용기간 동의를 포함합니다.</p>
+          <p>이용약관, 개인정보의 수집범위, 개인정보의 수집 및 이용 목적, 개인정보의 보유기간 및 이용기간 동의를 포함합니다.</p>
           <label className="select-all-label">
             <input
                 type="checkbox"
@@ -226,241 +246,323 @@ const Agreements = ({ agreements, setAgreements }) => {
   );
 };
 
+// validation 규칙과 메시지 분리
+const validationRules = {
+  id: {
+    required: true,
+    minLength: 4,
+    maxLength: 20,
+    pattern: /^[a-zA-Z0-9]+$/,
+    message: {
+      required: '아이디를 입력해주세요',
+      minLength: '아이디는 4~20자 사이로 입력해주세요',
+      maxLength: '아이디는 4~20자 사이로 입력해주세요',
+      pattern: '아이디는 영문자와 숫자만 사용 가능합니다'
+    }
+  },
+  name: {
+    required: true,
+    minLength: 2,
+    maxLength: 20,
+    message: {
+      required: '이름을 입력해주세요',
+      minLength: '이름은 2~20자 사이로 입력해주세요',
+      maxLength: '이름은 2~20자 사이로 입력해주세요'
+    }
+  },
+  email: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    message: {
+      required: '이메일을 입력해주세요',
+      pattern: '올바른 이메일 형식으로 입력해주세요'
+    }
+  },
+  nickname: {
+    required: true,
+    minLength: 2,
+    maxLength: 15,
+    pattern: /^[ㄱ-힣a-zA-Z0-9]+$/,
+    message: {
+      required: '닉네임을 입력해주세요',
+      minLength: '닉네임은 2~15자 사이로 입력해주세요',
+      maxLength: '닉네임은 2~15자 사이로 입력해주세요',
+      pattern: '닉네임은 한글, 영문자, 숫자만 사용 가능합니다'
+    }
+  },
+  password: {
+    required: true,
+    minLength: 6,
+    maxLength: 20,
+    pattern: /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,}$/,
+    message: {
+      required: '비밀번호를 입력해주세요',
+      minLength: '비밀번호는 6~20자 사이로 입력해주세요',
+      maxLength: '비밀번호는 6~20자 사이로 입력해주세요',
+      pattern: '비밀번호는 영문자와 숫자를 포함해야 합니다'
+    }
+  },
+  passwordConfirm: {
+    required: true,
+    message: {
+      required: '비밀번호 확인을 입력해주세요',
+      match: '비밀번호가 일치하지 않습니다'
+    }
+  }
+};
+
+const duplicateErrorMessages = {
+  id: {
+    TOO_SHORT: '아이디는 4~20자 사이로 입력해주세요.',
+    INVALID_FORMAT: '아이디는 영문자와 숫자만 사용 가능합니다.',
+    DUPLICATE: '이미 사용 중인 아이디입니다.',
+    SERVER_ERROR: '확인 중 오류가 발생했습니다.',
+    UNSUPPORTED_TYPE: '지원하지 않는 타입입니다.'
+  },
+  nickname: {
+    TOO_SHORT: '닉네임은 2~15자여야 합니다.',
+    INVALID_FORMAT: '닉네임은 한글, 영문자, 숫자만 사용 가능합니다.',
+    DUPLICATE: '이미 사용 중인 닉네임입니다.',
+    SERVER_ERROR: '확인 중 오류가 발생했습니다.',
+    UNSUPPORTED_TYPE: '지원하지 않는 타입입니다.'
+  },
+  email: {
+    INVALID_FORMAT: '올바른 이메일 형식으로 입력해주세요.',
+    DUPLICATE: '이미 사용 중인 이메일입니다.',
+    SERVER_ERROR: '확인 중 오류가 발생했습니다.',
+    UNSUPPORTED_TYPE: '지원하지 않는 타입입니다.'
+  }
+};
+
+const getDuplicateMessage = (field, code) => {
+  if (!code) return '';
+  return duplicateErrorMessages[field]?.[code] || '확인 중 오류가 발생했습니다.';
+};
+
 const Inform = () => {
+
+  // 1. 상태 선언
+  // [formData] : 회원가입 입력값 전체를 관리
+  // [duplicateStatus] : id, nickname, email의 중복확인 상태(checked, available, message)
+  // [validationErrors] : 각 입력값의 validation 에러 메시지
   const [formData, setFormData] = useState({
-    username: '',
-    nickname: '',
-    email: '',
-    phone: '',
-    authKey: '',
-    id: '',
-    password: '',
-    passwordConfirm: '',
-    address: '',
-    detailAddress: ''
+    name: '', nickname: '', email: '', phone: '', authKey: '', id: '', password: '', passwordConfirm: '', address: '', detailAddress: ''
   });
-  
+
+  const [duplicateStatus, setDuplicateStatus] = useState({
+    id: { checked: false, available: false, message: '' },
+    nickname: { checked: false, available: false, message: '' },
+    email: { checked: false, available: false, message: '' }
+  });
+
+  const [validationErrors, setValidationErrors] = useState({});
+
+  // 2. useRef (race condition 방지)
+  // [lastRequestedValue] : 중복확인 요청의 마지막 값을 기억하여 응답 순서 꼬임(race condition) 방지
+  const lastRequestedValue = useRef({});
+
+  // 3. useDebounce
+  // [debounced] : 입력값이 일정 시간(500ms) 동안 변경 없을 때만 값이 반영됨(불필요한 API 호출 방지)
+  const debounced = {
+    id: useDebounce(formData.id, 500),
+    nickname: useDebounce(formData.nickname, 500),
+    email: useDebounce(formData.email, 500)
+  };
+
+  // 4. 헬퍼: validation
+  // [validateField] : 각 입력값에 대해 validation 규칙(길이, 정규식 등) 체크 후 에러 메시지 반환
+  const validateField = (field, value, compareValue) => {
+    const rules = validationRules[field];
+    if (!rules) return '';
+    if (rules.required && !value) return rules.message.required;
+    if (rules.minLength && value.length < rules.minLength) return rules.message.minLength;
+    if (rules.maxLength && value.length > rules.maxLength) return rules.message.maxLength;
+    if (rules.pattern && !rules.pattern.test(value)) return rules.message.pattern;
+    if (field === 'passwordConfirm' && value !== compareValue) return rules.message.match;
+    return '';
+  };
+
+  // 5. 헬퍼: 중복확인
+  // [checkDuplicate] : 중복확인 API 호출, 응답이 마지막 요청값과 일치할 때만 상태 업데이트 (race condition 방지)
+  const checkDuplicate = async (field, value) => {
+    lastRequestedValue.current[field] = value;
+
+    try {
+      setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
+      if (!['id', 'nickname', 'email'].includes(field)) return;
+      const response = await axiosAPI.get(`/member/exists?type=${field}&value=${value}`);
+      if (lastRequestedValue.current[field] !== value) return;
+      setDuplicateStatus(prev => ({
+        ...prev,
+        [field]: {
+          checked: true,
+          available: response.data.available,
+          message: getDuplicateMessage(field, response.data.code)
+        }
+      }));
+    } catch {
+      if (lastRequestedValue.current[field] !== value) return;
+      setDuplicateStatus(prev => ({
+        ...prev,
+        [field]: {
+          checked: true,
+          available: false,
+          message: getDuplicateMessage(field, 'SERVER_ERROR')
+        }
+      }));
+    }
+  };
+
+  // 6. useEffect: 중복확인 (하나로 통합)
+  // [debounced.id, debounced.nickname, debounced.email] 값이 바뀔 때마다 중복확인 API 호출
+  useEffect(() => {
+    ['id', 'nickname', 'email'].forEach(field => {
+      const value = debounced[field];
+      if (value && (field !== 'email' ? value.length >= (field === 'id' ? 4 : 2) : value.includes('@'))) {
+        setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
+        checkDuplicate(field, value);
+      }
+    });
+    // eslint-disable-next-line
+  }, [debounced.id, debounced.nickname, debounced.email]);
+
+  // 7. 입력 핸들러 (validation, 중복확인 상태 초기화)
+  // [handleInputChange] : 입력값 변경 시 formData, validationErrors, duplicateStatus를 업데이트
+  // - 아이디/닉네임/이메일 입력 시 중복확인 상태 초기화
+  // - 비밀번호 입력 시 비밀번호 확인도 재검증
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    if (['id', 'nickname', 'email'].includes(field)) {
+      setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
+    }
+
+    setValidationErrors(prev => ({
       ...prev,
-      [field]: value
+      [field]: validateField(field, value, field === 'passwordConfirm' ? formData.password : undefined)
     }));
+
+    if (field === 'password') {
+      setValidationErrors(prev => ({
+        ...prev,
+        passwordConfirm: validateField('passwordConfirm', formData.passwordConfirm, value)
+      }));
+    }
   };
-  
-  const handleDuplicateCheck = (field) => {
-    console.log(`${field} 중복확인`);
+
+  // 8. 렌더링 헬퍼
+  // [getStatusMessage] : 중복확인 결과 메시지 렌더링
+  // [getValidationError] : validation 에러 메시지 렌더링
+  // [getInputClass] : 입력 필드의 상태(기본/성공/실패)에 따라 CSS 클래스 반환
+  const getStatusMessage = field => {
+    const status = duplicateStatus[field];
+    if (!status || !status.checked || !status.message) return null;
+    return <span className={`status-message ${status.available ? 'success' : 'error'}`}>{status.message}</span>;
   };
-  
-  const handleSmsVerification = () => {
-    console.log('SMS 인증');
+
+  const getValidationError = field => {
+    const error = validationErrors[field];
+    return error ? <span className="validation-error">{error}</span> : null;
   };
-  
-  const handleAuthKeyVerification = () => {
-    console.log('인증 확인');
+
+  const getInputClass = field => {
+    const base = 'form-input';
+    const status = duplicateStatus[field];
+    if (validationErrors[field]) return `${base} unavailable`;
+    if (!['id', 'nickname', 'email'].includes(field)) return base;
+    if (status && status.checked && status.available) return `${base} available`;
+    if (status && status.checked && !status.available) return `${base} unavailable`;
+    return base;
   };
-  
-  const handleAddressSearch = () => {
-    console.log('우편번호 찾기');
-  };
-  
+
+  // 9. 기타 핸들러(placeholder)
+  // [handleSmsVerification] : SMS 인증 요청(추후 구현)
+  // [handleAuthKeyVerification] : 인증번호 확인(추후 구현)
+  // [handleAddressSearch] : 주소 검색(추후 구현)
+  const handleSmsVerification = () => {};
+
+  const handleAuthKeyVerification = () => {};
+
+  const handleAddressSearch = () => {};
+
+  // 10. 렌더링
   return (
-      <>
-        <h2 className="signup-title">정보입력</h2>
-        <p className="signup-subtitle">회원 가입을 위해 *표시는 필수로 입력해주세요</p>
-        <hr/>
-        
-        <form className="signup-form">
-          <div className="user-form-row">
-            <div className="user-form-group">
-              <label className="form-label">
-                Username <span className="required">*</span>
-              </label>
-              <div className="form-input-group">
-                <input
-                    type="text"
-                    className="form-input"
-                    placeholder="이름"
-                    value={formData.username}
-                    onChange={(e) => handleInputChange('username', e.target.value)}
-                />
-                <button
-                    type="button"
-                    className="action-btn"
-                    onClick={() => handleDuplicateCheck('username')}
-                >
-                  중복 확인
-                </button>
-              </div>
-            </div>
-            
-            <div className="user-form-group">
-              <label className="form-label">
-                Nickname <span className="required">*</span>
-              </label>
-              <div className="form-input-group">
-                <input
-                    type="text"
-                    className="form-input"
-                    placeholder="닉네임"
-                    value={formData.nickname}
-                    onChange={(e) => handleInputChange('nickname', e.target.value)}
-                />
-                <button
-                    type="button"
-                    className="action-btn"
-                    onClick={() => handleDuplicateCheck('nickname')}
-                >
-                  중복 확인
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="user-form-row">
-            <div className="user-form-group">
-              <label className="form-label">
-                Email address <span className="required">*</span>
-              </label>
-              <input
-                  type="email"
-                  className="form-input"
-                  placeholder="이메일 (비밀번호 찾기 등 본인 확인 용도)"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-              />
-            </div>
-            
-            <div className="user-form-group">
-              <label className="form-label">
-                Phone <span className="required">*</span>
-              </label>
-              <div className="form-input-group">
-                <input
-                    type="tel"
-                    className="form-input"
-                    placeholder="전화번호"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                />
-                <button
-                    type="button"
-                    className="action-btn"
-                    onClick={handleSmsVerification}
-                >
-                  SMS 인증
-                </button>
-              </div>
-            </div>
-          </div>
-          
+    <>
+      <h2 className="signup-title">정보입력</h2>
+      <p className="signup-subtitle">회원 가입을 위해 *표시는 필수로 입력해주세요</p>
+      <hr/>
+      <form className="signup-form">
+        <div className="user-form-row">
           <div className="user-form-group">
-            <label className="form-label">
-              Auth key <span className="required">*</span>
-            </label>
+            <label className="form-label">이름 <span className="required">*</span></label>
+            <input type="text" className={getInputClass('name')} placeholder="이름을 입력해주세요" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} />
+            {getValidationError('name')}
+          </div>
+          <div className="user-form-group">
+            <label className="form-label">닉네임 <span className="required">*</span></label>
             <div className="form-input-group">
-              <input
-                  type="text"
-                  className="form-input"
-                  placeholder="인증번호"
-                  value={formData.authKey}
-                  onChange={(e) => handleInputChange('authKey', e.target.value)}
-              />
-              <button
-                  type="button"
-                  className="action-btn"
-                  onClick={handleAuthKeyVerification}
-              >
-                인증 확인
-              </button>
+              <input type="text" className={getInputClass('nickname')} placeholder="닉네임을 입력해주세요" value={formData.nickname} onChange={e => handleInputChange('nickname', e.target.value)} />
             </div>
+            {getStatusMessage('nickname')}
+            {getValidationError('nickname')}
           </div>
-          
+        </div>
+        <div className="user-form-row">
           <div className="user-form-group">
-            <label className="form-label">
-              ID <span className="required">*</span>
-            </label>
+            <label className="form-label">이메일 <span className="required">*</span></label>
+            <input type="email" className={getInputClass('email')} placeholder="이메일을 입력해주세요" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} />
+            {getStatusMessage('email')}
+            {getValidationError('email')}
+          </div>
+          <div className="user-form-group">
+            <label className="form-label">전화번호 <span className="required">*</span></label>
             <div className="form-input-group">
-              <input
-                  type="text"
-                  className="form-input"
-                  placeholder="아이디"
-                  value={formData.id}
-                  onChange={(e) => handleInputChange('id', e.target.value)}
-              />
-              <button
-                  type="button"
-                  className="action-btn"
-                  onClick={() => handleDuplicateCheck('id')}
-              >
-                중복 확인
-              </button>
+              <input type="tel" className="form-input" placeholder="전화번호를 입력해주세요" value={formData.phone} onChange={e => handleInputChange('phone', e.target.value)} />
+              <button type="button" className="action-btn" onClick={handleSmsVerification}>SMS 인증</button>
             </div>
           </div>
-          
-          <div className="user-form-group">
-            <label className="form-label">
-              Password <span className="required">*</span>
-            </label>
-            <input
-                type="password"
-                className="form-input"
-                placeholder="비밀번호 (영어,숫자,특수문자(@,#,..) 6~20글자 사이로 입력해주세요.)"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-            />
+        </div>
+        <div className="user-form-group">
+          <label className="form-label">인증번호 <span className="required">*</span></label>
+          <div className="form-input-group">
+            <input type="text" className="form-input" placeholder="인증번호를 입력해주세요" value={formData.authKey} onChange={e => handleInputChange('authKey', e.target.value)} />
+            <button type="button" className="action-btn" onClick={handleAuthKeyVerification}>인증 확인</button>
           </div>
-          
-          <div className="user-form-group">
-            <label className="form-label">
-              Password confirm <span className="required">*</span>
-            </label>
-            <input
-                type="password"
-                className="form-input"
-                placeholder="비밀번호 확인"
-                value={formData.passwordConfirm}
-                onChange={(e) => handleInputChange('passwordConfirm', e.target.value)}
-            />
+        </div>
+        <div className="user-form-group">
+          <label className="form-label">아이디 <span className="required">*</span></label>
+          <div className="form-input-group">
+            <input type="text" className={getInputClass('id')} placeholder="아이디를 입력해주세요 (4~20자, 영문자/숫자)" value={formData.id} onChange={e => handleInputChange('id', e.target.value)} />
           </div>
-          
-          <div className="user-form-group">
-            <label className="form-label">Address</label>
-            <div className="address-group">
-              <div className="form-input-group">
-                <input
-                    type="text"
-                    className="form-input"
-                    placeholder="우편번호"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    readOnly
-                />
-                <button
-                    type="button"
-                    className="action-btn"
-                    onClick={handleAddressSearch}
-                >
-                  우편번호 찾기
-                </button>
-              </div>
-              <input
-                  type="text"
-                  className="form-input full-width"
-                  placeholder="상세 주소"
-                  value={formData.detailAddress}
-                  onChange={(e) => handleInputChange('detailAddress', e.target.value)}
-              />
+          {getStatusMessage('id')}
+          {getValidationError('id')}
+        </div>
+        <div className="user-form-group">
+          <label className="form-label">비밀번호 <span className="required">*</span></label>
+          <input type="password" className={getInputClass('password')} placeholder="비밀번호를 입력해주세요 (6~20자, 영문자+숫자)" value={formData.password} onChange={e => handleInputChange('password', e.target.value)} />
+          {getValidationError('password')}
+        </div>
+        <div className="user-form-group">
+          <label className="form-label">비밀번호 확인 <span className="required">*</span></label>
+          <input type="password" className={getInputClass('passwordConfirm')} placeholder="비밀번호를 다시 입력해주세요" value={formData.passwordConfirm} onChange={e => handleInputChange('passwordConfirm', e.target.value)} />
+          {getValidationError('passwordConfirm')}
+        </div>
+        <div className="user-form-group">
+          <label className="form-label">주소</label>
+          <div className="address-group">
+            <div className="form-input-group">
+              <input type="text" className="form-input" placeholder="우편번호" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} readOnly />
+              <button type="button" className="action-btn" onClick={handleAddressSearch}>우편번호 찾기</button>
             </div>
+            <input type="text" className="form-input full-width" placeholder="상세 주소" value={formData.detailAddress} onChange={e => handleInputChange('detailAddress', e.target.value)} />
           </div>
-        </form>
-      </>
+        </div>
+      </form>
+    </>
   );
 };
 
 const Completion = () => {
-  const handleLoginRedirect = () => {
-    console.log('로그인 하러 가기');
-  };
   
   const path = '/src/assets/signup/';
   const cards = [
@@ -497,8 +599,8 @@ const Completion = () => {
             {/* Feature Cards */}
             <div className="feature-cards">
               
-              {cards.map((card) => (
-                <div className="feature-card">
+              {cards.map((card, index) => (
+                <div className="feature-card" key={index}>
                   <div className="feature-icon-wrapper">
                     <img src={path + card.img} alt={card.img} className="feature-icon-img" />
                   </div>
@@ -515,9 +617,9 @@ const Completion = () => {
         </div>
         
         {/* Login Button */}
-        <button className="login-btn" onClick={handleLoginRedirect}>
+        <Link to="/signin" className="login-btn" style={{ display: 'block', width: '100%' }}>
           로그인 하러 가기
-        </button>
+        </Link>
       </>
   );
 };

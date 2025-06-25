@@ -40,7 +40,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         // JSON 형식으로 비동기 요청을 하기 때문에, @ModelAttribute가 아닌, @RequestBody 활용
-        // email, password (LoginRequest) -> accessToken, nickname (LoginResponse)
+        // id, password (LoginRequest) -> accessToken, nickname (LoginResponse)
         
         // 1. 로그인 처리 및 토큰 생성 (서비스에서 Access + Refresh 생성 및 DB 저장)
         Map<String, Object> map = authService.login(request);

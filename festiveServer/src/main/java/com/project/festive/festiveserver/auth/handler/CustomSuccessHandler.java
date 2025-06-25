@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -66,8 +67,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                             .path("/")
                             .build();
 
-      response.addHeader("Set-Cookie", accessTokenCookie.toString());
-      response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+      response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+      response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
       
       log.info("쿠키 설정 완료");
 

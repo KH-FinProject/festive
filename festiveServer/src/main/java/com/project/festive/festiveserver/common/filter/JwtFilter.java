@@ -2,6 +2,7 @@ package com.project.festive.festiveserver.common.filter;
 
 import java.io.IOException;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -10,8 +11,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
 import com.project.festive.festiveserver.auth.dto.CustomOAuth2User;
-import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.common.util.JwtUtil;
+import com.project.festive.festiveserver.member.dto.MemberDto;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -77,7 +78,7 @@ public class JwtFilter extends OncePerRequestFilter {
               .path("/")
               .build();
           
-          response.addHeader("Set-Cookie", newAccessTokenCookie.toString());
+          response.addHeader(HttpHeaders.SET_COOKIE, newAccessTokenCookie.toString());
 
           createAuthenticationToken(memberNo, email, role);
           
@@ -126,6 +127,8 @@ public class JwtFilter extends OncePerRequestFilter {
            path.contains("/assets/") ||
            path.contains("/error") ||
            path.contains("/actuator/") ||
+           path.startsWith("/auth/") || // 인증 관련 경로 제외
+           path.startsWith("/oauth2/") || // OAuth2 관련 경로 제외
            path.endsWith(".ico") ||
            path.endsWith(".css") ||
            path.endsWith(".js") ||

@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import './Signin.css';
-import {Link} from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faComment } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from 'react';
+import { Link } from "react-router-dom";
+import axiosAPI from "../../api/axiosAPI";
+import './Signin.css';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -17,10 +18,18 @@ const LoginForm = () => {
       [name]: value
     }));
   };
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
+
+  const handleLogin = async (e) => {
     console.log('로그인 시도:', formData);
+    try {
+      const response = await axiosAPI.post(`/auth/login`, {
+        id: formData.id,
+        password: formData.password
+      });
+      console.log('로그인 성공:', response.data);
+    } catch (error) {
+      console.error('로그인 실패:', error);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -95,15 +104,12 @@ const LoginForm = () => {
               
               {/* 버튼 그룹 */}
               <div className="button-group">
-                <button
-                    type="submit"
-                    onClick={handleSubmit}
-                    className="btn btn-signup"
-                >
+                <Link to="/signup" className="btn btn-signup">
                   회원가입
-                </button>
+                </Link>
                 <button
                     type="button"
+                    onClick={handleLogin}
                     className="btn btn-login"
                 >
                   로그인

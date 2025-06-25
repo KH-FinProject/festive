@@ -8,6 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
@@ -19,7 +20,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "REFRESH_TOKEN")
+@Table(name = "REFRESH_TOKEN", indexes = {
+    @Index(name = "idx_refresh_token_expiration", columnList = "EXPIRATION_DATE")
+})
 @Getter
 @Setter
 @Builder
@@ -28,12 +31,13 @@ import lombok.Setter;
 public class RefreshToken {
 
 	@Id
+	@Column(name = "MEMBER_NO")
 	private Long memberNo;
 
-	@Column(nullable = false)
+	@Column(name = "REFRESH_TOKEN", nullable = false, length = 500)
 	private String token;
 
-	@Column(nullable = false)
+	@Column(name = "EXPIRATION_DATE", nullable = false)
 	private LocalDateTime expirationDate;
 
 	// RefreshToken 엔티티와 Member 엔티티 간의 1:1 단방향 연관관계를 설정합니다.
@@ -50,7 +54,7 @@ public class RefreshToken {
 	// @JoinColumn(name = "memberNo"):
 	//   - RefreshToken 테이블의 memberNo 컬럼이 Member 테이블의 PK와 매핑되는 외래키임을 명시합니다.
 	//   - 실제 DB 테이블에서 memberNo 컬럼이 외래키로 동작합니다.
-	@JoinColumn(name = "memberNo")
+	@JoinColumn(name = "MEMBER_NO")
 	// 단방향 참조:
 	//   - RefreshToken 엔티티에서만 Member 엔티티를 참조할 수 있습니다.
 	//   - Member 엔티티에서는 RefreshToken을 알지 못합니다.

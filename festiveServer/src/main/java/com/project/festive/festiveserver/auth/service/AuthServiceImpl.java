@@ -35,8 +35,9 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public Map<String, Object> login(LoginRequest request) {
 
-		Member member = memberRepository.findByEmail(request.getEmail())
-				.orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
+		// 사용자가 입력한 id로 회원 찾기 (이메일 또는 사용자 ID)
+		Member member = memberRepository.findByUserId(request.getId())
+				.orElseThrow(() -> new RuntimeException("존재하지 않는 계정입니다."));
 
 		if (!bcrypt.matches(request.getPassword(), member.getPassword())) {
 			throw new RuntimeException("비밀번호가 일치하지 않습니다.");
@@ -105,5 +106,29 @@ public class AuthServiceImpl implements AuthService {
 		String encPw = bcrypt.encode(pw);
 		
 		return memberRepository.updatePasswordByMemberNo(memberNo, encPw);
+	}
+	
+	/**
+	 * 만료된 리프레시 토큰들을 삭제합니다.
+	 * @return 삭제된 토큰의 개수
+	 */
+	@Override
+	public int deleteExpiredRefreshTokens() {
+		LocalDateTime now = LocalDateTime.now();
+		int deletedCount = refreshTokenRepository.deleteAllByExpirationDateBefore(now);
+		log.info("만료된 리프레시 토큰 {}개를 삭제했습니다.", deletedCount);
+		return deletedCount;
+	}
+	
+	/**
+	 * 특정 회원의 리프레시 토큰이 유효한지 확인합니다.
+	 * @param memberNo 회원 번호
+	 * @return 토큰이 존재하고 만료되지 않았으면 true, 그렇지 않으면 false
+	 */
+	@Override
+	public boolean isRefreshTokenValid(Long memberNo) {
+		return refreshTokenRepository.findByMember_MemberNo(memberNo)
+				.map(token -> token.getExpirationDate().isAfter(LocalDateTime.now()))
+				.orElse(false);
 	}
 }
