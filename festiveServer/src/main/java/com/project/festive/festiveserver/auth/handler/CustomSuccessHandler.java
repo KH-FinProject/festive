@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-  
+
   private final JwtUtil jwtUtil;
 
   public CustomSuccessHandler(JwtUtil jwtUtil) {
@@ -30,53 +30,43 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
   }
 
   @Override
-  public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-    
+  public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+      Authentication authentication) throws IOException, ServletException {
+
     log.info("OAuth2 로그인 성공 처리 시작");
-    
+
     try {
       CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-      
+
       String socialId = customOAuth2User.getSocialId();
-      log.info("사용자 정보: memberNo={}, email={}, socialId={}", 
-               customOAuth2User.getMemberNo(), customOAuth2User.getEmail(), socialId);
 
       Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
       Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
       GrantedAuthority auth = iterator.next();
       String role = auth.getAuthority();
 
-      String token = jwtUtil.generateAccessToken(customOAuth2User.getMemberNo(), customOAuth2User.getEmail(), role, socialId);
-      String refreshToken = jwtUtil.generateRefreshToken(customOAuth2User.getMemberNo(), customOAuth2User.getEmail(), role, socialId);
+      String accessToken = jwtUtil.generateAccessToken(customOAuth2User.getMemberNo(), customOAuth2User.getEmail(), role);
+      String refreshToken = jwtUtil.generateRefreshToken(customOAuth2User.getMemberNo(), customOAuth2User.getEmail(), role);
 
-    // Access Token 쿠키 설정
-    ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", token)
-                            .httpOnly(true)
-                            //.secure(true)
-                            //.sameSite("Strict")
-                            .maxAge(3600)
-                            .path("/")
-                            .build();
+      // Access Token을 쿼리 파라미터로 포함하여 프론트엔드로 리다이렉트
+      String redirectUrl = String.format("http://localhost:5173/oauth-callback.html?accessToken=%s", accessToken);
+      response.sendRedirect(redirectUrl);
 
-    // Refresh Token 쿠키 설정
-    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-                            .httpOnly(true)
-                            //.secure(true)
-                            //.sameSite("Strict")
-                            .maxAge(7 * 24 * 60 * 60) // 7일
-                            .path("/")
-                            .build();
+      // Refresh Token 쿠키 설정
+      ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+          .httpOnly(true)
+          // .secure(true)
+          // .sameSite("Strict")
+          .maxAge(7 * 24 * 60 * 60) // 7일
+          .path("/")
+          .build();
 
-      response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
       response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-      
-      log.info("쿠키 설정 완료");
 
-      log.info("OAuth2 로그인 성공 처리 완료, 리다이렉트 시작");
-      
-      // 리다이렉트 (응답이 커밋되기 전에 실행)
-      response.sendRedirect("http://localhost:5173/");
-      
+      log.info("토큰 설정 완료");
+
+      log.info("OAuth2 로그인 성공 처리 완료");
+
     } catch (Exception e) {
       log.error("OAuth2 로그인 성공 처리 중 오류 발생", e);
       if (!response.isCommitted()) {

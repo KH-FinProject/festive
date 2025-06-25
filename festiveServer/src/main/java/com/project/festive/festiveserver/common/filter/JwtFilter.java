@@ -67,7 +67,7 @@ public class JwtFilter extends OncePerRequestFilter {
           String role = jwtUtil.getClaims(refreshToken).get("role", String.class);
           
           // 새로운 Access Token 생성
-          String newAccessToken = jwtUtil.generateAccessToken(memberNo, email, role, null);
+          String newAccessToken = jwtUtil.generateAccessToken(memberNo, email, role);
           
           // 새로운 Access Token을 쿠키에 설정
           ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)

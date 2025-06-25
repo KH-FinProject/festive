@@ -32,16 +32,11 @@ public class JwtUtil {
   }
 
   // Access Token 생성
-  public String generateAccessToken(Long memberNo, String email, String role, String socialId) {
+  public String generateAccessToken(Long memberNo, String email, String role) {
     JwtBuilder builder = Jwts.builder()
         .claim("memberNo", memberNo)
         .claim("email", email)
         .claim("role", role);
-
-    // 소셜 로그인 시 소셜 아이디 추가
-    if (socialId != null) {
-        builder.claim("socialId", socialId);
-    }
 
     return builder
         .subject("AccessToken")
@@ -52,15 +47,11 @@ public class JwtUtil {
   }
 
   // Refresh Token 생성
-  public String generateRefreshToken(Long memberNo, String email, String role, String socialId) {
+  public String generateRefreshToken(Long memberNo, String email, String role) {
     JwtBuilder builder = Jwts.builder()
         .claim("memberNo", memberNo)
         .claim("email", email)
         .claim("role", role);
-
-    if (socialId != null) {
-        builder.claim("socialId", socialId);
-    }
 
     return builder
         .subject("RefreshToken")

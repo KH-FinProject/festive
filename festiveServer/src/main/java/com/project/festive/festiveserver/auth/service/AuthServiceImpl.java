@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public Map<String, Object> login(LoginRequest request) {
 
-		// 사용자가 입력한 id로 회원 찾기 (이메일 또는 사용자 ID)
+		// 사용자가 입력한 id로 회원 찾기 (사용자 ID)
 		Member member = memberRepository.findByUserId(request.getId())
 				.orElseThrow(() -> new RuntimeException("존재하지 않는 계정입니다."));
 
@@ -43,8 +43,8 @@ public class AuthServiceImpl implements AuthService {
 			throw new RuntimeException("비밀번호가 일치하지 않습니다.");
 		}
 
-		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
-		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
+		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole());
+		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole());
 
 		Date expirationDate = jwtUtil.getExpirationDate(refreshToken);
 		LocalDateTime localExpirationDate = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
