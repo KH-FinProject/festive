@@ -380,7 +380,6 @@
   font-size: 20px;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #60a5fa;
   animation: fadeIn 0.4s ease-out forwards;
   animation-delay: 0.3s;
   opacity: 0;
@@ -408,7 +407,6 @@
   color: #333;
   font-size: 1.3rem;
   margin-bottom: 15px;
-  border-bottom: 2px solid #60a5fa;
   padding-bottom: 8px;
 }
 
