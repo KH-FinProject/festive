@@ -80,4 +80,9 @@ public class ReportServiceImpl implements ReportService {
         // memberMapper 호출 필요(Autowired)
         return memberMapper.increaseSanctionCount(memberNo);
     }
+
+    @Override
+    public int decreaseSanctionCount(long memberNo) {
+        return memberMapper.decreaseSanctionCount(memberNo);
+    }
 }

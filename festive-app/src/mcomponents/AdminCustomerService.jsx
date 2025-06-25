@@ -173,24 +173,24 @@ const AdminCustomerService = () => {
                     {currentReports.length > 0 ? (
                       currentReports.map((report) => (
                         <div key={report.reportNo} className="report-item">
-                          <div className="report-header">
-                            <span className="report-id">
+                          <div className="inquiry-header">
+                            <span className="inquiry-id">
                               #{report.reportNo}
                             </span>
-                            <span className="report-title">
+                            <span className="inquiry-title">
                               {report.reportType === 0 ? "게시글" : "댓글"} 신고
                               - {report.reportReason}
                             </span>
                           </div>
-                          <div className="report-meta">
-                            <span className="report-author">
+                          <div className="inquiry-meta">
+                            <span className="inquiry-author">
                               신고자: {report.reporterNo}
                             </span>
-                            <span className="report-date">
+                            <span className="inquiry-date">
                               {report.reportTime}
                             </span>
                           </div>
-                          <div className="report-actions">
+                          <div className="inquiry-actions">
                             <button
                               className="admin-action-btn admin-view-btn"
                               onClick={() =>
