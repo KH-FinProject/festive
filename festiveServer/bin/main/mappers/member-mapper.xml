@@ -2,7 +2,7 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.project.festive.festiveserver.member.mapper.MemberMapper">
-  
+
     <!-- 제재 카운트 1 증가 -->
     <update id="increaseSanctionCount" parameterType="long">
         UPDATE MEMBER SET SANCTION_COUNT = SANCTION_COUNT + 1 WHERE MEMBER_NO = #{memberNo}
