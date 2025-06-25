@@ -31,23 +31,17 @@ public class AdminServiceImpl implements AdminService{
 	// 관리자 이메일 발급
 	@Override
 	public String createAdminAccount(MemberDto member) {
-		log.info("1번자리");
 	    // 1. 영어(대소문자) 6자리 난수로 만든 비밀번호를 암호화한 값 구하기
 	    String rawPw = generateRandomPassword(4); // 평문 비번
 
-	    log.info("2번자리");
 	    // 2. 평문 비밀번호를 암호화하여 저장
 	    String encPw = bcrypt.encode(rawPw);
 
-	    log.info("3번자리");
 	    // 3. member에 암호화된 비밀번호 세팅
 	    member.setPassword(encPw);
 
-	    log.info("4번자리");
 	    // 4. DB에 암호화된 비밀번호가 세팅된 member를 전달하여 계정 발급
 	    int result = mapper.createAdminAccount(member);
-
-	    log.info("5번자리");
 
 	    // 5. 계정 발급 정상처리 되었다면, 발급된(평문) 비밀번호 리턴
 	    return result > 0 ? rawPw : null;

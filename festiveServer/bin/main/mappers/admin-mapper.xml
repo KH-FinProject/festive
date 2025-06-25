@@ -20,7 +20,7 @@
     MEMBER_DEL_FL,
     SANCTION_COUNT
   ) VALUES (
-    61,
+    64,
     #{name},
     #{email},
     #{password},
