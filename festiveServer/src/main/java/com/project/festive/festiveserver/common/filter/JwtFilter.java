@@ -1,4 +1,4 @@
-package com.project.festive.festiveserver.filter;
+package com.project.festive.festiveserver.common.filter;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import org.springframework.web.util.WebUtils;
 
 import com.project.festive.festiveserver.auth.dto.CustomOAuth2User;
 import com.project.festive.festiveserver.member.dto.MemberDto;
-import com.project.festive.festiveserver.util.JwtUtil;
+import com.project.festive.festiveserver.common.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

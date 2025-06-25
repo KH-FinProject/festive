@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import com.project.festive.festiveserver.auth.dto.CustomOAuth2User;
-import com.project.festive.festiveserver.util.JwtUtil;
+import com.project.festive.festiveserver.common.util.JwtUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

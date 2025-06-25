@@ -15,7 +15,7 @@ import com.project.festive.festiveserver.auth.entity.RefreshToken;
 import com.project.festive.festiveserver.auth.repository.RefreshTokenRepository;
 import com.project.festive.festiveserver.member.entity.Member;
 import com.project.festive.festiveserver.member.repository.MemberRepository;
-import com.project.festive.festiveserver.util.JwtUtil;
+import com.project.festive.festiveserver.common.util.JwtUtil;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

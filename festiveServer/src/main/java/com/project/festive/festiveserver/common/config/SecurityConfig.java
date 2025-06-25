@@ -13,8 +13,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
-import com.project.festive.festiveserver.filter.JwtFilter;
-import com.project.festive.festiveserver.util.JwtUtil;
+import com.project.festive.festiveserver.common.filter.JwtFilter;
+import com.project.festive.festiveserver.common.util.JwtUtil;
 
 @Configuration
 @EnableWebSecurity
