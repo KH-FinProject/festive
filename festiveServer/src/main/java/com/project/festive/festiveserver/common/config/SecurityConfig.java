@@ -64,9 +64,9 @@ public class SecurityConfig {
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
         .requestMatchers("/", "/favicon.ico", "/static/**", "/css/**", "/js/**", "/images/**", "/assets/**", "/error", "/actuator/**").permitAll()
-        .requestMatchers("/signup", "/login", "/auth/**", "/oauth2/**", "/api/reports/**").permitAll()
+        .requestMatchers("/signup", "/login", "/auth/**", "/oauth2/**", "/api/reports/**", "/admin/**").permitAll() //admin 로그인 완전구현 이후 "관리자만 접근" 주석풀고 여기꺼 삭제
         .requestMatchers("/myPage/**").authenticated() // 인증된 사용자만 접근
-        .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
+//        .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
         .anyRequest().authenticated())
         
         //세션 설정 : STATELESS

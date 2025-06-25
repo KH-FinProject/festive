@@ -6,6 +6,7 @@ import Title from './Title.jsx';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useNavigate } from 'react-router-dom';
 
 function formatDate(yyyymmdd) {
     return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
@@ -17,6 +18,8 @@ const FestiveCalendar = () => {
     const [clickedDate, setClickedDate] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 4;
+
+    const navigate = useNavigate();
 
     const totalPages = Math.ceil(selectedDateFestivals.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -90,8 +93,14 @@ const FestiveCalendar = () => {
                     return aPriority - bPriority;
                 }
 
-                // 상태 같으면 시작일 최신순 정렬 (내림차순)
-                return new Date(b.startDate) - new Date(a.startDate);
+                // 상태가 같을 때
+                if (a.status === '예정') {
+                    // 예정인 경우: 시작일 오름차순
+                    return new Date(a.startDate) - new Date(b.startDate);
+                } else {
+                    // 그 외: 시작일 내림차순
+                    return new Date(b.startDate) - new Date(a.startDate);
+                }
             });
 
 
@@ -131,10 +140,6 @@ const FestiveCalendar = () => {
             setCurrentPage(pageNumber);
             // window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    };
-
-    const handleFestivalClick = (festivalId) => {
-        console.log(`축제 ${festivalId} 상세페이지로 이동`);
     };
 
     const handleDatesSet = (arg) => {
@@ -269,6 +274,12 @@ const FestiveCalendar = () => {
         return 'festival-default';
     }
 
+    const handleFestivalClick = (festivalId) => {
+        // 실제로는 React Router로 상세페이지 이동
+        console.log(`축제 ${festivalId} 상세페이지로 이동`);
+        navigate(`/festival/detail/${festivalId}`);
+    };
+
 
     return (
         <div className="app-container">
@@ -298,7 +309,10 @@ const FestiveCalendar = () => {
                 <section className="content-section">
                     {clickedDate && (
                         <div className="selected-date-heading">
-                            <h2>{formatKoreanDate(clickedDate)}의 축제</h2>
+                            <p style={{ fontSize: "24px" }}>
+                                {formatKoreanDate(clickedDate)}의 축제
+                            </p>
+
                         </div>
                     )}
 
