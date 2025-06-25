@@ -246,6 +246,7 @@ function WagleDetail() {
   const post = allPosts.find((p) => String(p.id) === String(id));
   const [liked, setLiked] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [currentReportData, setCurrentReportData] = useState(null);
 
   // 공지사항인지 확인 (notices 배열에 있는 게시글인지 체크)
   const isNotice = notices.some((notice) => String(notice.id) === String(id));
@@ -303,7 +304,15 @@ function WagleDetail() {
             {!isNotice && (
               <button
                 className="report-btn"
-                onClick={() => setIsReportModalOpen(true)}
+                onClick={() => {
+                  setCurrentReportData({
+                    type: 0, // 게시글
+                    targetId: post.id,
+                    targetAuthor: post.author,
+                    content: post.title,
+                  });
+                  setIsReportModalOpen(true);
+                }}
               >
                 <FontAwesomeIcon
                   icon={faTriangleExclamation}
@@ -349,7 +358,7 @@ function WagleDetail() {
             </form>
             <ul className="wagle-detail-comment-list">
               {comments.map((c) => (
-                <CommentItem key={c.id} comment={c} />
+                <CommentItem key={c.id} comment={c} onReport={handleReport} />
               ))}
             </ul>
           </div>
