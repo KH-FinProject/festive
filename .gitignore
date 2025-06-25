@@ -38,6 +38,25 @@ replay_pid*
 # Spring Boot properties
 *-local.properties
 
+# Environment variables and secrets
+.env
+
+# Database configuration files
+database.properties
+db.properties
+
+# OAuth2 client secrets (if stored in properties)
+oauth2-secrets.properties
+
+# IDE Settings (개발자별 설정 파일)
+.vscode/
+.settings/
+.project
+.classpath
+.metadata/
+*.launch
+*.prefs
+
 ### JetBrains+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
