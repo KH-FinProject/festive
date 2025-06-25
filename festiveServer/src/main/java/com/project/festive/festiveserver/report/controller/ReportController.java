@@ -70,8 +70,8 @@ public class ReportController {
     }
 
     // 웹소켓 메시지 처리 (테스트용)
-    @MessageMapping("/report")
-    @SendTo("/topic/alerts")
+   // @MessageMapping("/report")
+   // @SendTo("/topic/alerts")
     public ReportAlert sendReportAlert(ReportAlert report) {
         return new ReportAlert("신고가 접수되었습니다", report.getReportType(), report.getMemberNo());
     }

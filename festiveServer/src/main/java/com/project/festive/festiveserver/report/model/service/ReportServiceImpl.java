@@ -5,7 +5,6 @@ import com.project.festive.festiveserver.report.model.dto.ReportAlert;
 import com.project.festive.festiveserver.report.model.mapper.ReportMapper;
 import com.project.festive.festiveserver.member.mapper.MemberMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,10 +16,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private ReportMapper reportMapper;
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
+    
     @Autowired
     private MemberMapper memberMapper;
 
@@ -72,7 +68,7 @@ public class ReportServiceImpl implements ReportService {
                 .build();
         
         // /topic/admin-alerts로 관리자에게 알림 전송
-        messagingTemplate.convertAndSend("/topic/admin-alerts", alert);
+        // messagingTemplate.convertAndSend("/topic/admin-alerts", alert);
     }
 
     @Override
