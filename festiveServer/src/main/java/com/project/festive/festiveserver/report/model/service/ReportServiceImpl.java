@@ -17,7 +17,6 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private ReportMapper reportMapper;
 
-    @Autowired
 
     @Autowired
     private MemberMapper memberMapper;
@@ -70,7 +69,7 @@ public class ReportServiceImpl implements ReportService {
                 .build();
         
         // /topic/admin-alerts로 관리자에게 알림 전송
-        messagingTemplate.convertAndSend("/topic/admin-alerts", alert);
+//        messagingTemplate.convertAndSend("/topic/admin-alerts", alert);
     }
 
     @Override

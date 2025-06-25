@@ -1,69 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Title from "./Title";
 import "./WagleDetail.css";
 import { useNavigate, useParams } from "react-router-dom";
-import { posts } from "./GeneralBoard";
-import { notices } from "./NoticeBoard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTriangleExclamation,
   faHeart as faHeartSolid,
   faTimes,
-  faFlag,
 } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import GeneralBoard from "./GeneralBoard";
 import NoticeBoard from "./NoticeBoard";
 
-const images = [
-  // 실제로는 서버에서 받아온 이미지 URL 배열
-  "https://via.placeholder.com/180x120/9dc4fe/fff?text=Image1",
-  "https://via.placeholder.com/180x120/9dc4fe/fff?text=Image2",
-  "https://via.placeholder.com/180x120/9dc4fe/fff?text=Image3",
-  "https://via.placeholder.com/180x120/9dc4fe/fff?text=Image4",
-];
-
-const comments = [
-  {
-    id: 1,
-    author: "김춘자",
-    date: "2024.04.13 15:20",
-    content: "와 정말 예쁘네요! 저도 내일 가려고 했는데 더 기대돼요",
-    replies: [
-      {
-        id: 11,
-        author: "벚꽃사랑",
-        date: "2024.04.13 15:25",
-        content: "@김춘자 네! 꼭 가보세요~ 지금이 딱 절정이에요",
-      },
-    ],
-  },
-  {
-    id: 2,
-    author: "사진작가이재용",
-    date: "2024.04.13 16:45",
-    content:
-      "사진 정말 잘 찍으셨네요! 어떤 카메라 쓰셨어요? 저도 이번 주말에 가서 찍어보려고 하는데 팁 좀 알려주세요~",
-    replies: [],
-  },
-  {
-    id: 3,
-    author: "박서현",
-    date: "2024.04.13 17:30",
-    content:
-      "저도 어제 갔었는데 정말 예뻤어요! 다만 사람이 너무 많아서 좀 힘들었지만... 그래도 갈 만해요!",
-    replies: [],
-  },
-  {
-    id: 4,
-    author: "최민호",
-    date: "2024.04.13 18:15",
-    content: "몇 시쯤 가는게 가장 좋을까요? 평일에도 사람 많나요?",
-    replies: [],
-  },
-];
-
 function CommentItem({ comment, onReport }) {
+  const formatDate = (dateString) => {
+    return new Date(dateString)
+      .toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+      .replace(/\. /g, ".")
+      .replace(".", ".")
+      .slice(0, -1);
+  };
+
   return (
     <li className="wagle-detail-comment-item">
       <div className="comment-main-row">
@@ -72,8 +35,10 @@ function CommentItem({ comment, onReport }) {
           src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
           alt="프로필"
         />
-        <span className="comment-author">{comment.author}</span>
-        <span className="comment-date">{comment.date}</span>
+        <span className="comment-author">{comment.memberNickname}</span>
+        <span className="comment-date">
+          {formatDate(comment.commentCreateDate)}
+        </span>
         <div className="comment-actions">
           <button className="comment-btn">수정</button>
           <button className="comment-btn">삭제</button>
@@ -83,29 +48,35 @@ function CommentItem({ comment, onReport }) {
             onClick={() =>
               onReport({
                 type: 1, // 댓글
-                targetId: comment.id,
-                targetAuthor: comment.author,
-                content: comment.content,
+                targetId: comment.commentNo,
+                targetAuthor: comment.memberNickname,
+                content: comment.commentContent,
               })
             }
           >
-            <FontAwesomeIcon icon={faFlag} />
+            <FontAwesomeIcon
+              icon={faTriangleExclamation}
+              style={{ marginRight: 4 }}
+            />
+            신고
           </button>
         </div>
       </div>
-      <div className="comment-content">{comment.content}</div>
+      <div className="comment-content">{comment.commentContent}</div>
       {comment.replies &&
         comment.replies.length > 0 &&
         comment.replies.map((reply) => (
-          <div className="reply-row" key={reply.id}>
+          <div className="reply-row" key={reply.commentNo}>
             <div className="comment-main-row">
               <img
                 className="comment-avatar"
                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
                 alt="프로필"
               />
-              <span className="comment-author">{reply.author}</span>
-              <span className="comment-date">{reply.date}</span>
+              <span className="comment-author">{reply.memberNickname}</span>
+              <span className="comment-date">
+                {formatDate(reply.commentCreateDate)}
+              </span>
               <div className="comment-actions">
                 <button className="comment-btn">수정</button>
                 <button className="comment-btn">삭제</button>
@@ -114,17 +85,21 @@ function CommentItem({ comment, onReport }) {
                   onClick={() =>
                     onReport({
                       type: 1, // 댓글
-                      targetId: reply.id,
-                      targetAuthor: reply.author,
-                      content: reply.content,
+                      targetId: reply.commentNo,
+                      targetAuthor: reply.memberNickname,
+                      content: reply.commentContent,
                     })
                   }
                 >
-                  <FontAwesomeIcon icon={faFlag} />
+                  <FontAwesomeIcon
+                    icon={faTriangleExclamation}
+                    style={{ marginRight: 4 }}
+                  />
+                  신고
                 </button>
               </div>
             </div>
-            <div className="comment-content">{reply.content}</div>
+            <div className="comment-content">{reply.commentContent}</div>
           </div>
         ))}
     </li>
@@ -242,14 +217,142 @@ function ReportModal({ isOpen, onClose, onSubmit, reportData }) {
 function WagleDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const allPosts = [...posts, ...notices];
-  const post = allPosts.find((p) => String(p.id) === String(id));
+  const [post, setPost] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [liked, setLiked] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [currentReportData, setCurrentReportData] = useState(null);
+  const [newComment, setNewComment] = useState("");
 
-  // 공지사항인지 확인 (notices 배열에 있는 게시글인지 체크)
-  const isNotice = notices.some((notice) => String(notice.id) === String(id));
+  // 게시글 상세 정보 가져오기
+  const fetchPostDetail = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/boards/${id}`
+      );
+
+      if (!response.ok) {
+        throw new Error("게시글을 불러오는데 실패했습니다.");
+      }
+
+      const data = await response.json();
+
+      // 데이터 형식 변환
+      const formattedPost = {
+        id: data.boardNo,
+        boardTypeNo: data.boardTypeNo,
+        title: data.boardTitle,
+        author: data.memberNickname,
+        date: new Date(data.boardCreateDate)
+          .toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(/\. /g, ".")
+          .replace(".", ".")
+          .slice(0, -1),
+        content: data.boardContent,
+        views: data.boardViewCount,
+        likes: data.boardLikeCount,
+        commentCount: data.boardCommentCount,
+        images: data.boardImages || [],
+      };
+
+      setPost(formattedPost);
+    } catch (err) {
+      console.error("게시글 로딩 실패:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 댓글 목록 가져오기
+  const fetchComments = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/boards/${id}/comments`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data);
+      }
+    } catch (err) {
+      console.error("댓글 로딩 실패:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchPostDetail();
+      fetchComments();
+    }
+  }, [id]);
+
+  // 좋아요 토글
+  const handleLikeToggle = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/boards/${id}/like`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setLiked(data.action === "like");
+        setPost((prev) => ({ ...prev, likes: data.likeCount }));
+      }
+    } catch (err) {
+      console.error("좋아요 처리 실패:", err);
+    }
+  };
+
+  // 댓글 작성
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/boards/${id}/comments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            commentContent: newComment,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        setNewComment("");
+        fetchComments(); // 댓글 목록 새로고침
+        fetchPostDetail(); // 댓글 수 업데이트를 위해 게시글 정보도 새로고침
+      } else {
+        alert("댓글 작성에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("댓글 작성 실패:", err);
+      alert("댓글 작성 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 공지사항인지 확인 (boardTypeNo가 2인 경우)
+  const isNotice = post?.boardTypeNo === 2;
 
   // flat 구조로 변환
   const flatComments = flattenComments(comments);
@@ -264,17 +367,51 @@ function WagleDetail() {
     // 추가 처리 로직이 있다면 여기에 구현
   };
 
-  if (!post) {
+  // 로딩 상태
+  if (loading) {
     return (
       <div className="wagle-detail-outer" style={{ background: "#fff" }}>
         <Title currentPage="게시글 상세" hideSubtitle={true} />
         <div className="wagle-detail-container">
           <div className="wagle-detail-main">
-            <h2
-              style={{ color: "#888", textAlign: "center", margin: "80px 0" }}
+            <div
+              style={{ textAlign: "center", padding: "50px", color: "#666" }}
             >
-              존재하지 않는 게시글입니다.
-            </h2>
+              게시글을 불러오는 중...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error || !post) {
+    return (
+      <div className="wagle-detail-outer" style={{ background: "#fff" }}>
+        <Title currentPage="게시글 상세" hideSubtitle={true} />
+        <div className="wagle-detail-container">
+          <div className="wagle-detail-main">
+            <div
+              style={{ textAlign: "center", padding: "50px", color: "#e74c3c" }}
+            >
+              {error || "존재하지 않는 게시글입니다."}
+              <br />
+              <button
+                onClick={() => navigate("/wagle")}
+                style={{
+                  marginTop: "10px",
+                  padding: "8px 16px",
+                  background: "#3498db",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                목록으로 돌아가기
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -323,25 +460,26 @@ function WagleDetail() {
             )}
           </div>
           <div className="wagle-detail-content">
-            {/* 실제 본문은 post.content로 확장 가능 */}
-            (여기에 본문 예시 또는 post.content)
+            {post.content && (
+              <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.6" }}>
+                {post.content}
+              </div>
+            )}
           </div>
           <div className="wagle-detail-images">
-            {images.map((img, idx) => (
-              <img src={img} alt={`user-upload-${idx}`} key={idx} />
-            ))}
+            {post.images &&
+              post.images.map((img, idx) => (
+                <img src={img} alt={`user-upload-${idx}`} key={idx} />
+              ))}
           </div>
           <div className="wagle-detail-actions-bar">
             <div className="wagle-detail-actions">
-              <button
-                className="like-btn"
-                onClick={() => setLiked((prev) => !prev)}
-              >
+              <button className="like-btn" onClick={handleLikeToggle}>
                 <FontAwesomeIcon
                   icon={liked ? faHeartSolid : faHeartRegular}
                   style={{ marginRight: 4 }}
                 />{" "}
-                좋아요
+                좋아요 ({post.likes || 0})
               </button>
             </div>
             <button className="list-btn" onClick={() => navigate("/wagle")}>
@@ -351,20 +489,37 @@ function WagleDetail() {
         </div>
         {!isNotice && (
           <div className="wagle-detail-comments">
-            <div className="wagle-detail-comments-title">댓글</div>
-            <form className="wagle-detail-comment-form">
-              <input type="text" placeholder="댓글을 남겨주세요..." />
+            <div className="wagle-detail-comments-title">
+              댓글 ({flatComments.length})
+            </div>
+            <form
+              className="wagle-detail-comment-form"
+              onSubmit={handleCommentSubmit}
+            >
+              <input
+                type="text"
+                placeholder="댓글을 남겨주세요..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+              />
               <button type="submit">댓글 작성</button>
             </form>
             <ul className="wagle-detail-comment-list">
               {comments.map((c) => (
-                <CommentItem key={c.id} comment={c} onReport={handleReport} />
+                <CommentItem
+                  key={c.commentNo}
+                  comment={c}
+                  onReport={handleReport}
+                />
               ))}
             </ul>
           </div>
         )}
         <div className="wagle-detail-bottom-list">
           <div className="wagle-divider" />
+          <div className="wagle-detail-bottom-title">
+            <h3>{isNotice ? "공지사항" : "게시글"}</h3>
+          </div>
           {isNotice ? (
             <NoticeBoard hideTitle={true} />
           ) : (
