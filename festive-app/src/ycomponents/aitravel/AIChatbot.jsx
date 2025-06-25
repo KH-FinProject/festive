@@ -800,140 +800,7 @@ const getDefaultCoordinates = (areaCode) => {
   return coordinates;
 };
 
-// 샘플 축제 데이터 생성 함수
-const getSampleFestivalData = (keyword, areaCode) => {
-  console.log("🎨 샘플 축제 데이터 생성 중...");
-
-  const areaCenter = getAreaCenter(areaCode);
-  const today = new Date();
-  const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-  // 지역별 특색 축제 정의
-  const regionSpecificFestivals = {
-    35: [
-      // 전북 (전주)
-      {
-        name: "전주한옥마을축제",
-        theme: "한옥과 전통문화",
-        location: "전주시 완산구 한옥마을",
-      },
-      {
-        name: "전주비빔밥축제",
-        theme: "전통음식과 맛",
-        location: "전주시 덕진구 덕진공원",
-      },
-      {
-        name: "전주국제영화제",
-        theme: "영화와 문화예술",
-        location: "전주시 완산구 객사",
-      },
-    ],
-    37: [
-      // 경북 (포항)
-      {
-        name: "포항국제불빛축제",
-        theme: "불빛과 해안경관",
-        location: "포항시 북구 해수욕장",
-      },
-      {
-        name: "포항해맞이축제",
-        theme: "일출과 새해맞이",
-        location: "포항시 남구 호미곶",
-      },
-      {
-        name: "포항철강문화축제",
-        theme: "산업문화와 역사",
-        location: "포항시 남구 포스코",
-      },
-    ],
-    32: [
-      // 강원
-      {
-        name: "강릉커피축제",
-        theme: "커피와 바다",
-        location: "강릉시 사천면 안목해변",
-      },
-      {
-        name: "춘천막국수축제",
-        theme: "막국수와 메밀",
-        location: "춘천시 소양강변",
-      },
-      {
-        name: "정선아리랑축제",
-        theme: "아리랑과 전통문화",
-        location: "정선군 정선읍",
-      },
-    ],
-    39: [
-      // 제주
-      { name: "제주벚꽃축제", theme: "벚꽃과 자연", location: "제주시 전농로" },
-      {
-        name: "제주유채꽃축제",
-        theme: "유채꽃과 봄",
-        location: "서귀포시 성산읍",
-      },
-      {
-        name: "제주해녀축제",
-        theme: "해녀문화와 바다",
-        location: "제주시 구좌읍",
-      },
-    ],
-  };
-
-  const defaultFestivals = [
-    { name: "벚꽃축제", theme: "벚꽃과 봄", location: "중구" },
-    { name: "문화축제", theme: "전통문화와 현대문화", location: "종로구" },
-    { name: "음식축제", theme: "지역 특색 음식", location: "강남구" },
-  ];
-
-  const festivalsToCreate =
-    regionSpecificFestivals[areaCode] ||
-    defaultFestivals.map((f) => ({
-      ...f,
-      name: `${areaCenter.name} ${f.name}`,
-      location: `${areaCenter.name}시 ${f.location}`,
-    }));
-
-  const sampleFestivals = festivalsToCreate.map((festivalInfo, index) => ({
-    id: `sample_festival_${index + 1}`,
-    title: festivalInfo.name,
-    startDate: formatDate(today),
-    endDate: formatDate(nextMonth),
-    location: festivalInfo.location,
-    image: `https://via.placeholder.com/300x200?text=${encodeURIComponent(
-      festivalInfo.name
-    )}`,
-    lat: areaCenter.lat + (Math.random() - 0.5) * 0.01,
-    lng: areaCenter.lng + (Math.random() - 0.5) * 0.01,
-    tel: `0${Math.floor(Math.random() * 9) + 1}-${
-      Math.floor(Math.random() * 900) + 100
-    }-${Math.floor(Math.random() * 9000) + 1000}`,
-    status: index === 0 ? "진행중" : index === 1 ? "예정" : "진행중",
-    overview: `${festivalInfo.theme}를 주제로 한 ${areaCenter.name} 지역의 대표적인 축제입니다. 지역 주민과 관광객들이 함께 즐길 수 있는 다양한 프로그램이 준비되어 있습니다.`,
-    areaCode: areaCode || "1",
-    contentTypeId: "15",
-    hasRealCoordinates: true, // 샘플 데이터이지만 해당 지역 좌표 사용
-  }));
-
-  // 키워드 필터링
-  if (keyword && keyword.length >= 2) {
-    const filtered = sampleFestivals.filter(
-      (festival) =>
-        festival.title.includes(keyword) || festival.location.includes(keyword)
-    );
-    if (filtered.length > 0) {
-      console.log(
-        `🔍 키워드 "${keyword}"로 필터링된 샘플 데이터: ${filtered.length}개`
-      );
-      return filtered;
-    }
-  }
-
-  console.log(
-    `🎭 ${areaCenter.name} 지역 샘플 축제 데이터 ${sampleFestivals.length}개 반환`
-  );
-  return sampleFestivals;
-};
+// getSampleFestivalData 함수 제거 - 실제 Tour API 데이터만 사용
 
 // Tour API 전용 fetchFestivalData 함수 (fetch().then() 방식)
 const fetchFestivalData = (query = "") => {
@@ -1126,14 +993,20 @@ const fetchFestivalData = (query = "") => {
     `📋 선택된 API 전략: ${apiEndpoints.map((ep) => ep.name).join(" → ")}`
   );
 
-  // 순차적으로 API 호출하는 함수
-  const tryApiEndpoint = (endpointIndex) => {
+  // 순차적으로 API 호출하는 함수 (최대 재시도 제한)
+  const tryApiEndpoint = (endpointIndex, retryCount = 0) => {
     if (endpointIndex >= apiEndpoints.length) {
       return Promise.reject(
         new Error(
           "현재 진행중인 축제 정보를 찾을 수 없습니다. 잠시 후 다시 시도해주세요."
         )
       );
+    }
+
+    // 최대 재시도 횟수 제한 (무한 루프 방지)
+    if (retryCount > 3) {
+      console.warn("API 재시도 횟수 초과. 다음 엔드포인트로 이동");
+      return tryApiEndpoint(endpointIndex + 1, 0);
     }
 
     const endpoint = apiEndpoints[endpointIndex];
@@ -1166,8 +1039,22 @@ const fetchFestivalData = (query = "") => {
         console.log("📊 응답 상태:", response.status, response.statusText);
 
         if (!response.ok) {
-          console.warn(`⚠️ ${endpoint.name} 실패: ${response.status}`);
-          return tryApiEndpoint(endpointIndex + 1);
+          console.warn(
+            `⚠️ ${endpoint.name} 실패: ${response.status} (재시도: ${
+              retryCount + 1
+            })`
+          );
+          if (response.status >= 500 && retryCount < 2) {
+            // 서버 오류인 경우만 재시도
+            console.log(`서버 오류로 인한 재시도: ${retryCount + 1}/2`);
+            return new Promise((resolve) => {
+              setTimeout(
+                () => resolve(tryApiEndpoint(endpointIndex, retryCount + 1)),
+                1000
+              );
+            });
+          }
+          return tryApiEndpoint(endpointIndex + 1, 0);
         }
 
         return response.text();
@@ -1380,9 +1267,7 @@ const fetchFestivalData = (query = "") => {
               startDate: item.eventstartdate || today,
               endDate: item.eventenddate || nextMonth,
               location: item.addr1 || "장소 미상",
-              image:
-                item.firstimage ||
-                "https://via.placeholder.com/300x200?text=축제",
+              image: item.firstimage || null, // placeholder 제거
               lat: finalLat,
               lng: finalLng,
               hasRealCoordinates: hasRealCoordinates, // 실제 좌표인지 여부 추가
@@ -1600,18 +1485,12 @@ const fetchFestivalData = (query = "") => {
               `🔍 ${areaCenter.name} 지역 내 축제: ${inRegionFestivals.length}개`
             );
 
-            // 해당 지역 축제가 없으면 샘플 데이터로 보강
+            // 해당 지역 축제가 없는 경우 로그만 출력
             if (inRegionFestivals.length === 0) {
               console.log(
-                `⚠️ ${areaCenter.name} 지역에 진행중인 축제가 없습니다. 샘플 데이터로 보강합니다.`
+                `⚠️ ${areaCenter.name} 지역에 현재 진행중인 축제가 없습니다.`
               );
-              const sampleData = getSampleFestivalData(keyword, areaCode);
-
-              // 샘플 데이터를 앞에 배치하고 기존 데이터는 뒤에 추가
-              finalFestivals = [...sampleData, ...finalFestivals.slice(0, 5)];
-              console.log(
-                `🎨 샘플 데이터 보강 완료: ${finalFestivals.length}개`
-              );
+              console.log("💡 다른 지역이나 키워드로 검색해보세요.");
             }
           }
 
@@ -1637,8 +1516,22 @@ const fetchFestivalData = (query = "") => {
         return tryApiEndpoint(endpointIndex + 1);
       })
       .catch((error) => {
-        console.error(`❌ ${endpoint.name} 오류:`, error.message);
-        return tryApiEndpoint(endpointIndex + 1);
+        console.error(
+          `❌ ${endpoint.name} 오류:`,
+          error.message,
+          `(재시도: ${retryCount + 1})`
+        );
+        if (retryCount < 2 && !error.message.includes("abort")) {
+          // 네트워크 오류인 경우만 재시도 (abort 오류 제외)
+          console.log(`네트워크 오류로 인한 재시도: ${retryCount + 1}/2`);
+          return new Promise((resolve) => {
+            setTimeout(
+              () => resolve(tryApiEndpoint(endpointIndex, retryCount + 1)),
+              2000
+            );
+          });
+        }
+        return tryApiEndpoint(endpointIndex + 1, 0);
       });
   };
 
@@ -1920,11 +1813,32 @@ const AIChatbot = () => {
           height: mapContainer.offsetHeight,
         });
 
-        // 컨테이너 크기가 0인 경우 대기
+        // 컨테이너 크기가 0인 경우 대기 (최대 5회 재시도)
         if (mapContainer.offsetWidth === 0 || mapContainer.offsetHeight === 0) {
-          console.warn("지도 컨테이너 크기가 0입니다. 잠시 후 재시도...");
-          setTimeout(() => initializeMap(), 100);
-          return;
+          const retryCount = mapContainer.dataset.retryCount || 0;
+          if (retryCount < 5) {
+            console.warn(
+              `지도 컨테이너 크기가 0입니다. 재시도 ${retryCount + 1}/5`
+            );
+            mapContainer.dataset.retryCount = retryCount + 1;
+            setTimeout(() => initializeMap(), 200);
+            return;
+          } else {
+            console.warn("지도 초기화 재시도 횟수 초과. 대체 지도 표시");
+            mapContainer.style.cssText = `
+              width: 100%;
+              height: 400px;
+              background: #f5f5f5;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 8px;
+              color: #666;
+              font-size: 14px;
+            `;
+            mapContainer.innerHTML = "🗺️ 지도 로딩 중...";
+            return;
+          }
         }
 
         console.log("🗺️ 지도 초기화 시작");
@@ -2004,70 +1918,72 @@ const AIChatbot = () => {
     }
   }, [messages, currentStreamMessage]);
 
-  // 지도 마커 및 거리 표시 업데이트
+  // 지도 마커 및 거리 표시 업데이트 (안정성 개선)
   useEffect(() => {
-    try {
-      const map = mapRef.current;
-      if (
-        !map ||
-        !window.kakao ||
-        !window.kakao.maps ||
-        locations.length === 0
-      ) {
-        console.log("지도 또는 카카오맵 객체가 없어 마커 표시 생략");
-        return;
-      }
+    // 디바운싱으로 과도한 실행 방지
+    const timeoutId = setTimeout(() => {
+      try {
+        const map = mapRef.current;
+        if (
+          !map ||
+          !window.kakao ||
+          !window.kakao.maps ||
+          locations.length === 0
+        ) {
+          console.log("지도 또는 카카오맵 객체가 없어 마커 표시 생략");
+          return;
+        }
 
-      console.log("마커 및 거리 표시 업데이트 시작 - locations:", locations);
-      console.log("현재 travelInfo:", travelInfo);
+        console.log("마커 및 거리 표시 업데이트 시작 - locations:", locations);
+        console.log("현재 travelInfo:", travelInfo);
 
-      // 기존 오버레이들 제거
-      if (map._overlays) {
-        map._overlays.forEach((overlay) => {
-          if (overlay) overlay.setMap(null);
-        });
-      }
-      map._overlays = [];
+        // 기존 오버레이들 제거
+        if (map._overlays) {
+          map._overlays.forEach((overlay) => {
+            if (overlay) overlay.setMap(null);
+          });
+        }
+        map._overlays = [];
 
-      // 지도 범위 객체 생성
-      const bounds = new window.kakao.maps.LatLngBounds();
+        // 지도 범위 객체 생성
+        const bounds = new window.kakao.maps.LatLngBounds();
 
-      // Day별 색상 정의
-      const dayColors = {
-        1: "#ff4757", // 빨간색 (Day 1)
-        2: "#2196F3", // 파란색 (Day 2)
-        3: "#4CAF50", // 초록색 (Day 3)
-        4: "#FF9800", // 주황색 (Day 4)
-        5: "#9C27B0", // 보라색 (Day 5)
-        default: "#607D8B", // 회색 (기본)
-      };
+        // Day별 색상 정의
+        const dayColors = {
+          1: "#ff4757", // 빨간색 (Day 1)
+          2: "#2196F3", // 파란색 (Day 2)
+          3: "#4CAF50", // 초록색 (Day 3)
+          4: "#FF9800", // 주황색 (Day 4)
+          5: "#9C27B0", // 보라색 (Day 5)
+          default: "#607D8B", // 회색 (기본)
+        };
 
-      // 각 위치에 day별 색상의 마커 생성 (겹침 방지 처리)
-      locations.forEach((loc, index) => {
-        // 마커 겹침 방지를 위한 약간의 좌표 조정
-        const offsetLat = ((index % 3) - 1) * 0.0001; // -0.0001, 0, 0.0001
-        const offsetLng = ((Math.floor(index / 3) % 3) - 1) * 0.0001;
-        const position = new window.kakao.maps.LatLng(
-          loc.lat + offsetLat,
-          loc.lng + offsetLng
-        );
+        // 각 위치에 day별 색상의 마커 생성 (겹침 방지 처리)
+        locations.forEach((loc, index) => {
+          // 마커 겹침 방지를 위한 약간의 좌표 조정
+          const offsetLat = ((index % 3) - 1) * 0.0001; // -0.0001, 0, 0.0001
+          const offsetLng = ((Math.floor(index / 3) % 3) - 1) * 0.0001;
+          const position = new window.kakao.maps.LatLng(
+            loc.lat + offsetLat,
+            loc.lng + offsetLng
+          );
 
-        // Day별 색상 결정
-        const dayColor = dayColors[loc.day] || dayColors.default;
+          // Day별 색상 결정
+          const dayColor = dayColors[loc.day] || dayColors.default;
 
-        // 커스텀 마커 (실제 좌표 vs 기본 좌표 구분)
-        const isRealCoordinate = loc.hasRealCoordinates !== false; // 기본값 true (이전 데이터 호환)
-        const markerColor = isRealCoordinate ? dayColor : "#95a5a6"; // day별 색상 vs 회색
-        const borderColor = isRealCoordinate ? "white" : "#7f8c8d";
+          // 커스텀 마커 (실제 좌표 vs 기본 좌표 구분)
+          const isRealCoordinate = loc.hasRealCoordinates !== false; // 기본값 true (이전 데이터 호환)
+          const markerColor = isRealCoordinate ? dayColor : "#95a5a6"; // day별 색상 vs 회색
+          const borderColor = isRealCoordinate ? "white" : "#7f8c8d";
 
-        // Day별 마커 번호 계산 (각 Day별로 1부터 시작)
-        const dayLocations = locations.filter((l) => l.day === loc.day);
-        const dayIndex =
-          dayLocations.findIndex(
-            (l) => l.lat === loc.lat && l.lng === loc.lng
-          ) + 1;
+          // Day별 마커 번호 계산 (각 Day별로 1부터 시작)
+          const dayLocations = locations.filter((l) => l.day === loc.day);
+          const dayIndex =
+            dayLocations.findIndex(
+              (l) => l.lat === loc.lat && l.lng === loc.lng
+            ) + 1;
 
-        const markerContent = `
+          const markerContent = `
           <div style="
             background: ${markerColor};
             color: white;
@@ -2094,34 +2010,34 @@ const AIChatbot = () => {
           </div>
         `;
 
-        const customOverlay = new window.kakao.maps.CustomOverlay({
-          position: position,
-          content: markerContent,
-          yAnchor: 0.5,
-        });
+          const customOverlay = new window.kakao.maps.CustomOverlay({
+            position: position,
+            content: markerContent,
+            yAnchor: 0.5,
+          });
 
-        customOverlay.setMap(map);
-        map._overlays.push(customOverlay);
+          customOverlay.setMap(map);
+          map._overlays.push(customOverlay);
 
-        // 해당 위치의 활동 정보 찾기
-        let activityInfo = loc.name || `장소 ${dayIndex}`;
-        if (travelInfo.courses && travelInfo.courses.length > 0) {
-          // 같은 Day와 순서에 해당하는 코스 찾기
-          const matchingCourse = travelInfo.courses.find(
-            (course) =>
-              course.day === loc.day &&
-              course.activity &&
-              (course.activity.includes(loc.name) ||
-                loc.name.includes(course.activity.split(" ")[0]))
-          );
+          // 해당 위치의 활동 정보 찾기
+          let activityInfo = loc.name || `장소 ${dayIndex}`;
+          if (travelInfo.courses && travelInfo.courses.length > 0) {
+            // 같은 Day와 순서에 해당하는 코스 찾기
+            const matchingCourse = travelInfo.courses.find(
+              (course) =>
+                course.day === loc.day &&
+                course.activity &&
+                (course.activity.includes(loc.name) ||
+                  loc.name.includes(course.activity.split(" ")[0]))
+            );
 
-          if (matchingCourse) {
-            activityInfo = matchingCourse.activity;
+            if (matchingCourse) {
+              activityInfo = matchingCourse.activity;
+            }
           }
-        }
 
-        // 장소명과 활동 정보 표시
-        let infoContent = `
+          // 장소명과 활동 정보 표시
+          let infoContent = `
           <div style="
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid #ddd;
@@ -2144,45 +2060,47 @@ const AIChatbot = () => {
           </div>
         `;
 
-        const infoOverlay = new window.kakao.maps.CustomOverlay({
-          position: position,
-          content: infoContent,
-          yAnchor: -0.8, // 마커 아래에 표시
-        });
+          const infoOverlay = new window.kakao.maps.CustomOverlay({
+            position: position,
+            content: infoContent,
+            yAnchor: -0.8, // 마커 아래에 표시
+          });
 
-        infoOverlay.setMap(map);
-        map._overlays.push(infoOverlay);
+          infoOverlay.setMap(map);
+          map._overlays.push(infoOverlay);
 
-        // Geocoder를 사용해서 좌표를 주소로 변환
-        if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
-          const geocoder = new window.kakao.maps.services.Geocoder();
+          // Geocoder를 사용해서 좌표를 주소로 변환
+          if (window.kakao && window.kakao.maps && window.kakao.maps.services) {
+            const geocoder = new window.kakao.maps.services.Geocoder();
 
-          geocoder.coord2Address(loc.lng, loc.lat, (result, status) => {
-            let addressText = isRealCoordinate ? "정확한 위치" : "대략적 위치";
+            geocoder.coord2Address(loc.lng, loc.lat, (result, status) => {
+              let addressText = isRealCoordinate
+                ? "정확한 위치"
+                : "대략적 위치";
 
-            if (status === window.kakao.maps.services.Status.OK) {
-              const address = result[0];
-              if (address.road_address) {
-                // 도로명 주소가 있으면 도로명 주소 사용
-                addressText = address.road_address.address_name;
-              } else if (address.address) {
-                // 지번 주소 사용
-                addressText = address.address.address_name;
-              }
+              if (status === window.kakao.maps.services.Status.OK) {
+                const address = result[0];
+                if (address.road_address) {
+                  // 도로명 주소가 있으면 도로명 주소 사용
+                  addressText = address.road_address.address_name;
+                } else if (address.address) {
+                  // 지번 주소 사용
+                  addressText = address.address.address_name;
+                }
 
-              // 주소가 너무 길면 줄임
-              if (addressText.length > 30) {
-                const parts = addressText.split(" ");
-                if (parts.length > 3) {
-                  addressText = parts.slice(-3).join(" "); // 뒤의 3개 부분만 표시
-                } else {
-                  addressText = addressText.substring(0, 30) + "...";
+                // 주소가 너무 길면 줄임
+                if (addressText.length > 30) {
+                  const parts = addressText.split(" ");
+                  if (parts.length > 3) {
+                    addressText = parts.slice(-3).join(" "); // 뒤의 3개 부분만 표시
+                  } else {
+                    addressText = addressText.substring(0, 30) + "...";
+                  }
                 }
               }
-            }
 
-            // 활동 정보 계속 표시 (주소 정보 제거)
-            const updatedInfoContent = `
+              // 활동 정보 계속 표시 (주소 정보 제거)
+              const updatedInfoContent = `
               <div style="
                 background: rgba(255, 255, 255, 0.95);
                 border: 1px solid #ddd;
@@ -2205,73 +2123,76 @@ const AIChatbot = () => {
               </div>
             `;
 
-            // 기존 오버레이의 내용을 업데이트
-            infoOverlay.setContent(updatedInfoContent);
-          });
-        }
-
-        bounds.extend(position);
-      });
-
-      // Day별로 같은 day끼리만 연결선 그리기
-      if (locations.length >= 2) {
-        console.log("Day별 마커 간 거리 계산 및 표시 시작");
-
-        // Day별로 그룹화
-        const locationsByDay = {};
-        locations.forEach((loc) => {
-          const day = loc.day || 1;
-          if (!locationsByDay[day]) {
-            locationsByDay[day] = [];
+              // 기존 오버레이의 내용을 업데이트
+              infoOverlay.setContent(updatedInfoContent);
+            });
           }
-          locationsByDay[day].push(loc);
+
+          bounds.extend(position);
         });
 
-        console.log("Day별 위치 그룹:", locationsByDay);
+        // Day별로 같은 day끼리만 연결선 그리기
+        if (locations.length >= 2) {
+          console.log("Day별 마커 간 거리 계산 및 표시 시작");
 
-        // 각 Day별로 연결선 그리기
-        Object.entries(locationsByDay).forEach(([day, dayLocations]) => {
-          const dayNum = parseInt(day);
-          const dayColor = dayColors[dayNum] || dayColors.default;
+          // Day별로 그룹화
+          const locationsByDay = {};
+          locations.forEach((loc) => {
+            const day = loc.day || 1;
+            if (!locationsByDay[day]) {
+              locationsByDay[day] = [];
+            }
+            locationsByDay[day].push(loc);
+          });
 
-          console.log(
-            `Day ${day} 연결선 그리기 (${dayLocations.length}개 위치)`
-          );
+          console.log("Day별 위치 그룹:", locationsByDay);
 
-          for (let i = 0; i < dayLocations.length - 1; i++) {
-            const start = dayLocations[i];
-            const end = dayLocations[i + 1];
+          // 각 Day별로 연결선 그리기
+          Object.entries(locationsByDay).forEach(([day, dayLocations]) => {
+            const dayNum = parseInt(day);
+            const dayColor = dayColors[dayNum] || dayColors.default;
 
-            const startPos = new window.kakao.maps.LatLng(start.lat, start.lng);
-            const endPos = new window.kakao.maps.LatLng(end.lat, end.lng);
-
-            // 거리 계산
-            const distance = calculateDistance(
-              start.lat,
-              start.lng,
-              end.lat,
-              end.lng
+            console.log(
+              `Day ${day} 연결선 그리기 (${dayLocations.length}개 위치)`
             );
 
-            // Day별 색상으로 연결선 그리기
-            const polyline = new window.kakao.maps.Polyline({
-              path: [startPos, endPos],
-              strokeWeight: 4,
-              strokeColor: dayColor,
-              strokeOpacity: 0.8,
-              strokeStyle: "solid",
-            });
+            for (let i = 0; i < dayLocations.length - 1; i++) {
+              const start = dayLocations[i];
+              const end = dayLocations[i + 1];
 
-            polyline.setMap(map);
-            map._overlays.push(polyline);
+              const startPos = new window.kakao.maps.LatLng(
+                start.lat,
+                start.lng
+              );
+              const endPos = new window.kakao.maps.LatLng(end.lat, end.lng);
 
-            // 중간 지점 계산 (연결선 중간에 거리 표시)
-            const midLat = (start.lat + end.lat) / 2;
-            const midLng = (start.lng + end.lng) / 2;
-            const midPosition = new window.kakao.maps.LatLng(midLat, midLng);
+              // 거리 계산
+              const distance = calculateDistance(
+                start.lat,
+                start.lng,
+                end.lat,
+                end.lng
+              );
 
-            // Day별 색상으로 거리 정보 표시
-            const distanceContent = `
+              // Day별 색상으로 연결선 그리기
+              const polyline = new window.kakao.maps.Polyline({
+                path: [startPos, endPos],
+                strokeWeight: 4,
+                strokeColor: dayColor,
+                strokeOpacity: 0.8,
+                strokeStyle: "solid",
+              });
+
+              polyline.setMap(map);
+              map._overlays.push(polyline);
+
+              // 중간 지점 계산 (연결선 중간에 거리 표시)
+              const midLat = (start.lat + end.lat) / 2;
+              const midLng = (start.lng + end.lng) / 2;
+              const midPosition = new window.kakao.maps.LatLng(midLat, midLng);
+
+              // Day별 색상으로 거리 정보 표시
+              const distanceContent = `
               <div style="
                 background: ${dayColor}e6;
                 color: white;
@@ -2287,40 +2208,40 @@ const AIChatbot = () => {
               </div>
             `;
 
-            const distanceOverlay = new window.kakao.maps.CustomOverlay({
-              position: midPosition,
-              content: distanceContent,
-              yAnchor: 0.5,
-            });
+              const distanceOverlay = new window.kakao.maps.CustomOverlay({
+                position: midPosition,
+                content: distanceContent,
+                yAnchor: 0.5,
+              });
 
-            distanceOverlay.setMap(map);
-            map._overlays.push(distanceOverlay);
+              distanceOverlay.setMap(map);
+              map._overlays.push(distanceOverlay);
 
-            console.log(
-              `Day${day} ${i + 1}→${i + 2}: ${distance.toFixed(1)}km`
+              console.log(
+                `Day${day} ${i + 1}→${i + 2}: ${distance.toFixed(1)}km`
+              );
+            }
+          });
+
+          // 전체 여행 거리 계산
+          const totalDistance = locations.reduce((total, loc, index) => {
+            if (index === 0) return 0;
+            const prev = locations[index - 1];
+            return (
+              total + calculateDistance(prev.lat, prev.lng, loc.lat, loc.lng)
             );
-          }
-        });
+          }, 0);
 
-        // 전체 여행 거리 계산
-        const totalDistance = locations.reduce((total, loc, index) => {
-          if (index === 0) return 0;
-          const prev = locations[index - 1];
-          return (
-            total + calculateDistance(prev.lat, prev.lng, loc.lat, loc.lng)
-          );
-        }, 0);
+          console.log(`총 여행 거리: ${totalDistance.toFixed(1)}km`);
 
-        console.log(`총 여행 거리: ${totalDistance.toFixed(1)}km`);
+          // 좌표 정확성 통계
+          const realCoordCount = locations.filter(
+            (loc) => loc.hasRealCoordinates !== false
+          ).length;
+          const defaultCoordCount = locations.length - realCoordCount;
 
-        // 좌표 정확성 통계
-        const realCoordCount = locations.filter(
-          (loc) => loc.hasRealCoordinates !== false
-        ).length;
-        const defaultCoordCount = locations.length - realCoordCount;
-
-        // 총 거리 정보와 좌표 정확성 범례를 지도 상단에 표시
-        const totalDistanceContent = `
+          // 총 거리 정보와 좌표 정확성 범례를 지도 상단에 표시
+          const totalDistanceContent = `
           <div style="
             background: rgba(52, 152, 219, 0.95);
             color: white;
@@ -2341,20 +2262,20 @@ const AIChatbot = () => {
           </div>
         `;
 
-        // 지도 중심점에서 약간 위쪽에 표시
-        const mapCenter = map.getCenter();
-        const totalDistanceOverlay = new window.kakao.maps.CustomOverlay({
-          position: mapCenter,
-          content: totalDistanceContent,
-          yAnchor: 2, // 지도 중심에서 위쪽에 표시
-        });
+          // 지도 중심점에서 약간 위쪽에 표시
+          const mapCenter = map.getCenter();
+          const totalDistanceOverlay = new window.kakao.maps.CustomOverlay({
+            position: mapCenter,
+            content: totalDistanceContent,
+            yAnchor: 2, // 지도 중심에서 위쪽에 표시
+          });
 
-        totalDistanceOverlay.setMap(map);
-        map._overlays.push(totalDistanceOverlay);
+          totalDistanceOverlay.setMap(map);
+          map._overlays.push(totalDistanceOverlay);
 
-        // 좌표 정확성 범례 (지도 우상단)
-        if (defaultCoordCount > 0) {
-          const legendContent = `
+          // 좌표 정확성 범례 (지도 우상단)
+          if (defaultCoordCount > 0) {
+            const legendContent = `
             <div style="
               background: rgba(0, 0, 0, 0.8);
               color: white;
@@ -2371,40 +2292,43 @@ const AIChatbot = () => {
             </div>
           `;
 
-          // 지도 중심에서 우상단에 표시
-          const bounds = map.getBounds();
-          const ne = bounds.getNorthEast();
-          const legendPosition = new window.kakao.maps.LatLng(
-            ne.getLat() - 0.001,
-            ne.getLng() - 0.001
-          );
+            // 지도 중심에서 우상단에 표시
+            const bounds = map.getBounds();
+            const ne = bounds.getNorthEast();
+            const legendPosition = new window.kakao.maps.LatLng(
+              ne.getLat() - 0.001,
+              ne.getLng() - 0.001
+            );
 
-          const legendOverlay = new window.kakao.maps.CustomOverlay({
-            position: legendPosition,
-            content: legendContent,
-            xAnchor: 1, // 오른쪽 정렬
-            yAnchor: 0, // 위쪽 정렬
-          });
+            const legendOverlay = new window.kakao.maps.CustomOverlay({
+              position: legendPosition,
+              content: legendContent,
+              xAnchor: 1, // 오른쪽 정렬
+              yAnchor: 0, // 위쪽 정렬
+            });
 
-          legendOverlay.setMap(map);
-          map._overlays.push(legendOverlay);
+            legendOverlay.setMap(map);
+            map._overlays.push(legendOverlay);
+          }
         }
-      }
 
-      // 지도 범위 재설정 (마커들이 모두 보이도록)
-      if (locations.length > 0) {
-        map.setBounds(bounds);
+        // 지도 범위 재설정 (마커들이 모두 보이도록)
+        if (locations.length > 0) {
+          map.setBounds(bounds);
 
-        // 여유 공간을 위해 레벨을 약간 조정
-        setTimeout(() => {
-          const currentLevel = map.getLevel();
-          map.setLevel(currentLevel + 1);
-        }, 100);
+          // 여유 공간을 위해 레벨을 약간 조정
+          setTimeout(() => {
+            const currentLevel = map.getLevel();
+            map.setLevel(currentLevel + 1);
+          }, 100);
+        }
+      } catch (error) {
+        console.error("❌ 마커 및 거리 표시 중 오류:", error);
       }
-    } catch (error) {
-      console.error("❌ 마커 및 거리 표시 중 오류:", error);
-    }
-  }, [locations, travelInfo]);
+    }, 300); // 300ms 디바운싱
+
+    return () => clearTimeout(timeoutId);
+  }, [locations.length, travelInfo.festival.name]); // 의존성 최소화
 
   const processResponse = (response) => {
     console.log("원본 응답:", response);
@@ -2530,9 +2454,30 @@ const AIChatbot = () => {
           }
 
           console.log("🎯 메인 축제 선택:", mainFestival?.title);
-          console.log("🖼️ 축제 이미지:", mainFestival?.firstimage);
+          console.log("🖼️ 축제 이미지 (firstimage):", mainFestival?.firstimage);
+          console.log(
+            "🖼️ 축제 이미지 (firstimage2):",
+            mainFestival?.firstimage2
+          );
           console.log("📅 축제 시작일:", mainFestival?.eventstartdate);
           console.log("📅 축제 종료일:", mainFestival?.eventenddate);
+
+          // 이미지 URL 유효성 확인
+          const imageUrl = mainFestival.firstimage || mainFestival.firstimage2;
+          if (imageUrl) {
+            console.log("🔍 이미지 URL 검증 중:", imageUrl);
+            // 이미지 URL이 유효한지 간단히 체크
+            if (
+              imageUrl.startsWith("http") &&
+              !imageUrl.includes("placeholder")
+            ) {
+              console.log("✅ 유효한 이미지 URL:", imageUrl);
+            } else {
+              console.log("⚠️ 부적절한 이미지 URL:", imageUrl);
+            }
+          } else {
+            console.log("⚠️ Tour API에서 이미지 URL을 찾을 수 없음");
+          }
 
           festivalInfo = {
             name: mainFestival.title || `${currentRegion || "추천"} 대표 축제`,
@@ -2560,63 +2505,21 @@ const AIChatbot = () => {
 
           console.log("✅ 최종 축제 정보:", festivalInfo);
         } else {
-          // Tour API 데이터가 없는 경우 샘플 축제 데이터 제공
-          console.log("❌ TourAPI 데이터 없음 - 샘플 축제 데이터 사용");
-
-          // 지역별 샘플 축제 데이터
-          const sampleFestivals = {
-            서울: {
-              name: "서울 빛초롱 축제",
-              period: "2024.12.01 - 2024.12.31",
-              image:
-                "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-            },
-            부산: {
-              name: "부산 국제영화제",
-              period: "2024.10.01 - 2024.10.10",
-              image:
-                "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400",
-            },
-            전주: {
-              name: "전주 한옥마을 축제",
-              period: "2024.11.01 - 2024.11.15",
-              image:
-                "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-            },
-            제주: {
-              name: "제주 유채꽃 축제",
-              period: "2024.04.01 - 2024.04.30",
-              image:
-                "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400",
-            },
-            경주: {
-              name: "경주 벚꽃축제",
-              period: "2024.04.01 - 2024.04.15",
-              image:
-                "https://images.unsplash.com/photo-1522383225653-ed111181a951?w=400",
-            },
-            강릉: {
-              name: "강릉 커피축제",
-              period: "2024.10.01 - 2024.10.05",
-              image:
-                "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400",
-            },
-          };
-
-          const currentRegionName = currentRegion || "서울";
-          const sampleData =
-            sampleFestivals[currentRegionName] || sampleFestivals["서울"];
+          // Tour API 데이터가 없는 경우 기본 축제 정보 제공 (이미지 없음)
+          console.log("❌ TourAPI 데이터 없음 - 기본 정보만 제공");
 
           festivalInfo = {
-            name: sampleData.name,
-            period: sampleData.period,
-            location: `${currentRegionName} 일대`,
-            image: sampleData.image,
-            description: `${currentRegionName} 지역의 대표적인 축제입니다.`,
+            name: `${currentRegion || "추천"} 지역 축제`,
+            period: "축제 일정을 확인해주세요",
+            location: `${currentRegion || "추천"} 일대`,
+            image: null, // 이미지 없음
+            description: `${
+              currentRegion || "추천"
+            } 지역의 축제 정보입니다. 구체적인 축제명을 입력하시면 더 정확한 정보를 제공해드릴 수 있습니다.`,
             phone: "관련 문의: 지역 관광청",
           };
 
-          console.log("🎪 샘플 축제 정보 설정:", festivalInfo);
+          console.log("ℹ️ 기본 축제 정보 설정:", festivalInfo);
         }
 
         console.log("축제 정보:", festivalInfo);
@@ -2970,11 +2873,10 @@ ${prompt}`,
 
         return openai.chat.completions
           .create({
-            model: "gpt-4.1", //  초고속 모델
+            model: "gpt-4o-mini", // 올바른 모델명으로 수정
             messages: enhancedMessages,
-            max_tokens: 1500, // 토큰 수 최적화
-            temperature: 0.7, // 응답 속도 향상
-            top_p: 0.9, // 처리 속도 최적화
+            max_tokens: 800, // 토큰 최적화
+            temperature: 0.5, // 응답 속도 향상
             stream: true, // 실시간 스트리밍 활성화
           })
           .then((response) => {
@@ -3167,7 +3069,7 @@ ${prompt}`,
                 <h3>메인 축제 정보</h3>
 
                 {/* 축제 이미지 */}
-                {travelInfo.festival.image && (
+                {travelInfo.festival.image ? (
                   <div className="ai-chatbot-festival-image">
                     <img
                       src={travelInfo.festival.image}
@@ -3178,11 +3080,37 @@ ${prompt}`,
                         objectFit: "cover",
                         borderRadius: "8px",
                         marginBottom: "15px",
+                        backgroundColor: "#f3f4f6",
                       }}
                       onError={(e) => {
+                        console.log("이미지 로딩 실패:", e.target.src);
+                        // 이미지 로딩 실패 시 이미지 영역 숨김
                         e.target.style.display = "none";
+                        e.target.parentElement.style.display = "none";
+                      }}
+                      onLoad={(e) => {
+                        console.log("이미지 로딩 성공:", e.target.src);
                       }}
                     />
+                  </div>
+                ) : (
+                  <div
+                    className="ai-chatbot-festival-no-image"
+                    style={{
+                      width: "100%",
+                      height: "120px",
+                      backgroundColor: "#f8f9fa",
+                      borderRadius: "8px",
+                      marginBottom: "15px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#6b7280",
+                      fontSize: "14px",
+                      border: "1px dashed #d1d5db",
+                    }}
+                  >
+                    🎪 축제 이미지 준비중
                   </div>
                 )}
 
