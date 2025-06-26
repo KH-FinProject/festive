@@ -14,8 +14,10 @@ import { useEffect, useState } from "react";
 import KakaoMap from "./KakaoMap";
 // 전기차 충전소
 import EVChargeApi from "./EVChargeApi";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import PublicCarPark from "./PublicCarParkApi";
 
+// 축제 상태 진행
 const getFestivalStatus = (start, end) => {
   const now = new Date();
   const startDate = new Date(
@@ -34,10 +36,13 @@ const FestivalDetail = () => {
   const [festival, setFestival] = useState([]);
   const [festivalDetail, setFestivalDetail] = useState([]);
   const [festivalImg, setFestivalImg] = useState([]);
+  const [listFestival, setListFestival] = useState([]);
   const [posterImg, setPosterImg] = useState([]);
+  const [listStay, setListStay] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [eventState, setEventState] = useState("");
   const { contentId } = useParams();
+  const navigate = useNavigate();
 
   // 슬라이더
   const FestivalSwiper = () => {
@@ -70,7 +75,7 @@ const FestivalDetail = () => {
     try {
       const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
 
-      const url = `http://apis.data.go.kr/B551011/KorService2/detailCommon2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&contentId=${contentId}`;
+      const url = `https://apis.data.go.kr/B551011/KorService2/detailCommon2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&contentId=${contentId}`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -88,7 +93,7 @@ const FestivalDetail = () => {
     try {
       const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
 
-      const url = `https://apis.data.go.kr/B551011/KorService2/detailIntro2?serviceKey=${serviceKey}&MobileApp=AppTest&MobileOS=ETC&_type=json&contentId=${contentId}&contentTypeId=15`;
+      const url = `https://apis.data.go.kr/B551011/KorService2/detailIntro2?serviceKey=${serviceKey}&MobileApp=festive&MobileOS=ETC&_type=json&contentId=${contentId}&contentTypeId=15`;
 
       const response = await fetch(url);
       const data = await response.json();
@@ -137,27 +142,128 @@ const FestivalDetail = () => {
 
       setPosterImg(poster);
       setFestivalImg(subImgs);
+      console.log(festivalImg);
     } catch (error) {
       console.error("축제 이미지 정보 로드 실패:", error);
     }
   };
 
+  // 축제 리스트 (추천 축제를 위한 리스트)
+  const fetchFestivalList = async () => {
+    try {
+      const today = new Date();
+      const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+
+      const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=C&numOfRows=50&pageNo=1`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+      const items = data?.response?.body?.items?.item;
+
+      if (!items || !Array.isArray(items)) return;
+
+      const mapped = items.map((item) => {
+        const start = item.eventstartdate;
+        const end = item.eventenddate;
+        return {
+          id: item.contentid,
+          title: item.title,
+          location: item.addr1 || "장소 미정",
+          date: `${start?.replace(
+            /(\d{4})(\d{2})(\d{2})/,
+            "$1.$2.$3"
+          )} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
+          image: item.firstimage || "../../logo.png",
+          startDate: start,
+          status: getFestivalStatus(start, end),
+        };
+      });
+
+      // 랜덤 셔플 후 3개 선택
+      const shuffled = [...mapped].sort(() => Math.random() - 0.5);
+      const randomThree = shuffled.slice(0, 3);
+      setListFestival(randomThree);
+    } catch (error) {
+      console.error("추천 축제 리스트 로드 실패:", error);
+    }
+  };
+
+  // 축제 클릭 핸들러
+  const handleFestivalClick = (festivalId) => {
+    // 실제로는 React Router로 상세페이지 이동
+    window.scrollTo(0, 0);
+    console.log(`축제 ${festivalId} 상세페이지로 이동`);
+    navigate(`/festival/detail/${festivalId}`);
+  };
+
+  // 숙박 정보
+  const fetchListStay = async ({ lDongRegnCd, lDongSignguCd }) => {
+    try {
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+
+      const url = `https://apis.data.go.kr/B551011/KorService2/searchStay2?serviceKey=${serviceKey}&MobileApp=festive&MobileOS=ETC&pageNo=1&numOfRows=10&arrange=C&_type=json&lDongRegnCd=${lDongRegnCd}&lDongSignguCd=${lDongSignguCd}`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+      const items = data?.response?.body?.items?.item;
+      console.log("test3================ : ", lDongRegnCd);
+      if (!items || !Array.isArray(items)) return;
+      const mapped = items.map((item) => {
+        return {
+          id: item.contentid,
+          title: item.title,
+          addr1: item.addr1,
+          addr2: item.addr2,
+          image: item.firstimage || "../../logo.png",
+        };
+      });
+      // 랜덤 셔플 후 3개 선택
+      const shuffled = [...mapped].sort(() => Math.random() - 0.5);
+      const randomThree = shuffled.slice(0, 3);
+      setListStay(randomThree);
+    } catch (error) {
+      console.error("숙박 정보 로드 실패:", error);
+    }
+  };
+
+  // useEffect
   useEffect(() => {
     fetchFestivals();
     fetchFestivalImg();
     fetchFestivalDetail();
-  }, []);
+    fetchFestivalList();
+  }, [contentId]);
 
   useEffect(() => {
     if (
       festival != null &&
       festivalDetail != null &&
       festivalImg != null &&
-      eventState != null
+      eventState != null &&
+      listFestival != null &&
+      listStay != null
     ) {
       setIsLoading(false);
     }
-  }, [festival, festivalDetail, festivalImg, eventState]);
+  }, [
+    festival,
+    festivalDetail,
+    festivalImg,
+    eventState,
+    listFestival,
+    listStay,
+  ]);
+
+  // 축제 정보를 불러온 후 숙소 정보 불러오기 가능
+  useEffect(() => {
+    if (festival && festival.lDongRegnCd && festival.lDongSignguCd) {
+      fetchListStay({
+        lDongRegnCd: festival.lDongRegnCd,
+        lDongSignguCd: festival.lDongSignguCd,
+      });
+    }
+  }, [festival]);
 
   if (isLoading) {
     <h1>Loading...</h1>;
@@ -191,7 +297,7 @@ const FestivalDetail = () => {
 
             {/* Festival Images */}
             <div className="festival-slider">
-              <FestivalSwiper />
+              {festivalImg > 0 && <FestivalSwiper />}
             </div>
 
             {/* Festival Details 축제 상세설명*/}
@@ -215,7 +321,7 @@ const FestivalDetail = () => {
                   </span>
                 </div>
 
-                <div className="info-item">
+                <div className="detail-info-item">
                   <h3>장소</h3>
                   <p>
                     {festival.addr1}
@@ -223,12 +329,12 @@ const FestivalDetail = () => {
                   </p>
                 </div>
 
-                <div className="info-item">
+                <div className="detail-info-item">
                   <h3>입장료</h3>
                   <p>{festivalDetail?.usetimefestival}</p>
                 </div>
 
-                <div className="info-item">
+                <div className="detail-info-item">
                   <h3>개최지</h3>
                   <p>
                     {festivalDetail?.sponsor1}
@@ -236,7 +342,7 @@ const FestivalDetail = () => {
                   </p>
                 </div>
 
-                <div className="info-item">
+                <div className="detail-info-item">
                   <h3>연락처</h3>
                   <p className="contact">
                     <Phone className="phone-icon" />
@@ -254,12 +360,17 @@ const FestivalDetail = () => {
               찾아가기
             </h3>
             <div className="map-container">
-              <KakaoMap center={{ lat: festival.mapy, lng: festival.mapx }} />
+              <PublicCarPark
+                lDongRegnCd={festival.lDongRegnCd}
+                lDongSignguCd={festival.lDongSignguCd}
+                center={{ lat: festival.mapy, lng: festival.mapx }}
+                placeName={festival.title}
+              />
             </div>
           </section>
 
           {/* Public Transportation Maps */}
-          <section className="transport-section">
+          {/* <section className="transport-section">
             <div className="transport-grid">
               <div className="transport-item">
                 <h4>
@@ -267,7 +378,11 @@ const FestivalDetail = () => {
                   근처 공영주차장
                 </h4>
                 <div className="transport-map">
-                  <p>주차장 지도 API 영역</p>
+                   <PublicCarPark
+                    lDongRegnCd={festival.lDongRegnCd}
+                    lDongSignguCd={festival.lDongSignguCd}
+                    center={{ lat: festival.mapy, lng: festival.mapx }}
+                  /> 
                 </div>
               </div>
               <div className="transport-item">
@@ -275,41 +390,54 @@ const FestivalDetail = () => {
                   <span className="transport-icon">🚇</span>
                   근처 전기차충전소 충전소
                 </h4>
-                <div className="transport-map">
-                  {/*  <EVChargeApi
+                 <div className="transport-map">
+                  <EVChargeApi
                     metroCode={festival.lDongRegnCd}
                     cityCode={festival.lDongSignguCd}
-                  /> */}
-                </div>
+                  />
+                </div> 
               </div>
             </div>
-          </section>
+          </section> */}
 
           {/* Accommodation Section */}
           <section className="accommodation-section">
             <h3 className="section-title">주변 숙박 정보</h3>
             <div className="accommodation-grid">
-              <div className="accommodation-item">
-                <div className="accommodation-image"></div>
-                <div className="accommodation-info">
-                  <h4>베인트 윈드 소흘 호텔</h4>
-                  <p>강원특별자치도 춘천시</p>
+              {listStay.map((stay) => (
+                <div
+                  key={stay.id}
+                  className="festival-card"
+                  onClick={() => handleFestivalClick(stay.id)}
+                >
+                  <div className="festival-image-container">
+                    <img
+                      src={stay.image}
+                      alt={stay.title}
+                      className="festival-image"
+                    />
+                  </div>
+
+                  <div className="festival-info">
+                    <h3 className="festival-title">{stay.title}</h3>
+                    <p className="festival-location">
+                      <svg
+                        className="icon"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {stay.addr1}
+                      {stay.addr2}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="accommodation-item">
-                <div className="accommodation-image"></div>
-                <div className="accommodation-info">
-                  <h4>스카이베이호텔 펜션</h4>
-                  <p>강원특별자치도 춘천시</p>
-                </div>
-              </div>
-              <div className="accommodation-item">
-                <div className="accommodation-image"></div>
-                <div className="accommodation-info">
-                  <h4>바이오산 펜션</h4>
-                  <p>강원특별자치도 춘천시</p>
-                </div>
-              </div>
+              ))}
             </div>
           </section>
 
@@ -317,30 +445,60 @@ const FestivalDetail = () => {
           <section className="other-festivals">
             <h3 className="section-title">다른 축제도 둘러보세요!</h3>
             <div className="festivals-grid">
-              <div className="festival-card">
-                <div className="festival-card-image"></div>
-                <div className="festival-card-info">
-                  <h4>태백 해바라기축제</h4>
-                  <p className="festival-date">2025.07.01 ~ 2025.08.31</p>
-                  <p className="festival-location">강원특별자치도 태백시</p>
+              {listFestival.map((festival) => (
+                <div
+                  key={festival.id}
+                  className="festival-card"
+                  onClick={() => handleFestivalClick(festival.id)}
+                >
+                  <div className="festival-image-container">
+                    <img
+                      src={festival.image}
+                      alt={festival.title}
+                      className="festival-image"
+                    />
+                    <div
+                      className={`festival-status ${
+                        festival.status === "진행중" ? "active" : "upcoming"
+                      }`}
+                    >
+                      {festival.status}
+                    </div>
+                  </div>
+
+                  <div className="festival-info">
+                    <h3 className="festival-title">{festival.title}</h3>
+                    <p className="festival-location">
+                      <svg
+                        className="icon"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {festival.location}
+                    </p>
+                    <p className="festival-date">
+                      <svg
+                        className="icon"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {festival.date}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="festival-card">
-                <div className="festival-card-image"></div>
-                <div className="festival-card-info">
-                  <h4>김치 거버넌스</h4>
-                  <p className="festival-date">2025.10.25 ~ 2025.10.30</p>
-                  <p className="festival-location">강원특별자치도 강릉시</p>
-                </div>
-              </div>
-              <div className="festival-card">
-                <div className="festival-card-image"></div>
-                <div className="festival-card-info">
-                  <h4>산나물 숲속 축제</h4>
-                  <p className="festival-date">2025.09.24 ~ 2025.09.27</p>
-                  <p className="festival-location">강원특별자치도 홍천군</p>
-                </div>
-              </div>
+              ))}
             </div>
           </section>
         </main>

@@ -42,11 +42,19 @@ export default defineConfig({
         },
       },
 
-      /* 전기차충전소 API 충전시 CORS policy 에러로 추가 : 미애 */
+      /* 전기차충전소 API 사용시 CORS policy 에러로 추가 : 미애 */
       "/kepco-api": {
         target: "https://bigdata.kepco.co.kr",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/kepco-api/, ""),
+        secure: true,
+      },
+
+      /* 공영주차장 API 사용시 CORS policy 에러로 추가 : 미애 */
+      "/carpark-api": {
+        target: "https://api.odcloud.kr",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/carpark-api/, ""),
         secure: true,
       },
     },
