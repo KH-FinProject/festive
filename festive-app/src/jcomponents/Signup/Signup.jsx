@@ -403,9 +403,17 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
 
     try {
       setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
+
+      // 중복 확인하는 필드가 아닌 경우
       if (!['id', 'nickname', 'email'].includes(field)) return;
-      const response = await axiosAPI.get(`/member/exists?type=${field}&value=${value}`);
+
+      // 특수 문자가 포함된 경우 인코딩 처리
+      const response = await axiosAPI.get(`/member/exists?type=${field}&value=${encodeURIComponent(value)}`);
+
+      // 마지막 요청값과 현재 값이 다른 경우 중복확인 중단
       if (lastRequestedValue.current[field] !== value) return;
+      
+      // 중복 확인 결과 업데이트
       setDuplicateStatus(prev => ({
         ...prev,
         [field]: {
@@ -414,8 +422,10 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           message: getDuplicateMessage(field, response.data.code)
         }
       }));
+
     } catch {
       if (lastRequestedValue.current[field] !== value) return;
+      
       setDuplicateStatus(prev => ({
         ...prev,
         [field]: {
@@ -580,10 +590,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           }
 
           // 우편번호와 주소 정보를 해당 필드에 넣는다.
-          document.getElementById('postcode').value = data.zonecode;
-          document.getElementById("address").value = addr;
-          // 커서를 상세주소 필드로 이동한다.
-          document.getElementById("detailAddress").focus();
+          setFormData(prev => ({ ...prev, address: data.zonecode, detailAddress: addr }));
         }
       }).open();
     };
@@ -753,10 +760,10 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           <label className="form-label">주소</label>
           <div className="address-group">
             <div className="form-input-group">
-              <input type="text" className="form-input" placeholder="우편번호" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} readOnly />
+              <input type="text" disabled className="form-input" placeholder="우편번호" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} readOnly />
               <button type="button" className="action-btn" onClick={handleAddressSearch}>우편번호 찾기</button>
             </div>
-            <input type="text" className="form-input full-width" placeholder="상세 주소" value={formData.detailAddress} onChange={e => handleInputChange('detailAddress', e.target.value)} />
+            <input type="text" disabled className="form-input full-width" placeholder="상세 주소" value={formData.detailAddress} onChange={e => handleInputChange('detailAddress', e.target.value)} />
           </div>
         </div>
         {currentStep === 2 && (
