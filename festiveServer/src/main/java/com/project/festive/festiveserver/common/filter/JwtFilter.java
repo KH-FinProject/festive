@@ -35,6 +35,11 @@ public class JwtFilter extends OncePerRequestFilter {
     long startTime = System.currentTimeMillis();
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
+    String path = ((HttpServletRequest) request).getRequestURI();
+    if (path.startsWith("/ws")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
     
     log.info("JWT Filter 시작: {} {}", method, requestURI);
     
