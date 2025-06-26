@@ -67,12 +67,6 @@ function Header() {
         )}
       </nav>
       <div className="headerheader-right">
-        <input
-          type="text"
-          className="headersearch-input"
-          placeholder="검색어를 입력해 주세요."
-        />
-        <img src={searchbtn} className="headersearch-btn" />
         <div className="headerweather-placeholder">
           <Weather />
         </div>
