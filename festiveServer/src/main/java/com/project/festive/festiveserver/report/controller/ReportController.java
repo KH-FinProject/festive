@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.festive.festiveserver.report.model.dto.Report;
+import com.project.festive.festiveserver.report.model.dto.ReportAlert;
 import com.project.festive.festiveserver.report.model.service.ReportService;
 
 @RestController
