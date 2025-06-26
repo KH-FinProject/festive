@@ -7,11 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.member.entity.Member;
+import com.project.festive.festiveserver.member.converter.MemberConverter;
 import com.project.festive.festiveserver.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;

@@ -74,7 +74,18 @@ public class AuthServiceImpl implements AuthService {
 		
 		Map<String, Object> map = new HashMap<>();
 		map.put("refreshToken", refreshToken);
-		map.put("loginResponse", new LoginResponse(accessToken, member.getName()));
+		map.put("accessToken", accessToken);
+
+		LoginResponse loginResponse = LoginResponse.builder()
+				.memberNo(member.getMemberNo())
+				.name(member.getName())
+				.nickname(member.getNickname())
+				.email(member.getEmail())
+				.role(member.getRole())
+				.profileImage(member.getProfileImage())
+				.build();
+		
+		map.put("loginResponse", loginResponse);
 		
 		return map;
 	}

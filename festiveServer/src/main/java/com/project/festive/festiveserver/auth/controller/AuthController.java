@@ -41,17 +41,14 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequest request) {
         // JSON 형식으로 비동기 요청을 하기 때문에, @ModelAttribute가 아닌, @RequestBody 활용
-        // id, password (LoginRequest) -> accessToken, nickname (LoginResponse)
+        // id, password (LoginRequest) -> 기본적인 회원정보 + 토큰 (LoginResponse)
         
         try {
             // 1. 로그인 처리 및 토큰 생성 (서비스에서 Access + Refresh 생성 및 DB 저장)
             Map<String, Object> map = authService.login(request);
-            LoginResponse loginResponse = (LoginResponse) map.get("loginResponse");
             
             // 2. Refresh Token 쿠키로 전달(보안상 절대 Body에 보내면 안됨(XSS 공격에 취약)
             // ResponseCookie 활용
-            // -> 빌더 패턴 + 체이닝 방식으로 가독성을 높힘
-            // -> 쿠키 보안 옵션을 쉽게 설정할 수 있음
             ResponseCookie cookie = ResponseCookie.from("refreshToken", (String)map.get("refreshToken"))
                     .httpOnly(true) // HttpOnly 쿠키 (JS에서 접근 불가 -> XSS에 안전)
                     // .secure(true) HTTPS에서만 전송하도록 제한(개발모드에서 false 괜찮음, 배포모드 반드시 true)
@@ -62,14 +59,15 @@ public class AuthController {
                     .path("/auth/refresh") // refresh 엔드포인트에서만 사용 (보안 강화)
                     .maxAge(Duration.ofDays(7)) // 7일
                     .build();
+
+            // refreshToken은 body에 포함되지 않도록 제거
+            map.remove("refreshToken");
             
             // 3. Access Token은 본문으로 반환 (localStorage에 저장될 수 있도록)
-            // 응답은 ResponseEntity 활용
-            // -> HttpServletResponse 객체를 사용하지 않고,
-            //    ResponseEntity 단일 객체로 모두(status, header, body) 관리 가능하기 때문
+            // 응답은 ResponseEntity 활용                                      
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(loginResponse);
+                    .body(map);
                     
         } catch (RuntimeException e) {
             e.printStackTrace();

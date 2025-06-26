@@ -18,12 +18,11 @@ const useAuthStore = create(
   persist(
     // 스토어의 상태와 액션을 정의하는 함수
     (set) => ({
-      // accessToken 상태 (초기값: null)
       accessToken: null,
-      // accessToken을 설정하는 액션 함수
-      setAccessToken: (token) => set({ accessToken: token }),
-      // accessToken을 제거하는 액션 함수
-      removeAccessToken: () => set({ accessToken: null })
+      member: null,
+
+      login: (token, user) => set({ accessToken: token, member: user }),
+      logout: () => set({ accessToken: null, member: null })
     }),
     {
       // localStorage에 저장될 때 사용할 키 이름

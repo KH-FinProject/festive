@@ -29,7 +29,7 @@ const LoginForm = () => {
       return;
     }
 
-    console.log("로그인 시도:", formData);
+    console.log("로그인 시도");
     setLoading(true); // 로딩 상태 시작, 버튼이 비활성화됨
 
     try {
@@ -38,19 +38,17 @@ const LoginForm = () => {
         password: formData.password,
       });
       const data = response.data;
-      console.log("로그인 응답:", data);
       
-      if (data && data.accessToken) {
-        const { setAccessToken } = useAuthStore.getState();
-        setAccessToken(data.accessToken);
+      if (data && data.loginResponse) {
+        const { login } = useAuthStore.getState();
+        login(data.accessToken, data.loginResponse);
         navigate("/");
       } else {
-        console.log("로그인 실패:", data);
+        console.log("로그인 실패");
       }
 
     } catch (error) {
-      console.log("로그인 실패:", error.response.data.message);
-      alert(error.response.data.message);
+      console.log("로그인 중 오류 발생");
       
     } finally {
       // 요청이 성공하든 실패하든 항상 로딩 상태를 해제
