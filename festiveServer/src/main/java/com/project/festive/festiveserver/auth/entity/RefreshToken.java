@@ -35,7 +35,7 @@ public class RefreshToken {
 	private Long memberNo;
 
 	@Column(name = "REFRESH_TOKEN", nullable = false, length = 500)
-	private String token;
+	private String refreshToken;
 
 	@Column(name = "EXPIRATION_DATE", nullable = false)
 	private LocalDateTime expirationDate;
@@ -62,8 +62,8 @@ public class RefreshToken {
 	//   - 이 관계는 읽기 전용으로 설계되어 있어, token.setMember(newMember)와 같이 member를 변경하는 코드는 허용되지 않습니다.
 	private Member member;
 
-	public void update(String token, LocalDateTime expirationDate) {
-		this.token = token;
+	public void update(String refreshToken, LocalDateTime expirationDate) {
+		this.refreshToken = refreshToken;
 		this.expirationDate = expirationDate;
 	}
 }

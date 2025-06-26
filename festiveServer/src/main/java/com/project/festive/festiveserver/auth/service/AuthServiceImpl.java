@@ -18,6 +18,7 @@ import com.project.festive.festiveserver.auth.dto.LoginRequest;
 import com.project.festive.festiveserver.auth.dto.LoginResponse;
 import com.project.festive.festiveserver.auth.entity.AuthKey;
 import com.project.festive.festiveserver.auth.entity.RefreshToken;
+import com.project.festive.festiveserver.auth.mapper.AuthMapper;
 import com.project.festive.festiveserver.auth.repository.AuthKeyRepository;
 import com.project.festive.festiveserver.auth.repository.RefreshTokenRepository;
 import com.project.festive.festiveserver.common.util.JwtUtil;
@@ -28,7 +29,6 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -42,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
 	private final AuthKeyRepository authKeyRepository;
 	private final JwtUtil jwtUtil;
 	private final JavaMailSender mailSender;
+	private final AuthMapper authMapper;
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -59,14 +60,16 @@ public class AuthServiceImpl implements AuthService {
 		Date expirationDate = jwtUtil.getExpirationDate(refreshToken);
 		LocalDateTime localExpirationDate = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 		
-		RefreshToken tokenEntity = refreshTokenRepository.findById(member.getMemberNo()).orElse(null);
+		RefreshToken refreshTokenEntity = RefreshToken.builder()
+				.memberNo(member.getMemberNo())
+				.refreshToken(refreshToken)
+				.expirationDate(localExpirationDate)
+				.build();
 		
-		if (tokenEntity == null) {
-			tokenEntity = RefreshToken.builder().memberNo(member.getMemberNo()).token(refreshToken)
-					.expirationDate(localExpirationDate).build();
-			refreshTokenRepository.save(tokenEntity);
-		} else {
-			tokenEntity.update(refreshToken, localExpirationDate);
+		int result = authMapper.updateRefreshToken(refreshTokenEntity);
+		
+		if (result == 0) {
+			authMapper.insertRefreshToken(refreshTokenEntity);
 		}
 		
 		Map<String, Object> map = new HashMap<>();
@@ -92,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String findRefreshToken(Long memberNo) {
 		return refreshTokenRepository.findById(memberNo) // Optional<RefreshToken> 객체를 반환함 (해당 회원의 토큰이 있을 수도, 없을 수도 있음)
-				.map(RefreshToken::getToken) // Optional<RefreshToken>을 Optional<String>으로 변환 (토큰 문자열만 추출)
+				.map(RefreshToken::getRefreshToken) // Optional<RefreshToken>을 Optional<String>으로 변환 (토큰 문자열만 추출)
 				.orElse(null); // 값이 없을 경우 null 반환
 	}
 	
