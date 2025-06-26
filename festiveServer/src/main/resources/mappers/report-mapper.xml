@@ -3,19 +3,21 @@
 <mapper namespace="com.project.festive.festiveserver.report.model.mapper.ReportMapper">
 
     <!-- 신고 등록 -->
-    <insert id="insertReport" parameterType="com.project.festive.festiveserver.report.model.dto.Report">
+    <insert id="insertReport" >
         INSERT INTO report (
-            member_no,
-            reporter_no,
-            report_time,
-            report_reason,
-            report_status,
-            report_type,
-            report_board_no
+        	REPORT_NO,
+            MEMBER_NO,
+            REPORTER_NO,
+            REPORT_TIME,
+            REPORT_REASON,
+            REPORT_STATUS,
+            REPORT_TYPE,
+            REPORT_BOARD_NO
         ) VALUES (
+            REPORT_SEQ.NEXTVAL,
             #{memberNo},
             #{reporterNo},
-            #{reportTime},
+            TO_DATE(#{reportTime}, 'YYYY-MM-DD HH24:MI:SS'),
             #{reportReason},
             #{reportStatus},
             #{reportType},

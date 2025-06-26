@@ -1,4 +1,4 @@
-package com.project.festive.festiveserver.util;
+package com.project.festive.festiveserver.common.util;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;

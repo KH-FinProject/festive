@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.project.festive.festiveserver.admin.model.mapper.AdminMapper">
+<mapper namespace="com.project.festive.festiveserver.myPage.model.mapper.MyPageMapper">
 
 	
 	<!-- 관리자 이메일 중복 검사 -->
@@ -20,7 +20,7 @@
     MEMBER_DEL_FL,
     SANCTION_COUNT
   ) VALUES (
-    64,
+    61,
     #{name},
     #{email},
     #{password},

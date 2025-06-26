@@ -1,18 +1,19 @@
 package com.project.festive.festiveserver.admin.model.service;
 
-import org.aspectj.apache.bcel.classfile.Utility;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.project.festive.festiveserver.admin.model.mapper.AdminMapper;
-import com.project.festive.festiveserver.member.entity.Member;
+import com.project.festive.festiveserver.member.dto.MemberDto;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
+@Slf4j
 public class AdminServiceImpl implements AdminService{
 	
 	private final AdminMapper mapper;
@@ -21,16 +22,16 @@ public class AdminServiceImpl implements AdminService{
 	
 	// 관리자 이메일 중복 검사
 	@Override
-	public int checkEmail(String memberEmail) {
-		return mapper.checkEmail(memberEmail);
+	public int checkEmail(String email) {
+		log.info("디질래? 서비스단 도착");
+		return mapper.checkEmail(email);
 	}
 
 	// 관리자 이메일 발급
 	@Override
-	public String createAdminAccount(Member member) {
-
+	public String createAdminAccount(MemberDto member) {
 	    // 1. 영어(대소문자) 6자리 난수로 만든 비밀번호를 암호화한 값 구하기
-	    String rawPw = generateRandomPassword(6); // 평문 비번
+	    String rawPw = generateRandomPassword(4); // 평문 비번
 
 	    // 2. 평문 비밀번호를 암호화하여 저장
 	    String encPw = bcrypt.encode(rawPw);

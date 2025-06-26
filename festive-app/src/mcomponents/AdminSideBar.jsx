@@ -1,8 +1,9 @@
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import "./AdminCommon.css";
+import { useAdminNotification } from "./AdminNotificationContext.jsx";
 
 const AdminSidebar = () => {
-  const location = useLocation();
+  const { hasNewReport } = useAdminNotification();
 
   return (
     <div className="admin-management-container">
@@ -62,6 +63,23 @@ const AdminSidebar = () => {
               }
             >
               <span>고객센터 관리</span>
+              {hasNewReport && (
+                <span
+                  style={{
+                    background: "#ff4757",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                    padding: "2px 7px",
+                    marginLeft: "8px",
+                    verticalAlign: "middle",
+                    animation: "popIn 0.3s",
+                  }}
+                >
+                  New!
+                </span>
+              )}
             </NavLink>
           </div>
 

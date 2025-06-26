@@ -129,7 +129,7 @@ function ReportModal({ isOpen, onClose, onSubmit, reportData }) {
     try {
       const reportPayload = {
         memberNo: 1, // 실제로는 로그인된 사용자 ID
-        reporterNo: 1, // 실제로는 로그인된 사용자 ID
+        reporterNo: 2, // 실제로는 로그인된 사용자 ID
         reportReason: reason,
         reportType: reportData.type, // 0: 게시글, 1: 댓글
         reportBoardNo: reportData.targetId,

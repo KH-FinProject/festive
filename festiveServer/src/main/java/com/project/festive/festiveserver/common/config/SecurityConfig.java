@@ -13,8 +13,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
-import com.project.festive.festiveserver.filter.JwtFilter;
-import com.project.festive.festiveserver.util.JwtUtil;
+import com.project.festive.festiveserver.common.filter.JwtFilter;
+import com.project.festive.festiveserver.common.util.JwtUtil;
 
 @Configuration
 @EnableWebSecurity
@@ -64,9 +64,9 @@ public class SecurityConfig {
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
         .requestMatchers("/", "/favicon.ico", "/static/**", "/css/**", "/js/**", "/images/**", "/assets/**", "/error", "/actuator/**").permitAll()
-        .requestMatchers("/signup", "/login", "/auth/**", "/oauth2/**", "/api/reports/**", "/api/wagle/**", "/api/customer/**", "/api/ai/**").permitAll()
+        .requestMatchers("/signup", "/login", "/auth/**", "/oauth2/**", "/api/reports/**", "/admin/**", "/api/**", "/ws/**").permitAll() //admin 로그인 완전구현 이후 "관리자만 접근" 주석풀고 여기꺼 삭제
         .requestMatchers("/myPage/**").authenticated() // 인증된 사용자만 접근
-        .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
+//        .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
         .anyRequest().authenticated())
         
         //세션 설정 : STATELESS

@@ -1,4 +1,4 @@
-package com.project.festive.festiveserver.filter;
+package com.project.festive.festiveserver.common.filter;
 
 import java.io.IOException;
 
@@ -11,7 +11,7 @@ import org.springframework.web.util.WebUtils;
 
 import com.project.festive.festiveserver.auth.dto.CustomOAuth2User;
 import com.project.festive.festiveserver.member.dto.MemberDto;
-import com.project.festive.festiveserver.util.JwtUtil;
+import com.project.festive.festiveserver.common.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -35,6 +35,11 @@ public class JwtFilter extends OncePerRequestFilter {
     long startTime = System.currentTimeMillis();
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
+    String path = ((HttpServletRequest) request).getRequestURI();
+    if (path.startsWith("/ws")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
     
     log.info("JWT Filter 시작: {} {}", method, requestURI);
     
@@ -120,6 +125,7 @@ public class JwtFilter extends OncePerRequestFilter {
     return path.contains("/favicon.ico") ||
            path.contains("/static/") ||
            path.contains("/css/") ||
+           path.startsWith("/admin/") || // 나중에 로그인 다 구현되면 빼기
            path.contains("/js/") ||
            path.contains("/images/") ||
            path.contains("/assets/") ||
