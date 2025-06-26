@@ -4,6 +4,7 @@ import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSideBar";
 import Pagination, { usePagination } from "./Pagination"; // 새로운 페이지네이션 컴포넌트 import
+import { useAdminNotification } from "./AdminNotificationContext.jsx";
 
 const AdminCustomerService = () => {
   const [inquiries] = useState([
@@ -54,6 +55,7 @@ const AdminCustomerService = () => {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+  const { setHasNewReport } = useAdminNotification();
 
   // 문의내역 페이지네이션 설정
   const inquiryPagination = usePagination({
@@ -72,6 +74,7 @@ const AdminCustomerService = () => {
   // 신고 목록 조회
   useEffect(() => {
     fetchReports();
+    setHasNewReport(false);
   }, []);
 
   const fetchReports = async () => {

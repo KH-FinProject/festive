@@ -3,17 +3,24 @@ import "./AdminCommon.css";
 import AdminSidebar from "./AdminSideBar";
 import { useEffect, useState } from "react";
 import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 
 const AdminMain = () => {
   const [notifications, setNotifications] = useState([]);
 
   // 웹소켓 연결
   useEffect(() => {
-    const socket = new SockJS("http://localhost:8080/ws");
-    const client = Stomp.over(socket);
+    const client = new Client({
+      webSocketFactory: () => new SockJS("http://localhost:8080/ws"),
+      debug: function (str) {
+        console.log(str);
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+    });
 
-    client.connect({}, () => {
+    client.onConnect = () => {
       console.log("WebSocket 연결됨");
 
       // 관리자 알림 구독
@@ -41,7 +48,13 @@ const AdminMain = () => {
           });
         }
       });
-    });
+    };
+
+    client.onStompError = (frame) => {
+      console.error("STOMP 에러:", frame);
+    };
+
+    client.activate();
 
     // 브라우저 알림 권한 요청
     if (Notification.permission === "default") {
@@ -51,7 +64,7 @@ const AdminMain = () => {
     // 컴포넌트 언마운트 시 연결 해제
     return () => {
       if (client) {
-        client.disconnect();
+        client.deactivate();
       }
     };
   }, []);

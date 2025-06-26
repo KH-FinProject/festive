@@ -4,6 +4,7 @@ import searchbtn from "../assets/searchbtn.png";
 import "./HeaderFooter.css";
 import { Link } from "react-router-dom";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
+import { useAdminNotification } from "../mcomponents/AdminNotificationContext.jsx";
 
 function Header() {
   const isLoggedIn = true;
@@ -12,6 +13,7 @@ function Header() {
     isAdmin: true,
     profileImage: "https://via.placeholder.com/30",
   };
+  const { hasNewReport } = useAdminNotification();
   return (
     <header className="header">
       <div className="headerlogo">
@@ -37,6 +39,25 @@ function Header() {
               className="headernav-link hover-grow"
             >
               {item.name}
+              {item.name === "관리자" && hasNewReport && (
+                <span
+                  style={{
+                    background: "#ff4757",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                    padding: "1px 6px",
+                    marginLeft: "6px",
+                    verticalAlign: "middle",
+                    position: "relative",
+                    top: "-7px",
+                    animation: "popIn 0.3s",
+                  }}
+                >
+                  new!
+                </span>
+              )}
             </Link>
           ) : (
             <a key={item.name} href="#" className="headernav-link hover-grow">

@@ -1,13 +1,25 @@
 package com.project.festive.festiveserver.report.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.project.festive.festiveserver.report.model.dto.Report;
 import com.project.festive.festiveserver.report.model.dto.ReportAlert;
 import com.project.festive.festiveserver.report.model.service.ReportService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -28,6 +40,7 @@ public class ReportController {
                 return ResponseEntity.badRequest().body("신고 접수에 실패했습니다.");
             }
         } catch (Exception e) {
+        	e.printStackTrace();
             return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
         }
     }
@@ -68,8 +81,8 @@ public class ReportController {
     }
 
     // 웹소켓 메시지 처리 (테스트용)
-    // @MessageMapping("/report")
-    // @SendTo("/topic/alerts")
+    @MessageMapping("/report")
+    @SendTo("/topic/alerts")
     public ReportAlert sendReportAlert(ReportAlert report) {
         return new ReportAlert("신고가 접수되었습니다", report.getReportType(), report.getMemberNo());
     }
