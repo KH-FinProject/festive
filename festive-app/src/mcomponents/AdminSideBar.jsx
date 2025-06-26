@@ -77,7 +77,7 @@ const AdminSidebar = () => {
                     animation: "popIn 0.3s",
                   }}
                 >
-                  New!
+                  new!
                 </span>
               )}
             </NavLink>
