@@ -1,6 +1,7 @@
 package com.project.festive.festiveserver.common.filter;
 
 import java.io.IOException;
+import java.time.Duration;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -10,7 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
-import com.project.festive.festiveserver.auth.dto.CustomOAuth2User;
+import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 
@@ -33,7 +34,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    long startTime = System.currentTimeMillis();
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
     
@@ -74,7 +74,7 @@ public class JwtFilter extends OncePerRequestFilter {
               .httpOnly(true)
               .secure(true)
               .sameSite("Strict")
-              .maxAge(30 * 60) // 30분
+              .maxAge(Duration.ofMinutes(30)) // 30분
               .path("/")
               .build();
           
@@ -107,9 +107,6 @@ public class JwtFilter extends OncePerRequestFilter {
     } catch (Exception e) {
       log.error("JWT 필터 처리 중 오류 발생: {} {} - {}", method, requestURI, e.getMessage(), e);
       filterChain.doFilter(request, response);
-    } finally {
-      long duration = System.currentTimeMillis() - startTime;
-      log.info("JWT Filter 완료: {} {} - {}ms", method, requestURI, duration);
     }
   }
   
@@ -122,6 +119,7 @@ public class JwtFilter extends OncePerRequestFilter {
            path.contains("/static/") ||
            path.contains("/css/") ||
            path.startsWith("/admin/") || // 나중에 로그인 다 구현되면 빼기
+           path.startsWith("/member/") ||
            path.contains("/js/") ||
            path.contains("/images/") ||
            path.contains("/assets/") ||
@@ -139,16 +137,30 @@ public class JwtFilter extends OncePerRequestFilter {
            path.endsWith(".svg");
   }
   
+  /**
+   * JWT 토큰 정보로 직접 CustomUserDetails 생성하여 Spring Security 인증 토큰 생성
+   */
   private void createAuthenticationToken(Long memberNo, String email, String role) {
-
-    MemberDto memberDto = new MemberDto();
-    memberDto.setMemberNo(memberNo);
-    memberDto.setEmail(email);
-    memberDto.setRole(role);
-
-    // Spring Security 인증 토큰 생성 및 등록
-    CustomOAuth2User customOAuth2User = new CustomOAuth2User(memberDto);
-    Authentication authToken = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
-    SecurityContextHolder.getContext().setAuthentication(authToken);
+    try {
+      // JWT 정보로 직접 MemberDto 생성 (DB 조회 없음)
+      MemberDto memberDto = new MemberDto();
+      memberDto.setMemberNo(memberNo);
+      memberDto.setEmail(email);
+      memberDto.setRole(role);
+      
+      // CustomUserDetails 생성
+      CustomUserDetails userDetails = new CustomUserDetails(memberDto);
+      
+      // 인증 토큰 생성
+      Authentication authToken = new UsernamePasswordAuthenticationToken(
+          userDetails, null, userDetails.getAuthorities());
+      
+      // SecurityContext에 인증 정보 저장
+      SecurityContextHolder.getContext().setAuthentication(authToken);
+      
+      log.debug("인증 토큰 생성 완료: {}", email);
+    } catch (Exception e) {
+      log.error("인증 토큰 생성 실패: {} - {}", email, e.getMessage());
+    }
   }
 }

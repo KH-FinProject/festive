@@ -1,15 +1,21 @@
 package com.project.festive.festiveserver.member.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.project.festive.festiveserver.member.entity.Member;
 import com.project.festive.festiveserver.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -18,13 +24,14 @@ import java.util.Map;
 public class MemberController {
 
     private final MemberService memberService;
-
+    
     // 단일 쿼리스트링 엔드포인트: /member/exists?type=id&value=xxx
     @GetMapping("/exists")
     public ResponseEntity<Map<String, Object>> checkExists(@RequestParam("type") String type, @RequestParam("value") String value) {
         Map<String, Object> response = new HashMap<>();
         boolean isAvailable = false;
         String code = null;
+        
         try {
             switch (type) {
                 case "id":
@@ -43,6 +50,7 @@ public class MemberController {
                     isAvailable = memberService.isIdAvailable(value);
                     if (!isAvailable) code = "DUPLICATE";
                     break;
+                    
                 case "nickname":
                     if (value == null || value.trim().isEmpty()) {
                         code = "TOO_SHORT";
@@ -59,6 +67,7 @@ public class MemberController {
                     isAvailable = memberService.isNicknameAvailable(value);
                     if (!isAvailable) code = "DUPLICATE";
                     break;
+                    
                 case "email":
                     if (value == null || value.trim().isEmpty()) {
                         code = "INVALID_FORMAT";
@@ -72,6 +81,7 @@ public class MemberController {
                     isAvailable = memberService.isEmailAvailable(value);
                     if (!isAvailable) code = "DUPLICATE";
                     break;
+                    
                 default:
                     response.put("available", false);
                     response.put("code", "UNSUPPORTED_TYPE");
@@ -79,11 +89,26 @@ public class MemberController {
             }
             response.put("available", isAvailable);
             response.put("code", code);
+            
             return ResponseEntity.ok(response);
+            
         } catch (Exception e) {
             response.put("available", false);
             response.put("code", "SERVER_ERROR");
+            
             return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    @PostMapping("signup")
+    public int signup(@RequestBody Member member) {
+        try {
+            memberService.signup(member);
+            return 1;
+
+        } catch (Exception e) {
+            log.error("회원가입 중 오류 발생: {}", e.getMessage(), e);
+            return 0;
         }
     }
 } 

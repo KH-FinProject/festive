@@ -1,6 +1,6 @@
 import { faComment } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosAPI from "../../api/axiosAPI";
 import useAuthStore from "../../store/useAuthStore";
@@ -12,6 +12,7 @@ const LoginForm = () => {
     id: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,15 +23,38 @@ const LoginForm = () => {
   };
 
   const handleLogin = async (e) => {
+
+    // 이미 로딩 중이면 아무것도 하지 않고 함수를 종료
+    if (loading) {
+      return;
+    }
+
     console.log("로그인 시도:", formData);
+    setLoading(true); // 로딩 상태 시작, 버튼이 비활성화됨
+
     try {
       const response = await axiosAPI.post(`/auth/login`, {
         id: formData.id,
         password: formData.password,
       });
-      console.log("로그인 성공:", response.data);
+      const data = response.data;
+      console.log("로그인 응답:", data);
+      
+      if (data && data.accessToken) {
+        const { setAccessToken } = useAuthStore.getState();
+        setAccessToken(data.accessToken);
+        navigate("/");
+      } else {
+        console.log("로그인 실패:", data);
+      }
+
     } catch (error) {
-      console.error("로그인 실패:", error);
+      console.log("로그인 실패:", error.response.data.message);
+      alert(error.response.data.message);
+      
+    } finally {
+      // 요청이 성공하든 실패하든 항상 로딩 상태를 해제
+      setLoading(false);
     }
   };
 
@@ -162,9 +186,10 @@ const LoginForm = () => {
                 type="button"
                 onClick={handleLogin}
                 className="btn btn-login"
+                disabled={loading} // loading이 true일 때 버튼을 비활성화
               >
-                로그인
-              </button>
+              {loading ? "로그인 중..." : "로그인"}
+            </button>
             </div>
 
             {/* SNS 로그인 섹션 */}

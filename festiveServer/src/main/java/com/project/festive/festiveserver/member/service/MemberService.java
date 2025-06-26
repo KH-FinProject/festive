@@ -1,5 +1,7 @@
 package com.project.festive.festiveserver.member.service;
 
+import com.project.festive.festiveserver.member.entity.Member;
+
 public interface MemberService {
     
     /**
@@ -22,4 +24,6 @@ public interface MemberService {
      * @return 사용 가능하면 true, 중복이면 false
      */
     boolean isEmailAvailable(String email);
-} 
+    
+    int signup(Member member);
+}  

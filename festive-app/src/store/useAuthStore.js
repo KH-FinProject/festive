@@ -22,6 +22,8 @@ const useAuthStore = create(
       accessToken: null,
       // accessToken을 설정하는 액션 함수
       setAccessToken: (token) => set({ accessToken: token }),
+      // accessToken을 제거하는 액션 함수
+      removeAccessToken: () => set({ accessToken: null })
     }),
     {
       // localStorage에 저장될 때 사용할 키 이름
@@ -29,7 +31,7 @@ const useAuthStore = create(
       name: "auth-store",
       // JSON 형태로 localStorage에 저장하도록 설정
       // createJSONStorage는 객체를 JSON 문자열로 변환하여 저장하고, 읽을 때는 다시 객체로 변환해줌
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => localStorage)
     }
   )
 );

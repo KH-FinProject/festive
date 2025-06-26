@@ -1,6 +1,7 @@
 package com.project.festive.festiveserver.auth.handler;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -11,7 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import com.project.festive.festiveserver.auth.dto.CustomOAuth2User;
+import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 
 import jakarta.servlet.ServletException;
@@ -36,17 +37,15 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     log.info("OAuth2 로그인 성공 처리 시작");
 
     try {
-      CustomOAuth2User customOAuth2User = (CustomOAuth2User) authentication.getPrincipal();
-
-      String socialId = customOAuth2User.getSocialId();
+      CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
       Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
       Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
       GrantedAuthority auth = iterator.next();
       String role = auth.getAuthority();
 
-      String accessToken = jwtUtil.generateAccessToken(customOAuth2User.getMemberNo(), customOAuth2User.getEmail(), role);
-      String refreshToken = jwtUtil.generateRefreshToken(customOAuth2User.getMemberNo(), customOAuth2User.getEmail(), role);
+      String accessToken = jwtUtil.generateAccessToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
+      String refreshToken = jwtUtil.generateRefreshToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
 
       // Access Token을 쿼리 파라미터로 포함하여 프론트엔드로 리다이렉트
       String redirectUrl = String.format("http://localhost:5173/oauth-callback.html?accessToken=%s", accessToken);
@@ -57,7 +56,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
           .httpOnly(true)
           // .secure(true)
           // .sameSite("Strict")
-          .maxAge(7 * 24 * 60 * 60) // 7일
+          .maxAge(Duration.ofDays(7)) // 7일
           .path("/")
           .build();
 
