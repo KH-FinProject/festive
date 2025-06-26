@@ -1,92 +1,125 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Title from "./Title";
 import "./CustomerDetail.css";
 import { useNavigate, useParams } from "react-router-dom";
 
-// 고객센터 게시글 더미 데이터 (실제로는 API에서 가져올 데이터)
-const customerPosts = [
-  {
-    id: 1205,
-    title:
-      "서울 불꽃축제 다녀왔어요 완전 대박이었음 ㅠㅠ 사진도 엄청 많이 찍었는데 날씨도 좋고 너무 예뻤어요",
-    author: "축제러버",
-    date: "2024.05.16 14:32",
-    views: 96,
-    content: `안녕하세요! 어제 서울 불꽃축제에 다녀왔는데 정말 최고였습니다!
-    
-날씨도 너무 좋았고, 사람들도 많았지만 그만큼 분위기가 정말 좋았어요.
-특히 마지막 피날레 불꽃이 정말 장관이었습니다.
-
-다음에도 꼭 가고 싶어요! 감사합니다.`,
-  },
-  {
-    id: 1204,
-    title: "부산 바다축제 후기에요! 예전엔 진짜루 누가 같이 갈 사람?",
-    author: "바다왕",
-    date: "2024.05.16 13:20",
-    views: 78,
-    content: "부산 바다축제 관련 문의 내용입니다.",
-  },
-  {
-    id: 1203,
-    title: "전주 한옥마을 축제 프로그램 완전 추천!",
-    author: "전주러",
-    date: "2024.05.15 18:45",
-    views: 45,
-    content: "전주 한옥마을 축제 관련 문의입니다.",
-  },
-  {
-    id: 1202,
-    title: "논산 딸기축제 2년째 반박자씩 늦게 갑니다",
-    author: "딸기마니아",
-    date: "2024.05.15 11:00",
-    views: 13,
-    content: "논산 딸기축제 관련 문의입니다.",
-  },
-  {
-    id: 1201,
-    title: "청주 흥덕 축제 야경 사진 공유해요~ (사진 많음 주의)",
-    author: "흥덕주민",
-    date: "2024.05.14 20:10",
-    views: 156,
-    content: "청주 흥덕 축제 관련 문의입니다.",
-  },
-  {
-    id: 1200,
-    title: "해운대 모래축제 현실 리뷰 꿀팁 전해드려요!",
-    author: "모래왕",
-    date: "2024.05.14 12:00",
-    views: 34,
-    content: "해운대 모래축제 관련 문의입니다.",
-  },
-  {
-    id: 1199,
-    title: "대구 치맥페스티벌 일정 정리했습니다",
-    author: "치맥러버",
-    date: "2024.05.13 09:00",
-    views: 24,
-    content: "대구 치맥페스티벌 관련 문의입니다.",
-  },
-];
-
 function CustomerDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const post = customerPosts.find((p) => String(p.id) === String(id));
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!post) {
+  // 게시글 상세 정보 가져오기
+  const fetchPostDetail = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:8080/api/customer/boards/${id}`
+      );
+
+      if (!response.ok) {
+        throw new Error("게시글을 불러오는데 실패했습니다.");
+      }
+
+      const data = await response.json();
+
+      // 데이터 형식 변환 (CustomerInquiryDto 사용)
+      const formattedPost = {
+        id: data.boardNo,
+        title: data.boardTitle,
+        author: data.memberNickname || "익명",
+        date: new Date(data.boardCreateDate)
+          .toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(/\. /g, ".")
+          .replace(".", ".")
+          .slice(0, -1),
+        content: data.boardContent,
+        views: data.boardViewCount,
+        // 고객센터 전용 정보
+        status: data.inquiryStatus || "대기중",
+        hasAnswer: data.hasAnswer || false,
+        answerContent: data.answerContent,
+        answerDate: data.answerDate
+          ? new Date(data.answerDate)
+              .toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+              .replace(/\. /g, ".")
+              .replace(".", ".")
+              .slice(0, -1)
+          : null,
+        priority: data.priority || "일반",
+        category: data.category || "기타",
+      };
+
+      setPost(formattedPost);
+    } catch (err) {
+      console.error("게시글 로딩 실패:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchPostDetail();
+    }
+  }, [id]);
+
+  // 로딩 상태
+  if (loading) {
     return (
       <div className="customer-detail-outer">
         <Title />
         <div className="customer-detail-container">
           <div className="customer-detail-main">
-            <h2 className="customer-detail-not-found">
-              존재하지 않는 문의글입니다.
-            </h2>
-            <div className="customer-detail-actions-bar">
+            <div
+              style={{ textAlign: "center", padding: "50px", color: "#666" }}
+            >
+              게시글을 불러오는 중...
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태 또는 게시글이 없는 경우
+  if (error || !post) {
+    return (
+      <div className="customer-detail-outer">
+        <Title />
+        <div className="customer-detail-container">
+          <div className="customer-detail-main">
+            <div
+              style={{ textAlign: "center", padding: "50px", color: "#e74c3c" }}
+            >
+              {error || "존재하지 않는 문의글입니다."}
+              <br />
               <button
                 className="customer-detail-list-btn"
                 onClick={() => navigate("/customer-center")}
+                style={{
+                  marginTop: "10px",
+                  padding: "8px 16px",
+                  background: "#3498db",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
               >
                 목록
               </button>
@@ -102,8 +135,46 @@ function CustomerDetail() {
       <Title />
       <div className="customer-detail-container">
         <div className="customer-detail-main">
-          <div className="customer-detail-title-row">
-            <h2 className="customer-detail-title">{post.title}</h2>
+          <div
+            className="customer-detail-title-row"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              marginBottom: "20px",
+            }}
+          >
+            <h2
+              className="customer-detail-title"
+              style={{ margin: "0", marginRight: "15px" }}
+            >
+              {post.title}
+            </h2>
+            <div
+              className="customer-detail-badges"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              <span
+                className={`status-badge ${
+                  post.hasAnswer ? "answered" : "waiting"
+                }`}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "12px",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  backgroundColor: post.hasAnswer ? "#e8f5e8" : "#fff3e0",
+                  color: post.hasAnswer ? "#2e7d32" : "#f57c00",
+                  border: `1px solid ${post.hasAnswer ? "#a5d6a7" : "#ffcc02"}`,
+                }}
+              >
+                {post.status}
+              </span>
+            </div>
           </div>
           <div className="customer-detail-meta">
             <span className="customer-detail-profile-img"></span>
@@ -111,7 +182,98 @@ function CustomerDetail() {
             <span className="customer-detail-date">{post.date}</span>
             <span className="customer-detail-views">조회수 {post.views}</span>
           </div>
-          <div className="customer-detail-content">{post.content}</div>
+          <div className="customer-detail-content">
+            <h3
+              style={{
+                borderBottom: "2px solid #3498db",
+                paddingBottom: "10px",
+                marginBottom: "20px",
+              }}
+            >
+              문의 내용
+            </h3>
+            {post.content && (
+              <div
+                style={{
+                  whiteSpace: "pre-wrap",
+                  lineHeight: "1.6",
+                  marginBottom: "30px",
+                }}
+              >
+                {post.content}
+              </div>
+            )}
+          </div>
+
+          {/* 답변 섹션 */}
+          <div
+            className="customer-detail-answer"
+            style={{
+              marginTop: "40px",
+              borderTop: "1px solid #eee",
+              paddingTop: "30px",
+            }}
+          >
+            <h3
+              style={{
+                borderBottom: "2px solid #2ecc71",
+                paddingBottom: "10px",
+                marginBottom: "20px",
+              }}
+            >
+              관리자 답변
+            </h3>
+            {post.hasAnswer && post.answerContent ? (
+              <div>
+                <div
+                  style={{
+                    backgroundColor: "#f8fffe",
+                    border: "1px solid #2ecc71",
+                    borderRadius: "8px",
+                    padding: "20px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      whiteSpace: "pre-wrap",
+                      lineHeight: "1.6",
+                      color: "#2c3e50",
+                    }}
+                  >
+                    {post.answerContent}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    textAlign: "right",
+                    fontSize: "14px",
+                    color: "#7f8c8d",
+                  }}
+                >
+                  답변일: {post.answerDate}
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  backgroundColor: "#fafafa",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  padding: "30px",
+                  textAlign: "center",
+                  color: "#7f8c8d",
+                }}
+              >
+                <div style={{ fontSize: "16px", marginBottom: "10px" }}>
+                  📝 아직 답변이 없습니다
+                </div>
+                <div style={{ fontSize: "14px" }}>
+                  관리자가 확인 후 빠른 시일 내에 답변드리겠습니다.
+                </div>
+              </div>
+            )}
+          </div>
           <div className="customer-detail-actions-bar">
             <button
               className="customer-detail-list-btn"

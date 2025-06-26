@@ -25,11 +25,11 @@ public class WagleController {
      */
     @GetMapping("/boards")
     public ResponseEntity<Map<String, Object>> getBoardList(
-            @RequestParam(defaultValue = "1") Long boardTypeNo,
-            @RequestParam(required = false) String searchType,
-            @RequestParam(required = false) String searchKeyword,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "7") int size) {
+            @RequestParam(value = "boardTypeNo", defaultValue = "1") Long boardTypeNo,
+            @RequestParam(value = "searchType", required = false) String searchType,
+            @RequestParam(value = "searchKeyword", required = false) String searchKeyword,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "7") int size) {
         
         try {
             Map<String, Object> result = wagleService.getBoardList(boardTypeNo, searchType, searchKeyword, page, size);
@@ -44,7 +44,7 @@ public class WagleController {
      * 게시글 상세 조회
      */
     @GetMapping("/boards/{boardNo}")
-    public ResponseEntity<BoardDto> getBoardDetail(@PathVariable Long boardNo) {
+    public ResponseEntity<BoardDto> getBoardDetail(@PathVariable("boardNo") Long boardNo) {
         try {
             BoardDto boardDetail = wagleService.getBoardDetail(boardNo);
             return ResponseEntity.ok(boardDetail);
@@ -62,7 +62,11 @@ public class WagleController {
         try {
             // TODO: 로그인 사용자 정보에서 memberNo 가져오기
             boardDto.setMemberNo(1L); // 임시 설정
-            boardDto.setBoardTypeNo(1L); // 일반 게시판
+            
+            // boardTypeNo가 없으면 기본값 1(일반 게시판)로 설정
+            if (boardDto.getBoardTypeNo() == null) {
+                boardDto.setBoardTypeNo(1L);
+            }
             
             int result = wagleService.createBoard(boardDto);
             if (result > 0) {
@@ -80,7 +84,7 @@ public class WagleController {
      * 게시글 수정
      */
     @PutMapping("/boards/{boardNo}")
-    public ResponseEntity<String> updateBoard(@PathVariable Long boardNo, @RequestBody BoardDto boardDto) {
+    public ResponseEntity<String> updateBoard(@PathVariable("boardNo") Long boardNo, @RequestBody BoardDto boardDto) {
         try {
             boardDto.setBoardNo(boardNo);
             int result = wagleService.updateBoard(boardDto);
@@ -99,7 +103,7 @@ public class WagleController {
      * 게시글 삭제
      */
     @DeleteMapping("/boards/{boardNo}")
-    public ResponseEntity<String> deleteBoard(@PathVariable Long boardNo) {
+    public ResponseEntity<String> deleteBoard(@PathVariable("boardNo") Long boardNo) {
         try {
             int result = wagleService.deleteBoard(boardNo);
             if (result > 0) {
@@ -117,7 +121,7 @@ public class WagleController {
      * 게시글 좋아요 토글
      */
     @PostMapping("/boards/{boardNo}/like")
-    public ResponseEntity<Map<String, Object>> toggleBoardLike(@PathVariable Long boardNo) {
+    public ResponseEntity<Map<String, Object>> toggleBoardLike(@PathVariable("boardNo") Long boardNo) {
         try {
             // TODO: 로그인 사용자 정보에서 memberNo 가져오기
             Long memberNo = 1L; // 임시 설정
@@ -134,7 +138,7 @@ public class WagleController {
      * 댓글 목록 조회
      */
     @GetMapping("/boards/{boardNo}/comments")
-    public ResponseEntity<List<CommentDto>> getCommentList(@PathVariable Long boardNo) {
+    public ResponseEntity<List<CommentDto>> getCommentList(@PathVariable("boardNo") Long boardNo) {
         try {
             List<CommentDto> comments = wagleService.getCommentList(boardNo);
             return ResponseEntity.ok(comments);
@@ -148,7 +152,7 @@ public class WagleController {
      * 댓글 작성
      */
     @PostMapping("/boards/{boardNo}/comments")
-    public ResponseEntity<String> createComment(@PathVariable Long boardNo, @RequestBody CommentDto commentDto) {
+    public ResponseEntity<String> createComment(@PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
         try {
             // TODO: 로그인 사용자 정보에서 memberNo 가져오기
             commentDto.setMemberNo(1L); // 임시 설정
@@ -170,7 +174,7 @@ public class WagleController {
      * 댓글 수정
      */
     @PutMapping("/comments/{commentNo}")
-    public ResponseEntity<String> updateComment(@PathVariable Long commentNo, @RequestBody CommentDto commentDto) {
+    public ResponseEntity<String> updateComment(@PathVariable("commentNo") Long commentNo, @RequestBody CommentDto commentDto) {
         try {
             commentDto.setCommentNo(commentNo);
             int result = wagleService.updateComment(commentDto);
@@ -189,7 +193,7 @@ public class WagleController {
      * 댓글 삭제
      */
     @DeleteMapping("/comments/{commentNo}")
-    public ResponseEntity<String> deleteComment(@PathVariable Long commentNo) {
+    public ResponseEntity<String> deleteComment(@PathVariable("commentNo") Long commentNo) {
         try {
             int result = wagleService.deleteComment(commentNo);
             if (result > 0) {

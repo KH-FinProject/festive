@@ -1,75 +1,120 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faThumbsUp, faEye } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
-const CustomerBoard = ({ currentPage }) => {
+const CustomerBoard = ({
+  currentPage,
+  searchType,
+  searchQuery,
+  onTotalPagesChange,
+}) => {
   const navigate = useNavigate();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const posts = [
-    {
-      id: 1205,
-      title:
-        "서울 불꽃축제 다녀왔어요 완전 대박이었음 ㅠㅠ 사진도 엄청 많이 찍었는데 날씨도 좋고 너무 예뻤어요",
-      author: "축제러버",
-      date: "2024.05.16 14:32",
-      likes: 123,
-      views: 96,
-    },
-    {
-      id: 1204,
-      title: "부산 바다축제 후기에요! 예전엔 진짜루 누가 같이 갈 사람?",
-      author: "바다왕",
-      date: "2024.05.16 13:20",
-      likes: 56,
-      views: 78,
-    },
-    {
-      id: 1203,
-      title: "전주 한옥마을 축제 프로그램 완전 추천!",
-      author: "전주러",
-      date: "2024.05.15 18:45",
-      likes: 24,
-      views: 45,
-    },
-    {
-      id: 1202,
-      title: "논산 딸기축제 2년째 반박자씩 늦게 갑니다",
-      author: "딸기마니아",
-      date: "2024.05.15 11:00",
-      likes: 47,
-      views: 13,
-    },
-    {
-      id: 1201,
-      title: "청주 흥덕 축제 야경 사진 공유해요~ (사진 많음 주의)",
-      author: "흥덕주민",
-      date: "2024.05.14 20:10",
-      likes: 80,
-      views: 156,
-    },
-    {
-      id: 1200,
-      title: "해운대 모래축제 현실 리뷰 꿀팁 전해드려요!",
-      author: "모래왕",
-      date: "2024.05.14 12:00",
-      likes: 56,
-      views: 34,
-    },
-    {
-      id: 1199,
-      title: "대구 치맥페스티벌 일정 정리했습니다",
-      author: "치맥러버",
-      date: "2024.05.13 09:00",
-      likes: 12,
-      views: 24,
-    },
-  ];
+  // 게시글 목록 가져오기
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        size: "7",
+      });
+
+      if (searchType && searchQuery) {
+        params.append("searchType", searchType);
+        params.append("searchKeyword", searchQuery);
+      }
+
+      const response = await fetch(
+        `http://localhost:8080/api/customer/boards?${params}`
+      );
+
+      if (!response.ok) {
+        throw new Error("게시글을 불러오는데 실패했습니다.");
+      }
+
+      const data = await response.json();
+
+      // 데이터 형식 변환 (inquiryList 사용)
+      const formattedPosts = (data.inquiryList || []).map((post) => ({
+        id: post.boardNo,
+        title: post.boardTitle,
+        author: post.memberNickname || "익명",
+        date: new Date(post.boardCreateDate)
+          .toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(/\. /g, ".")
+          .replace(".", ".")
+          .slice(0, -1),
+        likes: post.boardLikeCount || 0,
+        views: post.boardViewCount || 0,
+        status: post.inquiryStatus || "대기중", // 고객센터 전용 상태 정보
+        hasAnswer: post.hasAnswer || false, // 답변 여부
+      }));
+
+      setPosts(formattedPosts);
+
+      // 총 페이지 수 업데이트
+      if (onTotalPagesChange) {
+        onTotalPagesChange(data.totalPages || 1);
+      }
+    } catch (err) {
+      console.error("게시글 로딩 실패:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, [currentPage, searchType, searchQuery]);
 
   const handleItemClick = (id) => {
     navigate(`/customer-center/${id}`);
     setTimeout(() => window.scrollTo(0, 0), 0);
   };
+
+  // 로딩 상태
+  if (loading) {
+    return (
+      <div className="customer-board-list">
+        <div style={{ textAlign: "center", padding: "50px", color: "#666" }}>
+          게시글을 불러오는 중...
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="customer-board-list">
+        <div style={{ textAlign: "center", padding: "50px", color: "#e74c3c" }}>
+          {error}
+        </div>
+      </div>
+    );
+  }
+
+  // 게시글이 없는 경우
+  if (posts.length === 0) {
+    return (
+      <div className="customer-board-list">
+        <div style={{ textAlign: "center", padding: "50px", color: "#666" }}>
+          등록된 게시글이 없습니다.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="customer-board-list">
@@ -80,7 +125,26 @@ const CustomerBoard = ({ currentPage }) => {
           onClick={() => handleItemClick(post.id)}
           style={{ cursor: "pointer" }}
         >
-          <div className="customer-board-title">{`#${post.id} ${post.title}`}</div>
+          <div className="customer-board-title">
+            {post.title}
+            <span
+              className={`status-badge ${
+                post.hasAnswer ? "answered" : "waiting"
+              }`}
+              style={{
+                marginLeft: "10px",
+                padding: "4px 8px",
+                borderRadius: "12px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                backgroundColor: post.hasAnswer ? "#e8f5e8" : "#fff3e0",
+                color: post.hasAnswer ? "#2e7d32" : "#f57c00",
+                border: `1px solid ${post.hasAnswer ? "#a5d6a7" : "#ffcc02"}`,
+              }}
+            >
+              {post.status}
+            </span>
+          </div>
           <div className="customer-board-meta">
             <img
               src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
@@ -89,10 +153,6 @@ const CustomerBoard = ({ currentPage }) => {
             />
             <span className="customer-board-author">{post.author}</span>
             <span className="customer-board-date">{post.date}</span>
-            <div className="customer-board-likes">
-              <FontAwesomeIcon icon={faThumbsUp} />
-              <span>{post.likes}</span>
-            </div>
             <div className="customer-board-views">
               <FontAwesomeIcon icon={faEye} />
               <span>{post.views}</span>

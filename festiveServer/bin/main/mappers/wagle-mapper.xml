@@ -10,6 +10,7 @@
             SELECT ROWNUM rn, t.* FROM (
                 SELECT 
                     b.BOARD_NO as boardNo,
+                    b.BOARD_TYPE_NO as boardTypeNo,
                     b.BOARD_TITLE as boardTitle,
                     m.NICKNAME as memberNickname,
                     b.BOARD_CREATE_DATE as boardCreateDate,
@@ -166,7 +167,7 @@
             c.COMMENT_CREATE_DATE as commentCreateDate,
             c.COMMENT_UPDATE_DATE as commentUpdateDate,
             c.COMMENT_DELETE_YN as commentDeleteYn
-        FROM COMMENT c
+        FROM WAGLE_COMMENT c
         JOIN MEMBER m ON c.MEMBER_NO = m.MEMBER_NO
         WHERE c.BOARD_NO = #{boardNo} AND c.COMMENT_DELETE_YN = 'N'
         ORDER BY c.COMMENT_PARENT_NO NULLS FIRST, c.COMMENT_CREATE_DATE ASC
@@ -177,7 +178,7 @@
         <selectKey keyProperty="commentNo" resultType="Long" order="BEFORE">
             SELECT SEQ_COMMENT_NO.NEXTVAL FROM DUAL
         </selectKey>
-        INSERT INTO COMMENT (
+        INSERT INTO WAGLE_COMMENT (
             COMMENT_NO, BOARD_NO, MEMBER_NO, COMMENT_CONTENT, 
             COMMENT_PARENT_NO, COMMENT_CREATE_DATE, COMMENT_DELETE_YN
         ) VALUES (
@@ -188,7 +189,7 @@
 
     <!-- 댓글 수정 -->
     <update id="updateComment" parameterType="com.project.festive.festiveserver.wagle.dto.CommentDto">
-        UPDATE COMMENT 
+        UPDATE WAGLE_COMMENT 
         SET COMMENT_CONTENT = #{commentContent},
             COMMENT_UPDATE_DATE = #{commentUpdateDate}
         WHERE COMMENT_NO = #{commentNo}
@@ -196,7 +197,7 @@
 
     <!-- 댓글 삭제 (논리삭제) -->
     <update id="deleteCommentLogical">
-        UPDATE COMMENT 
+        UPDATE WAGLE_COMMENT 
         SET COMMENT_DELETE_YN = 'Y' 
         WHERE COMMENT_NO = #{commentNo}
     </update>
@@ -205,7 +206,7 @@
     <update id="updateBoardCommentCount">
         UPDATE BOARD 
         SET BOARD_COMMENT_COUNT = (
-            SELECT COUNT(*) FROM COMMENT WHERE BOARD_NO = #{boardNo} AND COMMENT_DELETE_YN = 'N'
+            SELECT COUNT(*) FROM WAGLE_COMMENT WHERE BOARD_NO = #{boardNo} AND COMMENT_DELETE_YN = 'N'
         )
         WHERE BOARD_NO = #{boardNo}
     </update>
