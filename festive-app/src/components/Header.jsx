@@ -28,7 +28,7 @@ function Header() {
           { name: "지역별 축제", path: "/festival/local" },
           { name: "와글와글", path: "/wagle" },
           { name: "AI 여행코스 추천", path: "/ai-travel" },
-          { name: "고객센터", path: "#" },
+          { name: "고객센터", path: "/customer-center" },
           { name: "부스참가신청", path: "/booth" },
           ...(user.isAdmin ? [{ name: "관리자", path: "/admin" }] : []),
         ].map((item) =>

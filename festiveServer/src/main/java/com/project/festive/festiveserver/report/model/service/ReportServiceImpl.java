@@ -21,8 +21,10 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private ReportMapper reportMapper;
+  
     @Autowired
     private MemberMapper memberMapper;
+   
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 

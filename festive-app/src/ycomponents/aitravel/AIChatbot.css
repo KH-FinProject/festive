@@ -60,6 +60,120 @@
   border-radius: 16px 16px 16px 0;
 }
 
+/* 🚀 AI 스트리밍 타이핑 애니메이션 */
+.ai-chatbot-message.assistant.streaming {
+  background: #f8f9fa;
+  color: #333;
+  animation: aiTyping 0.6s ease-in-out infinite;
+}
+
+.ai-chatbot-message.assistant.streaming::after {
+  content: "▋";
+  color: #60a5fa;
+  animation: blink 1s ease-in-out infinite;
+  margin-left: 2px;
+}
+
+@keyframes aiTyping {
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(96, 165, 250, 0.2);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 🎯 텍스트 스트리밍 효과 최적화 */
+.ai-chatbot-streaming-text {
+  animation: fadeInText 0.1s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInText {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🌊 부드러운 텍스트 흐름 효과 */
+.ai-chatbot-message.assistant p {
+  animation: textFlow 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes textFlow {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 🚀 AI 응답 로딩 애니메이션 (더 빠르고 생동감 있게) */
+.ai-chatbot-message-content.loading {
+  position: relative;
+  color: #666;
+  font-style: italic;
+  animation: pulseLoading 0.8s ease-in-out infinite;
+}
+
+.ai-chatbot-message-content.loading::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(45deg, #60a5fa, #3b82f6);
+  animation: typingCursor 0.5s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+@keyframes pulseLoading {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes typingCursor {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
 .ai-chatbot-message p {
   margin: 0;
   padding: 0;
@@ -246,8 +360,8 @@
   margin-top: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   animation: slideUp 0.6s ease-out forwards;
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @keyframes slideUp {
@@ -266,7 +380,6 @@
   font-size: 20px;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #60a5fa;
   animation: fadeIn 0.4s ease-out forwards;
   animation-delay: 0.3s;
   opacity: 0;
@@ -288,8 +401,101 @@
   opacity: 0;
 }
 
+.ai-chatbot-festival-info h3,
+.ai-chatbot-course-timeline h3,
+.ai-chatbot-transportation-info h3 {
+  color: #333;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+}
+
 .ai-chatbot-festival-info {
   animation-delay: 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 축제 정보 대형 이미지 스타일 */
+.ai-chatbot-festival-container {
+  animation: fadeIn 0.5s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-image-large {
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.ai-chatbot-festival-image-large img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.ai-chatbot-festival-image-large:hover img {
+  transform: scale(1.02);
+}
+
+.ai-chatbot-festival-details {
+  padding: 15px 0;
+}
+
+.ai-chatbot-festival-details h4 {
+  font-size: 1.4rem;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-period {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.6s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-location {
+  color: #888;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.7s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-contact {
+  color: #60a5fa;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.8s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-content {
+  position: relative;
+  z-index: 2;
 }
 
 .ai-chatbot-course-timeline {
@@ -331,6 +537,21 @@
 
 .ai-chatbot-course-timeline {
   margin-bottom: 0;
+}
+
+.ai-chatbot-day-section {
+  margin-bottom: 30px;
+}
+
+.ai-chatbot-day-title {
+  margin: 20px 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2563eb;
+  padding: 12px 20px;
+  border-radius: 8px;
+  animation: fadeIn 0.4s ease-out forwards;
+  opacity: 0;
 }
 
 .ai-chatbot-course-item {
