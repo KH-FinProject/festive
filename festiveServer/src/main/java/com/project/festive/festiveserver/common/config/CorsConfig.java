@@ -19,8 +19,7 @@ public class CorsConfig {
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:5173"
+            "http://localhost:3000"
         ));
         
         // 허용할 HTTP 메서드
@@ -29,11 +28,8 @@ public class CorsConfig {
         // 허용할 헤더
         configuration.setAllowedHeaders(Arrays.asList("*"));
         
-        // 자격 증명 허용
+        // 자격 증명 허용 (WebSocket에는 불필요하지만 API용으로 유지)
         configuration.setAllowCredentials(true);
-        
-        // 브라우저 캐시 시간 (초)
-        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
