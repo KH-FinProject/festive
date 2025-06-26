@@ -94,8 +94,16 @@ const tourAPI = {
         data?.response?.body?.items?.item &&
         data.response.body.items.item.length > 0
       ) {
-        const festival = data.response.body.items.item[0];
-        console.log("🎪 축제 정보 추출 성공:", festival.title);
+        // 랜덤 축제 선택 (다양성 확보)
+        const festivals = data.response.body.items.item;
+        const randomIndex = Math.floor(Math.random() * festivals.length);
+        const festival = festivals[randomIndex];
+
+        console.log(
+          `🎪 축제 정보 추출 성공 (${randomIndex + 1}/${
+            festivals.length
+          }번째): ${festival.title}`
+        );
 
         // 좌표 정보 상세 로깅
         console.log("📍 축제 좌표 정보:", {
@@ -218,9 +226,40 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
   return distance;
 };
 
-// 응답 처리 함수
-const processResponse = (response) => {
+// nearbySpots에서 가장 가까운 관광지 찾기 함수
+const findNearestSpot = (lat, lng, spots) => {
+  if (!spots || spots.length === 0) return null;
+
+  let minDistance = Infinity;
+  let nearestSpot = null;
+
+  spots.forEach((spot) => {
+    if (spot.mapx && spot.mapy) {
+      const distance = calculateDistance(
+        lat,
+        lng,
+        parseFloat(spot.mapy),
+        parseFloat(spot.mapx)
+      );
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestSpot = spot;
+      }
+    }
+  });
+
+  console.log(
+    `🎯 가장 가까운 관광지: ${nearestSpot?.title} (거리: ${minDistance.toFixed(
+      2
+    )}km)`
+  );
+  return nearestSpot;
+};
+
+// 응답 처리 함수 (nearbySpots 활용)
+const processResponse = (response, availableSpots = []) => {
   console.log("원본 응답:", response);
+  console.log("활용 가능한 관광지:", availableSpots.length + "개");
 
   const newLocations = [];
   let cleanResponse = response;
@@ -229,6 +268,7 @@ const processResponse = (response) => {
     // 위치 정보와 day 정보 추출
     const regex = /@location:\s*\[(\d+\.\d+)\s*,\s*(\d+\.\d+)\]\s*@day:(\d+)/g;
     let match;
+    let spotIndex = 0; // nearbySpots 인덱스
 
     while ((match = regex.exec(response)) !== null) {
       const lat = parseFloat(match[1]);
@@ -236,84 +276,45 @@ const processResponse = (response) => {
       const day = parseInt(match[3]);
 
       if (!isNaN(lat) && !isNaN(lng) && !isNaN(day) && day > 0 && day <= 10) {
-        // @location 이전의 텍스트에서 장소명 찾기
-        const beforeLocation = response.substring(0, match.index);
-
-        let placeName = "미지정 장소";
+        let placeName = "";
         let timeInfo = "";
 
-        // 마지막 몇 줄에서 장소명 찾기
-        const lines = beforeLocation.split("\n");
-
-        // 역순으로 최근 라인부터 검사
-        for (
-          let i = lines.length - 1;
-          i >= Math.max(0, lines.length - 10);
-          i--
-        ) {
-          const line = lines[i]?.trim() || "";
-
-          if (
-            line &&
-            !line.includes("@location") &&
-            !line.includes("위치정보")
-          ) {
-            console.log(`🔍 검사 중인 라인: "${line}"`);
-
-            // 가장 일반적인 패턴: "1. **오전 09:00** - 해운대 해수욕장"
-            let match1 = line.match(/^\d+\.\s*\*\*([^*]+)\*\*\s*[-–]\s*(.+)$/);
-            if (match1) {
-              timeInfo = match1[1].trim();
-              placeName = match1[2].trim();
-              console.log(
-                `✅ 패턴1 매칭: 시간="${timeInfo}", 장소="${placeName}"`
-              );
-              break;
-            }
-
-            // 패턴2: "1. 해운대 해수욕장" (시간 없이)
-            let match2 = line.match(/^\d+\.\s*(.+)$/);
-            if (match2) {
-              placeName = match2[1].trim();
-              // **시간** 부분 제거
-              placeName = placeName.replace(/\*\*[^*]+\*\*\s*[-–]?\s*/, "");
-              console.log(`✅ 패턴2 매칭: 장소="${placeName}"`);
-              break;
-            }
-
-            // 패턴3: "- 해운대 해수욕장"
-            let match3 = line.match(/^[-–]\s*(.+)$/);
-            if (match3) {
-              placeName = match3[1].trim();
-              placeName = placeName.replace(/\*\*[^*]+\*\*\s*[-–]?\s*/, "");
-              console.log(`✅ 패턴3 매칭: 장소="${placeName}"`);
-              break;
-            }
-
-            // 패턴4: 아무 기호 없이 장소명만 있는 경우
-            if (
-              line.length > 2 &&
-              line.length < 30 &&
-              !line.includes("Day") &&
-              !line.includes("코스")
-            ) {
-              placeName = line;
-              console.log(`✅ 패턴4 매칭: 장소="${placeName}"`);
-              break;
-            }
-          }
+        // 방법 1: 좌표와 가장 가까운 실제 관광지 찾기
+        const nearestSpot = findNearestSpot(lat, lng, availableSpots);
+        if (nearestSpot) {
+          placeName = nearestSpot.title;
+          console.log(`✅ TourAPI 관광지 매칭: ${placeName}`);
         }
-
-        // 장소명 후처리 - 불필요한 텍스트 제거
-        placeName = placeName.replace(/\s*포인트:.*$/, "").trim();
-        placeName = placeName.replace(/\s*@.*$/, "").trim();
-        placeName = placeName.replace(/\([^)]*\)/g, "").trim(); // 괄호 내용 제거
-
-        // 여전히 추출되지 않았으면 기본값 설정
-        if (placeName === "미지정 장소" || placeName.length < 2) {
+        // 방법 2: 순서대로 nearbySpots 사용 (fallback)
+        else if (spotIndex < availableSpots.length) {
+          placeName = availableSpots[spotIndex].title;
+          console.log(`✅ TourAPI 순서 매칭: ${placeName}`);
+          spotIndex++;
+        }
+        // 방법 3: 기본값 (최후의 수단)
+        else {
           placeName = `Day ${day} 코스 ${
             newLocations.filter((loc) => loc.day === day).length + 1
           }`;
+          console.log(`⚠️ 기본값 사용: ${placeName}`);
+        }
+
+        // AI 응답에서 시간 정보 추출 시도
+        const beforeLocation = response.substring(0, match.index);
+        const lines = beforeLocation.split("\n");
+
+        for (
+          let i = lines.length - 1;
+          i >= Math.max(0, lines.length - 3);
+          i--
+        ) {
+          const line = lines[i]?.trim() || "";
+          const timeMatch = line.match(/\*\*([^*]*(?:오전|오후)[^*]*)\*\*/);
+          if (timeMatch) {
+            timeInfo = timeMatch[1].trim();
+            console.log(`✅ 시간 추출: ${timeInfo}`);
+            break;
+          }
         }
 
         // 기본 시간 설정
@@ -402,6 +403,7 @@ const AIChatbot = () => {
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [currentStreamMessage, setCurrentStreamMessage] = useState("");
+  const [nearbySpots, setNearbySpots] = useState([]);
   const [travelInfo, setTravelInfo] = useState({
     festival: {
       name: "",
@@ -698,6 +700,9 @@ const AIChatbot = () => {
       );
       console.log(`🎯 주변 관광지: ${nearbySpots.length}개`);
 
+      // nearbySpots를 상태에 저장
+      setNearbySpots(nearbySpots);
+
       // 2. TourAPI 데이터를 포함해서 백엔드 AI 요청
       const response = await aiAPI.generateResponse(
         userMessage,
@@ -718,13 +723,13 @@ const AIChatbot = () => {
 
       for (const chunk of chunks) {
         fullResponse += chunk;
-        const processed = processResponse(fullResponse);
+        const processed = processResponse(fullResponse, nearbySpots);
         setCurrentStreamMessage(processed.cleanResponse);
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       // 최종 처리
-      const finalProcessed = processResponse(fullResponse);
+      const finalProcessed = processResponse(fullResponse, nearbySpots);
 
       setMessages((prev) => [
         ...prev,
