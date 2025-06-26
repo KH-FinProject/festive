@@ -56,6 +56,13 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/carpark-api/, ""),
         secure: true,
+
+      /* 웹소켓 연결을 위한 설정 : 성원*/
+      "/ws": {
+        target: "http://localhost:8080",
+        ws: true,
+        changeOrigin: true,
+
       },
     },
   },

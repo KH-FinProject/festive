@@ -31,7 +31,7 @@
   position: relative;
   padding-bottom: 3px;
   /* 밑줄 공간 확보 */
-  margin: 0 0.5rem;
+  margin: 0 0.7rem;
 }
 
 .headernav-link::after {
@@ -176,6 +176,7 @@
   align-items: center;
   gap: 0.5rem;
   margin-right: 5rem;
+  margin-left: 1.3rem;
   /* 기존 searchbtn margin과 통일 */
   white-space: nowrap;
 }

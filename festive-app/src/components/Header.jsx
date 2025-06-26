@@ -4,6 +4,7 @@ import searchbtn from "../assets/searchbtn.png";
 import "./HeaderFooter.css";
 import { Link } from "react-router-dom";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
+import { useAdminNotification } from "../mcomponents/AdminNotificationContext.jsx";
 
 function Header() {
   const isLoggedIn = true;
@@ -12,6 +13,7 @@ function Header() {
     isAdmin: true,
     profileImage: "https://via.placeholder.com/30",
   };
+  const { hasNewReport } = useAdminNotification();
   return (
     <header className="header">
       <div className="headerlogo">
@@ -26,7 +28,7 @@ function Header() {
           { name: "지역별 축제", path: "/festival/local" },
           { name: "와글와글", path: "/wagle" },
           { name: "AI 여행코스 추천", path: "/ai-travel" },
-          { name: "고객센터", path: "#" },
+          { name: "고객센터", path: "/customer-center" },
           { name: "부스참가신청", path: "/booth" },
           ...(user.isAdmin ? [{ name: "관리자", path: "/admin" }] : []),
         ].map((item) =>
@@ -37,6 +39,25 @@ function Header() {
               className="headernav-link hover-grow"
             >
               {item.name}
+              {item.name === "관리자" && hasNewReport && (
+                <span
+                  style={{
+                    background: "#ff4757",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                    padding: "1px 6px",
+                    marginLeft: "6px",
+                    verticalAlign: "middle",
+                    position: "relative",
+                    top: "-7px",
+                    animation: "popIn 0.3s",
+                  }}
+                >
+                  new!
+                </span>
+              )}
             </Link>
           ) : (
             <a key={item.name} href="#" className="headernav-link hover-grow">
@@ -46,12 +67,6 @@ function Header() {
         )}
       </nav>
       <div className="headerheader-right">
-        <input
-          type="text"
-          className="headersearch-input"
-          placeholder="검색어를 입력해 주세요."
-        />
-        <img src={searchbtn} className="headersearch-btn" />
         <div className="headerweather-placeholder">
           <Weather />
         </div>

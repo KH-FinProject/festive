@@ -25,4 +25,7 @@ public interface ReportService {
     
     // 회원 제재(제재 카운트 증가)
     int increaseSanctionCount(long memberNo);
+
+    // 회원 제재(제재 카운트 감소)
+    int decreaseSanctionCount(long memberNo);
 }

@@ -10,6 +10,7 @@ const AdminCustomerReportDetail = () => {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSanctioning, setIsSanctioning] = useState(false);
 
   useEffect(() => {
     fetchDetail();
@@ -52,6 +53,8 @@ const AdminCustomerReportDetail = () => {
   };
 
   const handleSanction = async () => {
+    if (isSanctioning || (detail && detail.reportStatus === 1)) return;
+
     if (!detail || !detail.memberNo) return;
     if (
       !window.confirm(
@@ -59,8 +62,10 @@ const AdminCustomerReportDetail = () => {
       )
     )
       return;
+
+    setIsSanctioning(true);
+
     try {
-      // 1. 회원 제재 카운트 증가
       const sanctionRes = await fetch(
         `http://localhost:8080/api/reports/sanction/${detail.memberNo}`,
         { method: "POST" }
@@ -69,7 +74,6 @@ const AdminCustomerReportDetail = () => {
         alert("회원 제재에 실패했습니다.");
         return;
       }
-      // 2. 신고 처리완료로 상태 변경
       const processRes = await fetch(
         `http://localhost:8080/api/reports/${reportNo}/status?status=1`,
         { method: "PUT" }
@@ -79,15 +83,58 @@ const AdminCustomerReportDetail = () => {
         return;
       }
       alert("회원 제재 및 신고 처리완료가 모두 적용되었습니다.");
-      navigate("/admin/customer");
+
+      await fetchDetail();
     } catch {
       alert("회원 제재/신고 처리 중 오류가 발생했습니다.");
+    } finally {
+      setIsSanctioning(false);
+    }
+  };
+
+  // 제재 취소 핸들러
+  const handleCancelSanction = async () => {
+    if (!detail || !detail.memberNo) return;
+    if (!window.confirm("해당 회원의 제재를 취소(카운트 1 감소)하시겠습니까?"))
+      return;
+    setIsSanctioning(true);
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/reports/sanction-cancel/${detail.memberNo}`,
+        { method: "POST" }
+      );
+      if (!res.ok) {
+        alert("회원 제재 취소에 실패했습니다.");
+        return;
+      }
+      // 신고상태를 대기로 변경
+      const processRes = await fetch(
+        `http://localhost:8080/api/reports/${reportNo}/status?status=0`,
+        { method: "PUT" }
+      );
+      if (!processRes.ok) {
+        alert("제재 취소는 성공했으나, 신고상태 대기 전환에는 실패했습니다.");
+        return;
+      }
+      alert(
+        "회원 제재가 취소(카운트 1 감소)되고, 신고상태가 대기로 변경되었습니다."
+      );
+      await fetchDetail();
+    } catch {
+      alert("회원 제재 취소/신고상태 변경 중 오류가 발생했습니다.");
+    } finally {
+      setIsSanctioning(false);
     }
   };
 
   if (loading) return <div className="admin-main">로딩 중...</div>;
   if (error) return <div className="admin-main">{error}</div>;
   if (!detail) return <div className="admin-main">상세 정보 없음</div>;
+
+  // 디버깅: 실제 신고상태 값과 타입 확인
+  console.log("신고상태:", detail.reportStatus, typeof detail.reportStatus);
+  const isReportProcessed =
+    detail.reportStatus === 1 || detail.reportStatus === "1";
 
   return (
     <div className="admin-management-container">
@@ -201,12 +248,36 @@ const AdminCustomerReportDetail = () => {
 
           {/* 액션 버튼들 */}
           <div className="report-actions">
-            <button
-              className="report-action-btn report-reply-btn"
-              onClick={handleSanction}
-            >
-              해당 회원 제재
-            </button>
+            {!isReportProcessed && !isSanctioning && (
+              <button
+                className="report-action-btn report-reply-btn"
+                onClick={handleSanction}
+              >
+                해당 회원 제재
+              </button>
+            )}
+
+            {isSanctioning && (
+              <button
+                className="report-action-btn report-reply-btn"
+                disabled
+                style={{ opacity: 0.6, cursor: "not-allowed" }}
+              >
+                제재 처리 중...
+              </button>
+            )}
+
+            {isReportProcessed && (
+              <button
+                className="report-action-btn report-reply-btn"
+                style={{ backgroundColor: "#6c757d", color: "white" }}
+                onClick={handleCancelSanction}
+                disabled={isSanctioning}
+              >
+                제재취소
+              </button>
+            )}
+
             <button
               className="report-action-btn report-reply-btn"
               onClick={handleDelete}
