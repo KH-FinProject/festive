@@ -1,6 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import SockJS from "sockjs-client";
-import { Client } from "@stomp/stompjs";
 
 const AdminNotificationContext = createContext();
 
@@ -12,72 +10,66 @@ export function AdminNotificationProvider({ children }) {
   const [hasNewReport, setHasNewReport] = useState(false);
 
   useEffect(() => {
-    const client = new Client({
-      // SockJS 연결 URL을 정확히 설정
-      webSocketFactory: () => {
-        console.log("WebSocket 연결 시도: http://localhost:8080/ws");
-        return new SockJS("http://localhost:8080/ws");
-      },
-      debug: function (str) {
-        console.log("STOMP Debug:", str);
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      // 연결 상태 더 자세히 확인하기 위한 설정
-      onStompError: (frame) => {
-        console.error("STOMP 에러:", frame);
-        console.error("STOMP 에러 상세:", frame.headers, frame.body);
-      },
-      onWebSocketError: (error) => {
-        console.error("WebSocket 에러:", error);
-      },
-      onDisconnect: (frame) => {
-        console.log("WebSocket 연결 해제:", frame);
-      },
-    });
+    // 전통적인 WebSocket 사용 (SockJS 없이)
+    let ws = null;
 
-    client.onConnect = (frame) => {
-      console.log("WebSocket 연결 성공!");
-      console.log("연결 프레임:", frame);
+    const connectWebSocket = () => {
+      try {
+        console.log("WebSocket 연결 시도: ws://localhost:8080/ws/websocket");
 
-      // 구독 설정
-      const subscription = client.subscribe(
-        "/topic/admin-alerts",
-        (message) => {
-          console.log("받은 메시지 전체:", message);
-          console.log("메시지 본문:", message.body);
+        ws = new WebSocket("ws://localhost:8080/ws/websocket");
 
-          try {
-            const alertData = JSON.parse(message.body);
-            console.log("파싱된 알림 데이터:", alertData);
-            setHasNewReport(true);
-          } catch (error) {
-            console.error("메시지 파싱 에러:", error);
-            // 파싱 실패해도 알림은 표시
+        ws.onopen = function (event) {
+          console.log("WebSocket 연결 성공!", event);
+
+          // STOMP CONNECT 프레임 전송
+          const connectFrame = "CONNECT\naccept-version:1.0,1.1,2.0\n\n\x00";
+          ws.send(connectFrame);
+        };
+
+        ws.onmessage = function (event) {
+          console.log("WebSocket 메시지 받음:", event.data);
+
+          if (event.data.includes("CONNECTED")) {
+            console.log("STOMP 연결 완료!");
+
+            // 구독 프레임 전송
+            const subscribeFrame =
+              "SUBSCRIBE\nid:sub-0\ndestination:/topic/admin-alerts\n\n\x00";
+            ws.send(subscribeFrame);
+            console.log("/topic/admin-alerts 구독 요청 전송");
+          } else if (event.data.includes("/topic/admin-alerts")) {
+            console.log("관리자 알림 메시지 받음!");
             setHasNewReport(true);
           }
-        }
-      );
+        };
 
-      console.log("구독 완료:", subscription);
+        ws.onclose = function (event) {
+          console.log("WebSocket 연결 종료:", event);
+
+          // 5초 후 재연결 시도
+          setTimeout(() => {
+            console.log("WebSocket 재연결 시도...");
+            connectWebSocket();
+          }, 5000);
+        };
+
+        ws.onerror = function (error) {
+          console.error("WebSocket 에러:", error);
+        };
+      } catch (error) {
+        console.error("WebSocket 생성 에러:", error);
+      }
     };
 
-    client.onStompError = (frame) => {
-      console.error("STOMP 에러:", frame);
-      console.error("에러 헤더:", frame.headers);
-      console.error("에러 본문:", frame.body);
-    };
+    // 연결 시작
+    connectWebSocket();
 
-    // 연결 활성화
-    console.log("STOMP 클라이언트 활성화 시작");
-    client.activate();
-
-    // 클린업 함수
+    // 클린업
     return () => {
-      console.log("WebSocket 연결 해제 중...");
-      if (client && client.active) {
-        client.deactivate();
+      console.log("WebSocket 정리 중...");
+      if (ws) {
+        ws.close();
       }
     };
   }, []);

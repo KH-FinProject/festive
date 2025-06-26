@@ -24,7 +24,7 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        // 심플 브로커 활성화 (하트비트 없이)
+        // 심플 브로커 활성화
         registry.enableSimpleBroker("/topic");
         // 애플리케이션 목적지 접두사
         registry.setApplicationDestinationPrefixes("/app");
