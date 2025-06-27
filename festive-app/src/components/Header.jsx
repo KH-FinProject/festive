@@ -14,7 +14,6 @@ function Header() {
   useEffect(() => {
     if (member) {
       setIsLoggedIn(true);
-
     } else {
       setIsLoggedIn(false);
     }
@@ -36,7 +35,9 @@ function Header() {
           { name: "AI 여행코스 추천", path: "/ai-travel" },
           { name: "고객센터", path: "/customer-center" },
           { name: "부스참가신청", path: "/booth" },
-          ...(member?.role === "ADMIN" ? [{ name: "관리자", path: "/admin" }] : []),
+          ...(member?.role === "ADMIN"
+            ? [{ name: "관리자", path: "/admin" }]
+            : []),
         ].map((item) =>
           item.path !== "#" ? (
             <Link
@@ -45,7 +46,7 @@ function Header() {
               className="headernav-link hover-grow"
             >
               {item.name}
-              {item.name === "관리자" && hasNewReport && (
+              {item.role === "ADMIN" && hasNewReport && (
                 <span
                   style={{
                     background: "#ff4757",
@@ -80,11 +81,13 @@ function Header() {
           <a href={"/mypage/profile"}>
             <div className="header-user-info">
               <img
-                src={member?.profileImage || "https://via.placeholder.com/30"}
+                src={member?.profileImage || "../public/logo.png"}
                 alt="프로필"
                 className="header-user-profile"
               />
-              <span className="header-user-nickname">{member?.nickname || member?.name}</span>
+              <span className="header-user-nickname">
+                {member?.nickname || member?.name}
+              </span>
             </div>
           </a>
         ) : (
