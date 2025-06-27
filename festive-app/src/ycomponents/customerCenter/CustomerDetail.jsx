@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Title from "./Title";
 import "./CustomerDetail.css";
 import { useNavigate, useParams } from "react-router-dom";
+import useAuthStore from "../../store/useAuthStore";
 
 function CustomerDetail() {
   const { id } = useParams();
@@ -9,6 +10,7 @@ function CustomerDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { member: currentUser } = useAuthStore();
 
   // 게시글 상세 정보 가져오기
   const fetchPostDetail = async () => {
@@ -27,6 +29,7 @@ function CustomerDetail() {
       // 데이터 형식 변환 (CustomerInquiryDto 사용)
       const formattedPost = {
         id: data.boardNo,
+        memberNo: data.memberNo, // 작성자 회원번호 추가
         title: data.boardTitle,
         author: data.memberNickname || "익명",
         date: new Date(data.boardCreateDate)
@@ -78,6 +81,14 @@ function CustomerDetail() {
     }
   }, [id]);
 
+  // 접근 권한 확인 (작성자 또는 관리자만 접근 가능)
+  const hasAccess = () => {
+    if (!currentUser || !post) return false;
+    return (
+      currentUser.memberNo === post.memberNo || currentUser.role === "ADMIN"
+    );
+  };
+
   // 로딩 상태
   if (loading) {
     return (
@@ -107,6 +118,40 @@ function CustomerDetail() {
               style={{ textAlign: "center", padding: "50px", color: "#e74c3c" }}
             >
               {error || "존재하지 않는 문의글입니다."}
+              <br />
+              <button
+                className="customer-detail-list-btn"
+                onClick={() => navigate("/customer-center")}
+                style={{
+                  marginTop: "10px",
+                  padding: "8px 16px",
+                  background: "#3498db",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                목록
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 접근 권한이 없는 경우
+  if (!hasAccess()) {
+    return (
+      <div className="customer-detail-outer">
+        <Title />
+        <div className="customer-detail-container">
+          <div className="customer-detail-main">
+            <div
+              style={{ textAlign: "center", padding: "50px", color: "#e74c3c" }}
+            >
+              접근 권한이 없습니다.
               <br />
               <button
                 className="customer-detail-list-btn"

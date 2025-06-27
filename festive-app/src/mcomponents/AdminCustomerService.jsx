@@ -276,6 +276,16 @@ const AdminCustomerService = () => {
                               {report.reportType === 0 ? "게시글" : "댓글"} 신고
                               - {report.reportReason}
                             </span>
+                            <span
+                              className={`status-badge ${
+                                report.reportStatus === 1
+                                  ? "completed"
+                                  : "waiting"
+                              }`}
+                              style={{ marginLeft: "8px" }}
+                            >
+                              {report.reportStatus === 1 ? "처리완료" : "대기"}
+                            </span>
                           </div>
                           <div className="inquiry-meta">
                             <span className="inquiry-author">

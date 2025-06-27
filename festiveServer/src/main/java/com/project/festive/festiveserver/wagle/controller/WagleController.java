@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Map;
@@ -62,8 +63,21 @@ public class WagleController {
     @PostMapping("/boards")
     public ResponseEntity<String> createBoard(@RequestBody BoardDto boardDto) {
         try {
-            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            // 안전한 인증 정보 추출
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+            }
+            
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof CustomUserDetails)) {
+                log.error("인증 정보 타입 오류: {}", principal.getClass().getName());
+                return ResponseEntity.status(401).body("유효하지 않은 인증 정보입니다.");
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
             Long memberNo = userDetails.getMemberNo();
+            
             boardDto.setMemberNo(memberNo);
             // boardTypeNo가 없으면 기본값 1(일반 게시판)로 설정
             if (boardDto.getBoardTypeNo() == null) {
@@ -124,8 +138,21 @@ public class WagleController {
     @PostMapping("/boards/{boardNo}/like")
     public ResponseEntity<Map<String, Object>> toggleBoardLike(@PathVariable("boardNo") Long boardNo) {
         try {
-            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            // 안전한 인증 정보 추출
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof CustomUserDetails)) {
+                log.error("인증 정보 타입 오류: {}", principal.getClass().getName());
+                return ResponseEntity.status(401).build();
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
             Long memberNo = userDetails.getMemberNo();
+            
             Map<String, Object> result = wagleService.toggleBoardLike(boardNo, memberNo);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -154,8 +181,21 @@ public class WagleController {
     @PostMapping("/boards/{boardNo}/comments")
     public ResponseEntity<String> createComment(@PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
         try {
-            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            // 안전한 인증 정보 추출
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+            }
+            
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof CustomUserDetails)) {
+                log.error("인증 정보 타입 오류: {}", principal.getClass().getName());
+                return ResponseEntity.status(401).body("유효하지 않은 인증 정보입니다.");
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
             Long memberNo = userDetails.getMemberNo();
+            
             commentDto.setMemberNo(memberNo);
             commentDto.setBoardNo(boardNo);
             int result = wagleService.createComment(commentDto);
