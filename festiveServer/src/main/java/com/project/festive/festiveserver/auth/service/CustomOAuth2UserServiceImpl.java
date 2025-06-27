@@ -74,6 +74,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
             return new CustomUserDetails(MemberConverter.toDto(savedMember));
 
         } else {
+            // 소셜 로그인 정보가 있으면 회원 정보 업데이트
             existingMember.setName(oAuth2Response.getName());
             existingMember.setEmail(oAuth2Response.getEmail());
             existingMember.setNickname(oAuth2Response.getNickname());

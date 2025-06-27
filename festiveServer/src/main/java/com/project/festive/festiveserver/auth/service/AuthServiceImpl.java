@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.mail.javamail.JavaMailSender;
@@ -46,15 +47,28 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public Map<String, Object> login(LoginRequest request) throws RuntimeException {
+	public Map<String, Object> login(LoginRequest request) {
 		
-		Member member = memberRepository.findByUserId(request.getId())
-				.orElseThrow(() -> new RuntimeException("존재하지 않는 계정입니다."));
+		Map<String, Object> result = new HashMap<>();
 		
-		if (!bcrypt.matches(request.getPassword(), member.getPassword())) {
-			throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+		// 1. 사용자 존재 여부 확인
+		Optional<Member> memberOpt = memberRepository.findByUserId(request.getId());
+		if (!memberOpt.isPresent()) {
+			result.put("success", false);
+			result.put("message", "존재하지 않는 계정입니다.");
+			return result;
 		}
 		
+		Member member = memberOpt.get();
+		
+		// 2. 비밀번호 확인
+		if (!bcrypt.matches(request.getPassword(), member.getPassword())) {
+			result.put("success", false);
+			result.put("message", "비밀번호가 일치하지 않습니다.");
+			return result;
+		}
+		
+		// 3. 로그인 성공 시 토큰 생성
 		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole());
 		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole());
 		Date expirationDate = jwtUtil.getExpirationDate(refreshToken);
@@ -66,15 +80,16 @@ public class AuthServiceImpl implements AuthService {
 				.expirationDate(localExpirationDate)
 				.build();
 		
-		int result = authMapper.updateRefreshToken(refreshTokenEntity);
+		int updateResult = authMapper.updateRefreshToken(refreshTokenEntity);
 		
-		if (result == 0) {
+		if (updateResult == 0) {
 			authMapper.insertRefreshToken(refreshTokenEntity);
 		}
 		
-		Map<String, Object> map = new HashMap<>();
-		map.put("refreshToken", refreshToken);
-		map.put("accessToken", accessToken);
+		// 4. 성공 응답 구성
+		result.put("success", true);
+		result.put("refreshToken", refreshToken);
+		result.put("accessToken", accessToken);
 
 		LoginResponse loginResponse = LoginResponse.builder()
 				.memberNo(member.getMemberNo())
@@ -85,9 +100,9 @@ public class AuthServiceImpl implements AuthService {
 				.profileImage(member.getProfileImage())
 				.build();
 		
-		map.put("loginResponse", loginResponse);
+		result.put("loginResponse", loginResponse);
 		
-		return map;
+		return result;
 	}
 
 	@Override

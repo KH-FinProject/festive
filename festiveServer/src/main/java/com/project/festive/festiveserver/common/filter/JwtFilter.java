@@ -5,6 +5,7 @@ import java.time.Duration;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,14 +34,9 @@ public class JwtFilter extends OncePerRequestFilter {
   }
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+  protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
-    String path = ((HttpServletRequest) request).getRequestURI();
-    if (path.startsWith("/ws")) {
-        filterChain.doFilter(request, response);
-        return;
-    }
     
     log.info("JWT Filter 시작: {} {}", method, requestURI);
     
@@ -116,7 +112,7 @@ public class JwtFilter extends OncePerRequestFilter {
   }
   
   @Override
-  protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+  protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
     String path = request.getRequestURI();
     
     // 정적 리소스 및 특정 경로 제외
@@ -132,6 +128,7 @@ public class JwtFilter extends OncePerRequestFilter {
            path.contains("/actuator/") ||
            path.startsWith("/auth/") || // 인증 관련 경로 제외
            path.startsWith("/oauth2/") || // OAuth2 관련 경로 제외
+           path.startsWith("/ws") || // 웹소켓 연결 시 토큰 검증 제외
            path.endsWith(".ico") ||
            path.endsWith(".css") ||
            path.endsWith(".js") ||
@@ -148,10 +145,11 @@ public class JwtFilter extends OncePerRequestFilter {
   private void createAuthenticationToken(Long memberNo, String email, String role) {
     try {
       // JWT 정보로 직접 MemberDto 생성 (DB 조회 없음)
-      MemberDto memberDto = new MemberDto();
-      memberDto.setMemberNo(memberNo);
-      memberDto.setEmail(email);
-      memberDto.setRole(role);
+      MemberDto memberDto = MemberDto.builder()
+        .memberNo(memberNo)
+        .email(email)
+        .role(role)
+        .build();
       
       // CustomUserDetails 생성
       CustomUserDetails userDetails = new CustomUserDetails(memberDto);

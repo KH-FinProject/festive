@@ -1,5 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AdminSidebar from "./AdminSideBar";
+import { Routes, Route } from "react-router-dom";
 import AdminMain from "./AdminMain";
 import AdminCreateAccount from "./AdminCreateAccount";
 import AdminDeleteMember from "./adminDeleteMember";
@@ -8,7 +7,6 @@ import AdminBoardManagement from "./AdminBoardManagement";
 import AdminApplicationStatus from "./AdminApplicationStatus";
 
 import "./AdminCommon.css";
-import HeaderForManager from "./HeaderForManager";
 import AdminBoardWrite from "./AdminBoardWrite";
 import AdminCustomerReply from "./AdminCustomerReply";
 import AdminCustomerReportDetail from "./AdminCustomerReportDetail";

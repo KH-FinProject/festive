@@ -22,14 +22,18 @@ const LoginForm = () => {
     }));
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
   const handleLogin = async (e) => {
 
     // 이미 로딩 중이면 아무것도 하지 않고 함수를 종료
     if (loading) {
       return;
     }
-
-    console.log("로그인 시도");
     setLoading(true); // 로딩 상태 시작, 버튼이 비활성화됨
 
     try {
@@ -41,14 +45,14 @@ const LoginForm = () => {
       
       if (data && data.loginResponse) {
         const { login } = useAuthStore.getState();
-        login(data.accessToken, data.loginResponse);
+        login(data.loginResponse);
+
+        alert("로그인 성공!")
         navigate("/");
-      } else {
-        console.log("로그인 실패");
       }
 
     } catch (error) {
-      console.log("로그인 중 오류 발생");
+      alert(error.response.data);
       
     } finally {
       // 요청이 성공하든 실패하든 항상 로딩 상태를 해제
@@ -57,64 +61,13 @@ const LoginForm = () => {
   };
 
   const handleOAuth2Login = (provider) => {
-    // 팝업을 화면 중앙에 위치
-    const popupWidth = 500;
-    const popupHeight = 600;
-    const left = window.screenX + (window.outerWidth - popupWidth) / 2;
-    const top = window.screenY + (window.outerHeight - popupHeight) / 2;
 
-    // OAuth2 인증 URL
-    const oauthUrl = `${
-      import.meta.env.VITE_API_URL
-    }/oauth2/authorization/${provider}`;
+    // OAuth2 인증 URL 리다이렉트
+    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/${provider}`;
 
-    // 팝업을 통해 OAuth2 로그인 요청
-    const popup = window.open(
-      oauthUrl,
-      "oauth2",
-      `width=${popupWidth},height=${popupHeight},left=${left},top=${top}`
-    );
-
-    // 팝업이 차단되었는지 확인
-    if (!popup) {
-      alert("팝업이 차단되었습니다. 팝업 차단을 해제해주세요.");
-      return;
-    }
-
-    // 팝업에서 응답을 받기 위한 이벤트 리스너
-    const handlePopupMessage = (event) => {
-      // 팝업에서 부모 창으로 보내는 메시지인지 확인
-      if (event.source === popup) {
-        if (event.data.accessToken) {
-          // 성공: accessToken 저장
-          const { setAccessToken } = useAuthStore.getState();
-          setAccessToken(event.data.accessToken);
-
-          // 메인 페이지로 이동
-          navigate("/");
-        } else if (event.data.error) {
-          // 오류: 오류 메시지 표시
-          alert(event.data.error);
-        }
-
-        // 팝업 닫기
-        popup.close();
-
-        // 이벤트 리스너 제거
-        window.removeEventListener("message", handlePopupMessage);
-      }
-    };
-
-    // 부모 창에서 팝업 메시지 수신
-    window.addEventListener("message", handlePopupMessage);
-
-    // 팝업이 닫혔는지 주기적으로 확인 (타임아웃 처리)
-    const checkClosed = setInterval(() => {
-      if (popup.closed) {
-        clearInterval(checkClosed);
-        window.removeEventListener("message", handlePopupMessage);
-      }
-    }, 1000);
+    // CustomSuccessHandler.java 참고
+    // OAuth2 소셜 로그인 인증 이후 서버에서 자동으로 프론트엔드로 리다이렉트 됨
+    // 프론트엔드에서는 리다이렉트 된 페이지에서 토큰을 쿠키에 저장하고, 로그인 상태를 유지함
   };
 
   return (
@@ -142,6 +95,7 @@ const LoginForm = () => {
                 onChange={handleInputChange}
                 placeholder="아이디"
                 className="input-field"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
@@ -159,6 +113,7 @@ const LoginForm = () => {
                 onChange={handleInputChange}
                 placeholder="비밀번호"
                 className="input-field"
+                onKeyDown={handleKeyDown}
               />
             </div>
 
