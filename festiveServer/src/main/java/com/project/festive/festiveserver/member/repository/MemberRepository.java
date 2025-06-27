@@ -15,12 +15,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> { // 사�
 
 	Member findByMemberNo(Long memberNo);
 
-	// email 로 회원찾기는 기본 CURD에 없기때문에 직접 작성하기
-	Optional<Member> findByEmail(String email); // 이메일로 회원 찾기
+	@Query("SELECT m FROM Member m WHERE m.id = :id")
+	Optional<Member> findByUserId(@Param("id") String id);
 
-  Member findByName(String name);
+	Optional<Member> findByEmail(String email);
 
-  Member findBySocialId(String socialId);
+	Optional<Member> findByNickname(String nickname);
+
+	Member findBySocialId(String socialId);
 
 	// 비밀번호 변경하기
 	@Modifying // 수정시 사용하는 쿼리라는 뜻. DML 작업일 때 반드시 붙여야 함.

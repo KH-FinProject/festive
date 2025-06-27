@@ -139,6 +139,10 @@
   border: none;
   cursor: pointer;
   transition: background-color 0.15s ease-in-out; /* transition-colors */
+  text-decoration: none; /* Link 컴포넌트를 위한 스타일 */
+  display: flex; /* Link 컴포넌트를 위한 스타일 */
+  align-items: center; /* Link 컴포넌트를 위한 스타일 */
+  justify-content: center; /* Link 컴포넌트를 위한 스타일 */
 }
 
 .btn-signup {
@@ -148,6 +152,7 @@
 
 .btn-signup:hover {
   background-color: #93c5fd; /* hover:bg-blue-500 */
+  color: #ffffff; /* Link hover 시에도 색상 유지 */
 }
 
 .btn-login {

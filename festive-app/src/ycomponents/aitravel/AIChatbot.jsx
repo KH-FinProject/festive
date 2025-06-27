@@ -5,56 +5,192 @@ import AItitle from "./AItitle";
 // 백엔드 API 기본 URL
 const API_BASE_URL = "http://localhost:8080/api";
 
-// 백엔드 API 호출 함수들
+// TourAPI 설정
+const TOUR_API_KEY =
+  "tHW0b2nqX9PkA6UDYmBQuU5wccG5BZK9eugzVCPIb3Tfn+TPnUMyQq+vM3waDovQmI0DW+Bw0JkrH22wEHZbtQ==";
+
+// 지역 코드 매핑
+const AREA_CODE_MAP = {
+  서울: "1",
+  인천: "2",
+  대전: "3",
+  대구: "4",
+  광주: "5",
+  부산: "6",
+  울산: "7",
+  세종: "8",
+  경기: "31",
+  강원: "32",
+  충북: "33",
+  충남: "34",
+  경북: "35",
+  경남: "36",
+  전북: "37",
+  전남: "38",
+  제주: "39",
+};
+
+// 백엔드 API 호출 함수
 const aiAPI = {
-  async generateResponse(message, region = null, history = []) {
+  async generateResponse(
+    message,
+    region = null,
+    history = [],
+    festivalData = null,
+    nearbySpots = []
+  ) {
     const response = await fetch(`${API_BASE_URL}/ai/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, region, history }),
+      body: JSON.stringify({
+        message,
+        region,
+        history,
+        festivalData,
+        nearbySpots,
+      }),
     });
     if (!response.ok) throw new Error("AI 서비스 오류가 발생했습니다.");
     return response.json();
   },
-  // TourAPI 관련 메서드 제거 - 프론트엔드에서 직접 처리
 };
 
-const ASSISTANT_INSTRUCTIONS = `
-한국 여행 전문 AI - 실시간 맞춤 추천
+// 프론트엔드 TourAPI 호출 함수들
+const tourAPI = {
+  // 지역명에서 지역코드 추출
+  extractAreaCode(text) {
+    const regions = Object.keys(AREA_CODE_MAP);
+    for (const region of regions) {
+      if (text.includes(region)) {
+        return AREA_CODE_MAP[region];
+      }
+    }
+    return "1"; // 기본값: 서울
+  },
 
-**🎯 핵심 임무:**
-- 모든 질문에 대해 반드시 여행 코스 추천
-- 기본은 당일치기, 사용자가 몇박몇일 명시하면 day별 구분
-- Tour API 데이터와 실제 관광지 정보 우선 활용
+  // 축제 정보 검색
+  async fetchFestivalData(areaCode) {
+    try {
+      console.log(
+        `🌐 프론트엔드에서 TourAPI 축제 검색 시작 - 지역코드: ${areaCode}`
+      );
 
-**🚨 절대 필수 답변 형식:**
+      const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
+      const encodedKey = encodeURIComponent(TOUR_API_KEY);
 
-**당일/1일 여행의 경우:**
-[지역 소개] (2줄)
-[추천 코스]
-1. **오전 09:00** - 장소명
-   @location:[37.1234,127.5678] @day:1
-   포인트: 특별한 매력
+      const url =
+        `https://apis.data.go.kr/B551011/KorService2/searchFestival2?` +
+        `serviceKey=${encodedKey}&numOfRows=5&pageNo=1&MobileOS=ETC&MobileApp=festive` +
+        `&eventStartDate=${today}&areaCode=${areaCode}&_type=json&arrange=C`;
 
-**몇박몇일 여행의 경우:**
-[지역 소개] (2줄)
-[Day 1 코스]
-1. **오전 09:00** - 장소명
-   @location:[37.1234,127.5678] @day:1
-   포인트: 특별한 매력
+      console.log("📡 TourAPI 요청 URL:", url.substring(0, 100) + "...");
 
-[Day 2 코스]
-1. **오전 09:00** - 장소명
-   @location:[37.3456,127.7890] @day:2
-   포인트: 특별한 매력
+      const response = await fetch(url);
+      const data = await response.json();
 
-**절대 규칙:**
-- Day별 헤더 필수: [Day 1 코스], [Day 2 코스] 형식
-- @location:[위도,경도] @day:숫자 형식을 모든 장소에 반드시 포함
-- 각 Day마다 최소 3개 코스 추천
-- 이모지 사용 금지
-- 절대로 중간에 끝내지 말고 요청된 모든 날짜의 일정을 완성
-`;
+      console.log("📋 TourAPI 응답:", data);
+
+      if (
+        data?.response?.body?.items?.item &&
+        data.response.body.items.item.length > 0
+      ) {
+        const festival = data.response.body.items.item[0];
+        console.log("🎪 축제 정보 추출 성공:", festival.title);
+
+        // 좌표 정보 상세 로깅
+        console.log("📍 축제 좌표 정보:", {
+          mapx: festival.mapx,
+          mapy: festival.mapy,
+          title: festival.title,
+        });
+
+        const result = {
+          title: festival.title || "축제 정보",
+          eventstartdate: festival.eventstartdate || "",
+          eventenddate: festival.eventenddate || "",
+          addr1: festival.addr1 || "위치 미정",
+          firstimage:
+            festival.firstimage ||
+            festival.firstimage2 ||
+            "https://picsum.photos/300/400?text=Festival",
+          overview: festival.overview || "축제에 대한 상세 정보입니다.",
+          tel: festival.tel || "",
+          mapx: festival.mapx,
+          mapy: festival.mapy,
+        };
+
+        console.log("🎯 최종 축제 데이터:", result);
+        return result;
+      }
+
+      console.log("ℹ️ 축제 정보 없음 - 기본값 반환");
+      return null;
+    } catch (error) {
+      console.error("❌ TourAPI 호출 실패:", error);
+      return null;
+    }
+  },
+
+  // 주변 관광지 검색
+  async fetchNearbySpots(mapX, mapY) {
+    try {
+      console.log(`🌐 주변 관광지 검색 시작 - 좌표: ${mapX}, ${mapY}`);
+
+      const encodedKey = encodeURIComponent(TOUR_API_KEY);
+      const allSpots = [];
+
+      // 콘텐츠 타입별 검색
+      const contentTypes = ["12", "14", "15", "25", "28", "38", "39"]; // 관광지, 문화시설, 축제, 여행코스, 레포츠, 쇼핑, 음식점
+      const typeNames = [
+        "관광지",
+        "문화시설",
+        "축제공연행사",
+        "여행코스",
+        "레포츠",
+        "쇼핑",
+        "음식점",
+      ];
+
+      for (let i = 0; i < contentTypes.length; i++) {
+        try {
+          const url =
+            `https://apis.data.go.kr/B551011/KorService2/locationBasedList2?` +
+            `serviceKey=${encodedKey}&numOfRows=10&pageNo=1&MobileOS=ETC&MobileApp=festive` +
+            `&_type=json&mapX=${mapX}&mapY=${mapY}&radius=10000&contentTypeId=${contentTypes[i]}&arrange=E`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (
+            data?.response?.body?.items?.item &&
+            data.response.body.items.item.length > 0
+          ) {
+            const spots = Array.isArray(data.response.body.items.item)
+              ? data.response.body.items.item
+              : [data.response.body.items.item];
+
+            spots.forEach((spot) => {
+              spot.categoryName = typeNames[i];
+              allSpots.push(spot);
+            });
+          }
+
+          console.log(`${typeNames[i]} 검색 완료`);
+        } catch (error) {
+          console.error(`${typeNames[i]} 검색 실패:`, error);
+        }
+
+        if (allSpots.length >= 20) break; // 충분한 데이터 수집
+      }
+
+      console.log(`총 주변 관광지: ${allSpots.length}개`);
+      return allSpots;
+    } catch (error) {
+      console.error("❌ 주변 관광지 검색 실패:", error);
+      return [];
+    }
+  },
+};
 
 const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴트입니다.
 
@@ -66,8 +202,21 @@ const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴�
 
 **지역 + 여행기간**을 함께 말씀해주시면 더 정확한 코스를 추천드릴게요!`;
 
-// 서울시청 좌표
-const SEOUL_CITY_HALL = { lat: 37.5666805, lng: 126.9784147 };
+// 두 지점 간의 거리 계산 함수 (Haversine 공식)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371; // 지구의 반지름 (km)
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  return distance;
+};
 
 // 응답 처리 함수
 const processResponse = (response) => {
@@ -87,17 +236,19 @@ const processResponse = (response) => {
       const day = parseInt(match[3]);
 
       if (!isNaN(lat) && !isNaN(lng) && !isNaN(day) && day > 0 && day <= 10) {
+        // @location 이전의 텍스트에서 장소명 찾기
         const beforeLocation = response.substring(0, match.index);
-        const lines = beforeLocation.split("\n");
-        let placeName = `Day ${day} 코스 ${
-          newLocations.filter((loc) => loc.day === day).length + 1
-        }`;
+
+        let placeName = "미지정 장소";
         let timeInfo = "";
 
-        // 개선된 장소명 및 시간 추출 로직
+        // 마지막 몇 줄에서 장소명 찾기
+        const lines = beforeLocation.split("\n");
+
+        // 역순으로 최근 라인부터 검사
         for (
           let i = lines.length - 1;
-          i >= Math.max(0, lines.length - 5);
+          i >= Math.max(0, lines.length - 10);
           i--
         ) {
           const line = lines[i]?.trim() || "";
@@ -105,84 +256,74 @@ const processResponse = (response) => {
           if (
             line &&
             !line.includes("@location") &&
-            !line.includes("위치정보:")
+            !line.includes("위치정보")
           ) {
-            // 패턴 1: "1. **오전 09:00** - 경복궁" 형태 (가장 정확)
-            const timePattern = line.match(
-              /^\d+\.\s*\*\*([^*]+)\*\*\s*[-–]\s*(.+?)$/
-            );
-            if (timePattern) {
-              const timeStr = timePattern[1].trim(); // 시간 정보
-              let extractedName = timePattern[2].trim(); // 장소명
+            console.log(`🔍 검사 중인 라인: "${line}"`);
 
-              // 시간 정보 저장
-              timeInfo = timeStr;
-
-              // 괄호나 기타 설명 제거
-              extractedName = extractedName.replace(/\([^)]*\)/g, "").trim();
-              extractedName = extractedName.replace(/[()@]/g, "").trim();
-
-              // 첫 번째 단어만 사용 (장소명)
-              const firstWord = extractedName.split(/[,\s]+/)[0];
-
-              if (firstWord && firstWord.length > 0 && firstWord.length <= 20) {
-                placeName = firstWord;
-                console.log(
-                  `✅ 장소명 및 시간 추출 성공 (패턴1): "${placeName}" (${timeInfo}) from line: "${line}"`
-                );
-                break;
-              }
+            // 가장 일반적인 패턴: "1. **오전 09:00** - 해운대 해수욕장"
+            let match1 = line.match(/^\d+\.\s*\*\*([^*]+)\*\*\s*[-–]\s*(.+)$/);
+            if (match1) {
+              timeInfo = match1[1].trim();
+              placeName = match1[2].trim();
+              console.log(
+                `✅ 패턴1 매칭: 시간="${timeInfo}", 장소="${placeName}"`
+              );
+              break;
             }
 
-            // 패턴 2: "- 경복궁" 형태
-            const dashPattern = line.match(/^[-–]\s*(.+?)$/);
-            if (dashPattern) {
-              let extractedName = dashPattern[1].trim();
-              extractedName = extractedName.replace(/\([^)]*\)/g, "").trim();
-              extractedName = extractedName.replace(/[()@]/g, "").trim();
-
-              const firstWord = extractedName.split(/[,\s]+/)[0];
-
-              if (firstWord && firstWord.length > 0 && firstWord.length <= 20) {
-                placeName = firstWord;
-                console.log(`✅ 장소명 추출 성공 (패턴2): "${placeName}"`);
-                break;
-              }
+            // 패턴2: "1. 해운대 해수욕장" (시간 없이)
+            let match2 = line.match(/^\d+\.\s*(.+)$/);
+            if (match2) {
+              placeName = match2[1].trim();
+              // **시간** 부분 제거
+              placeName = placeName.replace(/\*\*[^*]+\*\*\s*[-–]?\s*/, "");
+              console.log(`✅ 패턴2 매칭: 장소="${placeName}"`);
+              break;
             }
 
-            // 패턴 3: 전체 라인에서 장소명 찾기
-            const cleanLine = line.replace(/[*\[\]]/g, "").trim();
-            const words = cleanLine.split(/[\s,\-–]+/);
-
-            for (const word of words) {
-              const cleanWord = word.replace(/[()@*]/g, "").trim();
-              if (
-                cleanWord.length >= 2 &&
-                cleanWord.length <= 15 &&
-                !cleanWord.includes("location") &&
-                !cleanWord.includes("day") &&
-                !cleanWord.includes("Day") &&
-                !cleanWord.includes("오전") &&
-                !cleanWord.includes("오후") &&
-                !cleanWord.includes("포인트") &&
-                !cleanWord.match(/^\d+$/) &&
-                !cleanWord.includes(":")
-              ) {
-                placeName = cleanWord;
-                console.log(`✅ 장소명 추출 성공 (패턴3): "${placeName}"`);
-                break;
-              }
+            // 패턴3: "- 해운대 해수욕장"
+            let match3 = line.match(/^[-–]\s*(.+)$/);
+            if (match3) {
+              placeName = match3[1].trim();
+              placeName = placeName.replace(/\*\*[^*]+\*\*\s*[-–]?\s*/, "");
+              console.log(`✅ 패턴3 매칭: 장소="${placeName}"`);
+              break;
             }
 
+            // 패턴4: 아무 기호 없이 장소명만 있는 경우
             if (
-              placeName !==
-              `Day ${day} 코스 ${
-                newLocations.filter((loc) => loc.day === day).length + 1
-              }`
+              line.length > 2 &&
+              line.length < 30 &&
+              !line.includes("Day") &&
+              !line.includes("코스")
             ) {
+              placeName = line;
+              console.log(`✅ 패턴4 매칭: 장소="${placeName}"`);
               break;
             }
           }
+        }
+
+        // 장소명 후처리 - 불필요한 텍스트 제거
+        placeName = placeName.replace(/\s*포인트:.*$/, "").trim();
+        placeName = placeName.replace(/\s*@.*$/, "").trim();
+        placeName = placeName.replace(/\([^)]*\)/g, "").trim(); // 괄호 내용 제거
+
+        // 여전히 추출되지 않았으면 기본값 설정
+        if (placeName === "미지정 장소" || placeName.length < 2) {
+          placeName = `Day ${day} 코스 ${
+            newLocations.filter((loc) => loc.day === day).length + 1
+          }`;
+        }
+
+        // 기본 시간 설정
+        if (!timeInfo) {
+          const courseIndex =
+            newLocations.filter((loc) => loc.day === day).length + 1;
+          if (courseIndex === 1) timeInfo = "오전 09:00";
+          else if (courseIndex === 2) timeInfo = "오후 12:00";
+          else if (courseIndex === 3) timeInfo = "오후 15:00";
+          else timeInfo = `코스 ${courseIndex}`;
         }
 
         newLocations.push({
@@ -190,10 +331,12 @@ const processResponse = (response) => {
           lng,
           name: placeName,
           day: day,
-          time:
-            timeInfo ||
-            `코스 ${newLocations.filter((loc) => loc.day === day).length + 1}`,
+          time: timeInfo,
         });
+
+        console.log(
+          `📍 최종 위치 추가: ${placeName} (Day ${day}, ${timeInfo})`
+        );
       }
     }
 
@@ -206,6 +349,7 @@ const processResponse = (response) => {
     console.error("위치 정보 처리 중 오류:", error);
   }
 
+  console.log("🎯 최종 추출된 위치들:", newLocations);
   return { locations: newLocations, cleanResponse };
 };
 
@@ -246,10 +390,6 @@ const createMarkerContent = (day, index) => {
   `;
 };
 
-// 축제 포스터 이미지 매핑 제거 - TourAPI firstimage 필드 직접 사용
-
-// 모든 TourAPI 로직 제거 - 백엔드에서 처리
-
 // React 컴포넌트
 const AIChatbot = () => {
   const [messages, setMessages] = useState([
@@ -275,7 +415,6 @@ const AIChatbot = () => {
     courses: [],
     transportation: { nearestStation: "", recommendedMode: "" },
   });
-  // currentFestivalData, currentRegion 제거 - 백엔드에서 처리
 
   const mapRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -494,7 +633,7 @@ const AIChatbot = () => {
     }
   }, [messages, currentStreamMessage]);
 
-  // 메시지 전송 처리 (완전 단순화 - 백엔드 전담)
+  // 메시지 전송 처리 (TourAPI 데이터를 백엔드로 전달)
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
@@ -505,12 +644,70 @@ const AIChatbot = () => {
     setCurrentStreamMessage("");
 
     try {
-      console.log("🚀 백엔드로 직접 전송:", userMessage);
+      console.log("🚀 TourAPI 데이터 수집 시작:", userMessage);
 
-      // 백엔드에서 모든 비즈니스 로직 처리 (지역추출 + TourAPI + OpenAI)
-      const response = await aiAPI.generateResponse(userMessage);
+      // 1. 먼저 TourAPI에서 축제 정보 + 주변 관광지 데이터 수집
+      const areaCode = tourAPI.extractAreaCode(userMessage);
+      console.log(`📍 추출된 지역코드: ${areaCode}`);
 
-      console.log("✅ 백엔드 응답 수신:", response);
+      // 축제 정보 가져오기
+      const festivalData = await tourAPI.fetchFestivalData(areaCode);
+
+      let nearbySpots = [];
+
+      // 주변 관광지 검색 (축제 좌표 또는 지역 중심 좌표 사용)
+      let searchMapX, searchMapY;
+
+      if (festivalData && festivalData.mapx && festivalData.mapy) {
+        console.log("🌐 축제 좌표로 주변 관광지 검색");
+        searchMapX = festivalData.mapx;
+        searchMapY = festivalData.mapy;
+      } else {
+        // 축제 좌표가 없으면 지역 중심 좌표 사용
+        console.log("🌐 지역 중심 좌표로 주변 관광지 검색");
+        const regionCoords = {
+          1: { mapx: "126.9784", mapy: "37.5666" }, // 서울
+          2: { mapx: "126.7052", mapy: "37.4563" }, // 인천
+          3: { mapx: "127.3845", mapy: "36.3504" }, // 대전
+          4: { mapx: "128.6014", mapy: "35.8714" }, // 대구
+          5: { mapx: "126.8526", mapy: "35.1595" }, // 광주
+          6: { mapx: "129.0756", mapy: "35.1796" }, // 부산
+          31: { mapx: "127.5179", mapy: "37.2636" }, // 경기
+          32: { mapx: "128.2093", mapy: "37.5554" }, // 강원
+          33: { mapx: "127.7298", mapy: "36.4919" }, // 충북
+          34: { mapx: "126.8000", mapy: "36.5184" }, // 충남
+          35: { mapx: "127.1530", mapy: "35.7175" }, // 전북
+          36: { mapx: "126.4628", mapy: "34.7604" }, // 전남
+          37: { mapx: "128.9056", mapy: "36.4919" }, // 경북
+          38: { mapx: "128.2132", mapy: "35.4606" }, // 경남
+          39: { mapx: "126.5312", mapy: "33.4996" }, // 제주
+        };
+
+        const coords = regionCoords[areaCode] || regionCoords["6"]; // 기본값: 부산
+        searchMapX = coords.mapx;
+        searchMapY = coords.mapy;
+      }
+
+      if (searchMapX && searchMapY) {
+        console.log(`🎯 검색 좌표: ${searchMapX}, ${searchMapY}`);
+        nearbySpots = await tourAPI.fetchNearbySpots(searchMapX, searchMapY);
+      }
+
+      console.log(
+        `🎪 축제 정보: ${festivalData ? festivalData.title : "없음"}`
+      );
+      console.log(`🎯 주변 관광지: ${nearbySpots.length}개`);
+
+      // 2. TourAPI 데이터를 포함해서 백엔드 AI 요청
+      const response = await aiAPI.generateResponse(
+        userMessage,
+        null,
+        [],
+        festivalData,
+        nearbySpots
+      );
+
+      console.log("✅ 백엔드 AI 응답 수신:", response);
 
       const content =
         response.content || "죄송합니다. 응답을 생성할 수 없습니다.";
@@ -546,37 +743,44 @@ const AIChatbot = () => {
         }, 500);
       }
 
-      // 축제 정보 설정 (백엔드에서 제공받은 데이터 사용 - 향후 구현)
-      if (response.mainFestival) {
-        const mainFestival = response.mainFestival;
-        console.log("🎪 백엔드에서 받은 메인축제:", mainFestival);
+      // 백엔드 응답에서 축제 정보 설정 (또는 TourAPI 데이터 사용)
+      const festivalInfo = response.mainFestival || festivalData;
 
-        const festivalImage =
-          mainFestival.firstimage ||
-          mainFestival.image ||
-          "https://picsum.photos/300/400?text=Festival";
+      if (festivalInfo) {
+        console.log(
+          "🎪 축제 정보 설정:",
+          festivalInfo.title || festivalInfo.name
+        );
 
         setTravelInfo({
           festival: {
-            name: mainFestival.title || mainFestival.name || "축제 정보",
-            period: mainFestival.eventstartdate
-              ? `${mainFestival.eventstartdate.replace(
-                  /(\d{4})(\d{2})(\d{2})/,
-                  "$1.$2.$3"
-                )} - ${
-                  mainFestival.eventenddate
-                    ? mainFestival.eventenddate.replace(
-                        /(\d{4})(\d{2})(\d{2})/,
-                        "$1.$2.$3"
-                      )
-                    : "종료일 미정"
-                }`
-              : "기간 미정",
+            name: festivalInfo.title || festivalInfo.name || "축제 정보",
+            period:
+              festivalInfo.period ||
+              (festivalInfo.eventstartdate
+                ? `${festivalInfo.eventstartdate.replace(
+                    /(\d{4})(\d{2})(\d{2})/,
+                    "$1.$2.$3"
+                  )} - ${
+                    festivalInfo.eventenddate
+                      ? festivalInfo.eventenddate.replace(
+                          /(\d{4})(\d{2})(\d{2})/,
+                          "$1.$2.$3"
+                        )
+                      : "종료일 미정"
+                  }`
+                : "기간 미정"),
             location:
-              mainFestival.addr1 || mainFestival.location || "위치 미정",
-            image: festivalImage,
-            overview: mainFestival.overview || "축제에 대한 상세 정보입니다.",
-            tel: mainFestival.tel || "연락처 정보 없음",
+              festivalInfo.location || festivalInfo.addr1 || "위치 미정",
+            image:
+              festivalInfo.image ||
+              festivalInfo.firstimage ||
+              "https://picsum.photos/300/400?text=Festival",
+            overview:
+              festivalInfo.description ||
+              festivalInfo.overview ||
+              "축제에 대한 상세 정보입니다.",
+            tel: festivalInfo.contact || festivalInfo.tel || "연락처 정보 없음",
           },
           courses: finalProcessed.locations.map((loc, index) => {
             return {
@@ -589,10 +793,10 @@ const AIChatbot = () => {
             nearestStation: "대중교통 이용 가능",
             recommendedMode: "지역 내 대중교통 또는 자가용",
           },
+          nearbySpots: nearbySpots,
         });
       } else {
-        // 백엔드에서 축제 정보를 제공하지 않는 경우 기본 정보 설정
-        console.log("ℹ️ 백엔드에서 축제 정보 미제공 - 기본 정보 사용");
+        console.log("ℹ️ 축제 정보 없음 - 기본 정보 사용");
         setTravelInfo({
           festival: {
             name: "AI 추천 여행",
@@ -613,6 +817,7 @@ const AIChatbot = () => {
             nearestStation: "대중교통 이용 가능",
             recommendedMode: "지역 내 대중교통 또는 자가용",
           },
+          nearbySpots: nearbySpots,
         });
       }
     } catch (error) {
@@ -728,6 +933,65 @@ const AIChatbot = () => {
         </p>
       );
     });
+  };
+
+  //Day별 타임라인 렌더링 함수
+  const renderDayTimeline = (day, dayLocations) => {
+    return (
+      <div key={`day-${day}`} style={{ marginBottom: "30px" }}>
+        <h4
+          style={{
+            color: getDayColor(day),
+            borderBottom: `2px solid ${getDayColor(day)}`,
+            paddingBottom: "10px",
+            marginBottom: "15px",
+          }}
+        >
+          Day {day}
+        </h4>
+        {dayLocations.map((location, index) => (
+          <div
+            key={`${day}-${index}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "15px",
+            }}
+          >
+            <div
+              style={{
+                background: getDayColor(day),
+                color: "white",
+                borderRadius: "50%",
+                width: "24px",
+                height: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginRight: "10px",
+                flexShrink: 0,
+              }}
+            >
+              {index + 1}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "14px", fontWeight: "bold" }}>
+                {location.name}
+              </div>
+              {location.time && (
+                <div
+                  style={{ fontSize: "12px", color: "#666", marginTop: "2px" }}
+                >
+                  {location.time}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
