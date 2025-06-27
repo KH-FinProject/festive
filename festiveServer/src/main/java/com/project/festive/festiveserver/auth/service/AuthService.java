@@ -10,9 +10,11 @@ import com.project.festive.festiveserver.member.entity.Member;
 public interface AuthService {
 	Map<String, Object> login(LoginRequest request) throws RuntimeException;
 
-	Member findMemberByEmail(String userEmail);
+	Member findMember(Long memberNo);
 
 	String findRefreshToken(Long memberNo);
+
+	Member findMemberByEmail(String email);
 
 	LocalDateTime findRefreshTokenExpiration(Long memberNo);
 

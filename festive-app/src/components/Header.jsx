@@ -1,23 +1,21 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import mainLogo from "../assets/festiveLogo.png";
-import { useAdminNotification } from "../mcomponents/AdminNotificationContext.jsx";
-import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 import useAuthStore from "../store/useAuthStore";
+import { useAdminNotification } from '../mcomponents/AdminNotificationContext.jsx';
+import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 import "./HeaderFooter.css";
 
-function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const { member } = useAuthStore();
+const Header = () => {
+  const [login, setLogin] = useState(false);
+  const { member, isLoggedIn } = useAuthStore();
   const { hasNewReport } = useAdminNotification();
 
   useEffect(() => {
-    if (member) {
-      setIsLoggedIn(true);
-    } else {
-      setIsLoggedIn(false);
-    }
-  }, [member]);
+    console.log('Header member:', member);
+
+    setLogin(isLoggedIn);
+  }, [isLoggedIn]);
 
   return (
     <header className="header">
@@ -77,13 +75,14 @@ function Header() {
         <div className="headerweather-placeholder">
           <Weather />
         </div>
-        {isLoggedIn ? (
+        {login ? (
           <a href={"/mypage/profile"}>
             <div className="header-user-info">
               <img
-                src={member?.profileImage || "../public/logo.png"}
+                src={member?.profileImage || "/logo.png"}
                 alt="프로필"
                 className="header-user-profile"
+                onError={e => { e.target.src = "/logo.png"; }}
               />
               <span className="header-user-nickname">
                 {member?.nickname || member?.name}
@@ -103,6 +102,6 @@ function Header() {
       </div>
     </header>
   );
-}
+};
 
 export default Header;

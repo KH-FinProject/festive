@@ -9,6 +9,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +40,38 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     
+    @GetMapping("/userInfo")
+    public ResponseEntity<Object> userInfo(@CookieValue("accessToken") String accessToken) {
+        try {
+            // accessToken 유효성 검사 및 정보 추출
+            if (!jwtUtil.isValidToken(accessToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+            }
+
+            Long memberNo = jwtUtil.getMemberNo(accessToken);
+            Member member = authService.findMember(memberNo);
+
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("회원을 찾을 수 없습니다.");
+            }
+
+            // 회원 정보 조회 결과를 필요한 정보만 담은 Map으로 변환
+            Map<String, Object> map = new HashMap<>();
+            map.put("memberNo", member.getMemberNo());
+            map.put("email", member.getEmail());
+            map.put("name", member.getName());
+            map.put("nickname", member.getNickname());
+            map.put("role", member.getRole());
+            map.put("profileImage", member.getProfileImage());
+
+            return ResponseEntity.ok(map);
+
+        } catch (Exception e) {
+            log.error("userInfo 조회 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 정보 조회 중 오류가 발생했습니다.");
+        }
+    }
+
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequest request) {
         // JSON 형식으로 비동기 요청을 하기 때문에, @ModelAttribute가 아닌, @RequestBody 활용
@@ -54,7 +88,6 @@ public class AuthController {
         // 3. 로그인 성공 시
         try {
             // 쿠키로 전달(보안상 절대 Body에 보내면 안됨(XSS 공격에 취약)
-
             ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", (String)result.get("accessToken"))
                     .httpOnly(true)
                     // .secure(true)

@@ -109,13 +109,10 @@ public class AuthServiceImpl implements AuthService {
 	public void logout(Long memberNo) {
 		refreshTokenRepository.deleteById(memberNo); // REFRESH_TOKEN의 ID는(PK) memberNo
 	}
-	
-	@Override
-	public Member findMemberByEmail(String userEmail) {
-		Member member = memberRepository.findByEmail(userEmail)
-				.orElseThrow(() -> new RuntimeException("존재하지 않는 이메일입니다."));
 
-		return member;
+	@Override
+	public Member findMember(Long memberNo) {
+		return memberRepository.findById(memberNo).orElse(null);
 	}
 
 	@Override
@@ -133,6 +130,10 @@ public class AuthServiceImpl implements AuthService {
 	        .orElse(null);
 	}
 
+	@Override
+	public Member findMemberByEmail(String email) {
+		return memberRepository.findByEmail(email).orElse(null);
+	}
 	
 	@Override
 	public int updatePasswordByMemberNo(Long memberNo, String pw) {
@@ -141,7 +142,7 @@ public class AuthServiceImpl implements AuthService {
 		
 		return memberRepository.updatePasswordByMemberNo(memberNo, encPw);
 	}
-	
+
 	/**
 	 * 만료된 리프레시 토큰들을 삭제합니다.
 	 * @return 삭제된 토큰의 개수
