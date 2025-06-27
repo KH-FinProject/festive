@@ -1,25 +1,24 @@
 package com.project.festive.festiveserver.ai.service;
 
-import com.project.festive.festiveserver.ai.dto.ChatRequest;
-import com.project.festive.festiveserver.ai.dto.ChatResponse;
-// TourApiRequest import 제거
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import com.project.festive.festiveserver.ai.dto.ChatRequest;
+import com.project.festive.festiveserver.ai.dto.ChatResponse;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +28,36 @@ public class AITravelServiceImpl implements AITravelService {
     @Value("${openai.api.key:}")
     private String openAiApiKey;
     
-    @Value("${tourapi.service.key}")
-    private String tourapiServiceKey;
+    // AI 어시스턴트 지시사항
+    private static final String ASSISTANT_INSTRUCTIONS = 
+        "한국 여행 전문 AI - 실시간 맞춤 추천\n\n" +
+        "**🎯 핵심 임무:**\n" +
+        "- 모든 질문에 대해 반드시 여행 코스 추천\n" +
+        "- 기본은 당일치기, 사용자가 몇박몇일 명시하면 day별 구분\n" +
+        "- Tour API 데이터와 실제 관광지 정보 우선 활용\n\n" +
+        "**🚨 절대 필수 답변 형식:**\n\n" +
+        "**당일/1일 여행의 경우:**\n" +
+        "[지역 소개] (2줄)\n" +
+        "[추천 코스]\n" +
+        "1. **오전 09:00** - 장소명\n" +
+        "   @location:[37.1234,127.5678] @day:1\n" +
+        "   포인트: 특별한 매력\n\n" +
+        "**몇박몇일 여행의 경우:**\n" +
+        "[지역 소개] (2줄)\n" +
+        "[Day 1 코스]\n" +
+        "1. **오전 09:00** - 장소명\n" +
+        "   @location:[37.1234,127.5678] @day:1\n" +
+        "   포인트: 특별한 매력\n\n" +
+        "[Day 2 코스]\n" +
+        "1. **오전 09:00** - 장소명\n" +
+        "   @location:[37.3456,127.7890] @day:2\n" +
+        "   포인트: 특별한 매력\n\n" +
+        "**절대 규칙:**\n" +
+        "- Day별 헤더 필수: [Day 1 코스], [Day 2 코스] 형식\n" +
+        "- @location:[위도,경도] @day:숫자 형식을 모든 장소에 반드시 포함\n" +
+        "- 각 Day마다 최소 3개 코스 추천\n" +
+        "- 이모지 사용 금지\n" +
+        "- 절대로 중간에 끝내지 말고 요청된 모든 날짜의 일정을 완성";
     
     // 지역코드 매핑 (전국)
     private final Map<String, String> AREA_CODE_MAP = new HashMap<String, String>() {{
@@ -104,7 +131,7 @@ public class AITravelServiceImpl implements AITravelService {
         put("37", "경북"); put("38", "경남"); put("39", "제주");
     }};
 
-    private final WebClient webClient = WebClient.builder().build();
+//    private final WebClient webClient = WebClient.builder().build();
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
@@ -117,24 +144,30 @@ public class AITravelServiceImpl implements AITravelService {
             String regionName = AREA_NAME_MAP.getOrDefault(areaCode, "서울");
             log.info("🗺️ 추출된 지역: {} (코드: {})", regionName, areaCode);
             
-            // 2. TourAPI에서 메인축제 + 근거리 관광지 정보 수집
-            Map<String, Object> tourData = fetchTourData(areaCode);
+            // 2. TourAPI 데이터 포함 프롬프트 생성
+            String enhancedPrompt = createEnhancedPromptWithTourData(
+                request.getMessage(), 
+                regionName, 
+                request.getFestivalData(), 
+                request.getNearbySpots()
+            );
             
-            // 3. OpenAI 프롬프트 생성 (TourAPI 데이터 포함)
-            String enhancedPrompt = createEnhancedPrompt(request.getMessage(), regionName, tourData);
+            // 3. OpenAI API 호출
+            String aiResponse = callOpenAI(enhancedPrompt);
             
-            // 4. OpenAI API 호출
-            String aiResponse = callOpenAIWithTourData(enhancedPrompt);
-            
-            // 5. 위치 정보 추출
+            // 4. 위치 정보 추출
             List<ChatResponse.LocationInfo> locations = extractLocations(aiResponse);
+            
+            // 5. 축제 정보 생성 (프론트엔드 데이터 기반)
+            ChatResponse.FestivalInfo festivalInfo = createFestivalInfoFromRequest(request.getFestivalData());
             
             ChatResponse response = new ChatResponse();
             response.setContent(aiResponse);
             response.setLocations(locations);
-            // FestivalInfo 객체 생성 (임시로 null 설정, 프론트엔드에서 처리)
-            response.setMainFestival(null);
+            response.setMainFestival(festivalInfo);
             response.setStreaming(false);
+            
+            log.info("✅ AI 여행 추천 완료 - 추출된 위치: {}개", locations.size());
             
             return response;
         } catch (Exception e) {
@@ -160,145 +193,11 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * TourAPI 데이터 수집 (메인축제 + 근거리 관광지)
+     * TourAPI 데이터를 포함한 향상된 프롬프트 생성
      */
-    private Map<String, Object> fetchTourData(String areaCode) {
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            // 현재 날짜
-            String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-            
-            // 1. 메인축제 검색
-            String festivalUrl = String.format(
-                "https://apis.data.go.kr/B551011/KorService2/searchFestival2?" +
-                "serviceKey=%s&numOfRows=50&pageNo=1&MobileOS=ETC&MobileApp=festive" +
-                "&eventStartDate=%s&_type=json&arrange=C&areaCode=%s",
-                tourapiServiceKey, today, areaCode
-            );
-            
-            Map<String, Object> mainFestival = fetchMainFestival(festivalUrl);
-            result.put("mainFestival", mainFestival);
-            
-            // 2. 메인축제 좌표로 근거리 관광지 검색
-            if (mainFestival != null && mainFestival.get("mapx") != null && mainFestival.get("mapy") != null) {
-                List<Map<String, Object>> nearbySpots = fetchNearbySpots(
-                    (String) mainFestival.get("mapx"), 
-                    (String) mainFestival.get("mapy")
-                );
-                result.put("nearbySpots", nearbySpots);
-            } else {
-                result.put("nearbySpots", new ArrayList<>());
-            }
-            
-        } catch (Exception e) {
-            log.error("❌ TourAPI 데이터 수집 오류: {}", e.getMessage());
-            result.put("mainFestival", null);
-            result.put("nearbySpots", new ArrayList<>());
-        }
-        
-        return result;
-    }
-    
-    /**
-     * 메인축제 검색 및 랜덤 선택
-     */
-    private Map<String, Object> fetchMainFestival(String url) {
-        try {
-            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
-            Map<String, Object> data = response.getBody();
-            
-            if (data != null && data.containsKey("response")) {
-                Map<String, Object> responseData = (Map<String, Object>) data.get("response");
-                Map<String, Object> body = (Map<String, Object>) responseData.get("body");
-                
-                if (body != null && body.containsKey("items")) {
-                    Map<String, Object> items = (Map<String, Object>) body.get("items");
-                    Object item = items.get("item");
-                    
-                    if (item instanceof List) {
-                        List<Map<String, Object>> festivals = (List<Map<String, Object>>) item;
-                        if (!festivals.isEmpty()) {
-                            // 랜덤 선택
-                            int randomIndex = new Random().nextInt(festivals.size());
-                            Map<String, Object> selectedFestival = festivals.get(randomIndex);
-                            log.info("🎪 선택된 메인축제: {}", selectedFestival.get("title"));
-                            return selectedFestival;
-                        }
-                    } else if (item instanceof Map) {
-                        log.info("🎪 단일 축제: {}", ((Map<String, Object>) item).get("title"));
-                        return (Map<String, Object>) item;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error("❌ 메인축제 검색 오류: {}", e.getMessage());
-        }
-        
-        return null;
-    }
-    
-    /**
-     * 근거리 관광지 검색
-     */
-    private List<Map<String, Object>> fetchNearbySpots(String mapX, String mapY) {
-        List<Map<String, Object>> allSpots = new ArrayList<>();
-        
-        // 콘텐츠 타입별 검색
-        String[] contentTypes = {"12", "14", "15", "25", "28", "38", "39"}; // 관광지, 문화시설, 축제, 여행코스, 레포츠, 쇼핑, 음식점
-        String[] typeNames = {"관광지", "문화시설", "축제공연행사", "여행코스", "레포츠", "쇼핑", "음식점"};
-        
-        for (int i = 0; i < contentTypes.length; i++) {
-            try {
-                String nearbyUrl = String.format(
-                    "https://apis.data.go.kr/B551011/KorService2/locationBasedList2?" +
-                    "serviceKey=%s&numOfRows=10&pageNo=1&MobileOS=ETC&MobileApp=festive" +
-                    "&_type=json&mapX=%s&mapY=%s&radius=100000&contentTypeId=%s&arrange=E",
-                    tourapiServiceKey, mapX, mapY, contentTypes[i]
-                );
-                
-                ResponseEntity<Map> response = restTemplate.getForEntity(nearbyUrl, Map.class);
-                Map<String, Object> data = response.getBody();
-                
-                if (data != null && data.containsKey("response")) {
-                    Map<String, Object> responseData = (Map<String, Object>) data.get("response");
-                    Map<String, Object> body = (Map<String, Object>) responseData.get("body");
-                    
-                    if (body != null && body.containsKey("items")) {
-                        Map<String, Object> items = (Map<String, Object>) body.get("items");
-                        Object item = items.get("item");
-                        
-                        if (item instanceof List) {
-                            List<Map<String, Object>> spots = (List<Map<String, Object>>) item;
-                            for (Map<String, Object> spot : spots) {
-                                spot.put("categoryName", typeNames[i]);
-                                allSpots.add(spot);
-                            }
-                        } else if (item instanceof Map) {
-                            Map<String, Object> spot = (Map<String, Object>) item;
-                            spot.put("categoryName", typeNames[i]);
-                            allSpots.add(spot);
-                        }
-                    }
-                }
-                
-                log.info("🏛️ {} 검색 완료", typeNames[i]);
-                
-            } catch (Exception e) {
-                log.error("❌ {} 검색 오류: {}", typeNames[i], e.getMessage());
-            }
-            
-            if (allSpots.size() >= 30) break; // 충분한 데이터 수집
-        }
-        
-        log.info("🎯 총 근거리 관광지: {}개", allSpots.size());
-        return allSpots;
-    }
-    
-    /**
-     * AI 프롬프트 생성 (TourAPI 데이터 포함)
-     */
-    private String createEnhancedPrompt(String userQuery, String regionName, Map<String, Object> tourData) {
+    private String createEnhancedPromptWithTourData(String userQuery, String regionName, 
+                                                  ChatRequest.FestivalData festivalData, 
+                                                  List<ChatRequest.NearbySpot> nearbySpots) {
         StringBuilder prompt = new StringBuilder();
         
         // 여행 기간 추출
@@ -309,161 +208,309 @@ public class AITravelServiceImpl implements AITravelService {
             duration = matcher.group(1);
         }
         
-        prompt.append("🎯 ").append(regionName).append(" 지역 ").append(duration).append(" 여행코스를 추천드립니다!\n\n");
+        prompt.append(regionName).append(" 지역 ").append(duration).append(" 여행코스를 추천드립니다!\n\n");
         
         // 지역 소개
         prompt.append("[지역 소개]\n");
         prompt.append(regionName).append("은 한국의 아름다운 관광지로 다양한 볼거리와 즐길거리가 가득한 곳입니다.\n");
         
-        // 메인축제 정보
-        Map<String, Object> mainFestival = (Map<String, Object>) tourData.get("mainFestival");
-        if (mainFestival != null) {
+        // 메인축제 정보 (프론트엔드에서 전달받은 실제 TourAPI 데이터)
+        if (festivalData != null && festivalData.getTitle() != null) {
             prompt.append("특히 현재 진행 중인 메인축제가 있어 더욱 특별한 여행을 즐길 수 있습니다.\n\n");
-            prompt.append("**🎪 메인축제 정보:**\n");
-            prompt.append("- 축제명: ").append(mainFestival.get("title")).append("\n");
-            prompt.append("- 위치: ").append(mainFestival.getOrDefault("addr1", "정보 없음")).append("\n");
-            if (mainFestival.get("eventstartdate") != null) {
-                prompt.append("- 기간: ").append(mainFestival.get("eventstartdate"));
-                if (mainFestival.get("eventenddate") != null) {
-                    prompt.append(" ~ ").append(mainFestival.get("eventenddate"));
-                }
-                prompt.append("\n");
+            
+            if (festivalData.getMapx() != null && festivalData.getMapy() != null) {
+                prompt.append("**메인축제:**\n");
+                prompt.append("1. **오전 10:00** - ").append(festivalData.getTitle()).append("\n");
+                prompt.append("   @location:[").append(festivalData.getMapy()).append(",").append(festivalData.getMapx()).append("] @day:1\n");
+                prompt.append("   포인트: 현재 진행 중인 특별한 축제 - ").append(festivalData.getAddr1()).append("\n\n");
             }
-            prompt.append("- 좌표: [").append(mainFestival.get("mapy")).append(",").append(mainFestival.get("mapx")).append("]\n\n");
+            
+            log.info("🎪 축제 정보 포함: {}", festivalData.getTitle());
         }
         
-        // 근거리 관광지 정보
-        List<Map<String, Object>> nearbySpots = (List<Map<String, Object>>) tourData.get("nearbySpots");
+        // 근거리 관광지 정보 (프론트엔드에서 전달받은 실제 TourAPI 데이터)
         if (nearbySpots != null && !nearbySpots.isEmpty()) {
-            prompt.append("**🏛️ 메인축제 근처 추천 관광지 (실제 TourAPI 데이터):**\n");
-            for (int i = 0; i < Math.min(10, nearbySpots.size()); i++) {
-                Map<String, Object> spot = nearbySpots.get(i);
-                prompt.append(i + 1).append(". ").append(spot.get("title")).append("\n");
-                prompt.append("   위치: ").append(spot.getOrDefault("addr1", "정보 없음")).append("\n");
-                prompt.append("   분류: ").append(spot.getOrDefault("categoryName", "관광지")).append("\n");
-                if (spot.get("mapx") != null && spot.get("mapy") != null) {
-                    prompt.append("   좌표: [").append(spot.get("mapy")).append(",").append(spot.get("mapx")).append("]\n");
+            prompt.append("**추천 관광지 (실제 TourAPI 데이터):**\n");
+            int spotIndex = festivalData != null ? 2 : 1; // 축제가 있으면 2번부터 시작
+            int day = 1;
+            
+            for (int i = 0; i < Math.min(8, nearbySpots.size()); i++) {
+                ChatRequest.NearbySpot spot = nearbySpots.get(i);
+                if (spot.getMapx() != null && spot.getMapy() != null && spot.getTitle() != null) {
+                    // 3일 이상 여행이면 Day 구분
+                    if (duration.contains("박") && spotIndex > 3) {
+                        if (spotIndex == 4) day = 2;
+                        else if (spotIndex == 7) day = 3;
+                    }
+                    
+                    prompt.append(spotIndex).append(". **");
+                    
+                    // 시간 설정
+                    if (spotIndex <= 3) prompt.append("오후 ").append(12 + (spotIndex-1)*2).append(":00");
+                    else if (spotIndex <= 6) prompt.append("오전 ").append(9 + (spotIndex-4)*2).append(":00");
+                    else prompt.append("오후 ").append(13 + (spotIndex-7)*2).append(":00");
+                    
+                    prompt.append("** - ").append(spot.getTitle()).append("\n");
+                    prompt.append("   @location:[").append(spot.getMapy()).append(",").append(spot.getMapx()).append("] @day:").append(day).append("\n");
+                    prompt.append("   포인트: ").append(spot.getCategoryName() != null ? spot.getCategoryName() : "관광지").append(" - ");
+                    
+                    String addr = spot.getAddr1();
+                    if (addr != null && addr.length() > 20) {
+                        addr = addr.substring(0, 20) + "...";
+                    }
+                    prompt.append(addr != null ? addr : "위치 정보").append("\n\n");
+                    
+                    spotIndex++;
                 }
-                prompt.append("\n");
             }
+            
+            log.info("🎯 주변 관광지 정보 포함: {}개", nearbySpots.size());
         }
         
-        // AI 지시사항
-        prompt.append("**📋 여행코스 구성 지침:**\n");
-        prompt.append("1. 위의 메인축제를 반드시 첫 번째 코스에 포함해주세요\n");
-        prompt.append("2. 위의 근거리 관광지 목록에서 실제 장소명과 좌표를 사용해주세요\n");
-        prompt.append("3. 각 Day마다 최소 3-5개 코스를 추천해주세요\n");
-        prompt.append("4. 장소 간 거리는 최대 50km 이내로 제한해주세요\n");
-        prompt.append("5. 모든 코스에 @location:[위도,경도] @day:숫자 형식을 포함해주세요\n\n");
+        prompt.append("위 정보를 바탕으로 ").append(duration).append(" 여행코스를 Day별로 구성해서 추천해주세요.\n");
+        prompt.append("각 장소마다 @location:[위도,경도] @day:숫자 형식을 반드시 포함해주세요.");
         
-        // 출력 형식 예시
-        prompt.append("**🔥 출력 형식 (반드시 지켜주세요):**\n\n");
-        prompt.append("[Day 1 코스]\n");
-        if (mainFestival != null) {
-            prompt.append("1. **오전 09:00** - ").append(mainFestival.get("title")).append("\n");
-            prompt.append("   @location:[").append(mainFestival.get("mapy")).append(",").append(mainFestival.get("mapx")).append("] @day:1\n");
-            prompt.append("   포인트: 메인축제 참가\n\n");
-        } else {
-            prompt.append("1. **오전 09:00** - 경복궁\n");
-            prompt.append("   @location:[37.5796,126.9770] @day:1\n");
-            prompt.append("   포인트: 조선왕조 대표 궁궐\n\n");
-        }
-        
-        prompt.append("2. **오후 12:00** - [위 관광지 목록 중 하나]\n");
-        prompt.append("   @location:[실제좌표] @day:1\n");
-        prompt.append("   포인트: 특별한 매력\n\n");
-        
-        prompt.append("3. **오후 15:00** - [위 관광지 목록 중 하나]\n");
-        prompt.append("   @location:[실제좌표] @day:1\n");
-        prompt.append("   포인트: 특별한 매력\n\n");
-        
-        if (duration.contains("2박") || duration.contains("3박")) {
-            prompt.append("[Day 2 코스]\n");
-            prompt.append("1. **오전 09:00** - [위 관광지 목록 중 하나]\n");
-            prompt.append("   @location:[실제좌표] @day:2\n");
-            prompt.append("   포인트: 특별한 매력\n\n");
-        }
-        
-        prompt.append("**⚠️ 중요: 위의 관광지 목록에 있는 실제 장소명과 좌표를 반드시 사용해주세요!**\n\n");
-        prompt.append("사용자 요청: ").append(userQuery).append("\n");
-        prompt.append("위 정보를 바탕으로 ").append(duration).append(" 여행코스를 추천해주세요.");
-        
-        log.info("📝 생성된 프롬프트 길이: {}자", prompt.length());
         return prompt.toString();
     }
     
     /**
-     * OpenAI API 호출 (TourAPI 데이터 포함)
+     * 프론트엔드 데이터로 FestivalInfo 생성
      */
-    private String callOpenAIWithTourData(String prompt) {
+    private ChatResponse.FestivalInfo createFestivalInfoFromRequest(ChatRequest.FestivalData festivalData) {
+        if (festivalData == null || festivalData.getTitle() == null) {
+            return null;
+        }
+        
+        // 기간 정보 조합
+        String period = "";
+        String startDate = festivalData.getEventstartdate();
+        String endDate = festivalData.getEventenddate();
+        if (startDate != null) {
+            period = startDate;
+            if (endDate != null && !endDate.equals(startDate)) {
+                period += " ~ " + endDate;
+            }
+        }
+        
+        ChatResponse.FestivalInfo festivalInfo = new ChatResponse.FestivalInfo(
+            festivalData.getTitle(),
+            period,
+            festivalData.getAddr1(),
+            festivalData.getOverview(),
+            festivalData.getFirstimage(),
+            festivalData.getTel()
+        );
+        
+        return festivalInfo;
+    }
+    
+    private String callOpenAI(String prompt) {
         try {
-            // OpenAI API 키 확인
+            log.info("🤖 OpenAI API 호출 시작");
+            
             if (openAiApiKey == null || openAiApiKey.isEmpty()) {
-                log.warn("OpenAI API 키가 설정되지 않았습니다. 샘플 응답을 반환합니다.");
-                return "죄송합니다. OpenAI API 키가 설정되지 않았습니다.";
+                log.warn("❌ OpenAI API 키가 설정되지 않았습니다.");
+                return "죄송합니다. AI 서비스 설정에 문제가 있습니다.";
             }
             
-            // 요청 헤더 설정
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + openAiApiKey);
             headers.set("Content-Type", "application/json");
             
-            // 요청 바디 구성
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-4o-mini");
             requestBody.put("max_tokens", 1500);
-            requestBody.put("temperature", 0.7);
+            requestBody.put("temperature", 0.5);
             
-            List<Map<String, String>> messages = new ArrayList<>();
+            List<Map<String, Object>> messages = new ArrayList<>();
+            Map<String, Object> systemMessage = new HashMap<>();
+            systemMessage.put("role", "system");
+            systemMessage.put("content", ASSISTANT_INSTRUCTIONS);
+            messages.add(systemMessage);
             
-            messages.add(Map.of("role", "system", "content", 
-                "당신은 한국 여행 전문가입니다. 사용자에게 실용적이고 구체적인 여행코스를 추천해주세요."));
-            
-            messages.add(Map.of("role", "user", "content", prompt));
+            Map<String, Object> userMessage = new HashMap<>();
+            userMessage.put("role", "user");
+            userMessage.put("content", prompt);
+            messages.add(userMessage);
             
             requestBody.put("messages", messages);
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
             
-            // OpenAI API 호출
-            ResponseEntity<Map> response = restTemplate.exchange(
-                "https://api.openai.com/v1/chat/completions", HttpMethod.POST, entity, Map.class);
+            log.info("📤 OpenAI 요청 전송 중...");
+            ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://api.openai.com/v1/chat/completions",
+                entity,
+                Map.class
+            );
             
-            // 응답 파싱
             Map<String, Object> responseBody = response.getBody();
             if (responseBody != null && responseBody.containsKey("choices")) {
                 List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
                 if (!choices.isEmpty()) {
-                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return (String) message.get("content");
+                    Map<String, Object> choice = choices.get(0);
+                    Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                    String content = (String) message.get("content");
+                    
+                    log.info("✅ OpenAI 응답 수신 완료 - 길이: {}", content.length());
+                    return content;
                 }
             }
             
-            throw new RuntimeException("OpenAI API 응답 파싱 실패");
+            log.warn("❌ OpenAI 응답 파싱 실패");
+            return "죄송합니다. AI 응답을 처리할 수 없습니다.";
             
         } catch (Exception e) {
-            log.error("OpenAI API 호출 실패", e);
-            return "죄송합니다. AI 응답 생성 중 오류가 발생했습니다.";
+            log.error("OpenAI API 호출 실패: {}", e.getMessage());
+            return "죄송합니다. AI 서비스에 일시적인 문제가 발생했습니다.";
         }
     }
     
-    // 모든 TourAPI 관련 메서드 제거 - 프론트엔드에서 직접 처리
-    
-    /*
-    @Override
-    public Flux<String> generateTravelRecommendationStream(ChatRequest request) {
-        return Flux.fromIterable(Arrays.asList(
-            "안녕하세요! ",
-            "여행 코스를 ",
-            "추천해드리겠습니다.\n\n",
-            "요청하신 지역의 ",
-            "멋진 축제와 ",
-            "관광지를 ",
-            "소개해드릴게요!"
-        )).delayElements(Duration.ofMillis(100));
+    private List<ChatResponse.LocationInfo> extractLocations(String content) {
+        List<ChatResponse.LocationInfo> locations = new ArrayList<>();
+        
+        // @location:[위도,경도] @day:숫자 패턴을 찾기 위한 정규식
+        Pattern locationPattern = Pattern.compile("@location:\\[([^,]+),([^\\]]+)\\]\\s*@day:(\\d+)");
+        Matcher matcher = locationPattern.matcher(content);
+        
+        while (matcher.find()) {
+            try {
+                double latitude = Double.parseDouble(matcher.group(1).trim());
+                double longitude = Double.parseDouble(matcher.group(2).trim());
+                int day = Integer.parseInt(matcher.group(3).trim());
+                
+                // 해당 위치 이전의 텍스트에서 장소명 추출
+                String beforeLocation = content.substring(0, matcher.start());
+                String placeName = extractPlaceNameFromContext(beforeLocation);
+                
+                if (placeName == null || placeName.isEmpty()) {
+                    placeName = "추천 장소 " + (locations.size() + 1);
+                }
+                
+                locations.add(new ChatResponse.LocationInfo(
+                    placeName,
+                    latitude,
+                    longitude,
+                    day,
+                    "AI 추천 장소입니다."
+                ));
+                
+                log.debug("장소 추출: {} (위도: {}, 경도: {}, Day: {})", placeName, latitude, longitude, day);
+                
+            } catch (NumberFormatException e) {
+                log.warn("위치 정보 파싱 실패: {}", matcher.group());
+            }
+        }
+        
+        log.info("추출된 위치 정보: {}개", locations.size());
+        return locations;
     }
-    */
     
+    /**
+     * 컨텍스트에서 장소명을 추출하는 헬퍼 메서드
+     */
+    private String extractPlaceNameFromContext(String context) {
+        log.info("🔍 장소명 추출 시작 - 컨텍스트 길이: {}", context.length());
+        
+        // 역순으로 줄을 확인하여 가장 가까운 장소명 찾기
+        String[] lines = context.split("\n");
+        
+        for (int i = lines.length - 1; i >= Math.max(0, lines.length - 5); i--) {
+            String line = lines[i].trim();
+            
+            if (line.isEmpty()) continue;
+            
+            log.info("🔎 라인 검사 [{}]: {}", i, line);
+            
+            // 패턴 1: "1. **광안리 해수욕장**" 형태 (번호와 함께)
+            Pattern pattern1 = Pattern.compile("\\d+\\.\\s*\\*\\*([^*]+)\\*\\*");
+            Matcher matcher1 = pattern1.matcher(line);
+            if (matcher1.find()) {
+                String name = matcher1.group(1).trim();
+                log.info("📍 패턴1 발견: {}", name);
+                if (isValidPlaceName(name)) {
+                    log.info("✅ 장소명 추출 성공 (패턴1): {}", name);
+                    return name;
+                }
+            }
+            
+            // 패턴 2: "- **해운대 해수욕장**" 형태
+            Pattern pattern2 = Pattern.compile("-\\s*\\*\\*([^*]+)\\*\\*");
+            Matcher matcher2 = pattern2.matcher(line);
+            if (matcher2.find()) {
+                String name = matcher2.group(1).trim();
+                log.info("📍 패턴2 발견: {}", name);
+                if (isValidPlaceName(name)) {
+                    log.info("✅ 장소명 추출 성공 (패턴2): {}", name);
+                    return name;
+                }
+            }
+            
+            // 패턴 3: "**해운대 해수욕장**" 형태 (단순)
+            Pattern pattern3 = Pattern.compile("\\*\\*([^*]+)\\*\\*");
+            Matcher matcher3 = pattern3.matcher(line);
+            if (matcher3.find()) {
+                String name = matcher3.group(1).trim();
+                log.info("📍 패턴3 발견: {}", name);
+                if (isValidPlaceName(name)) {
+                    log.info("✅ 장소명 추출 성공 (패턴3): {}", name);
+                    return name;
+                }
+            }
+        }
+        
+        log.warn("⚠️ 장소명 추출 실패 - 기본값 사용");
+        return null;
+    }
+    
+    /**
+     * 유효한 장소명인지 확인
+     */
+    private boolean isValidPlaceName(String name) {
+        if (name == null || name.isEmpty()) {
+            log.warn("❌ 장소명이 null 또는 비어있음");
+            return false;
+        }
+        
+        log.info("🔍 장소명 유효성 검사: '{}'", name);
+        
+        // 제외할 패턴들 (더 포괄적)
+        String[] excludePatterns = {
+            "Day", "day", "시간", "코스", "저녁", "오전", "오후", "포인트",
+            "부산에서의", "부산의", "해변과", "문화", "체험", "역사와", "전통을", "느끼다", 
+            "자연과", "힐링", "여행", "추천", "아래와", "같이", "드립니다",
+            "서울에서의", "서울의", "인천에서의", "인천의"
+        };
+        
+        for (String pattern : excludePatterns) {
+            if (name.contains(pattern)) {
+                log.warn("❌ 제외 패턴 포함: '{}' -> '{}'", name, pattern);
+                return false;
+            }
+        }
+        
+        // 시간 형식 제외 (00:00 형태)
+        if (name.matches(".*\\d{1,2}:\\d{2}.*")) {
+            log.warn("❌ 시간 형식 포함: '{}'", name);
+            return false;
+        }
+        
+        // 길이 확인 (2자 이상 30자 이하)
+        if (name.length() < 2 || name.length() > 30) {
+            log.warn("❌ 부적절한 길이: '{}' ({}자)", name, name.length());
+            return false;
+        }
+        
+        // 숫자만으로 구성된 경우 제외
+        if (name.matches("^\\d+$")) {
+            log.warn("❌ 숫자만 포함: '{}'", name);
+            return false;
+        }
+        
+        log.info("✅ 유효한 장소명: '{}'", name);
+        return true;
+    }
+
     @Override
     public ChatResponse.LocationInfo extractLocationInfo(String content) {
         // 위치 정보 추출 로직 (정규식 사용)
@@ -473,159 +520,13 @@ public class AITravelServiceImpl implements AITravelService {
         if (matcher.find()) {
             return new ChatResponse.LocationInfo(
                 "추천 장소",
-                Double.parseDouble(matcher.group(1)),
-                Double.parseDouble(matcher.group(2)),
-                Integer.parseInt(matcher.group(3)),
+                Double.parseDouble(matcher.group(1).trim()),
+                Double.parseDouble(matcher.group(2).trim()),
+                Integer.parseInt(matcher.group(3).trim()),
                 "AI 추천 장소입니다."
             );
         }
         
         return null;
-    }
-    
-    private String callOpenAI(ChatRequest request) {
-        try {
-            // OpenAI API 키 확인
-            if (openAiApiKey == null || openAiApiKey.isEmpty()) {
-                log.warn("OpenAI API 키가 설정되지 않았습니다. 샘플 응답을 반환합니다.");
-                return generateSampleResponse(request);
-            }
-            
-            // 요청 헤더 설정
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + openAiApiKey);
-            headers.set("Content-Type", "application/json");
-            
-            // 요청 바디 구성
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "gpt-4o-mini");
-            requestBody.put("max_tokens", 1500);
-            requestBody.put("temperature", 0.5);
-            
-            List<Map<String, String>> messages = new ArrayList<>();
-            
-            // 랜덤성을 위한 시드 추가
-            long randomSeed = System.currentTimeMillis() % 1000;
-            
-            messages.add(Map.of("role", "system", "content", 
-                "한국 여행 전문 AI - 실시간 맞춤 추천 (시드: " + randomSeed + ")\n\n" +
-                "**🎯 핵심 임무:**\n" +
-                "- 모든 질문에 대해 반드시 여행 코스 추천 (축제, 관광, 여행 등 모든 키워드)\n" +
-                "- 기본은 당일치기 코스이며, 사용자가 몇박몇일을 명시하면 day별 구분\n" +
-                "- 매번 다른 다양한 코스를 추천해야 함 (같은 지역이라도 다른 루트/장소)\n" +
-                "- 축제 정보가 있으면 반드시 포함하여 추천\n\n" +
-                
-                "**🚨 절대 필수 답변 형식 (위치정보 없으면 지도에 표시 안됨!):**\n\n" +
-                
-                "**당일/1일 여행의 경우 (기본):**\n" +
-                "[지역 소개] (2줄)\n" +
-                "[추천 코스]\n" +
-                "1. **오전 09:00** - 장소명\n" +
-                "   @location:[37.1234,127.5678] @day:1\n" +
-                "   포인트: 특별한 매력\n\n" +
-                "2. **오후 12:00** - 장소명\n" +
-                "   @location:[37.2345,127.6789] @day:1\n" +
-                "   포인트: 특별한 매력\n\n" +
-                "3. **오후 15:00** - 장소명\n" +
-                "   @location:[37.3456,127.7890] @day:1\n" +
-                "   포인트: 특별한 매력\n\n" +
-                
-                "**몇박몇일 여행의 경우 (1박2일, 2박3일 등):**\n" +
-                "[지역 소개] (2줄)\n" +
-                "[Day 1 코스]\n" +
-                "1. **오전 09:00** - 경복궁\n" +
-                "   @location:[37.1234,127.5678] @day:1\n" +
-                "   포인트: 조선왕조 대표 궁궐\n\n" +
-                "2. **오후 12:00** - 북촌한옥마을\n" +
-                "   @location:[37.2345,127.6789] @day:1\n" +
-                "   포인트: 전통 한옥 체험\n\n" +
-                "3. **오후 15:00** - 인사동\n" +
-                "   @location:[37.3456,127.7890] @day:1\n" +
-                "   포인트: 전통문화 거리\n\n" +
-                
-                "[Day 2 코스]\n" +
-                "1. **오전 09:00** - 남산타워\n" +
-                "   @location:[37.4567,127.8901] @day:2\n" +
-                "   포인트: 서울 전망 명소\n\n" +
-                "2. **오후 12:00** - 명동쇼핑가\n" +
-                "   @location:[37.5678,127.9012] @day:2\n" +
-                "   포인트: 쇼핑과 맛집\n\n" +
-                "3. **오후 15:00** - 청계천\n" +
-                "   @location:[37.6789,127.0123] @day:2\n" +
-                "   포인트: 도심 속 휴식공간\n\n" +
-                
-                "[Day 3 코스] (2박3일의 경우)\n" +
-                "1. **오전 09:00** - 한강공원\n" +
-                "   @location:[37.7890,127.1234] @day:3\n" +
-                "   포인트: 자연과 휴식\n\n" +
-                
-                "**🚨🚨🚨 절대 규칙 (반드시 지켜야 함!):**\n" +
-                "- 어떤 질문이든 반드시 여행 코스를 추천해야 함\n" +
-                "- **Day별 섹션 헤더 필수: [Day 1 코스], [Day 2 코스] 형식으로 명확히 구분**\n" +
-                "- **2박3일이면 Day 1, Day 2, Day 3 모든 일정을 완성해야 함**\n" +
-                "- **1박2일이면 Day 1, Day 2 모든 일정을 완성해야 함**\n" +
-                "- @location:[위도,경도] @day:숫자 형식을 모든 장소에 반드시 포함\n" +
-                "- 위도, 경도는 실제 소수점 숫자여야 함 (예: 37.5665, 126.9780)\n" +
-                "- Day별로 구분하여 각 Day마다 최소 3개 코스 추천\n" +
-                "- 위치정보가 없으면 지도에 마커가 표시되지 않음\n" +
-                "- 이모지 사용 금지\n" +
-                "- 반드시 구체적인 여행 코스 제공\n" +
-                "- **절대로 중간에 끝내지 말고 요청된 모든 날짜의 일정을 완성하세요**\n" +
-                "- **Day별 헤더 예시: [Day 1 코스], [Day 2 코스], [Day 3 코스] - 이 형식 반드시 지켜주세요!**\n" +
-                "- **매번 다른 다양한 장소를 추천하세요 (같은 지역이라도 다른 루트)**\n" +
-                "- **각 장소 간 거리는 최대 50km 이내로 제한**"));
-            
-            messages.add(Map.of("role", "user", "content", request.getMessage()));
-            
-            requestBody.put("messages", messages);
-            
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
-            
-            // OpenAI API 호출
-            ResponseEntity<Map> response = restTemplate.exchange(
-                "https://api.openai.com/v1/chat/completions", HttpMethod.POST, entity, Map.class);
-            
-            // 응답 파싱
-            Map<String, Object> responseBody = response.getBody();
-            if (responseBody != null && responseBody.containsKey("choices")) {
-                List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
-                if (!choices.isEmpty()) {
-                    Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-                    return (String) message.get("content");
-                }
-            }
-            
-            throw new RuntimeException("OpenAI API 응답 파싱 실패");
-            
-        } catch (Exception e) {
-            log.error("OpenAI API 호출 실패", e);
-            return generateSampleResponse(request);
-        }
-    }
-    
-    private String generateSampleResponse(ChatRequest request) {
-        String region = request.getRegion() != null ? request.getRegion() : "요청하신";
-        return "안녕하세요! " + region + " 지역의 멋진 축제 여행 코스를 추천해드리겠습니다.\n\n" +
-                "🎪 추천 코스:\n\n" +
-                "**1일차**\n" +
-                "- 오전: 지역 대표 축제 참가\n" +
-                "- 오후: 전통 체험 활동\n" +
-                "- 저녁: 지역 특산물 맛보기\n\n" +
-                "**2일차**\n" +
-                "- 오전: 문화유적지 관람\n" +
-                "- 오후: 자연 명소 탐방\n" +
-                "- 저녁: 축제 공연 관람\n\n" +
-                "즐거운 여행 되세요! 🎉";
-    }
-    
-    private List<ChatResponse.LocationInfo> extractLocations(String content) {
-        List<ChatResponse.LocationInfo> locations = new ArrayList<>();
-        
-        // 샘플 위치 정보 (실제로는 AI 응답에서 추출)
-        locations.add(new ChatResponse.LocationInfo(
-            "축제 메인 회장", 37.5665, 126.9780, 1, "주요 축제가 열리는 곳"
-        ));
-        
-        return locations;
     }
 } 

@@ -9,20 +9,27 @@ export function useAdminNotification() {
 export function AdminNotificationProvider({ children }) {
   const [hasNewReport, setHasNewReport] = useState(false);
 
+  console.log("새로운 방식 AdminNotificationProvider 렌더링!");
+
   useEffect(() => {
-    // 전통적인 WebSocket 사용 (SockJS 없이)
+    console.log("새로운 방식 useEffect 실행!");
+
+    // 네이티브 WebSocket 사용 (SockJS 없이)
     let ws = null;
 
     const connectWebSocket = () => {
       try {
-        console.log("WebSocket 연결 시도: ws://localhost:8080/ws/websocket");
+        console.log(
+          "네이티브 WebSocket 연결 시도: ws://localhost:8080/ws/websocket"
+        );
 
+        // 직접 WebSocket 연결 (SockJS 우회)
         ws = new WebSocket("ws://localhost:8080/ws/websocket");
 
         ws.onopen = function (event) {
-          console.log("WebSocket 연결 성공!", event);
+          console.log("네이티브 WebSocket 연결 성공!", event);
 
-          // STOMP CONNECT 프레임 전송
+          // STOMP CONNECT 프레임 수동 전송
           const connectFrame = "CONNECT\naccept-version:1.0,1.1,2.0\n\n\x00";
           ws.send(connectFrame);
         };
@@ -40,6 +47,7 @@ export function AdminNotificationProvider({ children }) {
             console.log("/topic/admin-alerts 구독 요청 전송");
           } else if (event.data.includes("/topic/admin-alerts")) {
             console.log("관리자 알림 메시지 받음!");
+            // 신고 또는 문의글 알림 모두 처리
             setHasNewReport(true);
           }
         };
@@ -67,7 +75,7 @@ export function AdminNotificationProvider({ children }) {
 
     // 클린업
     return () => {
-      console.log("WebSocket 정리 중...");
+      console.log("🧹 WebSocket 정리 중...");
       if (ws) {
         ws.close();
       }

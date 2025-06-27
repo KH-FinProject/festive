@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { axiosApi } from "../api/axiosAPI";
+import axiosAPI from "../api/axiosAPI";
 import "./AdminCreateAccount.css";
 import "./AdminCommon.css";
 import AdminSidebar from "./AdminSideBar";
@@ -31,7 +31,7 @@ const AdminCreateAccount = () => {
     }
 
     try {
-      const response = await axiosApi.post("/admin/create", {
+      const response = await axiosAPI.post("/admin/create", {
         email: email,
         name: name
       });

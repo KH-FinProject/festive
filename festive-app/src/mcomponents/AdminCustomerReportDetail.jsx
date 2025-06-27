@@ -26,6 +26,7 @@ const AdminCustomerReportDetail = () => {
       );
       if (!response.ok) throw new Error("상세 조회 실패");
       const data = await response.json();
+      console.log("신고 상세 데이터 detail:", data);
       setDetail(data);
     } catch {
       setError("상세 정보를 불러오지 못했습니다.");
@@ -128,8 +129,22 @@ const AdminCustomerReportDetail = () => {
   };
 
   if (loading) return <div className="admin-main">로딩 중...</div>;
-  if (error) return <div className="admin-main">{error}</div>;
-  if (!detail) return <div className="admin-main">상세 정보 없음</div>;
+  if (error)
+    return (
+      <div className="admin-main">
+        {error}
+        <br />
+        데이터: {detail && JSON.stringify(detail)}
+      </div>
+    );
+  if (!detail)
+    return (
+      <div className="admin-main">
+        상세 정보 없음
+        <br />
+        데이터: {JSON.stringify(detail)}
+      </div>
+    );
 
   // 디버깅: 실제 신고상태 값과 타입 확인
   console.log("신고상태:", detail.reportStatus, typeof detail.reportStatus);

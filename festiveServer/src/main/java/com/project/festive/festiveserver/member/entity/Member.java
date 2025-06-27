@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 /*
  * @Entity 
@@ -29,6 +30,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "MEMBER")
+@ToString
 @Getter
 @Setter
 @Builder
@@ -62,10 +64,16 @@ public class Member {
 	@Column(name = "PASSWORD", nullable = true) // OAuth2 사용자의 경우 비밀번호가 없을 수 있음
 	private String password; // 암호화된 비밀번호 저장
 
+	@Column(name = "TEL", nullable = true)
+	private String tel;
+
+	@Column(name = "ADDRESS", nullable = true)
+	private String address;
+
 	@Column(name = "PROFILE_IMAGE", nullable = true)
 	private String profileImage;
 
-	@Column(name = "SOCIAL_ID", nullable = false) 
+	@Column(name = "SOCIAL_ID", nullable = true) 
 	private String socialId;
 
 	@Column(name = "ROLE", nullable = false)

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.festive.festiveserver.report.model.dto.Report;
+import com.project.festive.festiveserver.report.model.dto.ReportAlert;
 import com.project.festive.festiveserver.report.model.service.ReportService;
 
 @RestController
@@ -75,13 +76,6 @@ public class ReportController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
         }
-    }
-
-    // 웹소켓 메시지 처리 (테스트용)
-//    @MessageMapping("/report")
-//    @SendTo("/topic/alerts")
-    public ReportAlert sendReportAlert(ReportAlert report) {
-        return new ReportAlert("신고가 접수되었습니다", report.getReportType(), report.getMemberNo());
     }
 
     // 신고 상세 조회 (확장: 게시글/댓글/신고내역 모두 반환)

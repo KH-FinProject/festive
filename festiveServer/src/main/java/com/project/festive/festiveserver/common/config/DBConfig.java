@@ -5,18 +5,21 @@ import javax.sql.DataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,13 +36,6 @@ public class DBConfig {
   public HikariConfig hikariConfig() {
     return new HikariConfig();
   }
-  @Bean
-  public DataSource dataSource(HikariConfig hikariConfig) {
-    DataSource dataSource = new HikariDataSource(hikariConfig);
-    return dataSource;
-  }
-  
-  // 하드코딩된 dataSource Bean 삭제됨 (이 부분이 문제였음)
 
   @Bean
   public SqlSessionFactory sessionFactory(DataSource dataSource) throws Exception{

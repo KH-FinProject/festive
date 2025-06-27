@@ -1,14 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './MyPageEditProfile.css';
 import './MyPageWithdrawal.css';
 import MyPageSideBar from "./MyPageSideBar.jsx";
+import axios from 'axios';
 
 const MyPageEditProfile = () => {
     const [showModal, setShowModal] = useState(false);
     const [profileData, setProfileData] = useState({
         name: '',
-        password: ''
+        password: '',
+        nickname: ''
     });
+    const [name, setName] = useState("");
+
+    useEffect(() => {
+        axios.get(`/mypage/profile`)
+            .then((res) => {
+                setName(res.data.name);
+                setProfileData((prev) => ({
+                    ...prev,
+                    nickname: res.data.nickname // 닉네임 input에 들어갈 값
+                }));
+            })
+            .catch((err) => {
+                console.error("회원 정보 조회 실패", err);
+            });
+    }, []);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -20,11 +37,8 @@ const MyPageEditProfile = () => {
 
     return (
         <div className="page-container">
-
             <main className="main-content">
-                <MyPageSideBar />
-
-                {/* Main Profile Section */}
+                <MyPageSideBar name={name} />
                 <section className="profile-main">
                     <div className="profile-header">
                         <h1>프로필 수정</h1>
@@ -47,11 +61,12 @@ const MyPageEditProfile = () => {
                                 <div className="mypage-input-group">
                                     <input
                                         type="text"
-                                        name="name"
-                                        value={profileData.name}
+                                        name="nickname"
+                                        value={profileData.nickname}
                                         onChange={handleInputChange}
                                         placeholder="닉네임을 입력하세요"
                                     />
+
                                     <button className="check-btn">중복 확인</button>
                                 </div>
                             </div>

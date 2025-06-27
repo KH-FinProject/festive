@@ -52,6 +52,7 @@ public class AdminController {
 			return ResponseEntity.status(HttpStatus.CREATED).body(accountPw);
 			
 		} catch (Exception e) {
+			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR) // 500
 					.body("관리자 계정 생성 중 문제 발생(서버 문의 바람)");
 		}
