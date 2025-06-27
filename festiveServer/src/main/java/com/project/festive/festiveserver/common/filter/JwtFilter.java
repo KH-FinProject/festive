@@ -49,6 +49,14 @@ public class JwtFilter extends OncePerRequestFilter {
       Cookie cookie = WebUtils.getCookie(request, "accessToken");
       String accessToken = cookie != null ? cookie.getValue() : null;
 
+      // Authorization 헤더에서 accessToken 추출 (쿠키가 없을 때)
+      if (accessToken == null) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+          accessToken = authHeader.substring(7);
+        }
+      }
+
       // authorization 헤더 검증
       if (accessToken == null) {
         log.info("accessToken 쿠키 존재하지 않음: {} {}", method, requestURI);

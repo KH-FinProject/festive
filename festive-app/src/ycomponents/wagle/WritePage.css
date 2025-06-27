@@ -96,6 +96,19 @@
   color: #222;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.wagle-write-input-title:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
+}
+
+.wagle-write-input-title:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
 }
 
 .wagle-write-btns {
@@ -117,8 +130,14 @@
   transition: background 0.2s;
 }
 
-.wagle-write-cancel:hover {
+.wagle-write-cancel:hover:not(:disabled) {
   background: #cccccc;
+}
+
+.wagle-write-cancel:disabled {
+  background: #f0f0f0;
+  color: #ccc;
+  cursor: not-allowed;
 }
 
 .wagle-write-submit {
@@ -131,10 +150,17 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
+  position: relative;
 }
 
-.wagle-write-submit:hover {
+.wagle-write-submit:hover:not(:disabled) {
   background: #4a86e8;
+}
+
+.wagle-write-submit:disabled {
+  background: #a0c4ff;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* Toast UI Editor 커스텀 최소화 */
@@ -145,4 +171,33 @@
   width: 100%;
   max-width: 1150px;
   margin: 0 auto;
+}
+
+.wagle-write-form .toastui-editor-defaultUI.toastui-editor-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 로딩 상태 스타일 */
+.wagle-write-submit:disabled::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
