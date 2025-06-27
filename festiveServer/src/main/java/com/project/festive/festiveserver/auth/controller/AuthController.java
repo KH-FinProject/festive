@@ -41,8 +41,25 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     
     @GetMapping("/userInfo")
-    public ResponseEntity<Object> userInfo(@CookieValue("accessToken") String accessToken) {
+    public ResponseEntity<Object> userInfo(HttpServletRequest request) {
         try {
+            // 쿠키에서 accessToken 추출
+            Cookie cookie = WebUtils.getCookie(request, "accessToken");
+            String accessToken = cookie != null ? cookie.getValue() : null;
+            
+            // Authorization 헤더에서 Bearer 토큰 추출
+            if (accessToken == null) {
+                String authHeader = request.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    accessToken = authHeader.substring(7);
+                }
+            }
+            
+            // accessToken이 없는 경우
+            if (accessToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+            }
+            
             // accessToken 유효성 검사 및 정보 추출
             if (!jwtUtil.isValidToken(accessToken)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");

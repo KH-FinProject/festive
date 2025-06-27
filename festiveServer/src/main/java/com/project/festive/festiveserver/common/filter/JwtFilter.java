@@ -41,56 +41,44 @@ public class JwtFilter extends OncePerRequestFilter {
     log.info("JWT Filter 시작: {} {}", method, requestURI);
     
     try {
-      // 쿠키에서 토큰 추출
+      // accessToken 추출 (쿠키 우선, 없으면 Authorization 헤더)
       Cookie cookie = WebUtils.getCookie(request, "accessToken");
       String accessToken = cookie != null ? cookie.getValue() : null;
 
-      // authorization 헤더 검증
+      // Authorization 헤더에서 Bearer 토큰 추출
       if (accessToken == null) {
-        log.info("accessToken 쿠키 존재하지 않음: {} {}", method, requestURI);
-        filterChain.doFilter(request, response);
-        return;
+          String authHeader = request.getHeader("Authorization");
+          if (authHeader != null && authHeader.startsWith("Bearer ")) {
+              accessToken = authHeader.substring(7);
+          }
       }
 
-      if (!jwtUtil.isValidToken(accessToken)) {
-        log.info("토큰이 유효하지 않음 - Refresh Token 확인: {} {}", method, requestURI);
-        
-        // Refresh Token 확인
-        Cookie refreshCookie = WebUtils.getCookie(request, "refreshToken");
-        String refreshToken = refreshCookie != null ? refreshCookie.getValue() : null;
-        
-        if (refreshToken != null && jwtUtil.isValidToken(refreshToken)) {
-          log.info("Refresh Token으로 새로운 Access Token 생성: {} {}", method, requestURI);
+      // accessToken이 없는 경우
+      if (accessToken == null) {
+          log.info("accessToken 쿠키/헤더 모두 존재하지 않음: {} {}", method, requestURI);
           
-          // Refresh Token에서 정보 추출
-          Long memberNo = jwtUtil.getMemberNo(refreshToken);
-          String email = jwtUtil.getEmail(refreshToken);
-          String role = jwtUtil.getClaims(refreshToken).get("role", String.class);
-          
-          // 새로운 Access Token 생성
-          String newAccessToken = jwtUtil.generateAccessToken(memberNo, email, role);
-          
-          // 새로운 Access Token을 쿠키에 설정
-          ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
-              .httpOnly(true)
-              .secure(true)
-              .sameSite("Strict")
-              .maxAge(Duration.ofMinutes(30)) // 30분
-              .path("/")
-              .build();
-          
-          response.addHeader(HttpHeaders.SET_COOKIE, newAccessTokenCookie.toString());
+          // permitAll 경로는 통과, 나머지는 401 오류
+          if (shouldNotFilter(request)) {
+              filterChain.doFilter(request, response);
+              return;
+          } else {
+              response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+              return;
+          }
+      }
 
-          createAuthenticationToken(memberNo, email, role);
+      // accessToken이 있지만 유효하지 않은 경우
+      if (!jwtUtil.isValidToken(accessToken)) {
+          log.warn("유효하지 않은 accessToken: {} {}", method, requestURI);
           
-          filterChain.doFilter(request, response);
-          return;
-          
-        } else {
-          log.warn("Refresh Token도 유효하지 않음: {} {}", method, requestURI);
-          filterChain.doFilter(request, response);
-          return;
-        }
+          // permitAll 경로는 통과, 나머지는 401 오류 (클라이언트에서 /auth/refresh 호출하도록)
+          if (shouldNotFilter(request)) {
+              filterChain.doFilter(request, response);
+              return;
+          } else {
+              response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+              return;
+          }
       }
       
       // 토큰이 유효한 경우 - Spring Security 인증 토큰 생성
@@ -114,29 +102,48 @@ public class JwtFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
     String path = request.getRequestURI();
+    String method = request.getMethod();
     
-    // 정적 리소스 및 특정 경로 제외
-    return path.contains("/favicon.ico") ||
-           path.contains("/static/") ||
-           path.contains("/css/") ||
-           path.startsWith("/admin/") || // 나중에 로그인 다 구현되면 빼기
-           path.startsWith("/member/") ||
-           path.contains("/js/") ||
-           path.contains("/images/") ||
-           path.contains("/assets/") ||
-           path.contains("/error") ||
-           path.contains("/actuator/") ||
-           path.startsWith("/auth/") || // 인증 관련 경로 제외
-           path.startsWith("/oauth2/") || // OAuth2 관련 경로 제외
-           path.startsWith("/ws") || // 웹소켓 연결 시 토큰 검증 제외
-           path.endsWith(".ico") ||
-           path.endsWith(".css") ||
-           path.endsWith(".js") ||
-           path.endsWith(".png") ||
-           path.endsWith(".jpg") ||
-           path.endsWith(".jpeg") ||
-           path.endsWith(".gif") ||
-           path.endsWith(".svg");
+    // 인증/회원 관련
+    if (path.startsWith("/auth/") || path.startsWith("/oauth2/") || path.startsWith("/member/")) {
+      return true;
+    }
+    
+    // API 경로들 (읽기 전용)
+    if (path.startsWith("/api/wagle/boards/") && (path.endsWith("/comments") || method.equals("GET"))) {
+      return true;
+    }
+    if (path.startsWith("/api/customer/boards/") && method.equals("GET")) {
+      return true;
+    }
+    if (path.startsWith("/api/ai/chat") || path.startsWith("/api/ai/health")) {
+      return true;
+    }
+    if (path.startsWith("/api/reports/")) {
+      return true;
+    }
+    
+    // 정적 리소스
+    if (path.startsWith("/favicon.ico") || path.startsWith("/static/") || 
+        path.startsWith("/css/") || path.startsWith("/js/") || 
+        path.startsWith("/images/") || path.startsWith("/assets/")) {
+      return true;
+    }
+    
+    // 정적 파일 확장자
+    if (path.endsWith(".ico") || path.endsWith(".css") || path.endsWith(".js") || 
+        path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || 
+        path.endsWith(".gif") || path.endsWith(".svg")) {
+      return true;
+    }
+    
+    // 시스템 경로
+    if (path.contains("/error") || path.startsWith("/actuator/") || 
+        path.startsWith("/.well-known/") || path.startsWith("/ws")) {
+      return true;
+    }
+    
+    return false;
   }
   
   /**

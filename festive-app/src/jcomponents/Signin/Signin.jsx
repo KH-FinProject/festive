@@ -43,9 +43,9 @@ const LoginForm = () => {
       });
       const data = response.data;
       
-      if (data && data.loginResponse) {
+      if (data) {
         const { login } = useAuthStore.getState();
-        login(data.loginResponse);
+        login(data);
 
         alert("로그인 성공!")
         navigate("/");

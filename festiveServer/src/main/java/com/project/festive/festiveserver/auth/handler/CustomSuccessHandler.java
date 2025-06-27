@@ -65,7 +65,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
           // .secure(true)
           // .sameSite("Strict")
           .maxAge(Duration.ofDays(7)) // 7일
-          .path("/")
+          .path("/auth/refresh") // refresh 엔드포인트에서만 사용 (보안 강화)
           .build();
 
       response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());

@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
@@ -63,15 +64,40 @@ public class SecurityConfig {
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
-        .anyRequest().permitAll())
-        // .requestMatchers("/auth/**").permitAll() // 인증 관련 경로 허용
-        // .requestMatchers("/oauth2/**").permitAll() // OAuth2 관련 경로 허용
-        // .requestMatchers("/member/**").permitAll() // 회원가입 등 허용
-        // .requestMatchers("/error").permitAll() // 에러 페이지 허용
-        // .requestMatchers("/favicon.ico").permitAll() // 파비콘 허용
-        // .requestMatchers("/myPage/**").authenticated() // 인증된 사용자만 접근
-        // .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
-        // .anyRequest().authenticated())
+            // 인증/회원/로그인 관련
+            .requestMatchers("/auth/**", "/oauth2/**", "/member/**").permitAll()
+
+            // 와글 게시판 - 조회만 공개, 나머지는 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/wagle/boards/**", "/api/wagle/boards/*/comments").permitAll()
+            .requestMatchers("/api/wagle/**").authenticated()
+
+            // 고객센터 - 조회만 공개, 나머지는 인증 필요, 관리자 API는 별도 지정
+            .requestMatchers(HttpMethod.GET, "/api/customer/boards/**", "/api/customer/boards/*/comments").permitAll()
+            .requestMatchers("/api/customer/boards/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/customer/boards/*/comments").hasRole("ADMIN")
+            .requestMatchers("/api/customer/statistics", "/api/customer/unanswered", "/api/customer/boards/*/status").hasRole("ADMIN")
+
+            // AI 서비스 - 공개
+            .requestMatchers("/api/ai/chat", "/api/ai/health").permitAll()
+
+            // 신고 - 등록/상세만 공개, 나머지는 관리자
+            .requestMatchers(HttpMethod.POST, "/api/reports").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/reports/*", "/api/reports/*/detail").permitAll()
+            .requestMatchers("/api/reports/**").hasRole("ADMIN")
+
+            // 마이페이지 - 인증 필요
+            .requestMatchers("/mypage/**").authenticated()
+
+            // 관리자 페이지
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+
+            // 정적 리소스/시스템 경로
+            .requestMatchers("/favicon.ico", "/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
+            .requestMatchers("/*.ico", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg").permitAll()
+            .requestMatchers("/error", "/actuator/**", "/.well-known/**", "/ws/**").permitAll()
+
+            // 그 외 모든 요청은 인증 필요
+            .anyRequest().authenticated())
         
         //세션 설정 : STATELESS
         .sessionManagement(session -> session
