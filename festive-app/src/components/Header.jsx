@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
-import mainLogo from "../assets/festiveLogo.png";
-import searchbtn from "../assets/searchbtn.png";
-import "./HeaderFooter.css";
 import { Link } from "react-router-dom";
+import mainLogo from "../assets/festiveLogo.png";
+import { useAdminNotification } from "../mcomponents/AdminNotificationContext.jsx";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 import useAuthStore from "../store/useAuthStore";
+import "./HeaderFooter.css";
 
 function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { member } = useAuthStore();
+  const { hasNewReport } = useAdminNotification();
 
   useEffect(() => {
     if (member) {
@@ -33,7 +34,7 @@ function Header() {
           { name: "지역별 축제", path: "/festival/local" },
           { name: "와글와글", path: "/wagle" },
           { name: "AI 여행코스 추천", path: "/ai-travel" },
-          { name: "고객센터", path: "#" },
+          { name: "고객센터", path: "/customer-center" },
           { name: "부스참가신청", path: "/booth" },
           ...(member?.role === "ADMIN" ? [{ name: "관리자", path: "/admin" }] : []),
         ].map((item) =>
@@ -44,6 +45,25 @@ function Header() {
               className="headernav-link hover-grow"
             >
               {item.name}
+              {item.name === "관리자" && hasNewReport && (
+                <span
+                  style={{
+                    background: "#ff4757",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                    padding: "1px 6px",
+                    marginLeft: "6px",
+                    verticalAlign: "middle",
+                    position: "relative",
+                    top: "-7px",
+                    animation: "popIn 0.3s",
+                  }}
+                >
+                  new!
+                </span>
+              )}
             </Link>
           ) : (
             <a key={item.name} href="#" className="headernav-link hover-grow">
@@ -53,12 +73,6 @@ function Header() {
         )}
       </nav>
       <div className="headerheader-right">
-        <input
-          type="text"
-          className="headersearch-input"
-          placeholder="검색어를 입력해 주세요."
-        />
-        <img src={searchbtn} className="headersearch-btn" />
         <div className="headerweather-placeholder">
           <Weather />
         </div>

@@ -5,6 +5,7 @@ import javax.sql.DataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,22 @@ public class DBConfig {
   @ConfigurationProperties(prefix = "spring.datasource.hikari")
   public HikariConfig hikariConfig() {
     return new HikariConfig();
+  }
+  
+  @Bean
+  public DataSource dataSource(
+      @Value("${spring.datasource.driver-class-name}") String driverClassName,
+      @Value("${spring.datasource.url}") String jdbcUrl,
+      @Value("${spring.datasource.username}") String username,
+      @Value("${spring.datasource.password}") String password) {
+    
+    HikariConfig config = hikariConfig();
+    config.setDriverClassName(driverClassName);
+    config.setJdbcUrl(jdbcUrl);
+    config.setUsername(username);
+    config.setPassword(password);
+    
+    return new HikariDataSource(config);
   }
 
   @Bean

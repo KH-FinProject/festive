@@ -36,6 +36,11 @@ public class JwtFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
+    String path = ((HttpServletRequest) request).getRequestURI();
+    if (path.startsWith("/ws")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
     
     log.info("JWT Filter 시작: {} {}", method, requestURI);
     

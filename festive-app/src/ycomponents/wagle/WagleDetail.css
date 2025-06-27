@@ -328,6 +328,18 @@
 .wagle-detail-bottom-list {
   margin-top: 48px;
 }
+
+.wagle-detail-bottom-title {
+  margin-bottom: 20px;
+}
+
+.wagle-detail-bottom-title h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
 .wagle-detail-sub-title {
   font-size: 14px;
   color: #999999;
