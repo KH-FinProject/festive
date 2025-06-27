@@ -77,13 +77,6 @@ public class ReportController {
         }
     }
 
-    // 웹소켓 메시지 처리 (테스트용)
-//    @MessageMapping("/report")
-//    @SendTo("/topic/alerts")
-    public ReportAlert sendReportAlert(ReportAlert report) {
-        return new ReportAlert("신고가 접수되었습니다", report.getReportType(), report.getMemberNo());
-    }
-
     // 신고 상세 조회 (확장: 게시글/댓글/신고내역 모두 반환)
     @GetMapping("/{reportNo}/detail")
     public ResponseEntity<?> getReportDetailResponse(@PathVariable("reportNo") int reportNo) {

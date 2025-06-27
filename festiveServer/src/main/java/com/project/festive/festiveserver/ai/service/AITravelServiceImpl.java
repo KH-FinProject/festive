@@ -1,10 +1,15 @@
 package com.project.festive.festiveserver.ai.service;
 
-import com.project.festive.festiveserver.ai.dto.ChatRequest;
-import com.project.festive.festiveserver.ai.dto.ChatResponse;
-// TourApiRequest import 제거
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,14 +17,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import com.project.festive.festiveserver.ai.dto.ChatRequest;
+import com.project.festive.festiveserver.ai.dto.ChatResponse;
+
+// TourApiRequest import 제거
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -104,7 +108,7 @@ public class AITravelServiceImpl implements AITravelService {
         put("37", "경북"); put("38", "경남"); put("39", "제주");
     }};
 
-    private final WebClient webClient = WebClient.builder().build();
+//    private final WebClient webClient = WebClient.builder().build();
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override

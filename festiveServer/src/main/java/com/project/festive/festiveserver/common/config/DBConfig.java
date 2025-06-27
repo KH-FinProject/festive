@@ -33,13 +33,6 @@ public class DBConfig {
   public HikariConfig hikariConfig() {
     return new HikariConfig();
   }
-  @Bean
-  public DataSource dataSource(HikariConfig hikariConfig) {
-    DataSource dataSource = new HikariDataSource(hikariConfig);
-    return dataSource;
-  }
-  
-  // 하드코딩된 dataSource Bean 삭제됨 (이 부분이 문제였음)
 
   @Bean
   public SqlSessionFactory sessionFactory(DataSource dataSource) throws Exception{
