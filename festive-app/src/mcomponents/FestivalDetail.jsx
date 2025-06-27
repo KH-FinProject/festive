@@ -1,6 +1,8 @@
 import { Calendar, Phone, Star, ChevronRight, MapPin } from "lucide-react";
 import "./FestivalDetail.css";
-import Weather from "./../scomponents/weatherAPI/WeatherAPI";
+
+// 모달 관련
+import { X } from "lucide-react";
 
 // 슬라이더
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -10,12 +12,10 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { useEffect, useState } from "react";
 
-// 카카오맵
-import KakaoMap from "./KakaoMap";
-// 전기차 충전소
-import EVChargeApi from "./EVChargeApi";
 import { useNavigate, useParams } from "react-router-dom";
-import PublicCarPark from "./PublicCarParkApi";
+import PublicCarPark from "./MapApi";
+import StayModal from "./StayModal";
+import DetailWeather from "./DetailWeatherAPI";
 
 // 축제 상태 진행
 const getFestivalStatus = (start, end) => {
@@ -43,6 +43,18 @@ const FestivalDetail = () => {
   const [eventState, setEventState] = useState("");
   const { contentId } = useParams();
   const navigate = useNavigate();
+
+  // 숙소 관련 모달창 열기
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedStay, setSelectedStay] = useState(null);
+
+  // 지도 마커 클릭 시 정보 받아오기
+  const [selectedMarkerInfo, setSelectedMarkerInfo] = useState(null);
+
+  const handleMarkerClick = (markerData) => {
+    setSelectedMarkerInfo(markerData);
+    console.log("markerData : ", markerData);
+  };
 
   // 슬라이더
   const FestivalSwiper = () => {
@@ -216,6 +228,7 @@ const FestivalDetail = () => {
           addr1: item.addr1,
           addr2: item.addr2,
           image: item.firstimage || "../../logo.png",
+          tel: item.tel,
         };
       });
       // 랜덤 셔플 후 3개 선택
@@ -227,12 +240,25 @@ const FestivalDetail = () => {
     }
   };
 
+  // handleCardClick 함수 정의
+  const handleCardClick = (stay) => {
+    setSelectedStay(stay);
+    setIsOpen(true);
+  };
+
+  // 모달 닫기 함수
+  const closeModal = () => {
+    setIsOpen(false);
+    setSelectedStay(null);
+  };
+
   // useEffect
   useEffect(() => {
     fetchFestivals();
     fetchFestivalImg();
     fetchFestivalDetail();
     fetchFestivalList();
+    setSelectedMarkerInfo(null);
   }, [contentId]);
 
   useEffect(() => {
@@ -283,7 +309,13 @@ const FestivalDetail = () => {
               <div className="festival-badge">
                 <span className="badge-button">{eventState}</span>
                 <div className="headerweather-placeholder">
-                  <Weather />
+                  {festival?.mapx && festival?.mapy ? (
+                    <DetailWeather
+                      center={{ lat: festival.mapy, lon: festival.mapx }}
+                    />
+                  ) : (
+                    <span>날씨 정보를 불러오는 중입니다!</span>
+                  )}
                 </div>
               </div>
               <div className="festival-date">
@@ -349,6 +381,13 @@ const FestivalDetail = () => {
                     {festivalDetail?.sponsor1tel}
                   </p>
                 </div>
+
+                {festivalDetail?.homepage && (
+                  <div className="detail-info-item">
+                    <h3>홈페이지 주소</h3>
+                    <p className="homepage">{festivalDetail.homepage}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -359,13 +398,39 @@ const FestivalDetail = () => {
               <MapPin className="title-icon" />
               찾아가기
             </h3>
-            <div className="map-container">
-              <PublicCarPark
-                lDongRegnCd={festival.lDongRegnCd}
-                lDongSignguCd={festival.lDongSignguCd}
-                center={{ lat: festival.mapy, lng: festival.mapx }}
-                placeName={festival.title}
-              />
+            <div className="map-container-grid">
+              <div className="map-container">
+                <PublicCarPark
+                  lDongRegnCd={festival.lDongRegnCd}
+                  lDongSignguCd={festival.lDongSignguCd}
+                  center={{ lat: festival.mapy, lng: festival.mapx }}
+                  placeName={festival.title}
+                  onMarkerClick={handleMarkerClick}
+                />
+              </div>
+
+              {selectedMarkerInfo ? (
+                <div className="map-container">
+                  <div className="map-container-detail">
+                    <h3>선택된 주차장</h3>
+                    <p>
+                      <strong>이름:</strong> {selectedMarkerInfo.name}
+                    </p>
+                    <p>
+                      <strong>도로명 주소:</strong> {selectedMarkerInfo.address}
+                    </p>
+                    <p>
+                      <strong>지번 주소:</strong> {selectedMarkerInfo.jibunAddr}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="map-container">
+                  <div className="map-container-detail">
+                    <h3>지도에서 주차장을 선택해주세요.</h3>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
@@ -408,7 +473,7 @@ const FestivalDetail = () => {
                 <div
                   key={stay.id}
                   className="festival-card"
-                  onClick={() => handleFestivalClick(stay.id)}
+                  onClick={() => handleCardClick(stay)}
                 >
                   <div className="festival-image-container">
                     <img
@@ -440,6 +505,13 @@ const FestivalDetail = () => {
               ))}
             </div>
           </section>
+
+          {/* Modal 컴포넌트 사용 */}
+          <StayModal
+            isOpen={isOpen}
+            selectedStay={selectedStay}
+            onClose={closeModal}
+          />
 
           {/* Other Festivals */}
           <section className="other-festivals">

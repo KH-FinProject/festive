@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AdminSidebar from "./AdminSideBar";
 import AdminMain from "./AdminMain";
 import AdminCreateAccount from "./AdminCreateAccount";
 import AdminDeleteMember from "./adminDeleteMember";
@@ -8,7 +7,6 @@ import AdminBoardManagement from "./AdminBoardManagement";
 import AdminApplicationStatus from "./AdminApplicationStatus";
 
 import "./AdminCommon.css";
-import HeaderForManager from "./HeaderForManager";
 import AdminBoardWrite from "./AdminBoardWrite";
 import AdminCustomerReply from "./AdminCustomerReply";
 import AdminCustomerReportDetail from "./AdminCustomerReportDetail";
@@ -24,7 +22,10 @@ const AdminRoutes = () => (
     <Route path="applications" element={<AdminApplicationStatus />} />
     <Route path="write" element={<AdminBoardWrite />} />
     <Route path="reply" element={<AdminCustomerReply />} />
-    <Route path="report-detail/:reportNo" element={<AdminCustomerReportDetail />} />
+    <Route
+      path="report-detail/:reportNo"
+      element={<AdminCustomerReportDetail />}
+    />
     <Route path="appDetail" element={<AdminApplicationDetail />} />
   </Routes>
 );
