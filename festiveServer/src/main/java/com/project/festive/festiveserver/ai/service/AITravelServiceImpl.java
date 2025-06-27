@@ -1,18 +1,24 @@
 package com.project.festive.festiveserver.ai.service;
 
-import com.project.festive.festiveserver.ai.dto.ChatRequest;
-import com.project.festive.festiveserver.ai.dto.ChatResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import com.project.festive.festiveserver.ai.dto.ChatRequest;
+import com.project.festive.festiveserver.ai.dto.ChatResponse;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +131,7 @@ public class AITravelServiceImpl implements AITravelService {
         put("37", "경북"); put("38", "경남"); put("39", "제주");
     }};
 
+//    private final WebClient webClient = WebClient.builder().build();
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override

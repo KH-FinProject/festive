@@ -36,22 +36,6 @@ public class DBConfig {
   public HikariConfig hikariConfig() {
     return new HikariConfig();
   }
-  
-  @Bean
-  public DataSource dataSource(
-      @Value("${spring.datasource.driver-class-name}") String driverClassName,
-      @Value("${spring.datasource.url}") String jdbcUrl,
-      @Value("${spring.datasource.username}") String username,
-      @Value("${spring.datasource.password}") String password) {
-    
-    HikariConfig config = hikariConfig();
-    config.setDriverClassName(driverClassName);
-    config.setJdbcUrl(jdbcUrl);
-    config.setUsername(username);
-    config.setPassword(password);
-    
-    return new HikariDataSource(config);
-  }
 
   @Bean
   public SqlSessionFactory sessionFactory(DataSource dataSource) throws Exception{
