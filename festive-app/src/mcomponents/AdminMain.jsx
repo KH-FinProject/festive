@@ -1,72 +1,8 @@
 import "./AdminMain.css";
 import "./AdminCommon.css";
 import AdminSidebar from "./AdminSideBar";
-import { useEffect, useState } from "react";
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
 
 const AdminMain = () => {
-  const [notifications, setNotifications] = useState([]);
-
-  // 웹소켓 연결
-  useEffect(() => {
-    const socket = new SockJS("http://localhost:8080/ws");
-    const client = Stomp.over(socket);
-
-    client.connect({}, () => {
-      console.log("WebSocket 연결됨");
-
-      // 관리자 알림 구독
-      client.subscribe("/topic/admin-alerts", (message) => {
-        const alert = JSON.parse(message.body);
-        console.log("새로운 신고 알림:", alert);
-
-        // 알림 목록에 추가
-        setNotifications((prev) => [
-          ...prev,
-          {
-            id: Date.now(),
-            message: alert.message,
-            reportType: alert.reportType,
-            memberNo: alert.memberNo,
-            timestamp: new Date().toLocaleString(),
-          },
-        ]);
-
-        // 브라우저 알림 표시
-        if (Notification.permission === "granted") {
-          new Notification("새로운 신고", {
-            body: alert.message,
-            icon: "/logo.png",
-          });
-        }
-      });
-    });
-
-    // 브라우저 알림 권한 요청
-    if (Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-
-    // 컴포넌트 언마운트 시 연결 해제
-    return () => {
-      if (client) {
-        client.disconnect();
-      }
-    };
-  }, []);
-
-  const handleNotificationClick = (notification) => {
-    // 신고 상세 페이지로 이동하거나 모달 표시
-    console.log("신고 상세 보기:", notification);
-    // 고객센터 페이지로 이동
-    window.location.href = "/admin/customer-service";
-  };
-
-  const clearNotification = (notificationId) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-  };
-
   return (
     <div className="admin-management-container">
       <div className="management-content">
@@ -77,38 +13,6 @@ const AdminMain = () => {
           <main className="admin-main">
             <div className="admin-header">
               <h1 className="admin-title">관리자 대시보드</h1>
-
-              {/* 실시간 알림 표시 */}
-              <div className="notification-area">
-                {notifications.length > 0 && (
-                  <div className="notification-badge">
-                    {notifications.length}
-                  </div>
-                )}
-                <div className="notification-dropdown">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="notification-item"
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      <div className="notification-content">
-                        <p>{notification.message}</p>
-                        <small>{notification.timestamp}</small>
-                      </div>
-                      <button
-                        className="notification-close"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          clearNotification(notification.id);
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
 
             <div className="main-section">

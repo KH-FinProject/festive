@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faThumbsUp,
@@ -14,204 +14,200 @@ import "./GeneralBoard.css";
 import { useNavigate } from "react-router-dom";
 import Pagination, { usePagination } from "./Pagination";
 
-export const posts = [
-  {
-    id: 1205,
-    title:
-      "서울 불꽃축제 다녀왔어요 완전 대박이었음 ㅠㅠ 사진도 엄청 많이 찍었는데 날씨도 좋고 너무 예뻤어요",
-    author: "축제러버",
-    date: "2024.05.16 14:32",
-    likes: 123,
-    views: 96,
-  },
-  {
-    id: 1204,
-    title: "부산 바다축제 후기에요! 예전엔 진짜루 누가 같이 갈 사람?",
-    author: "바다왕",
-    date: "2024.05.16 13:20",
-    likes: 56,
-    views: 78,
-  },
-  // ... 10개 더미 데이터 추가 (총 17개)
-  {
-    id: 1203,
-    title: "전주 한옥마을 축제 프로그램 완전 추천!",
-    author: "전주러",
-    date: "2024.05.15 18:45",
-    likes: 24,
-    views: 45,
-  },
-  {
-    id: 1202,
-    title: "논산 딸기축제 2년째 반박자씩 늦게 갑니다",
-    author: "딸기마니아",
-    date: "2024.05.15 11:00",
-    likes: 47,
-    views: 13,
-  },
-  {
-    id: 1201,
-    title: "청주 흥덕 축제 야경 사진 공유해요~ (사진 많음 주의)",
-    author: "흥덕주민",
-    date: "2024.05.14 20:10",
-    likes: 80,
-    views: 156,
-  },
-  {
-    id: 1200,
-    title: "해운대 모래축제 현실 리뷰 꿀팁 전해드려요!",
-    author: "모래왕",
-    date: "2024.05.14 12:00",
-    likes: 56,
-    views: 34,
-  },
-  {
-    id: 1199,
-    title: "대구 치맥페스티벌 일정 정리했습니다",
-    author: "치맥러버",
-    date: "2024.05.13 09:00",
-    likes: 12,
-    views: 24,
-  },
-  {
-    id: 1198,
-    title: "춘천 마임축제 후기!",
-    author: "마임러",
-    date: "2024.05.12 15:00",
-    likes: 33,
-    views: 44,
-  },
-  {
-    id: 1197,
-    title: "광주 비엔날레 축제 정보 공유",
-    author: "광주인",
-    date: "2024.05.12 10:00",
-    likes: 22,
-    views: 19,
-  },
-  {
-    id: 1196,
-    title: "울산 고래축제 다녀온 후기",
-    author: "고래사랑",
-    date: "2024.05.11 17:00",
-    likes: 15,
-    views: 18,
-  },
-  {
-    id: 1195,
-    title: "포항 불빛축제 꿀팁!",
-    author: "포항러",
-    date: "2024.05.10 20:00",
-    likes: 19,
-    views: 21,
-  },
-  {
-    id: 1194,
-    title: "여수 밤바다 축제 진짜 예뻐요",
-    author: "여수밤바다",
-    date: "2024.05.09 22:00",
-    likes: 41,
-    views: 55,
-  },
-  {
-    id: 1193,
-    title: "제주 유채꽃 축제 후기!",
-    author: "제주러버",
-    date: "2024.05.08 18:00",
-    likes: 25,
-    views: 30,
-  },
-  {
-    id: 1192,
-    title: "속초 오징어축제 꿀팁 공유",
-    author: "오징어킹",
-    date: "2024.05.07 15:00",
-    likes: 17,
-    views: 22,
-  },
-  {
-    id: 1191,
-    title: "광양 매화축제 사진 자랑합니다",
-    author: "매화러버",
-    date: "2024.05.06 13:00",
-    likes: 29,
-    views: 40,
-  },
-  {
-    id: 1190,
-    title: "진해 군항제 벚꽃 만개!",
-    author: "벚꽃매니아",
-    date: "2024.05.05 11:00",
-    likes: 38,
-    views: 51,
-  },
-  {
-    id: 1189,
-    title: "부산 불꽃축제 꿀팁!",
-    author: "불꽃러버",
-    date: "2024.05.04 20:00",
-    likes: 44,
-    views: 60,
-  },
-];
-
 const PAGE_SIZE = 7;
 
 function GeneralBoard({ hideTitle, hideWriteBtn }) {
-  const { currentPage, totalPages, goToPage, currentItems } = usePagination({
-    totalItems: posts.length,
-    pageSize: PAGE_SIZE,
-    initialPage: 1,
-  });
-
-  const pagedPosts = currentItems(posts);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchType, setSearchType] = useState("title");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+
+  // API에서 게시글 목록 가져오기
+  const fetchPosts = async (
+    page = 1,
+    searchTypeParam = "",
+    searchKeywordParam = ""
+  ) => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        boardTypeNo: "1", // 일반게시판
+        page: page.toString(),
+        size: PAGE_SIZE.toString(),
+      });
+
+      if (searchTypeParam && searchKeywordParam) {
+        params.append("searchType", searchTypeParam);
+        params.append("searchKeyword", searchKeywordParam);
+      }
+
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/boards?${params}`
+      );
+
+      if (!response.ok) {
+        throw new Error("게시글을 불러오는데 실패했습니다.");
+      }
+
+      const data = await response.json();
+
+      // 데이터 형식을 기존 포맷에 맞게 변환
+      const formattedPosts = data.boardList.map((post) => ({
+        id: post.boardNo,
+        title: post.boardTitle,
+        author: post.memberNickname,
+        date: new Date(post.boardCreateDate)
+          .toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(/\. /g, ".")
+          .replace(".", ".")
+          .slice(0, -1),
+        likes: post.boardLikeCount,
+        views: post.boardViewCount,
+      }));
+
+      setPosts(formattedPosts);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.currentPage);
+    } catch (err) {
+      console.error("게시글 로딩 실패:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  // 페이지 변경
+  const goToPage = (page) => {
+    fetchPosts(page, searchType, searchKeyword);
+  };
+
+  // 검색
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchPosts(1, searchType, searchKeyword);
+  };
+
+  // 검색어 입력 시 엔터키 처리
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
 
   const handleItemClick = (id) => {
     navigate(`/wagle/${id}`);
     setTimeout(() => window.scrollTo(0, 0), 0);
   };
 
+  // 로딩 상태
+  if (loading) {
+    return (
+      <div className="general-board-outer">
+        <div className="general-board-container">
+          <div style={{ textAlign: "center", padding: "50px", color: "#666" }}>
+            게시글을 불러오는 중...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="general-board-outer">
+        <div className="general-board-container">
+          <div
+            style={{ textAlign: "center", padding: "50px", color: "#e74c3c" }}
+          >
+            {error}
+            <br />
+            <button
+              onClick={() => fetchPosts()}
+              style={{
+                marginTop: "10px",
+                padding: "8px 16px",
+                background: "#3498db",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="general-board-outer">
       <div className="general-board-container">
         {/* 타이틀이 있다면 여기에 {!hideTitle && <div>타이틀</div>} 추가 가능 */}
         <div className="general-board-list paginated-list">
-          {pagedPosts.map((post) => (
-            <div
-              className="general-board-item"
-              key={post.id}
-              onClick={() => handleItemClick(post.id)}
-              style={{ cursor: "pointer" }}
-            >
-              <div className="general-board-title">{`#${post.id} ${post.title}`}</div>
-              <div className="general-board-meta">
-                <img
-                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
-                  alt="프로필"
-                  className="wagle-profile-img"
-                  style={{
-                    width: "28px",
-                    height: "28px",
-                    borderRadius: "50%",
-                    marginRight: "6px",
-                  }}
-                />
-                <span className="general-board-author">{post.author}</span>
-                <span className="general-board-date">{post.date}</span>
-                <span className="general-board-likes">
-                  <FontAwesomeIcon icon={faThumbsUp} /> {post.likes}
-                </span>
-                <span className="general-board-views">
-                  <FontAwesomeIcon icon={faEye} /> {post.views}
-                </span>
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <div
+                className="general-board-item"
+                key={post.id}
+                onClick={() => handleItemClick(post.id)}
+                style={{ cursor: "pointer" }}
+              >
+                <div className="general-board-title">{post.title}</div>
+                <div className="general-board-meta">
+                  <img
+                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
+                    alt="프로필"
+                    className="wagle-profile-img"
+                    style={{
+                      width: "28px",
+                      height: "28px",
+                      borderRadius: "50%",
+                      marginRight: "6px",
+                    }}
+                  />
+                  <span className="general-board-author">{post.author}</span>
+                  <span className="general-board-date">{post.date}</span>
+                  <span className="general-board-likes">
+                    <FontAwesomeIcon icon={faThumbsUp} /> {post.likes}
+                  </span>
+                  <span className="general-board-views">
+                    <FontAwesomeIcon icon={faEye} /> {post.views}
+                  </span>
+                </div>
               </div>
+            ))
+          ) : (
+            <div
+              style={{ textAlign: "center", padding: "50px", color: "#666" }}
+            >
+              게시글이 없습니다.
             </div>
-          ))}
+          )}
         </div>
         <div className="wagle-general-board-search-row">
           <div className="wagle-general-board-search-bar">
-            <select className="wagle-search-type">
+            <select
+              className="wagle-search-type"
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value)}
+            >
               <option value="title">제목</option>
               <option value="title_content">제목+내용</option>
               <option value="author">작성자</option>
@@ -220,8 +216,11 @@ function GeneralBoard({ hideTitle, hideWriteBtn }) {
               className="wagle-search-input"
               type="text"
               placeholder="검색어를 입력해 주세요..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyPress={handleKeyPress}
             />
-            <button className="wagle-search-btn">
+            <button className="wagle-search-btn" onClick={handleSearch}>
               <FontAwesomeIcon icon={faSearch} />
             </button>
           </div>

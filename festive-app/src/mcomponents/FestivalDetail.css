@@ -151,10 +151,14 @@ h2 {
 /* Right Content - Info Card */
 .festival-info-card {
   background: white;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+  border-radius: 0;
+  padding: 24px 0;
+  box-shadow: none;
+  width: 100%;
+  min-width: 50%;
 }
 
 .info-header {
@@ -171,22 +175,24 @@ h2 {
 .date-range {
   font-size: 16px;
   color: #333;
+  font-weight: 400;
 }
 
-.info-item {
+.detail-info-item {
   margin-bottom: 20px;
 }
 
-.info-item h4 {
+.detail-info-item h4 {
   font-size: 18x;
   font-weight: bold;
   color: #333;
   margin-bottom: 8px;
 }
 
-.info-item p {
+.detail-info-item p {
   font-size: 16px;
   color: #333;
+  font-weight: 400;
   line-height: 1.5;
 }
 

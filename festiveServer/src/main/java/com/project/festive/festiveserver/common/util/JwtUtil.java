@@ -1,6 +1,7 @@
 package com.project.festive.festiveserver.common.util;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -22,8 +23,8 @@ public class JwtUtil {
   private final SecretKey secretKey;
 
   // 토큰 유효시간 설정
-  private final long accessTokenValidity = 1000L * 60 * 30; // 30분
-  private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 7; // 7일
+  private final long accessTokenValidity = Duration.ofMinutes(30).toMillis(); // 30분
+  private final long refreshTokenValidity = Duration.ofDays(7).toMillis(); // 7일
 
   public JwtUtil(@Value("${jwt.secret}") String secret) {
     // 문자열 시크릿(secret)을 UTF-8 바이트 배열로 변환, 내부적으로 SecretKeySpec을 사용해서 SecretKey 객체를 만들어줌
@@ -31,16 +32,11 @@ public class JwtUtil {
   }
 
   // Access Token 생성
-  public String generateAccessToken(Long memberNo, String email, String role, String socialId) {
+  public String generateAccessToken(Long memberNo, String email, String role) {
     JwtBuilder builder = Jwts.builder()
         .claim("memberNo", memberNo)
         .claim("email", email)
         .claim("role", role);
-
-    // 소셜 로그인 시 소셜 아이디 추가
-    if (socialId != null) {
-        builder.claim("socialId", socialId);
-    }
 
     return builder
         .subject("AccessToken")
@@ -51,15 +47,11 @@ public class JwtUtil {
   }
 
   // Refresh Token 생성
-  public String generateRefreshToken(Long memberNo, String email, String role, String socialId) {
+  public String generateRefreshToken(Long memberNo, String email, String role) {
     JwtBuilder builder = Jwts.builder()
         .claim("memberNo", memberNo)
         .claim("email", email)
         .claim("role", role);
-
-    if (socialId != null) {
-        builder.claim("socialId", socialId);
-    }
 
     return builder
         .subject("RefreshToken")
