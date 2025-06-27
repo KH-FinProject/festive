@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +17,6 @@ import org.springframework.web.util.WebUtils;
 
 import com.project.festive.festiveserver.auth.dto.AuthKeyRequest;
 import com.project.festive.festiveserver.auth.dto.LoginRequest;
-import com.project.festive.festiveserver.auth.dto.LoginResponse;
 import com.project.festive.festiveserver.auth.service.AuthService;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.member.entity.Member;
@@ -167,5 +167,51 @@ public class AuthController {
     @PostMapping("checkAuthKey")
     public int checkAuthKey(@RequestBody AuthKeyRequest authKeyRequest) {
         return authService.checkAuthKey(authKeyRequest);
+    }
+    
+    
+    // 이메일 변경 인증번호 요청 및 이메일 중복 검사를 위해 지현이가 추가한 코드
+    // 이메일 인증 번호 발송 요청 (수정: 중복 확인 로직 추가)
+    @PostMapping("/email/send")
+    public ResponseEntity<Map<String, String>> sendEmailVerification(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "이메일 주소를 입력해주세요."));
+        }
+        
+        // 이메일 중복 확인 추가
+        if (authService.isEmailDuplicate(email)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", "이미 사용 중인 이메일입니다."));
+        }
+
+        try {
+            authService.sendEmail("signup", email);
+            return ResponseEntity.ok(Map.of("message", "인증번호가 이메일로 전송되었습니다."));
+        } catch (RuntimeException e) {
+            log.error("이메일 발송 오류: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));
+        }
+    }
+    
+    // 이메일 변경 인증번호 요청 및 이메일 중복 검사를 위해 지현이가 추가한 코드
+    // 이메일 인증 번호 확인 요청
+    @PostMapping("/email/verify")
+    public ResponseEntity<Map<String, String>> verifyEmail(@RequestBody AuthKeyRequest authKeyRequest) {
+        String email = authKeyRequest.getEmail();
+        String code = authKeyRequest.getAuthKey();
+        
+        if (email == null || email.isEmpty() || code == null || code.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "이메일과 인증번호를 모두 입력해주세요."));
+        }
+        
+        int checkResult = authService.checkAuthKey(authKeyRequest);
+        
+        if (checkResult == 1) {
+            return ResponseEntity.ok(Map.of("message", "이메일이 성공적으로 인증되었습니다."));
+        } else if (checkResult == 0) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "인증번호가 만료되었거나 올바르지 않습니다."));
+        } else { // checkResult == 2
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "인증번호가 일치하지 않습니다."));
+        }
     }
 }

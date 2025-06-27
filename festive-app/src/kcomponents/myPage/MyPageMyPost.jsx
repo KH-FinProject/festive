@@ -48,7 +48,12 @@ const MyPageMyPost = () => {
                             <p className="no-posts">작성한 게시글이 없습니다.</p>
                         ) : (
                             posts.map((post) => (
-                                <div key={post.boardNo} className="post-item">
+                                <div
+                                    key={post.boardNo}
+                                    className="post-item"
+                                    // 이 부분을 추가하여 클릭 시 해당 게시글로 이동
+                                    onClick={() => navigate(`/wagle/${post.boardNo}`)}
+                                >
                                     <div className="post-id">#{post.boardNo}</div>
                                     <div className="post-content">
                                         <div className="post-title">{post.boardTitle}</div>

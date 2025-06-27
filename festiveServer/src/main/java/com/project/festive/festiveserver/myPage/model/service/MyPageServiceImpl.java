@@ -1,10 +1,15 @@
 package com.project.festive.festiveserver.myPage.model.service;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.myPage.model.mapper.MyPageMapper;
@@ -22,6 +27,9 @@ public class MyPageServiceImpl implements MyPageService {
 	
 	private final MyPageMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    @Value("${file.upload-dir}") // 설정 파일에서 경로를 주입받음
+    private String uploadDir;
+
 
     // 회원 탈퇴
     @Override
@@ -65,19 +73,82 @@ public class MyPageServiceImpl implements MyPageService {
         return mapper.selectMyInfo(memberNo);
     }
 
+    // 회원 정보 수정
     @Override
     public boolean updateMyInfo(Long memberNo, MemberDto updatedInfo) {
-        // 현재 비밀번호 조회
+        // 현재 비밀번호 조회 (DB에 저장된 암호화된 비밀번호)
         String currentEncodedPw = mapper.selectPw(memberNo);
 
-        if (!passwordEncoder.matches(updatedInfo.getPassword(), currentEncodedPw)) {
+        // 프론트에서 넘어온 비밀번호(updatedInfo.getPassword()가 아니라 updatedInfo.getCurrentPassword())와 DB 비밀번호 비교
+        if (!passwordEncoder.matches(updatedInfo.getCurrentPassword(), currentEncodedPw)) {
+            // 비밀번호 불일치
             return false;
         }
 
         // 비밀번호 일치 시 정보 수정
-        updatedInfo.setMemberNo(memberNo);
-        mapper.updateMyInfo(updatedInfo);
+        updatedInfo.setMemberNo(memberNo); // memberNo는 JWT에서 추출한 것으로 설정
+        mapper.updateMyInfo(updatedInfo); // MemberDto 객체 전체를 전달
         return true;
+    }
+    
+    @Override
+    public MemberDto getProfileInfo(Long memberNo) {
+        return mapper.selectProfileInfo(memberNo);
+    }
+
+    @Override
+    public boolean checkNicknameDuplicate(String nickname, Long memberNo) {
+        // 본인 닉네임은 중복 검사에서 제외
+        Integer count = mapper.countByNicknameExcludeSelf(nickname, memberNo);
+        return count > 0; // 중복이면 true, 아니면 false
+    }
+
+    @Override
+    public boolean updateProfile(Long memberNo, String nickname, MultipartFile profileImageFile, String password) {
+        // 1. 비밀번호 확인
+        String currentEncodedPw = mapper.selectPw(memberNo);
+        if (!passwordEncoder.matches(password, currentEncodedPw)) {
+            log.warn("프로필 업데이트 실패: 비밀번호 불일치 (memberNo: {})", memberNo);
+            return false; // 비밀번호 불일치
+        }
+
+        String profileImagePath = null;
+
+        // 2. 프로필 이미지 파일 처리
+        if (profileImageFile != null && !profileImageFile.isEmpty()) {
+            try {
+                // 파일 저장 디렉토리 생성
+            	File directory = new File(uploadDir);
+            	if (!directory.exists()) {
+            	    boolean created = directory.mkdirs();
+            	    if (created) {
+            	        log.info("업로드 디렉토리 생성 성공: {}", uploadDir);
+            	    } else {
+            	        log.error("업로드 디렉토리 생성 실패: {}", uploadDir);
+            	        // 디렉토리 생성 실패 시 예외를 던져야 프론트엔드에 오류 전달
+            	        throw new IOException("Failed to create upload directory at " + uploadDir);
+            	    }
+            	}
+
+                // 파일명 중복 방지를 위해 UUID 사용
+                String originalFilename = profileImageFile.getOriginalFilename();
+                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                String savedFileName = UUID.randomUUID().toString() + extension;
+                File targetFile = new File(uploadDir, savedFileName);
+
+                profileImageFile.transferTo(targetFile); // 파일 저장
+                profileImagePath = "/profile-images/" + savedFileName; // 클라이언트에서 접근할 경로 (정적 리소스 매핑 필요)
+                log.info("프로필 이미지 저장 완료: {}", profileImagePath);
+            } catch (IOException e) {
+                log.error("프로필 이미지 저장 중 오류 발생 (memberNo: {}): {}", memberNo, e.getMessage(), e);
+                throw new RuntimeException("프로필 이미지 저장에 실패했습니다.");
+            }
+        }
+        // 3. DB 업데이트
+        // 닉네임만 변경되거나, 이미지 파일만 변경되거나, 둘 다 변경될 수 있음
+        int result = mapper.updateProfile(memberNo, nickname, profileImagePath);
+        log.info("프로필 업데이트 시도 결과 (memberNo: {}): {} rows affected", memberNo, result);
+        return result > 0;
     }
 
 

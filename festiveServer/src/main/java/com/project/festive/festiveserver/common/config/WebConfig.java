@@ -3,6 +3,7 @@ package com.project.festive.festiveserver.common.config;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -17,5 +18,13 @@ public class WebConfig implements WebMvcConfigurer {
               .allowedHeaders("*") // 클라이언트가 보낼 수 있는 헤더를 모두 허용
               .allowCredentials(true) // 브라우저가 쿠키, 인증 정보 등을 포함해서 요청할 수 있도록 허용
               .maxAge(3600); // 브라우저가 CORS preflight 요청(OPTIONS)을 캐싱할 시간(초)
+  }
+  
+  // 회원 프로필 이미지 저장 - 지현이가 추가함
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+      // /profile-images/** 요청이 오면 C:/upload/festive/profile/ 경로에서 파일을 찾도록 매핑
+      registry.addResourceHandler("/profile-images/**")
+              .addResourceLocations("file:///C:/upload/festive/profile/"); // 실제 저장 경로와 일치
   }
 }

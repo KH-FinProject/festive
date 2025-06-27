@@ -32,4 +32,7 @@ public class MemberDto {
   private String role;
   private String address;
   
+  // 마이페이지 비밀번호 변경 및 확인을 위해 추가함 - 지현
+  private String currentPassword;
+  
 }
