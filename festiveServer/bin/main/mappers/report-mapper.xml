@@ -81,7 +81,7 @@
         FROM report r
         LEFT JOIN member m ON r.member_no = m.member_no
         LEFT JOIN board b ON r.report_board_no = b.board_no
-        LEFT JOIN "COMMENT" c ON r.report_type = 1 AND c.board_no = b.board_no AND c.comment_no = r.report_board_no
+        LEFT JOIN WAGLE_COMMENT c ON r.report_type = 1 AND c.board_no = b.board_no AND c.comment_no = r.report_board_no
         WHERE r.report_no = #{reportNo}
     </select>
 
