@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.project.festive.festiveserver.member.dto.BoardDto;
-import com.project.festive.festiveserver.member.dto.CommentDto;
 import com.project.festive.festiveserver.member.dto.MemberDto;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
+import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 @Mapper
 public interface MyPageMapper {
