@@ -24,7 +24,12 @@ const getDistanceFromLatLonInMeter = (lat1, lon1, lat2, lon2) => {
   return d;
 };
 
-export default function KakaoMap({ center, markers, placeName }) {
+export default function KakaoMap({
+  center,
+  markers,
+  placeName,
+  onMarkerClick,
+}) {
   const key = import.meta.env.VITE_KAKAO_MAP_API_KEY;
   const [loading, error] = useKakaoLoader({
     appkey: key,
@@ -142,6 +147,23 @@ export default function KakaoMap({ center, markers, placeName }) {
     );
   }
 
+  // 마커 클릭 핸들러 수정
+  const handleMarkerClick = (index, marker) => {
+    setInfo(index);
+
+    // A 컴포넌트로 데이터 전달
+    const markerData = {
+      name: marker.name,
+      address: marker.address,
+      jibunAddr: marker.jibunAddr,
+    };
+
+    // 부모 컴포넌트로 데이터 전달
+    if (onMarkerClick) {
+      onMarkerClick(markerData);
+    }
+  };
+
   return (
     <Map
       center={center}
@@ -183,7 +205,7 @@ export default function KakaoMap({ center, markers, placeName }) {
             marker.mapx // 경도
           );
 
-          if (distance <= radius && marker.public == "공영") {
+          if (distance <= radius) {
             return (
               <MapMarker
                 key={index}
@@ -192,8 +214,9 @@ export default function KakaoMap({ center, markers, placeName }) {
                   src: "../../carPark.png",
                   size: { width: 24, height: 24 },
                 }}
-                title={marker.title}
-                onClick={() => setInfo(index)}
+                title={marker.name}
+                /* onClick={() => setInfo(index)} */
+                onClick={() => handleMarkerClick(index, marker)}
               >
                 {info === index && (
                   <div style={{ margin: "0 2px", fontSize: "14px" }}>
