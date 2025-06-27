@@ -42,7 +42,7 @@ public class SecurityConfig {
         // CORS(Cross-Origin Resource Sharing) 기본 설정을 활성화
         http.cors(Customizer.withDefaults())
 
-        // CSRF(Cross-Site Request Forgery) 보호를 비활성화
+        // CSRF(Cross-Site Request Forgery) 보호를 비활성화 (JWT 사용 시)
         .csrf(auth -> auth.disable())
         
         // JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
@@ -63,10 +63,15 @@ public class SecurityConfig {
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/**").permitAll() //admin 로그인 완전구현 이후 "관리자만 접근" 주석풀고 여기꺼 삭제
-        .requestMatchers("/myPage/**").authenticated() // 인증된 사용자만 접근
-//        .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
-        .anyRequest().authenticated())
+        .anyRequest().permitAll())
+        // .requestMatchers("/auth/**").permitAll() // 인증 관련 경로 허용
+        // .requestMatchers("/oauth2/**").permitAll() // OAuth2 관련 경로 허용
+        // .requestMatchers("/member/**").permitAll() // 회원가입 등 허용
+        // .requestMatchers("/error").permitAll() // 에러 페이지 허용
+        // .requestMatchers("/favicon.ico").permitAll() // 파비콘 허용
+        // .requestMatchers("/myPage/**").authenticated() // 인증된 사용자만 접근
+        // .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
+        // .anyRequest().authenticated())
         
         //세션 설정 : STATELESS
         .sessionManagement(session -> session

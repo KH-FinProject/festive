@@ -35,12 +35,19 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     try {
       CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+      
+      log.info("사용자 정보: memberNo={}, email={}, name={}", 
+               customUserDetails.getMemberNo(), 
+               customUserDetails.getEmail(), 
+               customUserDetails.getUserName());
 
       // 사용자 권한 정보 추출
       String role = authentication.getAuthorities().iterator().next().getAuthority();
 
       String accessToken = jwtUtil.generateAccessToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
       String refreshToken = jwtUtil.generateRefreshToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
+
+      log.info("JWT 토큰 생성 완료");
 
       // Access Token 쿠키 설정
       ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
@@ -64,7 +71,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
       response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-      log.info("토큰 설정 완료");
+      log.info("토큰 쿠키 설정 완료");
 
       log.info("OAuth2 로그인 성공 처리 완료");
       
@@ -73,6 +80,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     } catch (Exception e) {
       log.error("OAuth2 로그인 성공 처리 중 오류 발생", e);
+
       if (!response.isCommitted()) {
         response.sendRedirect("http://localhost:5173/login?error=oauth_failed");
       }
