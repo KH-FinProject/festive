@@ -66,7 +66,6 @@ public class MemberServiceImpl implements MemberService {
         // 회원가입 시 기본 권한 설정
         member.setRole("USER");
         
-        
         // 주소가 입력되지 않으면
         // inputMember.getMemberAddress() -> ",,"
         // memberAddress -> [,,]

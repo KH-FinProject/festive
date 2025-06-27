@@ -73,7 +73,7 @@ public class Member {
 	@Column(name = "PROFILE_IMAGE", nullable = true)
 	private String profileImage;
 
-	@Column(name = "SOCIAL_ID", nullable = false) 
+	@Column(name = "SOCIAL_ID", nullable = true) 
 	private String socialId;
 
 	@Column(name = "ROLE", nullable = false)
