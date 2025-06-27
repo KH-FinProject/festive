@@ -10,7 +10,7 @@
 	</select>
 	
 	<insert id="createAdminAccount">
-  INSERT INTO "MEMBER" (
+   INSERT INTO "MEMBER" (
     MEMBER_NO,
     ID,
     NAME,
@@ -21,7 +21,7 @@
     MEMBER_DEL_FL,
     SANCTION_COUNT
   ) VALUES (
-    64,
+    SEQ_MEMBER_NO.NEXTVAL,
     #{email},
     #{name},
     #{email},
