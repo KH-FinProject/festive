@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
 
 import java.util.List;
 import java.util.Map;
@@ -60,14 +62,13 @@ public class WagleController {
     @PostMapping("/boards")
     public ResponseEntity<String> createBoard(@RequestBody BoardDto boardDto) {
         try {
-            // TODO: 로그인 사용자 정보에서 memberNo 가져오기
-            boardDto.setMemberNo(1L); // 임시 설정
-            
+            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long memberNo = userDetails.getMemberNo();
+            boardDto.setMemberNo(memberNo);
             // boardTypeNo가 없으면 기본값 1(일반 게시판)로 설정
             if (boardDto.getBoardTypeNo() == null) {
                 boardDto.setBoardTypeNo(1L);
             }
-            
             int result = wagleService.createBoard(boardDto);
             if (result > 0) {
                 return ResponseEntity.ok("게시글이 작성되었습니다.");
@@ -123,9 +124,8 @@ public class WagleController {
     @PostMapping("/boards/{boardNo}/like")
     public ResponseEntity<Map<String, Object>> toggleBoardLike(@PathVariable("boardNo") Long boardNo) {
         try {
-            // TODO: 로그인 사용자 정보에서 memberNo 가져오기
-            Long memberNo = 1L; // 임시 설정
-            
+            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long memberNo = userDetails.getMemberNo();
             Map<String, Object> result = wagleService.toggleBoardLike(boardNo, memberNo);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -154,10 +154,10 @@ public class WagleController {
     @PostMapping("/boards/{boardNo}/comments")
     public ResponseEntity<String> createComment(@PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
         try {
-            // TODO: 로그인 사용자 정보에서 memberNo 가져오기
-            commentDto.setMemberNo(1L); // 임시 설정
+            CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Long memberNo = userDetails.getMemberNo();
+            commentDto.setMemberNo(memberNo);
             commentDto.setBoardNo(boardNo);
-            
             int result = wagleService.createComment(commentDto);
             if (result > 0) {
                 return ResponseEntity.ok("댓글이 작성되었습니다.");
