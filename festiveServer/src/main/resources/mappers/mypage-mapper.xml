@@ -30,30 +30,48 @@
 
 	<!-- 내가 작성한 게시글 조회 -->
 	<select id="selectMyPosts">
-		SELECT
-		B.BOARD_NO AS boardNo,
-		B.BOARD_TITLE AS boardTitle,
-		B.BOARD_CREATE_DATE AS boardCreateDate,
-		B.BOARD_VIEW_COUNT AS boardViewCount,
-		M.NICKNAME AS memberNickname,
-		B.BOARD_LIKE_COUNT AS boardLikeCount
-		FROM BOARD B
-		JOIN MEMBER M ON B.MEMBER_NO = M.MEMBER_NO
-		WHERE B.MEMBER_NO = #{memberNo}
-		AND B.BOARD_DELETE_YN = 'N'
-		ORDER BY B.BOARD_CREATE_DATE DESC
-	</select>
 
+        SELECT
+            b.BOARD_NO as boardNo,
+            b.BOARD_TITLE as boardTitle,
+            m.NICKNAME as memberNickname,
+            b.BOARD_CREAT_DATE as boardCreateDate,
+            b.READ_COUNT as boardViewCount,
+            COUNT(l.MEMBER_NO) AS boardLikeCount
+        FROM BOARD b
+        JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+        LEFT JOIN "LIKE" l ON b.BOARD_NO = l.BOARD_NO
+        WHERE b.MEMBER_NO = #{memberNo}
+        AND b.BOARD_DEL_FL = 'N'
+        GROUP BY b.BOARD_NO, b.BOARD_TITLE, m.NICKNAME, b.BOARD_CREAT_DATE, b.READ_COUNT
+        ORDER BY b.BOARD_CREAT_DATE DESC
+    </select>
+    
+    <!-- 내가 작성한 댓글 조회 -->
+    <select id="selectMyComments">
+        SELECT c.COMMENT_NO,
+               c.COMMENT_CONTENT,
+               c.COMMENT_WRITE_DATE,
+               c.BOARD_NO,
+               m.MEMBER_NICKNAME,
+               COUNT(cl.MEMBER_NO) AS LIKE_COUNT
+        FROM "COMMENT" c
+        JOIN MEMBER m ON c.MEMBER_NO = m.MEMBER_NO
+        LEFT JOIN "COMMENT_LIKE" cl ON c.COMMENT_NO = cl.COMMENT_NO
+        WHERE c.MEMBER_NO = #{memberNo} AND c.COMMENT_DEL_FL = 'N'
+        GROUP BY c.COMMENT_NO, c.COMMENT_CONTENT, c.COMMENT_WRITE_DATE, c.BOARD_NO, m.MEMBER_NICKNAME
+        ORDER BY c.COMMENT_WRITE_DATE DESC
+    </select>
+    
+    <!-- 내 정보 수정 -->
+    <update id="updateMemberInfo">
+        UPDATE MEMBER
+        SET TEL = #{tel},
+            EMAIL = #{email},
+            ADDRESS = #{address}
+        WHERE MEMBER_NO = #{memberNo}
+    </update>
 
-	<!-- 내가 작성한 댓글 조회 -->
-	<select id="selectMyComments">
-		SELECT M.NICKNAME AS memberNickname, *
-		FROM "COMMENT"
-		JOIN MEMBER M ON B.MEMBER_NO = M.MEMBER_NO
-		WHERE "MEMBER_NO" = #{memberNo}
-		AND "COMMENT_DEL_FL" = 'N'
-		ORDER BY "COMMENT_WRITE_DATE" DESC
-	</select>
 
 	<select id="selectMyInfo">
 		SELECT MEMBER_NO, MEMBER_PHONE, MEMBER_EMAIL, MEMBER_ADDRESS,

@@ -12,11 +12,13 @@
                     b.BOARD_NO as boardNo,
                     b.BOARD_CODE as boardTypeNo,
                     bt.BOARD_NAME as boardTypeName,
-                    b.BOARD_TITLE as boardTitle,
+                    b.MEMBER_NO as memberNo,
                     m.NICKNAME as memberNickname,
-                    b.BOARD_CREAT_DATE as boardCreateDate,
-                    b.READ_COUNT as boardViewCount,
+                    b.BOARD_TITLE as boardTitle,
                     b.BOARD_CONTENT as boardContent,
+                    b.READ_COUNT as boardViewCount,
+                    b.BOARD_CREAT_DATE as boardCreateDate,
+                    b.BOARD_UPDATE_DATE as boardUpdateDate,
                     b.BOARD_DEL_FL as boardDeleteYn
                 FROM BOARD b
                 JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
@@ -106,7 +108,7 @@
             READ_COUNT, BOARD_DEL_FL, BOARD_CREAT_DATE
         ) VALUES (
             #{boardNo}, #{boardTypeNo}, #{memberNo}, #{boardTitle}, #{boardContent}, 
-            0, 'N', #{boardCreateDate}
+            0, 'N', SYSDATE
         )
     </insert>
 
@@ -115,7 +117,7 @@
         UPDATE BOARD 
         SET BOARD_TITLE = #{boardTitle},
             BOARD_CONTENT = #{boardContent},
-            BOARD_UPDATE_DATE = #{boardUpdateDate}
+            BOARD_UPDATE_DATE = SYSDATE
         WHERE BOARD_NO = #{boardNo}
     </update>
 
@@ -126,22 +128,22 @@
         WHERE BOARD_NO = #{boardNo}
     </update>
 
-    <!-- 게시글 좋아요 추가 -->
+    <!-- 게시글 좋아요 추가 (LIKE 테이블 사용) -->
     <insert id="insertBoardLike">
-        INSERT INTO BOARD_LIKE (LIKE_NO, BOARD_NO, MEMBER_NO, LIKE_CREATE_DATE)
-        VALUES (SEQ_BOARD_LIKE_NO.NEXTVAL, #{boardNo}, #{memberNo}, SYSDATE)
+        INSERT INTO LIKE (BOARD_NO, MEMBER_NO)
+        VALUES (#{boardNo}, #{memberNo})
     </insert>
 
     <!-- 게시글 좋아요 삭제 -->
     <delete id="deleteBoardLike">
-        DELETE FROM BOARD_LIKE 
+        DELETE FROM LIKE 
         WHERE BOARD_NO = #{boardNo} AND MEMBER_NO = #{memberNo}
     </delete>
 
     <!-- 게시글 좋아요 여부 확인 -->
     <select id="selectBoardLikeCheck" resultType="int">
         SELECT COUNT(*) 
-        FROM BOARD_LIKE 
+        FROM LIKE 
         WHERE BOARD_NO = #{boardNo} AND MEMBER_NO = #{memberNo}
     </select>
 
@@ -156,7 +158,7 @@
             c.PARENT_COMMENT_NO as commentParentNo,
             c.COMMENT_WRITE_DATE as commentCreateDate,
             c.COMMENT_DEL_FL as commentDeleteYn
-        FROM COMMENT c
+        FROM "COMMENT" c
         JOIN MEMBER m ON c.MEMBER_NO = m.MEMBER_NO
         WHERE c.BOARD_NO = #{boardNo} AND c.COMMENT_DEL_FL = 'N'
         ORDER BY c.PARENT_COMMENT_NO NULLS FIRST, c.COMMENT_WRITE_DATE ASC
@@ -167,7 +169,7 @@
         <selectKey keyProperty="commentNo" resultType="Long" order="BEFORE">
             SELECT SEQ_COMMENT_NO.NEXTVAL FROM DUAL
         </selectKey>
-        INSERT INTO COMMENT (
+        INSERT INTO "COMMENT" (
             COMMENT_NO, BOARD_NO, MEMBER_NO, COMMENT_CONTENT, 
             PARENT_COMMENT_NO, COMMENT_WRITE_DATE, COMMENT_DEL_FL
         ) VALUES (
@@ -178,7 +180,7 @@
 
     <!-- 댓글 수정 -->
     <update id="updateComment" parameterType="com.project.festive.festiveserver.wagle.dto.CommentDto">
-        UPDATE COMMENT 
+        UPDATE "COMMENT" 
         SET COMMENT_CONTENT = #{commentContent},
             COMMENT_WRITE_DATE = SYSDATE
         WHERE COMMENT_NO = #{commentNo}
@@ -186,7 +188,7 @@
 
     <!-- 댓글 삭제 (논리삭제) -->
     <update id="deleteCommentLogical">
-        UPDATE COMMENT 
+        UPDATE "COMMENT" 
         SET COMMENT_DEL_FL = 'Y' 
         WHERE COMMENT_NO = #{commentNo}
     </update>
@@ -194,14 +196,16 @@
     <!-- 게시글 이미지 저장 -->
     <insert id="insertBoardImg">
         INSERT INTO BOARD_IMG (
-            IMG_NO, IMG_PATH, IMG_ORIGINAL_NAME, IMG_RENAME, IMG_ORDER, BOARD_NO
+            BOARD_IMG_NO, BOARD_NO, BOARD_IMG_ORIGINAL, 
+            BOARD_IMG_RENAME, BOARD_IMG_PATH, BOARD_IMG_LEVEL
         ) VALUES (
-            SEQ_BOARD_IMG_NO.NEXTVAL, #{imagePath}, #{originalName}, #{renameName}, #{order}, #{boardNo}
+            SEQ_BOARD_IMG_NO.NEXTVAL, #{boardNo}, #{originalName}, 
+            #{renameName}, #{imagePath}, #{level}
         )
     </insert>
 
     <!-- 게시글 이미지 조회 -->
-    <select id="selectBoardImages" resultType="String">
+    <select id="selectBoardImages" resultType="string">
         SELECT IMG_PATH
         FROM BOARD_IMG
         WHERE BOARD_NO = #{boardNo}
