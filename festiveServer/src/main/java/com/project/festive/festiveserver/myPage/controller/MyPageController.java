@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,18 +15,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
-import com.project.festive.festiveserver.member.dto.BoardDto;
-import com.project.festive.festiveserver.member.dto.CommentDto;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.myPage.model.service.MyPageService;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
+import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 
 @RestController // 비동기 컨트롤러

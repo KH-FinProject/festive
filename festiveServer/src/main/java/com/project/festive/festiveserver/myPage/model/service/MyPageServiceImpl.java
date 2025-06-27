@@ -8,10 +8,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.project.festive.festiveserver.member.dto.BoardDto;
-import com.project.festive.festiveserver.member.dto.CommentDto;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.myPage.model.mapper.MyPageMapper;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
+import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -3,9 +3,9 @@ package com.project.festive.festiveserver.myPage.model.service;
 import java.util.List;
 import java.util.Map;
 
-import com.project.festive.festiveserver.member.dto.BoardDto;
-import com.project.festive.festiveserver.member.dto.CommentDto;
 import com.project.festive.festiveserver.member.dto.MemberDto;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
+import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 public interface MyPageService {
 
