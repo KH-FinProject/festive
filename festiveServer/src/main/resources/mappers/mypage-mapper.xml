@@ -40,18 +40,18 @@
 	<!-- 내가 쓴 게시글 조회 -->
 	<select id="selectMyPosts">
         SELECT
-            b.BOARD_NO,
-            b.BOARD_TITLE,
-            m.MEMBER_NICKNAME,
-            b.BOARD_CREAT_DATE,
-            b.READ_COUNT,
-            COUNT(l.MEMBER_NO) AS LIKE_COUNT
+            b.BOARD_NO as boardNo,
+            b.BOARD_TITLE as boardTitle,
+            m.NICKNAME as memberNickname,
+            b.BOARD_CREAT_DATE as boardCreateDate,
+            b.READ_COUNT as boardViewCount,
+            COUNT(l.MEMBER_NO) AS boardLikeCount
         FROM BOARD b
         JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
         LEFT JOIN "LIKE" l ON b.BOARD_NO = l.BOARD_NO
         WHERE b.MEMBER_NO = #{memberNo}
         AND b.BOARD_DEL_FL = 'N'
-        GROUP BY b.BOARD_NO, b.BOARD_TITLE, m.MEMBER_NICKNAME, b.BOARD_CREAT_DATE, b.READ_COUNT
+        GROUP BY b.BOARD_NO, b.BOARD_TITLE, m.NICKNAME, b.BOARD_CREAT_DATE, b.READ_COUNT
         ORDER BY b.BOARD_CREAT_DATE DESC
     </select>
     
