@@ -31,6 +31,7 @@ public class MemberDto {
   @NotBlank(message = "이메일을 입력해주세요")
   @Email(message = "올바른 이메일 형식으로 입력해주세요")
   private String email;
+  private String tel;
   
   @NotBlank(message = "닉네임을 입력해주세요")
   @Size(min = 2, max = 15, message = "닉네임은 2~15자 사이로 입력해주세요")
@@ -45,4 +46,6 @@ public class MemberDto {
   private String profileImage;
   private String socialId;
   private String role;
+  private String address;
+  
 }
