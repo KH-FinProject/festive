@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './MyPageWithdrawal.css';
 import './MyPageEditPw.css';
 import MyPageSideBar from './MyPageSideBar';
-import { useNavigate } from 'react-router-dom'; // 추가
+import { useNavigate } from 'react-router-dom';
 
 const MyPageEditPw = () => {
     const [passwordData, setPasswordData] = useState({
@@ -11,10 +11,11 @@ const MyPageEditPw = () => {
         confirmPassword: ''
     });
 
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const navigate = useNavigate();
 
-    const navigate = useNavigate(); // useNavigate 사용
+    // JWT accessToken 추출 (state 구조에 맞게)
+    const persistedState = JSON.parse(localStorage.getItem("auth-store"));
+    const token = persistedState?.state?.accessToken;
 
     const handlePasswordChange = (e) => {
         const { name, value } = e.target;
@@ -28,15 +29,20 @@ const MyPageEditPw = () => {
         e.preventDefault();
 
         const { currentPassword, newPassword, confirmPassword } = passwordData;
-        const memberNo = localStorage.getItem('memberNo');
+
+        if (!token) {
+            alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+            navigate("/");
+            return;
+        }
 
         if (!currentPassword || !newPassword || !confirmPassword) {
-            setErrorMessage('모든 필드를 입력해주세요.');
+            alert("모든 필드를 입력해주세요.");
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            setErrorMessage('새 비밀번호가 일치하지 않습니다.');
+            alert("새 비밀번호가 일치하지 않습니다.");
             return;
         }
 
@@ -44,12 +50,12 @@ const MyPageEditPw = () => {
             const response = await fetch('http://localhost:8080/mypage/pw', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     currentPw: currentPassword,
-                    newPw: newPassword,
-                    memberNo
+                    newPw: newPassword
                 })
             });
 
@@ -57,25 +63,18 @@ const MyPageEditPw = () => {
 
             if (response.ok) {
                 alert('비밀번호가 성공적으로 변경되었습니다.\n다시 로그인해주세요.');
-
-                // 로그인 정보 초기화
-                localStorage.removeItem('memberNo');
-                localStorage.removeItem('loginMember'); // 혹시 loginMember라는 객체 저장했을 경우도 제거
-
-                // 리디렉션
-                navigate('/signin');
+                localStorage.clear();
+                navigate('/');
             } else {
-                setErrorMessage(data.message || '비밀번호 변경 실패');
-                setSuccessMessage('');
+                alert(data.message || '비밀번호 변경 실패');
             }
         } catch (error) {
             if (error instanceof Error) {
-                setErrorMessage(error.message);
+                alert(error.message);
             } else {
-                setErrorMessage('서버와의 통신 중 오류가 발생했습니다.');
+                alert('서버와의 통신 중 오류가 발생했습니다.');
             }
         }
-
     };
 
     return (
@@ -123,9 +122,6 @@ const MyPageEditPw = () => {
                                     placeholder="새 비밀번호를 다시 입력하세요"
                                 />
                             </div>
-
-                            {errorMessage && <div className="error-message">{errorMessage}</div>}
-                            {successMessage && <div className="success-message">{successMessage}</div>}
 
                             <div className="password-form-buttons">
                                 <button type="submit" className="submit-btn">수정하기</button>

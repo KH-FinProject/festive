@@ -1,10 +1,8 @@
 package com.project.festive.festiveserver.myPage.model.service;
 
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,292 +21,65 @@ import lombok.extern.slf4j.Slf4j;
 public class MyPageServiceImpl implements MyPageService {
 	
 	private final MyPageMapper mapper;
-	
-	// Bcrypt 암호화 객체 의존성 주입(SecurityConfig 참고)
-	@Autowired // 중요★ 이게 있어야 객체가 됨
-	private BCryptPasswordEncoder bcrypt;
-	
-//	@Value("${my.profile.web-path}")
-//	private String profileWebPath;
-//	
-//	@Value("${my.profile.folder-path}")
-//	private String profileFolderPath;
-	
-//	@Override
-//	public int updateInfo(MemberDto inputMember, String[] memberAddress) {
-//		
-//		// 입력된 주소가 있을 경우
-//		if(!inputMember.getAddress().equals(",,")) {
-//			String address = String.join("^^^", memberAddress);
-//			inputMember.setAddress(address);
-//		} else {
-//			// 없을 경우
-//			inputMember.setAddress(null);
-//			
-//		}
-//		
-//		
-//		return mapper.updateInfo(inputMember);
-//	}
+    private final PasswordEncoder passwordEncoder;
 
+    // 회원 탈퇴
+    @Override
+    public boolean withdraw(Long memberNo, String password) {
+        String encodedPw = mapper.selectPw(memberNo); // DB에서 암호화된 비밀번호 조회
 
-	// 비밀번호 변경 서비스
-	@Override
-	public int changePw(Map<String, String> paramMap, int memberNo) {
-		
-		// 1. 현재 비밀번호가 일치하는지 확인하기
-		// - 현재 로그인한 회원의 암호화된 비밀번호를 DB에서 조회
-		String originPw = mapper.selectPw(memberNo);
-		
-		// 입력 받은 현재 비밀번호와(평문)
-		// DB에서 조회한 비밀번호(암호화)를 비교
-		// -> bcrypt.matches(평문, 암호화비번) 사용
-		
-		// 다를 경우
-		if( !bcrypt.matches(paramMap.get("currentPw"), originPw) ) {
-			return 0;
-			
-		}
-		
-		// 2. 같을 경우
-		
-		// 새 비밀번호 암호화(bcrypt.encode(평문))
-		String encPw = bcrypt.encode(paramMap.get("newPw")); // 제출할 때 newPw와 newPwConfirm과 같은지 확인하기 때문에 둘 중 아무거나 상관없음
-		
-		// DB에 업데이트
-		// SQL 전달 해야하는 데이터 2개 (암호화한 새 비번 encPw, 회원번호 memberNo)
-		// -> mapper에 전달할 수 있는 전달인자는 단 1개!
-		// -> 묶어서 전달(paramMap 재활용)
-		
-		paramMap.put("encPw", encPw);
-		paramMap.put("memberNo", memberNo + ""); // 1 + "" => 문자열로 변환됨
-		
-		return mapper.changePw(paramMap);
-	}
+        // bcrypt 비교
+        if (encodedPw != null && passwordEncoder.matches(password, encodedPw)) {
+            return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
+        }
 
-	//회원 탈퇴 서비스
-	@Override
-	public int withdrawal(String memberPw, long memberNo) {
-		
-		// 현재 로그인한 회원의 암호화된 비밀번호 DB 조회
-		String originpPw = mapper.selectPw(memberNo);
-		
-		log.info("서비스 들어옴");
-				
-		// 다를 경우
-		if(!bcrypt.matches(memberPw, originpPw)) {
-			return 0;
-			
-		}
-		
-		return mapper.withdrawal(memberNo);
-	}
-	
-	// 내가 작성한 게시글 조회 서비스
-	@Override
-    public List<BoardDto> getMyPosts(int memberNo) {
+        return false;
+    }
+    
+    // 비밀번호 변경
+    @Override
+    public boolean changePw(Long memberNo, String currentPw, String newPw) {
+        String encodedPw = mapper.selectPw(memberNo);
+        if (encodedPw != null && passwordEncoder.matches(currentPw, encodedPw)) {
+            String newEncodedPw = passwordEncoder.encode(newPw);
+            return mapper.changePw(memberNo, newEncodedPw) > 0;
+        }
+        return false;
+    }
+    
+    // 내가 작성한 게시글 조회
+    @Override
+    public List<BoardDto> getMyPosts(Long memberNo) {
         return mapper.selectMyPosts(memberNo);
     }
-	
-	// 내가 작성한 댓글 서비스
-	@Override
-	public List<CommentDto> getMyComments(int memberNo) {
-	    return mapper.selectMyComments(memberNo);
-	}
-	
-	// 내 정보 조회
-	@Override
-    public MemberDto getMemberInfo(long memberNo) {
-        return mapper.selectMemberInfo(memberNo);
+    
+    // 내가 작성한 댓글 조회
+    @Override
+    public List<CommentDto> getMyComments(Long memberNo) {
+    	return mapper.selectMyComments(memberNo);
+    }
+    
+    // 회원 정보 조회
+    @Override
+    public MemberDto getMyInfo(Long memberNo) {
+        return mapper.selectMyInfo(memberNo);
     }
 
-	// 내 정보 변경 서비스
     @Override
-    public boolean updateMemberInfo(MemberDto dto) {
-        return mapper.updateMemberInfo(dto) > 0;
+    public boolean updateMyInfo(Long memberNo, MemberDto updatedInfo) {
+        // 현재 비밀번호 조회
+        String currentEncodedPw = mapper.selectPw(memberNo);
+
+        if (!passwordEncoder.matches(updatedInfo.getPassword(), currentEncodedPw)) {
+            return false;
+        }
+
+        // 비밀번호 일치 시 정보 수정
+        updatedInfo.setMemberNo(memberNo);
+        mapper.updateMyInfo(updatedInfo);
+        return true;
     }
-	
-	// 파일 업로드 테스트1
-//	@Override
-//	public String fileUpload1(MultipartFile uploadFile) throws Exception {
-//		
-//		// MultipartFile 이 제공하는 메소드
-//		// - getSize() : 파일 크기
-//		// - isEmpty() : 업로드한 파일이 없을 경우 true / 있다면 false
-//		// - getOriginalFileName() : 원본 파일명
-//		// - transferTo(경로) : 
-//		// 메모리 또는 임시 저장 경로에 업로드된 파일을
-//		// 원하는 경로에 실제로 전송(서버 어떤 경로 폴더에 저장할지 지정)
-//		
-//		// 업로드한 파일이 없을 경우
-//		if(uploadFile.isEmpty()) {
-//			return null;
-//		}
-//		
-//		// 업로드한 파일이 있을 경우
-//		// C:/uploadFiles/test/파일명으로 서버에 저장
-//		uploadFile.transferTo(new File("C:/uploadFiles/test/" + uploadFile.getOriginalFilename()));
-//		
-//		// 웹에서 해당 파일에 접근할 수 있는 경로 반환
-//		// 서버 : C:/uploadFiles/test/A.jpg
-//		// 웹 접근 주소 : /myPage/file/A.jpg
-//		
-//		
-//		return "/myPage/file/" + uploadFile.getOriginalFilename();
-//	}
-//
-//
-//	@Override
-//	public int fileUpload2(MultipartFile uploadFile, int memberNo) throws Exception {
-//		
-//		// 업로드된 파일이 없을 때
-//		if(uploadFile.isEmpty()) {
-//			return 0;
-//		}
-//		
-//		// 업로드된 파일이 있을 때
-//		
-//		/* DB에 파일 저장이 가능은 하지만
-//		 * DB 부하를 줄이기 위해서
-//		 * 
-//		 * 1) DB에는 서버에 저장할 파일 경로를 저장
-//		 * 
-//		 * 2) DB 삽입 / 수정 성공 후 서버에 파일 저장
-//		 * 
-//		 * 3) 만약에 파일 저장 실패 시
-//		 * -> 예외 발생
-//		 * -> @Transaction을 이용해서 rollback 수행
-//		 */
-//		
-//		// 1. 서버에 저장할 파일 경로 만들기
-//		
-//		// 파일이 저장될 서버 폴더 경로
-//		String folderPath = "C:/uploadFiles/test/"; // /myPage/file/** 과 연결되어있음
-//		
-//		// 클라이언트가 파일이 저장된 폴더에 접근할 수 있는 주소(정적리소스 요청 주소)
-//		String webPath = "/myPage/file/";
-//		
-//		// 2. DB에 전달할 데이터를 DTO로 묶기
-//		// webPath, memberNo, 원본 파일명, 변경된 파일명
-//		String fileRename = Utility.fileRename(uploadFile.getOriginalFilename());
-//		
-//		// Builder 패턴을 이용해서 uploadFile 객체 생성
-//		// 장점 1)
-//
-//		// 2. Builder 패턴을 이용해서 Upload 객체 생성
-//		UploadFile uf = UploadFile.builder()
-//						.memberNo(memberNo)
-//						.filePath(webPath)
-//						.fileOriginalName(uploadFile.getOriginalFilename())
-//						.fileRename(fileRename)
-//						.build();
-//		
-//		// 3. DTO 객체를 DB에 전달하기 (INSERT 하기)
-//		int result = mapper.insertUploadFile(uf);
-//		
-//		// 4. 삽입 성공 시 파일을 지정된 서버 폴더에 저장
-//		if(result == 0) return 0;
-//		
-//		// folderPath 경로(C:/uploadFiles/test/변경된파일명) 으로
-//		// 파일을 서버 컴퓨터로 저장!
-//		uploadFile.transferTo(new File(folderPath+fileRename));
-//		
-//		return result;
-//	}
-//
-//
-//	@Override
-//	public List<UploadFile> fileList(int memberNo) {
-//		return mapper.fileList(memberNo);
-//	}
-//
-//
-//	// 여러 파일 업로드 서비스
-//	@Override
-//	public int fileUpload3(List<MultipartFile> aaaList,
-//							List<MultipartFile> bbbList,
-//							int memberNo) throws Exception {
-//		
-//		// 1. aaaList 처리
-//		int result1 = 0; // 결과(INSERT된 행의 갯수) 저장할 변수
-//		
-//		// 업로드된 파일이 없을 경우를 제외하고 업로드
-//		for(MultipartFile file : aaaList) {
-//			
-//			if(file.isEmpty()) { // 파일이 없으면 다음 파일
-//				continue;
-//			}
-//			
-//			// DB에 저장 + 서버 실제로 저장 -> fileUpload2()
-//			// fileUpload2() 메서드를 호출(재활용)
-//			result1 += fileUpload2(file, memberNo); // int형으로 삽입된 행의 갯수
-//		}
-//		
-//		// 2. bbbList 처리
-//		int result2 = 0; // 결과(INSERT된 행의 갯수) 저장할 변수
-//		
-//		// 업로드된 파일이 없을 경우를 제외하고 업로드
-//		for(MultipartFile file : bbbList) {
-//			
-//			if(file.isEmpty()) { // 파일이 없으면 다음 파일
-//				continue;
-//			}
-//			
-//			// DB에 저장 + 서버 실제로 저장 -> fileUpload2()
-//			// fileUpload2() 메서드를 호출(재활용)
-//			result2 += fileUpload2(file, memberNo); // int형으로 삽입된 행의 갯수
-//		}
-//		
-//		
-//		return result1 + result2;
-//	}
-//
-//
-//	// 프로필 이미지 변경 서비스
-//	@Override
-//	public int profile(MultipartFile profileImg, MemberDto loginMember) throws Exception {
-//		
-//		// 프로필 이미지 경로
-//		String updatePath = null;
-//		
-//		// 변경명 저장
-//		String rename = null;
-//		
-//		// 업로드한 이미지가 있을 경우
-//		// - 있을 경우 : 경로 조합 (클라이언트 접근 경로 + 리네임파일명)
-//		if(!profileImg.isEmpty()) {
-//			// 1. 파일명 변경
-//			rename = Utility.fileRename(profileImg.getOriginalFilename());
-//			
-//			// 2. /myPage/profile/변경된파일명
-//			updatePath = profileWebPath + rename;
-//		}
-//		
-//		// 수정된 프로필 이미지 경로 + 회원 번호를 저장할 DTO 객체
-//		MemberDto member = MemberDto.builder()
-//						.memberNo(loginMember.getMemberNo())
-//						.profileImg(updatePath)
-//						.build();
-//		
-//		int result = mapper.profile(member);
-//		
-//		if(result >0) {
-//			
-//			// 프로필 이미지를 없애는 update를 한 경우를 제외
-//			// -> 업로드한 이미지가 있을 경우
-//			if(!profileImg.isEmpty()) {
-//				// 파일을 서버에 저장
-//				profileImg.transferTo(new File(profileFolderPath + rename));
-//						// C:/uploadFiles/profile/ 변경한 이름
-//			}
-//			
-//			// 세션에 저장된 loginMember의 프로필 이미지 경로를
-//			// DB와 동기화
-//			loginMember.setProfileImg(updatePath);
-//			
-//		}
-//		
-//		return result;
-//	}
+
+
 
 }
