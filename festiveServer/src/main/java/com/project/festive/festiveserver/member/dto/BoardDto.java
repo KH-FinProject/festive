@@ -11,13 +11,12 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MemberDto {
+public class BoardDto {
 
   private Long memberNo;
   private String id;
   private String name;
   private String email;
-  private String tel;
   private String nickname;
   private String password;
   private String profileImage;
@@ -25,4 +24,9 @@ public class MemberDto {
   private String role;
   private String address;
   
+  private int boardNo;
+  private String title;
+  private String createDate;
+  private int views;
+  private int likes;
 }

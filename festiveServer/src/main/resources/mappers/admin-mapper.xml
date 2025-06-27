@@ -12,6 +12,7 @@
 	<insert id="createAdminAccount">
   INSERT INTO "MEMBER" (
     MEMBER_NO,
+    ID,
     NAME,
     EMAIL,
     PASSWORD,
@@ -21,6 +22,7 @@
     SANCTION_COUNT
   ) VALUES (
     64,
+    #{email},
     #{name},
     #{email},
     #{password},

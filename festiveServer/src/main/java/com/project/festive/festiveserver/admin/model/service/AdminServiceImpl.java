@@ -24,7 +24,6 @@ public class AdminServiceImpl implements AdminService{
 	// 관리자 이메일 중복 검사
 	@Override
 	public int checkEmail(String email) {
-		log.info("디질래? 서비스단 도착");
 		return mapper.checkEmail(email);
 	}
 

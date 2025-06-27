@@ -1,7 +1,9 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import './MyPageSideBar.css';
 
-const MyPageSideBar = () => {
+const MyPageSideBar = ({ name }) => {
+  const location = useLocation();
+
   return (
     <aside className="mypage-sidebar">
       <br /><br />
@@ -10,7 +12,7 @@ const MyPageSideBar = () => {
           src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
           alt="프로필"
         />
-        <p>김성원</p><br />
+        <p>{name}</p><br />
       </div>
       <div className="mypage-sidebar-section">
         <NavLink
@@ -56,7 +58,6 @@ const MyPageSideBar = () => {
         >
           <span>내가 쓴 게시글 및 댓글</span>
         </NavLink>
-
         <NavLink
           to="/mypage/withdrawal"
           className={({ isActive }) =>

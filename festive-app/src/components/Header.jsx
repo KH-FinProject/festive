@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 
 function Header() {
-  const isLoggedIn = true;
+  const isLoggedIn = false;
   const user = {
     nickname: "홍길동",
     isAdmin: true,
