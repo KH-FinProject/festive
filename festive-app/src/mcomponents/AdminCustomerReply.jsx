@@ -57,7 +57,7 @@ const AdminCustomerReply = () => {
       const replyData = {
         boardNo: inquiry.boardNo,
         commentContent: replyContent.trim(),
-        memberNo: 1, // TODO: 실제 관리자 memberNo로 변경
+        memberNo: 46, // TODO: 실제 관리자 memberNo로 변경
       };
 
       const response = await axiosApi.post(
@@ -156,9 +156,6 @@ const AdminCustomerReply = () => {
                 </div>
               </div>
               <div className="inquiry-meta">
-                <span className="inquiry-category">
-                  [{inquiry?.category || "기타"}]
-                </span>
                 <span className="inquiry-author">
                   작성자: {inquiry?.memberNickname || "알 수 없음"}
                 </span>

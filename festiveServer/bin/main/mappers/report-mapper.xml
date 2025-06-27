@@ -77,7 +77,7 @@
             b.board_content AS boardContent,
             c.comment_no AS commentNo,
             c.comment_content AS commentContent,
-            TO_CHAR(c.comment_write_date, 'YYYY-MM-DD HH24:MI:SS') AS commentWriteDate
+            TO_CHAR(c.comment_create_date, 'YYYY-MM-DD HH24:MI:SS') AS commentWriteDate
         FROM report r
         LEFT JOIN member m ON r.member_no = m.member_no
         LEFT JOIN board b ON r.report_board_no = b.board_no

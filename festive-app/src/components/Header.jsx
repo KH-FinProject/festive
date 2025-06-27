@@ -46,7 +46,7 @@ function Header() {
               className="headernav-link hover-grow"
             >
               {item.name}
-              {item.role === "ADMIN" && hasNewReport && (
+              {item.name === "관리자" && hasNewReport && (
                 <span
                   style={{
                     background: "#ff4757",
