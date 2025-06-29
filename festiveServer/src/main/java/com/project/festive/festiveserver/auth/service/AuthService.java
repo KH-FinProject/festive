@@ -14,8 +14,6 @@ public interface AuthService {
 
 	String findRefreshToken(Long memberNo);
 
-	Member findMemberByEmail(String email);
-
 	LocalDateTime findRefreshTokenExpiration(Long memberNo);
 
 	void logout(Long memberNo);

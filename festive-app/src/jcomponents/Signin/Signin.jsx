@@ -39,7 +39,7 @@ const LoginForm = () => {
     try {
       const response = await axiosAPI.post(`/auth/login`, {
         id: formData.id,
-        password: formData.password,
+        password: formData.password
       });
       const data = response.data;
       

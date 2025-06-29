@@ -67,13 +67,11 @@ public class SecurityConfig {
             // 인증/회원/로그인 관련
             .requestMatchers("/auth/**", "/oauth2/**", "/member/**").permitAll()
 
-            // 와글 게시판 - 조회만 공개, 나머지는 인증 필요
-            .requestMatchers(HttpMethod.GET, "/api/wagle/boards/**", "/api/wagle/boards/*/comments").permitAll()
+            // 와글 게시판 - 인증 필요
             .requestMatchers("/api/wagle/**").authenticated()
 
-            // 고객센터 - 조회만 공개, 나머지는 인증 필요, 관리자 API는 별도 지정
-            .requestMatchers(HttpMethod.GET, "/api/customer/boards/**", "/api/customer/boards/*/comments").permitAll()
-            .requestMatchers("/api/customer/boards/**").authenticated()
+            // 고객센터 - 인증 필요
+            .requestMatchers("/api/customer/**").authenticated()
             .requestMatchers(HttpMethod.POST, "/api/customer/boards/*/comments").hasRole("ADMIN")
             .requestMatchers("/api/customer/statistics", "/api/customer/unanswered", "/api/customer/boards/*/status").hasRole("ADMIN")
 

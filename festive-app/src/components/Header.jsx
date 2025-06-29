@@ -12,8 +12,6 @@ const Header = () => {
   const { hasNewReport } = useAdminNotification();
 
   useEffect(() => {
-    console.log('Header member:', member);
-
     setLogin(isLoggedIn);
   }, [isLoggedIn]);
 

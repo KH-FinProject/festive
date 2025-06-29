@@ -46,7 +46,6 @@ public class AuthServiceImpl implements AuthService {
 	private final AuthMapper authMapper;
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
 	public Map<String, Object> login(LoginRequest request) {
 		
 		Map<String, Object> result = new HashMap<>();
@@ -128,11 +127,6 @@ public class AuthServiceImpl implements AuthService {
 	        .findById(memberNo)
 	        .map(RefreshToken::getExpirationDate)
 	        .orElse(null);
-	}
-
-	@Override
-	public Member findMemberByEmail(String email) {
-		return memberRepository.findByEmail(email).orElse(null);
 	}
 	
 	@Override

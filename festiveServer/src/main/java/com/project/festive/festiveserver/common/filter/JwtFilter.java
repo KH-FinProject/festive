@@ -1,10 +1,7 @@
 package com.project.festive.festiveserver.common.filter;
 
 import java.io.IOException;
-import java.time.Duration;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -53,45 +50,27 @@ public class JwtFilter extends OncePerRequestFilter {
           }
       }
 
-      // accessToken이 없는 경우
-      if (accessToken == null) {
-          log.info("accessToken 쿠키/헤더 모두 존재하지 않음: {} {}", method, requestURI);
-          
-          // permitAll 경로는 통과, 나머지는 401 오류
-          if (shouldNotFilter(request)) {
-              filterChain.doFilter(request, response);
-              return;
-          } else {
-              response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              return;
-          }
-      }
+      // accessToken이 존재하면서 accessToken이 유효한 경우
+      if (accessToken != null && jwtUtil.isValidToken(accessToken)) {
 
-      // accessToken이 있지만 유효하지 않은 경우
-      if (!jwtUtil.isValidToken(accessToken)) {
-          log.warn("유효하지 않은 accessToken: {} {}", method, requestURI);
-          
-          // permitAll 경로는 통과, 나머지는 401 오류 (클라이언트에서 /auth/refresh 호출하도록)
-          if (shouldNotFilter(request)) {
-              filterChain.doFilter(request, response);
-              return;
-          } else {
-              response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-              return;
-          }
+        log.info("유효한 토큰 확인: {} {}", method, requestURI);
+        
+        // JWT에서 사용자 정보 추출
+        Long memberNo = jwtUtil.getMemberNo(accessToken);
+        String email = jwtUtil.getEmail(accessToken);
+        String role = jwtUtil.getClaims(accessToken).get("role", String.class);
+
+        // SecurityContext에 인증 정보 저장
+        createAuthenticationToken(memberNo, email, role);
+        
+        filterChain.doFilter(request, response);
+
+      } else {
+        // accessToken이 없거나 유효하지 않은 경우
+        log.warn("유효하지 않은 토큰 확인: {} {}", method, requestURI);
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
       }
-      
-      // 토큰이 유효한 경우 - Spring Security 인증 토큰 생성
-      log.info("유효한 토큰 확인: {} {}", method, requestURI);
-      
-      // JWT에서 사용자 정보 추출
-      Long memberNo = jwtUtil.getMemberNo(accessToken);
-      String email = jwtUtil.getEmail(accessToken);
-      String role = jwtUtil.getClaims(accessToken).get("role", String.class);
-      
-      createAuthenticationToken(memberNo, email, role);
-      
-      filterChain.doFilter(request, response);
       
     } catch (Exception e) {
       log.error("JWT 필터 처리 중 오류 발생: {} {} - {}", method, requestURI, e.getMessage(), e);
@@ -102,7 +81,6 @@ public class JwtFilter extends OncePerRequestFilter {
   @Override
   protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
     String path = request.getRequestURI();
-    String method = request.getMethod();
     
     // 인증/회원 관련
     if (path.startsWith("/auth/") || path.startsWith("/oauth2/") || path.startsWith("/member/")) {
@@ -110,12 +88,6 @@ public class JwtFilter extends OncePerRequestFilter {
     }
     
     // API 경로들 (읽기 전용)
-    if (path.startsWith("/api/wagle/boards/") && (path.endsWith("/comments") || method.equals("GET"))) {
-      return true;
-    }
-    if (path.startsWith("/api/customer/boards/") && method.equals("GET")) {
-      return true;
-    }
     if (path.startsWith("/api/ai/chat") || path.startsWith("/api/ai/health")) {
       return true;
     }
@@ -169,6 +141,7 @@ public class JwtFilter extends OncePerRequestFilter {
       SecurityContextHolder.getContext().setAuthentication(authToken);
       
       log.debug("인증 토큰 생성 완료: {}", email);
+      
     } catch (Exception e) {
       log.error("인증 토큰 생성 실패: {} - {}", email, e.getMessage());
     }

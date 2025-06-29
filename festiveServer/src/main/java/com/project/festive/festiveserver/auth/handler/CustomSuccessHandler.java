@@ -36,11 +36,6 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     try {
       CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
       
-      log.info("사용자 정보: memberNo={}, email={}, name={}", 
-               customUserDetails.getMemberNo(), 
-               customUserDetails.getEmail(), 
-               customUserDetails.getUserName());
-
       // 사용자 권한 정보 추출
       String role = authentication.getAuthorities().iterator().next().getAuthority();
 
@@ -65,7 +60,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
           // .secure(true)
           // .sameSite("Strict")
           .maxAge(Duration.ofDays(7)) // 7일
-          .path("/auth/refresh") // refresh 엔드포인트에서만 사용 (보안 강화)
+          .path("/") // 모든 경로에서 사용 가능하도록 변경
           .build();
 
       response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
