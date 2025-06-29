@@ -50,9 +50,8 @@ public class JwtFilter extends OncePerRequestFilter {
           }
       }
 
-      // accessToken이 존재하면서 accessToken이 유효한 경우
+      // accessToken이 존재하면서 accessToken이 유효한 경우에만 SecurityContext 설정
       if (accessToken != null && jwtUtil.isValidToken(accessToken)) {
-
         log.info("유효한 토큰 확인: {} {}", method, requestURI);
         
         // JWT에서 사용자 정보 추출
@@ -62,60 +61,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // SecurityContext에 인증 정보 저장
         createAuthenticationToken(memberNo, email, role);
-        
-        filterChain.doFilter(request, response);
-
       } else {
-        // accessToken이 없거나 유효하지 않은 경우
-        log.warn("유효하지 않은 토큰 확인: {} {}", method, requestURI);
-
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        log.debug("토큰 없음 또는 유효하지 않음: {} {}", method, requestURI);
       }
+      
+      // 항상 다음 필터로 진행 (인증 실패 여부는 SecurityConfig에서 처리)
+      filterChain.doFilter(request, response);
       
     } catch (Exception e) {
       log.error("JWT 필터 처리 중 오류 발생: {} {} - {}", method, requestURI, e.getMessage(), e);
       filterChain.doFilter(request, response);
     }
-  }
-  
-  @Override
-  protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
-    String path = request.getRequestURI();
-    
-    // 인증/회원 관련
-    if (path.startsWith("/auth/") || path.startsWith("/oauth2/") || path.startsWith("/member/")) {
-      return true;
-    }
-    
-    // API 경로들 (읽기 전용)
-    if (path.startsWith("/api/ai/chat") || path.startsWith("/api/ai/health")) {
-      return true;
-    }
-    if (path.startsWith("/api/reports/")) {
-      return true;
-    }
-    
-    // 정적 리소스
-    if (path.startsWith("/favicon.ico") || path.startsWith("/static/") || 
-        path.startsWith("/css/") || path.startsWith("/js/") || 
-        path.startsWith("/images/") || path.startsWith("/assets/")) {
-      return true;
-    }
-    
-    // 정적 파일 확장자
-    if (path.endsWith(".ico") || path.endsWith(".css") || path.endsWith(".js") || 
-        path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || 
-        path.endsWith(".gif") || path.endsWith(".svg")) {
-      return true;
-    }
-    
-    // 시스템 경로
-    if (path.contains("/error") || path.startsWith("/actuator/") || 
-        path.startsWith("/.well-known/") || path.startsWith("/ws")) {
-      return true;
-    }
-    
-    return false;
   }
   
   /**

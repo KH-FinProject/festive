@@ -46,10 +46,6 @@ public class SecurityConfig {
         // CSRF(Cross-Site Request Forgery) 보호를 비활성화 (JWT 사용 시)
         .csrf(auth -> auth.disable())
         
-        // JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
-        // formLogin, oauth2Login 모두에 JWT 필터가 적용됨
-        .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
-        
         // formLogin 비활성화 (사용자 지정 로그인 사용)
         .formLogin(auth -> auth.disable())
         
@@ -64,13 +60,22 @@ public class SecurityConfig {
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
+
+            // WebSocket 관련 경로 - Spring Security 권장 방식
+            .requestMatchers("/ws/**", "/websocket/**").permitAll()
+
             // 인증/회원/로그인 관련
             .requestMatchers("/auth/**", "/oauth2/**", "/member/**").permitAll()
 
-            // 와글 게시판 - 인증 필요
+            // 와글 게시판 - 읽기는 공개, 쓰기/수정/삭제는 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/wagle/boards").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/wagle/boards/*").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/wagle/boards/*/comments").permitAll()
             .requestMatchers("/api/wagle/**").authenticated()
 
-            // 고객센터 - 인증 필요
+            // 고객센터 - 읽기는 공개, 쓰기/수정/삭제는 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/customer/boards").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/customer/boards/*").permitAll()
             .requestMatchers("/api/customer/**").authenticated()
             .requestMatchers(HttpMethod.POST, "/api/customer/boards/*/comments").hasRole("ADMIN")
             .requestMatchers("/api/customer/statistics", "/api/customer/unanswered", "/api/customer/boards/*/status").hasRole("ADMIN")
@@ -89,13 +94,17 @@ public class SecurityConfig {
             // 관리자 페이지
             .requestMatchers("/admin/**").hasRole("ADMIN")
 
-            // 정적 리소스/시스템 경로
-            .requestMatchers("/favicon.ico", "/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
+            // 정적 리소스/시스템 경로 - Spring Security 권장 방식
+            .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
             .requestMatchers("/*.ico", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg").permitAll()
-            .requestMatchers("/error", "/actuator/**", "/.well-known/**", "/ws/**").permitAll()
+            .requestMatchers("/error", "/actuator/**", "/.well-known/**").permitAll()
 
             // 그 외 모든 요청은 인증 필요
             .anyRequest().authenticated())
+        
+        // JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
+        // permitAll 경로는 JWT 필터를 거치지만 인증 실패 시에도 통과
+        .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
         
         //세션 설정 : STATELESS
         .sessionManagement(session -> session

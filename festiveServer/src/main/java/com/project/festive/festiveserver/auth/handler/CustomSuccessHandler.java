@@ -77,7 +77,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       log.error("OAuth2 로그인 성공 처리 중 오류 발생", e);
 
       if (!response.isCommitted()) {
-        response.sendRedirect("http://localhost:5173/login?error=oauth_failed");
+        response.sendRedirect("http://localhost:5173/signin?error=oauth_failed");
       }
     }
   }
