@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminMain from "./AdminMain";
 import AdminCreateAccount from "./AdminCreateAccount";
 import AdminDeleteMember from "./adminDeleteMember";
@@ -22,7 +22,10 @@ const AdminRoutes = () => (
     <Route path="applications" element={<AdminApplicationStatus />} />
     <Route path="write" element={<AdminBoardWrite />} />
     <Route path="reply" element={<AdminCustomerReply />} />
-    <Route path="report-detail/:reportNo" element={<AdminCustomerReportDetail />} />
+    <Route
+      path="report-detail/:reportNo"
+      element={<AdminCustomerReportDetail />}
+    />
     <Route path="appDetail" element={<AdminApplicationDetail />} />
   </Routes>
 );

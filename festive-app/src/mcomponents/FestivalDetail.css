@@ -228,14 +228,24 @@ h2 {
   color: #9dc4fe;
 }
 
+.map-container-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+}
 .map-container {
   height: 400px;
-  background: #f8f9fa;
   border-radius: 8px;
   /*  display: flex;
   align-items: center;
   justify-content: center; */
   border: 2px dashed #dee2e6;
+}
+
+.map-container-detail {
+  padding: 10px;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 /* Transport Section */

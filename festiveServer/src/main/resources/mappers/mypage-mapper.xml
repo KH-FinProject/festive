@@ -10,13 +10,14 @@
 		WHERE MEMBER_NO =
 		#{memberNo}
 	</select>
-	
+
 	<!-- 회원 비밀번호 변경 -->
- 	<update id="changePw">
- 		UPDATE "MEMBER" SET
- 		PASSWORD = #{encPw}
- 		WHERE MEMBER_NO = #{memberNo}
- 	</update>
+	<update id="changePw">
+		UPDATE "MEMBER" SET
+		PASSWORD = #{newEncodedPw}
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
+
 
 	<!-- 회원 탈퇴 -->
 	<update id="withdrawal">
@@ -25,33 +26,24 @@
 		WHERE MEMBER_NO
 		= #{memberNo}
 	</update>
-	
-	<!-- 파일 정보 DB에 삽입 -->
-	
-	<!-- 파일 목록 조회 -->
-	
-	<!-- 프로필 이미지 변경 -->
-	
-	
-	
-	
-	
-	
-	<!-- 내가 쓴 게시글 조회 -->
+
+
+	<!-- 내가 작성한 게시글 조회 -->
 	<select id="selectMyPosts">
+
         SELECT
-            b.BOARD_NO,
-            b.BOARD_TITLE,
-            m.MEMBER_NICKNAME,
-            b.BOARD_CREAT_DATE,
-            b.READ_COUNT,
-            COUNT(l.MEMBER_NO) AS LIKE_COUNT
+            b.BOARD_NO as boardNo,
+            b.BOARD_TITLE as boardTitle,
+            m.NICKNAME as memberNickname,
+            b.BOARD_CREAT_DATE as boardCreateDate,
+            b.READ_COUNT as boardViewCount,
+            COUNT(l.MEMBER_NO) AS boardLikeCount
         FROM BOARD b
         JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
         LEFT JOIN "LIKE" l ON b.BOARD_NO = l.BOARD_NO
         WHERE b.MEMBER_NO = #{memberNo}
         AND b.BOARD_DEL_FL = 'N'
-        GROUP BY b.BOARD_NO, b.BOARD_TITLE, m.MEMBER_NICKNAME, b.BOARD_CREAT_DATE, b.READ_COUNT
+        GROUP BY b.BOARD_NO, b.BOARD_TITLE, m.NICKNAME, b.BOARD_CREAT_DATE, b.READ_COUNT
         ORDER BY b.BOARD_CREAT_DATE DESC
     </select>
     
@@ -80,13 +72,23 @@
         WHERE MEMBER_NO = #{memberNo}
     </update>
 
-	<!-- 내 정보 조회 -->
-    <select id="selectMemberInfo">
-        SELECT MEMBER_NO as memberNo, TEL as tel, EMAIL as email,
-               ADDRESS as address, NICKNAME as nickname, NAME as name
-        FROM MEMBER
-        WHERE MEMBER_NO = #{memberNo}
-    </select>
 
+	<select id="selectMyInfo">
+		SELECT MEMBER_NO, MEMBER_PHONE, MEMBER_EMAIL, MEMBER_ADDRESS,
+		MEMBER_DETAIL_ADDRESS, MEMBER_POST_CODE
+		FROM MEMBER
+		WHERE MEMBER_NO = #{memberNo}
+	</select>
+
+	<update id="updateMyInfo">
+		UPDATE MEMBER
+		SET
+		MEMBER_PHONE = #{memberPhone},
+		MEMBER_EMAIL = #{memberEmail},
+		MEMBER_ADDRESS = #{memberAddress},
+		MEMBER_DETAIL_ADDRESS = #{memberDetailAddress},
+		MEMBER_POST_CODE = #{memberPostCode}
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
 
 </mapper>

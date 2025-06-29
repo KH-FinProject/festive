@@ -17,7 +17,7 @@ const MyPageMyComment = () => {
         //     return;
         // }
 
-        fetch(`http://localhost:8080/mypage/comments?memberNo=${memberNo}`)
+        fetch(`http://localhost:8080/mypage/comment?memberNo=${memberNo}`)
             .then(res => res.json())
             .then(data => {
                 setComments(data);

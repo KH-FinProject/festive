@@ -4,7 +4,7 @@
 
     <!-- 신고 등록 -->
     <insert id="insertReport" >
-        INSERT INTO report (
+        INSERT INTO REPORT (
         	REPORT_NO,
             MEMBER_NO,
             REPORTER_NO,
@@ -17,7 +17,7 @@
             REPORT_SEQ.NEXTVAL,
             #{memberNo},
             #{reporterNo},
-            TO_DATE(#{reportTime}, 'YYYY-MM-DD HH24:MI:SS'),
+            SYSDATE,
             #{reportReason},
             #{reportStatus},
             #{reportType},
@@ -50,16 +50,16 @@
     <!-- 신고 상세 조회 -->
     <select id="selectReportDetail" parameterType="int" resultType="com.project.festive.festiveserver.report.model.dto.Report">
         SELECT 
-            report_no,
-            member_no,
-            reporter_no,
-            report_time,
-            report_reason,
-            report_status,
-            report_type,
-            report_board_no
-        FROM report
-        WHERE report_no = #{reportNo}
+            REPORT_NO as reportNo,
+            MEMBER_NO as memberNo,
+            REPORTER_NO as reporterNo,
+            REPORT_TIME as reportTime,
+            REPORT_REASON as reportReason,
+            REPORT_STATUS as reportStatus,
+            REPORT_TYPE as reportType,
+            REPORT_BOARD_NO as reportBoardNo
+        FROM REPORT
+        WHERE REPORT_NO = #{reportNo}
     </select>
 
     <!-- 신고 상세 조회 (확장: 게시글/댓글/신고내역 모두 반환) -->
@@ -77,11 +77,11 @@
             b.board_content AS boardContent,
             c.comment_no AS commentNo,
             c.comment_content AS commentContent,
-            TO_CHAR(c.comment_write_date, 'YYYY-MM-DD HH24:MI:SS') AS commentWriteDate
+            TO_CHAR(c.comment_create_date, 'YYYY-MM-DD HH24:MI:SS') AS commentWriteDate
         FROM report r
         LEFT JOIN member m ON r.member_no = m.member_no
         LEFT JOIN board b ON r.report_board_no = b.board_no
-        LEFT JOIN "COMMENT" c ON r.report_type = 1 AND c.board_no = b.board_no AND c.comment_no = r.report_board_no
+        LEFT JOIN WAGLE_COMMENT c ON r.report_type = 1 AND c.board_no = b.board_no AND c.comment_no = r.report_board_no
         WHERE r.report_no = #{reportNo}
     </select>
 

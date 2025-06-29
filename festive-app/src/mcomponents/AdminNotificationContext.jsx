@@ -47,6 +47,7 @@ export function AdminNotificationProvider({ children }) {
             console.log("/topic/admin-alerts 구독 요청 전송");
           } else if (event.data.includes("/topic/admin-alerts")) {
             console.log("관리자 알림 메시지 받음!");
+            // 신고 또는 문의글 알림 모두 처리
             setHasNewReport(true);
           }
         };

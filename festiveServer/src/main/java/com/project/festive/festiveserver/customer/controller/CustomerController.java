@@ -4,10 +4,15 @@ import com.project.festive.festiveserver.customer.dto.CustomerInquiryDto;
 import com.project.festive.festiveserver.customer.service.CustomerService;
 import com.project.festive.festiveserver.wagle.dto.BoardDto;
 import com.project.festive.festiveserver.wagle.dto.CommentDto;
+import com.project.festive.festiveserver.common.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Map;
@@ -15,11 +20,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/customer")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @Slf4j
 public class CustomerController {
     
     private final CustomerService customerService;
+    private final JwtUtil jwtUtil;
     
     /**
      * 고객센터 게시글 목록 조회 (페이징)
@@ -62,9 +68,22 @@ public class CustomerController {
     @PostMapping("/boards")
     public ResponseEntity<String> createCustomerBoard(@RequestBody CustomerInquiryDto inquiryDto) {
         try {
-            // TODO: 로그인 사용자 정보에서 memberNo 가져오기
-            inquiryDto.setMemberNo(1L); // 임시 설정
+            // 안전한 인증 정보 추출
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+            }
             
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof CustomUserDetails)) {
+                log.error("인증 정보 타입 오류: {}", principal.getClass().getName());
+                return ResponseEntity.status(401).body("유효하지 않은 인증 정보입니다.");
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            Long memberNo = userDetails.getMemberNo();
+            
+            inquiryDto.setMemberNo(memberNo);
             int result = customerService.createInquiry(inquiryDto);
             if (result > 0) {
                 return ResponseEntity.ok("문의글이 작성되었습니다.");
