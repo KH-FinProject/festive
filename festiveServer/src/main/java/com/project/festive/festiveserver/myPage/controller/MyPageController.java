@@ -185,7 +185,7 @@ public class MyPageController {
         }
     }
     
-    // 프로필 정보 조회 (이름, 닉네임, 프로필 이미지) - /mypage/profile
+ // 프로필 정보 조회 (이름, 닉네임, 프로필 이미지) - /mypage/profile
     @GetMapping("/profile")
     public ResponseEntity<MemberDto> getProfileInfo(HttpServletRequest request) {
         try {

@@ -1,20 +1,53 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Editor } from "@toast-ui/react-editor";
 import "@toast-ui/editor/dist/toastui-editor.css";
 import Title from "./Title";
 import "./CustomerWrite.css";
-import { useNavigate } from "react-router-dom";
-import axiosApi from "../../api/axiosAPI";
+import { useNavigate, useParams } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
+import axiosApi from "../../api/axiosAPI";
 
-function CustomerWrite() {
+function CustomerEdit() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const editorRef = useRef();
   const [title, setTitle] = useState("");
-  const [category] = useState("기타");
-  const [priority] = useState("일반");
+  const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { member } = useAuthStore();
+
+  // 기존 게시글 데이터 불러오기
+  useEffect(() => {
+    const fetchBoardData = async () => {
+      try {
+        const response = await axiosApi.get(
+          `http://localhost:8080/api/customer/boards/${id}`
+        );
+        const data = response.data;
+
+        // 작성자 확인
+        if (data.memberNo !== member?.memberNo) {
+          alert("본인이 작성한 문의글만 수정할 수 있습니다.");
+          navigate("/customer-center");
+          return;
+        }
+
+        setTitle(data.boardTitle);
+        setContent(data.boardContent);
+      } catch (error) {
+        console.error("게시글 데이터 불러오기 실패:", error);
+        alert("게시글을 불러올 수 없습니다.");
+        navigate("/customer-center");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (member && id) {
+      fetchBoardData();
+    }
+  }, [id, member, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,8 +66,8 @@ function CustomerWrite() {
     }
 
     // 내용 검증
-    const content = editorRef.current.getInstance().getMarkdown();
-    if (!content.trim()) {
+    const editorContent = editorRef.current.getInstance().getMarkdown();
+    if (!editorContent.trim()) {
       alert("내용을 입력해주세요.");
       return;
     }
@@ -42,37 +75,25 @@ function CustomerWrite() {
     setIsSubmitting(true);
 
     try {
-      const inquiryData = {
+      const boardData = {
         boardTitle: title.trim(),
-        boardContent: content.trim(),
-        category: category,
-        priority: priority,
-        inquiryStatus: "대기중",
+        boardContent: editorContent.trim(),
       };
 
-      const response = await axiosApi.post(
-        "http://localhost:8080/api/customer/boards",
-        inquiryData
+      const response = await axiosApi.put(
+        `http://localhost:8080/api/customer/boards/${id}`,
+        boardData
       );
 
       if (response.status === 200) {
-        alert("문의가 성공적으로 등록되었습니다.");
-        navigate("/customer-center");
+        alert("문의글이 성공적으로 수정되었습니다.");
+        navigate(`/customer-center/${id}`);
+      } else {
+        alert("문의글 수정에 실패했습니다.");
       }
     } catch (error) {
-      console.error("문의 등록 실패:", error);
-
-      if (error.response) {
-        // 서버에서 응답이 온 경우
-        const errorMessage = error.response.data || "문의 등록에 실패했습니다.";
-        alert(errorMessage);
-      } else if (error.request) {
-        // 요청은 보냈지만 응답을 받지 못한 경우
-        alert("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
-      } else {
-        // 요청 자체를 보내지 못한 경우
-        alert("문의 등록 중 오류가 발생했습니다.");
-      }
+      console.error("문의글 수정 실패:", error);
+      alert("문의글 수정 중 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
     }
@@ -80,17 +101,28 @@ function CustomerWrite() {
 
   const handleCancel = () => {
     const confirmCancel = window.confirm(
-      "작성 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?"
+      "수정 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?"
     );
     if (confirmCancel) {
-      navigate("/customer-center");
+      navigate(`/customer-center/${id}`);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="customer-write-outer">
+        <Title currentPage="문의글 수정" />
+        <div className="customer-write-form-container">
+          <div style={{ textAlign: "center", padding: "2rem" }}>로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="customer-write-outer">
       <div className="customer-write-title-wrapper">
-        <Title />
+        <Title currentPage="문의글 수정" />
       </div>
       <div className="customer-write-form-container">
         <form onSubmit={handleSubmit} className="customer-write-form">
@@ -113,6 +145,7 @@ function CustomerWrite() {
             placeholder="문의 내용을 입력하세요"
             previewStyle="vertical"
             disabled={isSubmitting}
+            initialValue={content}
           />
           <div className="customer-write-btns">
             <button
@@ -128,7 +161,7 @@ function CustomerWrite() {
               className="customer-write-submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "등록 중..." : "문의등록"}
+              {isSubmitting ? "수정 중..." : "수정완료"}
             </button>
           </div>
         </form>
@@ -137,4 +170,4 @@ function CustomerWrite() {
   );
 }
 
-export default CustomerWrite;
+export default CustomerEdit;
