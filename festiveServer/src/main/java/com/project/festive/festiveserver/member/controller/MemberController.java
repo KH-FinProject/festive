@@ -157,7 +157,7 @@ public class MemberController {
             }
             
             response.put("success", true);
-            response.put("isAvailable", isAvailable);
+            response.put("available", isAvailable);
             if (code != null) {
                 response.put("code", code);
             }
