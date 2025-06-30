@@ -37,9 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
+	private final BCryptPasswordEncoder bcrypt;
 	private final MemberRepository memberRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
-	private final BCryptPasswordEncoder bcrypt;
 	private final AuthKeyRepository authKeyRepository;
 	private final JwtUtil jwtUtil;
 	private final JavaMailSender mailSender;
@@ -285,6 +285,20 @@ public class AuthServiceImpl implements AuthService {
 	public boolean isEmailDuplicate(String email) {
 			// MemberRepository를 사용하여 이메일 존재 여부 확인
 			return memberRepository.findByEmail(email).isPresent();
+	}
+	
+	@Override
+	public void saveRefreshToken(Long memberNo, String refreshToken, LocalDateTime expirationDate) {
+		RefreshToken refreshTokenEntity = RefreshToken.builder()
+			.memberNo(memberNo)
+			.refreshToken(refreshToken)
+			.expirationDate(expirationDate)
+			.build();
+
+		int updateResult = authMapper.updateRefreshToken(refreshTokenEntity);
+		if (updateResult == 0) {
+			authMapper.insertRefreshToken(refreshTokenEntity);
+		}
 	}
 	
 }

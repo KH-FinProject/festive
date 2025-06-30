@@ -34,8 +34,7 @@ const Header = () => {
           ...(member?.role === "ADMIN"
             ? [{ name: "관리자", path: "/admin" }]
             : []),
-        ].map((item) =>
-          item.path !== "#" ? (
+        ].map((item) =>(
             <Link
               key={item.name}
               to={item.path}
@@ -62,12 +61,7 @@ const Header = () => {
                 </span>
               )}
             </Link>
-          ) : (
-            <a key={item.name} href="#" className="headernav-link hover-grow">
-              {item.name}
-            </a>
-          )
-        )}
+        ))}
       </nav>
       <div className="headerheader-right">
         <div className="headerweather-placeholder">

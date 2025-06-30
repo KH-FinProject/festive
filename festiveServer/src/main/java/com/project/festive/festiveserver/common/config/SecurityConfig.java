@@ -7,10 +7,10 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
+import jakarta.servlet.http.HttpServletResponse;
 
 import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
@@ -21,10 +21,6 @@ import com.project.festive.festiveserver.common.util.JwtUtil;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true) // 메서드 레벨 보안 활성화
 public class SecurityConfig {
-    
-    // bcrypt 사용을 위한 Bean 등록
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
@@ -51,6 +47,20 @@ public class SecurityConfig {
         
         //HTTP Basic 인증 방식 disable
         .httpBasic(auth -> auth.disable())
+        
+        // 인증/인가 실패 시 JSON 반환
+        .exceptionHandling(auth -> auth
+            .authenticationEntryPoint((request, response, authException) -> {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\":false,\"message\":\"인증이 필요합니다.\"}");
+            })
+            .accessDeniedHandler((request, response, accessDeniedException) -> {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\":false,\"message\":\"권한이 없습니다.\"}");
+            })
+        )
         
         //oauth2
         .oauth2Login(oauth2 -> oauth2

@@ -51,13 +51,6 @@ axiosApi.interceptors.response.use(
                 return Promise.reject(error);
             }
 
-            // /auth/userInfo 요청인 경우는 토큰 갱신을 시도하지 않음
-            // (초기 상태에서 무한 루프 방지)
-            if (originalRequest.url?.includes('/auth/userInfo')) {
-                console.log("사용자 정보 요청이므로 토큰 갱신 시도하지 않음");
-                return Promise.reject(error);
-            }
-
             // /auth/ 경로의 요청인지 확인 (/auth/refresh, /auth/userInfo는 제외)
             const isAuthRequest = originalRequest.url?.includes('/auth/') &&
                                  !originalRequest.url?.includes('/auth/refresh') &&

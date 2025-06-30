@@ -4,6 +4,7 @@ import "./MyPageWithdrawal.css"; // 공통 스타일 유지
 import MyPageSideBar from "./MyPageSideBar.jsx";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
+import axiosApi from "../../api/axiosAPI";
 
 const MyPageEditProfile = () => {
   const { member } = useAuthStore();
@@ -25,33 +26,23 @@ const MyPageEditProfile = () => {
 
   // --- 초기 프로필 정보 로드 ---
   const fetchProfileInfo = useCallback(async () => {
-    if (!member) {
-      alert("로그인이 필요합니다.");
-      navigate("/signin");
-      return;
-    }
 
-    try {
-      const response = await fetch(`http://localhost:8080/mypage/profile`, {
-        credentials: "include",
-      });
-      const data = await response.json();
-      setProfileData({
-        name: data.name,
-        nickname: data.nickname,
-        profileImageUrl: data.profileImage, // 백엔드에서 profileImage로 받아옴
-        currentPassword: "", // 초기 비밀번호는 비워둠
-      });
-      originalNicknameRef.current = data.nickname; // 초기 닉네임 저장
-      setIsNicknameChecked(true); // 초기 닉네임은 중복 검사 필요 없음
-      setIsNicknameAvailable(true);
-      setNewProfileImageFile(null); // 새로운 파일 선택 상태 초기화
-      setPreviewImageUrl(null); // 미리보기 URL 초기화
-    } catch (err) {
-      console.error("회원 프로필 정보 조회 실패", err);
-      alert("프로필 정보를 불러오는데 실패했습니다.");
-    }
-  }, [member, navigate]);
+    const response = await axiosApi.get(`/mypage/profile`);
+    const data = response.data;
+
+    console.log(data);
+    setProfileData({
+      name: data.name,
+      nickname: data.nickname,
+      profileImageUrl: data.profileImage, // 백엔드에서 profileImage로 받아옴
+      currentPassword: "", // 초기 비밀번호는 비워둠
+    });
+    originalNicknameRef.current = data.nickname; // 초기 닉네임 저장
+    setIsNicknameChecked(true); // 초기 닉네임은 중복 검사 필요 없음
+    setIsNicknameAvailable(true);
+    setNewProfileImageFile(null); // 새로운 파일 선택 상태 초기화
+    setPreviewImageUrl(null); // 미리보기 URL 초기화
+  }, []);
 
   useEffect(() => {
     fetchProfileInfo();
@@ -93,13 +84,15 @@ const MyPageEditProfile = () => {
     }
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/mypage/profile/checkNickname?nickname=${nickname}`,
-        {
-          credentials: "include",
-        }
+      const response = await axiosApi.get(
+        `/mypage/profile/checkNickname?nickname=${nickname}`
       );
-      const data = await response.json();
+      const data = response.data;
+      console.log(data);
+
+      if (data.success) {
+        
+      }
       if (data.isDuplicate) {
         alert("이미 사용 중인 닉네임입니다.");
         setIsNicknameAvailable(false);

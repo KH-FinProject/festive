@@ -14,4 +14,6 @@ public interface OAuth2Response {
     String getNickname();
     //프로필 사진
     String getProfileImage();
+    // 전화번호
+    String getTel();
 }

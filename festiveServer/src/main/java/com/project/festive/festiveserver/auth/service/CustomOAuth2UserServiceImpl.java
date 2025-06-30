@@ -83,6 +83,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
                     .role("USER")  // ROLE_ 접두사 (CustomUserDetails에서 추가)
                     .nickname(oAuth2Response.getNickname())
                     .profileImage(oAuth2Response.getProfileImage())
+                    .tel(oAuth2Response.getTel())
                     .build();
 
                 log.debug("새로운 OAuth2 사용자 생성: name={}, email={}, socialId={}", 
@@ -101,7 +102,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
                 existingMember.setEmail(oAuth2Response.getEmail());
                 existingMember.setNickname(oAuth2Response.getNickname());
                 existingMember.setProfileImage(oAuth2Response.getProfileImage());
-
+                
                 log.debug("기존 OAuth2 사용자 업데이트: name={}, email={}, socialId={}", 
                          oAuth2Response.getName(), oAuth2Response.getEmail(), socialId);
                 

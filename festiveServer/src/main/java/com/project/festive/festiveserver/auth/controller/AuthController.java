@@ -38,56 +38,163 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
 
-    @GetMapping("/userInfo")
-    public ResponseEntity<Object> userInfo(HttpServletRequest request) {
+    @GetMapping("userInfo")
+    public ResponseEntity<?> userInfo(HttpServletRequest request) {
+        log.info("=== userInfo API 호출 시작 ===");
+        
         try {
             // 쿠키에서 accessToken 추출
             Cookie cookie = WebUtils.getCookie(request, "accessToken");
             String accessToken = cookie != null ? cookie.getValue() : null;
+            log.info("쿠키에서 accessToken 추출: {}", accessToken != null ? "존재" : "없음");
             
             // Authorization 헤더에서 Bearer 토큰 추출
             if (accessToken == null) {
                 String authHeader = request.getHeader("Authorization");
+                log.info("Authorization 헤더 확인: {}", authHeader != null ? "존재" : "없음");
+                
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     accessToken = authHeader.substring(7);
+                    log.info("Authorization 헤더에서 accessToken 추출 완료");
                 }
             }
             
-            // accessToken이 없는 경우
-            if (accessToken == null) {
+            Long memberNo = null;
+            String email = null;
+            String socialId = null;
+            
+            // accessToken이 있는 경우 유효성 검사
+            if (accessToken != null) {
+                log.info("최종 accessToken 확인: {}", accessToken.substring(0, Math.min(20, accessToken.length())) + "...");
+                
+                boolean isTokenValid = jwtUtil.isValidToken(accessToken);
+                log.info("토큰 유효성 검사 결과: {}", isTokenValid);
+                
+                if (isTokenValid) {
+                    // 유효한 토큰인 경우
+                    log.info("토큰 유효성 검사 통과");
+                    memberNo = jwtUtil.getMemberNo(accessToken);
+                    email = jwtUtil.getEmail(accessToken);
+                    socialId = jwtUtil.getSocialId(accessToken);
+                    
+                    log.info("JWT 토큰에서 추출한 정보 - memberNo: {}, email: {}, socialId: {}", 
+                            memberNo, email, socialId);
+                    
+                    Member member = authService.findMember(memberNo);
+                    if (member == null) {
+                        log.warn("회원을 찾을 수 없습니다. memberNo: {}", memberNo);
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("회원을 찾을 수 없습니다.");
+                    }
+                    
+                    log.info("회원 정보 조회 완료 - memberNo: {}, email: {}, name: {}, nickname: {}, socialId: {}", 
+                            member.getMemberNo(), member.getEmail(), member.getName(), 
+                            member.getNickname(), member.getSocialId());
+
+                    log.info("응답 데이터 생성 완료");
+                    log.info("=== userInfo API 호출 종료 ===");
+
+                    return ResponseEntity.ok(createUserInfoResponse(member));
+                } else {
+                    log.info("accessToken이 만료되어 refreshToken으로 새로운 토큰 발급 시도");
+                }
+            } else {
+                log.info("accessToken이 없어서 refreshToken으로 새로운 토큰 발급 시도");
+            }
+            
+            // accessToken이 없거나 만료된 경우 refreshToken으로 새로운 accessToken 발급 시도
+            Cookie refreshCookie = WebUtils.getCookie(request, "refreshToken");
+            if (refreshCookie == null) {
+                log.warn("refreshToken이 없습니다.");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
             
-            // accessToken 유효성 검사 및 정보 추출
-            if (!jwtUtil.isValidToken(accessToken)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+            String refreshToken = refreshCookie.getValue();
+            if (refreshToken == null || refreshToken.isEmpty()) {
+                log.warn("refreshToken이 비어있습니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
-
-            Long memberNo = jwtUtil.getMemberNo(accessToken);
+            
+            log.info("refreshToken 확인: {}", refreshToken.substring(0, Math.min(20, refreshToken.length())) + "...");
+            
+            // refreshToken 유효성 검사
+            if (!jwtUtil.isValidToken(refreshToken)) {
+                log.warn("refreshToken이 유효하지 않습니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+            }
+            
+            // refreshToken에서 사용자 정보 추출
+            memberNo = jwtUtil.getMemberNo(refreshToken);
+            email = jwtUtil.getEmail(refreshToken);
+            socialId = jwtUtil.getSocialId(refreshToken);
+            
+            log.info("refreshToken에서 추출한 정보 - memberNo: {}, email: {}, socialId: {}", 
+                    memberNo, email, socialId);
+            
+            // DB에 저장된 refreshToken과 일치하는지 확인
+            String savedRefreshToken = authService.findRefreshToken(memberNo);
+            if (!refreshToken.equals(savedRefreshToken)) {
+                log.warn("DB에 저장된 refreshToken과 일치하지 않습니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+            }
+            
+            // DB에 저장된 RefreshToken 만료 여부 확인
+            LocalDateTime expirationDate = authService.findRefreshTokenExpiration(memberNo);
+            if (expirationDate.isBefore(LocalDateTime.now())) {
+                log.warn("refreshToken이 만료되었습니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+            }
+            
+            // 새로운 accessToken 발급
             Member member = authService.findMember(memberNo);
-
             if (member == null) {
+                log.warn("회원을 찾을 수 없습니다. memberNo: {}", memberNo);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("회원을 찾을 수 없습니다.");
             }
-
-            // 회원 정보 조회 결과를 필요한 정보만 담은 Map으로 변환
-            Map<String, Object> map = new HashMap<>();
-            map.put("memberNo", member.getMemberNo());
-            map.put("email", member.getEmail());
-            map.put("name", member.getName());
-            map.put("nickname", member.getNickname());
-            map.put("role", member.getRole());
-            map.put("profileImage", member.getProfileImage());
-
-            return ResponseEntity.ok(map);
+            
+            String newAccessToken = jwtUtil.generateAccessToken(memberNo, email, member.getRole(), member.getSocialId());
+            log.info("새로운 accessToken 발급 완료");
+            
+            // 새로운 accessToken을 쿠키로 설정
+            ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
+                    .httpOnly(true)
+                    .maxAge(30 * 60) // 30분
+                    .path("/")
+                    .build();
+            
+            log.info("회원 정보 조회 완료 - memberNo: {}, email: {}, name: {}, nickname: {}, socialId: {}", 
+                    member.getMemberNo(), member.getEmail(), member.getName(), 
+                    member.getNickname(), member.getSocialId());
+            
+            log.info("응답 데이터 생성 완료");
+            log.info("=== userInfo API 호출 종료 ===");
+            
+            // 응답에 새로운 쿠키 포함
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, newAccessTokenCookie.toString())
+                    .body(createUserInfoResponse(member));
 
         } catch (Exception e) {
             log.error("userInfo 조회 중 오류 발생", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 정보 조회 중 오류가 발생했습니다.");
         }
     }
+    
+    /**
+     * 회원 정보를 응답 형식에 맞게 변환하는 헬퍼 메서드
+     */
+    private Map<String, Object> createUserInfoResponse(Member member) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("memberNo", member.getMemberNo());
+        map.put("email", member.getEmail());
+        map.put("name", member.getName());
+        map.put("nickname", member.getNickname());
+        map.put("role", member.getRole());
+        map.put("profileImage", member.getProfileImage());
+        map.put("socialId", member.getSocialId());
+        return map;
+    }
 
-    @PostMapping("/login")
+    @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         // JSON 형식으로 비동기 요청을 하기 때문에, @ModelAttribute가 아닌, @RequestBody 활용
         // id, password (LoginRequest) -> 기본적인 회원정보 + 토큰 (LoginResponse)
@@ -140,7 +247,7 @@ public class AuthController {
         }
     }
     
-    @PostMapping("/refresh")
+    @PostMapping("refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request) {
         
         Map<String, Object> responseBody = new HashMap<>();
@@ -264,7 +371,7 @@ public class AuthController {
     
     // 이메일 변경 인증번호 요청 및 이메일 중복 검사를 위해 지현이가 추가한 코드
     // 이메일 인증 번호 발송 요청 (수정: 중복 확인 로직 추가)
-    @PostMapping("/email/send")
+    @PostMapping("email/send")
     public ResponseEntity<Map<String, String>> sendEmailVerification(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
         if (email == null || email.isEmpty()) {
@@ -287,7 +394,7 @@ public class AuthController {
     
     // 이메일 변경 인증번호 요청 및 이메일 중복 검사를 위해 지현이가 추가한 코드
     // 이메일 인증 번호 확인 요청
-    @PostMapping("/email/verify")
+    @PostMapping("email/verify")
     public ResponseEntity<Map<String, String>> verifyEmail(@RequestBody AuthKeyRequest authKeyRequest) {
         String email = authKeyRequest.getEmail();
         String code = authKeyRequest.getAuthKey();
