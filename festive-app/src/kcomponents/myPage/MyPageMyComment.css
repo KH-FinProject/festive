@@ -121,6 +121,7 @@
     padding: 1rem;
     border-bottom: 1px solid #e5e7eb;
     transition: background-color 0.2s;
+    cursor: pointer;
 }
 
 .mypage-comment-item:hover {
@@ -168,10 +169,15 @@
 }
 
 .mypage-comment-text {
-    color: #374151;
-    font-size: 14px;
-    margin-bottom: 0.5rem;
-    line-height: 1.5;
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.mypage-comment-text:hover {
+    color: #60a5fa;
 }
 
 .mypage-comment-actions {

@@ -3,18 +3,24 @@ package com.project.festive.festiveserver.myPage.controller;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.WebUtils;
 
+import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.myPage.model.service.MyPageService;
 import com.project.festive.festiveserver.wagle.dto.BoardDto;
@@ -23,10 +29,8 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-
-@RestController // 비동기 컨트롤러
-@CrossOrigin(origins="http://localhost:5173" /*, allowCredentials = "true"*/ )
-// , allowCredentials = "true" 클라이언트로부터 들어오는 쿠키 허용
+@RestController
+@CrossOrigin(origins="http://localhost:5173", allowCredentials = "true")
 @RequestMapping("mypage")
 @Slf4j
 @RequiredArgsConstructor
@@ -34,190 +38,227 @@ import lombok.extern.slf4j.Slf4j;
 public class MyPageController {
 	
 	private final MyPageService service;
+	private final JwtUtil jwtUtil;
 
-	/**
-	 * 회원탈퇴
-	 * 
-	 * @param member
-	 * @return
-	 */
-	@PostMapping("withdrawal")
-	public ResponseEntity<String> withdrawal(@RequestBody MemberDto member) {
-		try {
-			log.info("컨트롤러 들어옴1");
-			// 요청에서 필요한 정보 추출
-			String memberPw = "pass6";
-			long memberNo = 6; // 프론트에서 로그인한 회원 번호를 포함하여 전달
-			
-			log.info("PW: " + memberPw); // 로그 찍히는지 확인
-			log.info("NO: " + memberNo);
-		    
-			int result = service.withdrawal(memberPw, memberNo);
-
-			log.info("컨트롤러 들어옴");
-			if (result > 0) {
-				return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
-			} else {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 탈퇴 중 서버 오류 발생");
-		}
-
+	// 쿠키에서 accessToken 추출하는 헬퍼 메서드
+	private String getAccessTokenFromCookie(HttpServletRequest request) {
+		Cookie cookie = WebUtils.getCookie(request, "accessToken");
+		return cookie != null ? cookie.getValue() : null;
 	}
-	
-//	@GetMapping("/profile")
-//	public ResponseEntity<?> getMyInfoMain(HttpSession session) {
-//	    // 1. 세션 기반 확인
-//	    MemberDto loginMember = (MemberDto) session.getAttribute("loginMember");
-//	    log.info("로그인 회원 번호 : ", loginMember);
-//	    if (loginMember != null) {
-//	        Long memberNo = loginMember.getMemberNo();
-//	        return ResponseEntity.ok(service.getMemberInfo(memberNo));
-//	    }
-//
-//	    // 2. JWT 기반 확인
-//	    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//	    if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails) {
-//	        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
-//	        int memberNo = userDetails.getMemberNo();
-//	        return ResponseEntity.ok(service.getMemberInfo(memberNo));
-//	    }
-//
-//	    // 3. 로그인 안 된 경우
-//	    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-//	}
 
-	
-//	// 프로필 사진 변경
-//	// MemberController.java
-//	@PutMapping("/mypage/profile")
-//	public ResponseEntity<?> updateProfile(@RequestParam int memberNo,
-//	                                       @RequestParam String nickname,
-//	                                       @RequestParam(required = false) MultipartFile profileImage) {
-//	    service.updateProfile(memberNo, nickname, profileImage);
-//	    return ResponseEntity.ok().build();
-//	}
-
-	
-//	/** 회원 정보 조회 (GET) */
-//    @GetMapping("/info/{memberNo}")
-//    public ResponseEntity<MemberDto> getInfo(@PathVariable int memberNo) {
-//    	MemberDto member = service.getMemberByNo(memberNo);
-//        if (member != null) {
-//            return ResponseEntity.ok(member);
-//        } else {
-//            return ResponseEntity.notFound().build();
-//        }
-//    }
-//
-//    /** 회원 정보 수정 (PUT) */
-//    @PutMapping("/info")
-//    public ResponseEntity<Map<String, Object>> updateInfo(@RequestBody MemberDto inputMember) {
-//        // inputMember에 memberNo 포함되어 있어야 함 (토큰이나 세션에서 가져오는 로직은 생략)
-//        // 주소가 여러 필드로 분리되어 있으면 프론트에서 합쳐서 보내거나,
-//        // JSON 구조를 변경하여 받아서 서비스단에서 합칠 수 있음
-//
-//        int result = service.updateInfo(inputMember);
-//
-//        if (result > 0) {
-//            return ResponseEntity.ok(Map.of("message", "회원 정보 수정 성공"));
-//        } else {
-//            return ResponseEntity.badRequest().body(Map.of("message", "회원 정보 수정 실패"));
-//        }
-//    }
-
-	/** 비밀번호 변경 (POST) */
-	@PostMapping("/pw")
-	public ResponseEntity<Map<String, Object>> changePw(@RequestBody Map<String, String> paramMap) {
-
-	    // 1. 필수 파라미터 유효성 검사
-	    if (!paramMap.containsKey("currentPw") || !paramMap.containsKey("newPw") || !paramMap.containsKey("memberNo")) {
-	        return ResponseEntity
-	                .badRequest()
-	                .body(Map.of("message", "필수 정보(currentPw, newPw, memberNo)가 누락되었습니다."));
-	    }
-
+	// 회원탈퇴
+	@PostMapping("/withdrawal")
+	public ResponseEntity<String> withdraw(HttpServletRequest request,
+	                                       @RequestBody Map<String, String> requestBody) {
 	    try {
-	        // 2. 파라미터 꺼내기
-	        String currentPw = paramMap.get("currentPw");
-	        String newPw = paramMap.get("newPw");
-	        int memberNo = Integer.parseInt(paramMap.get("memberNo"));
-
-	        // 3. 서비스 호출
-	        int result = service.changePw(paramMap, memberNo);
-
-	        // 4. 결과 반환
-	        if (result > 0) {
-	            return ResponseEntity.ok(Map.of("message", "비밀번호가 변경되었습니다!"));
-	        } else {
-	            return ResponseEntity.badRequest().body(Map.of("message", "현재 비밀번호가 일치하지 않습니다."));
+	        String accessToken = getAccessTokenFromCookie(request);
+	        if (accessToken == null) {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
 	        }
 
-	    } catch (NumberFormatException e) {
-	        return ResponseEntity
-	                .badRequest()
-	                .body(Map.of("message", "memberNo는 숫자여야 합니다."));
+	        Long memberNo = jwtUtil.getMemberNo(accessToken);
+	        String password = requestBody.get("password");
+
+	        boolean success = service.withdraw(memberNo, password);
+
+	        if (success) {
+	            return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+	        } else {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
+	        }
 	    } catch (Exception e) {
-	        return ResponseEntity
-	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(Map.of("message", "서버 오류 발생"));
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류 발생");
 	    }
 	}
 	
-	// 내가 작성한 게시글
-	@GetMapping("/mypost")
-	public ResponseEntity<?> getMyPosts(@RequestParam("memberNo") int memberNo) {
-	    List<BoardDto> list = service.getMyPosts(memberNo);
-	    return ResponseEntity.ok(list);
+	// 비밀번호 변경
+	@PostMapping("/change-password")
+	public ResponseEntity<?> updatePassword(HttpServletRequest request,
+	                                        @RequestBody Map<String, String> requestBody) {
+	    try {
+	        String accessToken = getAccessTokenFromCookie(request);
+	        if (accessToken == null) {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+	        }
+
+	        Long memberNo = jwtUtil.getMemberNo(accessToken);
+	        String currentPassword = requestBody.get("currentPassword");
+	        String newPassword = requestBody.get("newPassword");
+
+	        boolean result = service.changePw(memberNo, currentPassword, newPassword);
+
+	        if (result) {
+	            return ResponseEntity.ok(Map.of("message", "비밀번호 변경 성공"));
+	        } else {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "현재 비밀번호가 일치하지 않습니다."));
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "서버 오류 발생"));
+	    }
 	}
 	
-	// 내가 작성한 댓글
-	@GetMapping("/comments")
-	public ResponseEntity<?> getMyComments(@RequestParam("memberNo") int memberNo) {
-	    List<CommentDto> list = service.getMyComments(memberNo);
-	    return ResponseEntity.ok(list);
+	// 내가 작성한 게시글 목록 조회
+	@GetMapping("/post")
+	public ResponseEntity<List<BoardDto>> getMyPosts(HttpServletRequest request) {
+	    try {
+	        String accessToken = getAccessTokenFromCookie(request);
+	        if (accessToken == null) {
+	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	        }
+
+	        Long memberNo = jwtUtil.getMemberNo(accessToken);
+	        List<BoardDto> postList = service.getMyPosts(memberNo);
+	        return ResponseEntity.ok(postList);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	    }
 	}
 	
-	// 정보 조회
+	// 내가 쓴 작성한 댓글 목록 조회
+	@GetMapping("/comment")
+	public ResponseEntity<List<CommentDto>> getMyComments(HttpServletRequest request) {
+		try {
+			String accessToken = getAccessTokenFromCookie(request);
+			if (accessToken == null) {
+				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+			}
+
+			Long memberNo = jwtUtil.getMemberNo(accessToken);
+			List<CommentDto> postList = service.getMyComments(memberNo);
+			return ResponseEntity.ok(postList);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
+	}
+	
+	// 현재 회원 정보 조회
     @GetMapping("/info")
-    public ResponseEntity<?> getMyInfo(@RequestParam int memberNo) {
-        return ResponseEntity.ok(service.getMemberInfo(memberNo));
+    public ResponseEntity<MemberDto> getMyInfo(HttpServletRequest request) {
+        try {
+            String accessToken = getAccessTokenFromCookie(request);
+            if (accessToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Long memberNo = jwtUtil.getMemberNo(accessToken);
+            log.info("회원 정보 조회 요청: memberNo = {}", memberNo);
+            MemberDto memberInfo = service.getMyInfo(memberNo);
+            if (memberInfo != null) {
+                return ResponseEntity.ok(memberInfo);
+            } else {
+                log.warn("회원 정보를 찾을 수 없음: memberNo = {}", memberNo);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (Exception e) {
+            log.error("회원 정보 조회 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    // 정보 수정
-    @PutMapping("/info")
-    public ResponseEntity<?> updateMyInfo(@RequestBody MemberDto dto) {
-        boolean updated = service.updateMemberInfo(dto);
-        return updated
-            ? ResponseEntity.ok(Map.of("message", "정보가 수정되었습니다."))
-            : ResponseEntity.badRequest().body(Map.of("message", "정보 수정에 실패했습니다."));
+    // 개인정보 수정
+    @PostMapping("/edit-info")
+    public ResponseEntity<Map<String, String>> updateInfo(HttpServletRequest request,
+                                        @RequestBody MemberDto updatedInfo) {
+        try {
+            String accessToken = getAccessTokenFromCookie(request);
+            if (accessToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+            }
+
+            Long memberNo = jwtUtil.getMemberNo(accessToken);
+            log.info("회원 정보 수정 요청: memberNo = {}, updatedInfo = {}", memberNo, updatedInfo);
+
+            boolean result = service.updateMyInfo(memberNo, updatedInfo);
+
+            if (result) {
+                return ResponseEntity.ok(Map.of("message", "정보 수정 성공"));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+            }
+        } catch (Exception e) {
+            log.error("개인정보 수정 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
+        }
+    }
+    
+    // 프로필 정보 조회 (이름, 닉네임, 프로필 이미지) - /mypage/profile
+    @GetMapping("/profile")
+    public ResponseEntity<MemberDto> getProfileInfo(HttpServletRequest request) {
+        try {
+            String accessToken = getAccessTokenFromCookie(request);
+            if (accessToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Long memberNo = jwtUtil.getMemberNo(accessToken);
+            log.info("프로필 정보 조회 요청: memberNo = {}", memberNo);
+            MemberDto profileInfo = service.getProfileInfo(memberNo);
+            if (profileInfo != null) {
+                return ResponseEntity.ok(profileInfo);
+            } else {
+                log.warn("프로필 정보를 찾을 수 없음: memberNo = {}", memberNo);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (Exception e) {
+            log.error("프로필 정보 조회 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
+    // 닉네임 중복 확인 - /mypage/profile/checkNickname
+    @GetMapping("/profile/checkNickname")
+    public ResponseEntity<Map<String, Boolean>> checkNickname(HttpServletRequest request,
+                                                              @RequestParam("nickname") String nickname) {
+        try {
+            String accessToken = getAccessTokenFromCookie(request);
+            if (accessToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-//
-//    /** 프로필 이미지 변경 (POST) - MultipartFile 처리 위해 @RequestPart 사용 */
-//    @PostMapping(value = "/profile", consumes = {"multipart/form-data"})
-//    public ResponseEntity<Map<String, Object>> updateProfile(
-//            @RequestPart("profileImg") MultipartFile profileImg,
-//            @RequestParam("memberNo") int memberNo) throws Exception {
-//
-//        int result = service.profile(profileImg, memberNo);
-//
-//        if (result > 0) {
-//            return ResponseEntity.ok(Map.of("message", "프로필 이미지 변경 성공"));
-//        } else {
-//            return ResponseEntity.badRequest().body(Map.of("message", "프로필 이미지 변경 실패"));
-//        }
-//    }
-//
-//    /** 파일 목록 조회 (GET) */
-//    @GetMapping("/fileList/{memberNo}")
-//    public ResponseEntity<List<UploadFile>> getFileList(@PathVariable int memberNo) {
-//        List<UploadFile> list = service.fileList(memberNo);
-//        return ResponseEntity.ok(list);
-//    }
+            Long memberNo = jwtUtil.getMemberNo(accessToken);
+            
+            // 현재 로그인한 사용자의 닉네임은 제외하고 중복 검사
+            boolean isDuplicate = service.checkNicknameDuplicate(nickname, memberNo);
+            
+            return ResponseEntity.ok(Map.of("isDuplicate", isDuplicate));
+        } catch (Exception e) {
+            log.error("닉네임 중복 확인 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("isDuplicate", true)); // 오류 시 중복으로 처리
+        }
+    }
 
+    // 프로필 업데이트 (닉네임, 프로필 이미지) - /mypage/profile
+    @PostMapping("/edit-profile")
+    public ResponseEntity<Map<String, String>> updateProfile(HttpServletRequest request,
+                                                             @RequestBody Map<String, String> requestBody) {
+        try {
+            String accessToken = getAccessTokenFromCookie(request);
+            if (accessToken == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+            }
+
+            Long memberNo = jwtUtil.getMemberNo(accessToken);
+            String nickname = requestBody.get("nickname");
+            String password = requestBody.get("password");
+
+            if ((nickname == null || nickname.isEmpty())) {
+                return ResponseEntity.badRequest().body(Map.of("message", "수정할 닉네임을 입력해주세요."));
+            }
+
+            boolean result = service.updateProfile(memberNo, nickname, null, password);
+
+            if (result) {
+                return ResponseEntity.ok(Map.of("message", "프로필 수정 성공"));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+            }
+        } catch (Exception e) {
+            log.error("프로필 수정 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "프로필 수정 중 오류가 발생했습니다."));
+        }
+    }
 }

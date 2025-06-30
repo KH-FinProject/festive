@@ -47,6 +47,28 @@
     object-fit: cover;
 }
 
+/* 닉네임 메시지 스타일 */
+.nickname-message {
+    font-size: 0.85em;
+    margin-top: 5px;
+    margin-left: 0;
+    /* 필요에 따라 조절 */
+    padding-left: 10px;
+    /* 라벨과의 정렬을 위해 */
+}
+
+.nickname-message.success {
+    color: green;
+}
+
+.nickname-message.error {
+    color: red;
+}
+
+.nickname-message.info {
+    color: gray;
+}
+
 .close-btn {
     position: absolute;
     top: -10px;

@@ -12,16 +12,16 @@ function WritePage() {
   const editorRef = useRef();
   const [title, setTitle] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { accessToken } = useAuthStore();
+  const { member } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // 디버깅용 로그
-    console.log("현재 accessToken:", accessToken);
+    console.log("현재 member:", member);
 
     // 로그인 체크
-    if (!accessToken) {
+    if (!member) {
       alert("로그인이 필요한 서비스입니다.");
       navigate("/signin");
       return;

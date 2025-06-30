@@ -10,7 +10,7 @@ import com.project.festive.festiveserver.member.entity.Member;
 public interface AuthService {
 	Map<String, Object> login(LoginRequest request) throws RuntimeException;
 
-	Member findMemberByEmail(String userEmail);
+	Member findMember(Long memberNo);
 
 	String findRefreshToken(Long memberNo);
 
@@ -36,4 +36,7 @@ public interface AuthService {
 	String sendEmail(String signup, String email);
 
 	int checkAuthKey(AuthKeyRequest authKeyRequest);
+
+	// 변경할 이메일 중복 검사 - 지현이가 추가한 코드
+	boolean isEmailDuplicate(String email);
 }

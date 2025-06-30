@@ -1,67 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import './MyPageMyPost.css';
-import MyPageSideBar from './MyPageSideBar';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import "./MyPageMyPost.css";
+import MyPageSideBar from "./MyPageSideBar";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../../store/useAuthStore";
 
 const MyPageMyPost = () => {
-    const [posts, setPosts] = useState([]);
-    // const [currentPage, setCurrentPage] = useState(1);
-    const navigate = useNavigate();
+  const [posts, setPosts] = useState([]);
+  const navigate = useNavigate();
+  const { member } = useAuthStore();
 
-    const memberNo = localStorage.getItem('memberNo');
+  useEffect(() => {
+    if (!member) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/signin");
+      return;
+    }
+    fetch(`http://localhost:8080/mypage/post`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => setPosts(data))
+      .catch((err) => console.error(err));
+  }, [member]);
 
-    useEffect(() => {
-        // if (!memberNo) {
-        //     navigate('/signin');
-        //     return;
-        // }
-        fetch(`http://localhost:8080/mypage/posts?memberNo=${memberNo}`)
-            .then(res => res.json())
-            .then(data => setPosts(data))
-            .catch(err => console.error(err));
-    }, [memberNo]);
-
-    return (
-        <div className="page-container">
-            <main className="main-content">
-                <MyPageSideBar />
-                <section className="withdrawal-section">
-                    <div className="profile-header">
-                        <h1>내가 쓴 게시글 및 댓글</h1>
-                        <p>내가 쓴 게시글을 목록입니다.</p>
+  return (
+    <div className="page-container">
+      <main className="main-content">
+        <MyPageSideBar />
+        <section className="withdrawal-section">
+          <div className="profile-header">
+            <h1>내가 쓴 게시글 및 댓글</h1>
+            <p>내가 쓴 게시글 목록입니다.</p>
+          </div>
+          <div className="mypage-tabs">
+            <button className="mypage-tab active">게시글 {posts.length}</button>
+            <button
+              className="mypage-tab"
+              onClick={() => navigate("/mypage/mycomment")}
+            >
+              댓글
+            </button>
+          </div>
+          <div className="posts-list">
+            {posts.length === 0 ? (
+              <p className="no-posts">작성한 게시글이 없습니다.</p>
+            ) : (
+              posts.map((post) => (
+                <div
+                  key={post.boardNo}
+                  className="post-item"
+                  // 이 부분을 추가하여 클릭 시 해당 게시글로 이동
+                  onClick={() => navigate(`/wagle/${post.boardNo}`)}
+                >
+                  <div className="post-id">#{post.boardNo}</div>
+                  <div className="post-content">
+                    <div className="post-title">{post.boardTitle}</div>
+                    <div className="post-meta">
+                      <span className="nickname">{post.memberNickname}</span>
+                      <span className="date">
+                        {new Date(post.boardCreateDate).toLocaleString("ko-KR")}
+                      </span>
                     </div>
-                    <div className="mypage-tabs">
-                        <button className="mypage-tab active">게시글 {posts.length}</button>
-                        <button className="mypage-tab" onClick={() => navigate('/mypage/mycomment')}>
-                            댓글
-                        </button>
-                    </div>
-                    <div className="posts-list">
-                        {posts.map((post) => (
-                            <div key={post.boardNo} className="post-item">
-                                <div className="post-id">#{post.boardNo}</div>
-                                <div className="post-content">
-                                    <div className="post-title">{post.title}</div>
-                                    <div className="post-meta">
-                                        <span className="nickname">{post.nickname}</span>
-                                        <span className="date">
-                                            {new Date(post.createDate)
-                                                .toLocaleString('ko-KR')}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="post-stats">
-                                    <span className="likes">♥{post.likes}</span>
-                                    <span className="views">👁{post.views}</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    {/* Pagination 생략 or 구현 */}
-                </section>
-            </main>
-        </div>
-    );
+                  </div>
+                  <div className="post-stats">
+                    <span className="likes">♥{post.boardLikeCount}</span>
+                    <span className="views">👁{post.boardViewCount}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
 };
 
 export default MyPageMyPost;
