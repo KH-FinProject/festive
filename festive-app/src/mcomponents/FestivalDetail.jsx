@@ -32,6 +32,7 @@ const getFestivalStatus = (start, end) => {
   else return "진행중";
 };
 
+// 축제 디테일 페이지 시작
 const FestivalDetail = () => {
   const [festival, setFestival] = useState([]);
   const [festivalDetail, setFestivalDetail] = useState([]);
@@ -39,9 +40,11 @@ const FestivalDetail = () => {
   const [listFestival, setListFestival] = useState([]);
   const [posterImg, setPosterImg] = useState([]);
   const [listStay, setListStay] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [eventState, setEventState] = useState("");
   const { contentId } = useParams();
+
   const navigate = useNavigate();
 
   // 숙소 관련 모달창 열기
@@ -154,7 +157,7 @@ const FestivalDetail = () => {
 
       setPosterImg(poster);
       setFestivalImg(subImgs);
-      console.log(festivalImg);
+      // console.log(festivalImg);
     } catch (error) {
       console.error("축제 이미지 정보 로드 실패:", error);
     }
