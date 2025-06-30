@@ -114,7 +114,7 @@ public class WagleServiceImpl implements WagleService {
                 result.put("action", "like");
             }
             
-            wagleMapper.updateBoardLikeCount(boardNo);
+            // 좋아요 수 조회
             BoardDto boardDetail = wagleMapper.selectBoardDetail(boardNo);
             result.put("likeCount", boardDetail.getBoardLikeCount());
             
@@ -122,6 +122,17 @@ public class WagleServiceImpl implements WagleService {
         } catch (Exception e) {
             log.error("게시글 좋아요 처리 중 오류 발생", e);
             throw new RuntimeException("좋아요 처리에 실패했습니다.");
+        }
+    }
+    
+    @Override
+    public boolean checkBoardLike(Long boardNo, Long memberNo) {
+        try {
+            int likeCheck = wagleMapper.selectBoardLikeCheck(boardNo, memberNo);
+            return likeCheck > 0;
+        } catch (Exception e) {
+            log.error("게시글 좋아요 상태 확인 중 오류 발생", e);
+            return false;
         }
     }
     
@@ -156,7 +167,6 @@ public class WagleServiceImpl implements WagleService {
             commentDto.setCommentDeleteYn("N");
             
             int result = wagleMapper.insertComment(commentDto);
-            wagleMapper.updateBoardCommentCount(commentDto.getBoardNo());
             
             return result;
         } catch (Exception e) {

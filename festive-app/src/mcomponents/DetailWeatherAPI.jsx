@@ -41,7 +41,7 @@ const DetailWeather = ({ iconSize = 50, center }) => {
         console.error("Weather API Error:", err);
       }
     };
-    console.log("center : ", center);
+    //console.log("center : ", center);
     if (center != undefined) {
       fetchWeather(center.lat, center.lon);
     } else {

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import mainLogo from "../assets/festiveLogo.png";
 import useAuthStore from "../store/useAuthStore";
-import { useAdminNotification } from '../mcomponents/AdminNotificationContext.jsx';
+import { useAdminNotification } from "../mcomponents/AdminNotificationContext.jsx";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 import "./HeaderFooter.css";
 
@@ -10,10 +10,19 @@ const Header = () => {
   const [login, setLogin] = useState(false);
   const { member, isLoggedIn } = useAuthStore();
   const { hasNewReport } = useAdminNotification();
+  const location = useLocation();
 
   useEffect(() => {
     setLogin(isLoggedIn);
   }, [isLoggedIn]);
+
+  // 현재 경로가 해당 링크와 일치하는지 확인하는 함수
+  const isActiveLink = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <header className="header">
@@ -39,7 +48,9 @@ const Header = () => {
             <Link
               key={item.name}
               to={item.path}
-              className="headernav-link hover-grow"
+              className={`headernav-link hover-grow ${
+                isActiveLink(item.path) ? "active" : ""
+              }`}
             >
               {item.name}
               {item.name === "관리자" && hasNewReport && (
@@ -80,7 +91,9 @@ const Header = () => {
                 src={member?.profileImage || "/logo.png"}
                 alt="프로필"
                 className="header-user-profile"
-                onError={e => { e.target.src = "/logo.png"; }}
+                onError={(e) => {
+                  e.target.src = "/logo.png";
+                }}
               />
               <span className="header-user-nickname">
                 {member?.nickname || member?.name}
@@ -89,10 +102,20 @@ const Header = () => {
           </a>
         ) : (
           <>
-            <Link to="/signin" className="headernav-link hover-grow">
+            <Link
+              to="/signin"
+              className={`headernav-link hover-grow ${
+                isActiveLink("/signin") ? "active" : ""
+              }`}
+            >
               Sign In
             </Link>
-            <Link to="/signup" className="headernav-link hover-grow">
+            <Link
+              to="/signup"
+              className={`headernav-link hover-grow ${
+                isActiveLink("/signup") ? "active" : ""
+              }`}
+            >
               Sign Up
             </Link>
           </>
