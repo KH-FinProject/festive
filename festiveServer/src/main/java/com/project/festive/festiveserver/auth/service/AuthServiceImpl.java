@@ -68,8 +68,8 @@ public class AuthServiceImpl implements AuthService {
 		}
 		
 		// 3. 로그인 성공 시 토큰 생성
-		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole());
-		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole());
+		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
+		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
 		Date expirationDate = jwtUtil.getExpirationDate(refreshToken);
 		LocalDateTime localExpirationDate = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 		

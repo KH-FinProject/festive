@@ -52,10 +52,10 @@ public class Member {
 	@Column(name = "ID", nullable = true) // OAuth2 사용자의 경우 ID가 없을 수 있음
 	private String id;
 
-	@Column(name = "NICKNAME", nullable = true)
+	@Column(name = "NICKNAME", nullable = false)
 	private String nickname;
 
-	@Column(name = "NAME", nullable = false)
+	@Column(name = "NAME", nullable = true)
 	private String name;
 
 	@Column(name = "EMAIL", unique = true, nullable = false) // DB 컬럼 속성 지정. 중복 불가, null 불가

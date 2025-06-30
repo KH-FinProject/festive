@@ -32,11 +32,12 @@ public class JwtUtil {
   }
 
   // Access Token 생성
-  public String generateAccessToken(Long memberNo, String email, String role) {
+  public String generateAccessToken(Long memberNo, String email, String role, String socialId) {
     JwtBuilder builder = Jwts.builder()
         .claim("memberNo", memberNo)
         .claim("email", email)
-        .claim("role", role);
+        .claim("role", role)
+        .claim("socialId", socialId);
 
     return builder
         .subject("AccessToken")
@@ -47,11 +48,12 @@ public class JwtUtil {
   }
 
   // Refresh Token 생성
-  public String generateRefreshToken(Long memberNo, String email, String role) {
+  public String generateRefreshToken(Long memberNo, String email, String role, String socialId) {
     JwtBuilder builder = Jwts.builder()
         .claim("memberNo", memberNo)
         .claim("email", email)
-        .claim("role", role);
+        .claim("role", role)
+        .claim("socialId", socialId);
 
     return builder
         .subject("RefreshToken")
@@ -97,6 +99,16 @@ public class JwtUtil {
     } catch (ExpiredJwtException e) {
         // 만료된 토큰이라도 claims 유효
         return e.getClaims().get("memberNo", Long.class);
+    }
+  }
+
+  // 토큰에서 socialId 추출
+  public String getSocialId(String token) {
+    try {
+        return getClaims(token).get("socialId", String.class);
+    } catch (ExpiredJwtException e) {
+        // 만료된 토큰이라도 claims 유효
+        return e.getClaims().get("socialId", String.class);
     }
   }
 

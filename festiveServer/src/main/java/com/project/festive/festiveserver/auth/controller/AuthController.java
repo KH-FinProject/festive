@@ -203,7 +203,7 @@ public class AuthController {
         }
         
         // 6. 위 모든 경우가 아니라면 새로운 Access Token 발급
-        String newAccessToken = jwtUtil.generateAccessToken(memberNo, userEmail, member.getRole());
+        String newAccessToken = jwtUtil.generateAccessToken(memberNo, userEmail, member.getRole(), member.getSocialId());
         
         // 7. 성공 응답
         responseBody.put("success", true);

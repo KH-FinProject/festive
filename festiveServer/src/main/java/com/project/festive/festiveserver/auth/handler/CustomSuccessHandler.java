@@ -39,8 +39,8 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       // 사용자 권한 정보 추출
       String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-      String accessToken = jwtUtil.generateAccessToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
-      String refreshToken = jwtUtil.generateRefreshToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
+      String accessToken = jwtUtil.generateAccessToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role, customUserDetails.getSocialId());
+      String refreshToken = jwtUtil.generateRefreshToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role, customUserDetails.getSocialId());
 
       log.info("JWT 토큰 생성 완료");
 

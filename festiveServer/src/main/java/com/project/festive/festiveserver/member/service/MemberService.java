@@ -26,4 +26,6 @@ public interface MemberService {
     boolean isEmailAvailable(String email);
     
     int signup(Member member);
+
+    Member findByMemberNo(Long memberNo);
 }  

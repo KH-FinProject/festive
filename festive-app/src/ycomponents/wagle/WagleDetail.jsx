@@ -12,6 +12,7 @@ import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import GeneralBoard from "./GeneralBoard";
 import NoticeBoard from "./NoticeBoard";
 import useAuthStore from "../../store/useAuthStore";
+import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 
 function CommentItem({ comment, onReport, currentUser, onReplySubmit }) {
   const [showReplyInput, setShowReplyInput] = useState(false);
@@ -172,6 +173,10 @@ function ReportModal({ isOpen, onClose, onSubmit, reportData, currentUser }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!reason.trim()) {
+      alert("신고 사유를 입력해주세요.");
+      return;
+    }
 
     try {
       const reportPayload = {
@@ -415,6 +420,11 @@ function WagleDetail() {
       navigate("/signin");
       return;
     }
+    
+    // 닉네임 체크
+    const canProceed = await checkNicknameForSocialUser(navigate);
+    if (!canProceed) return;
+
     try {
       const response = await fetch(
         `http://localhost:8080/api/wagle/boards/${id}/comments`,
