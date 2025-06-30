@@ -277,7 +277,7 @@ function WagleDetail() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [currentReportData, setCurrentReportData] = useState(null);
   const [newComment, setNewComment] = useState("");
-  const { member: currentUser, accessToken } = useAuthStore();
+  const { member } = useAuthStore();
 
   // 게시글 상세 정보 가져오기
   const fetchPostDetail = async () => {
@@ -379,7 +379,7 @@ function WagleDetail() {
     if (!newComment.trim()) return;
 
     // 로그인 체크
-    if (!accessToken) {
+    if (!member) {
       alert("로그인이 필요한 서비스입니다.");
       navigate("/signin");
       return;
@@ -392,8 +392,8 @@ function WagleDetail() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
           },
+          credentials: "include",
           body: JSON.stringify({
             commentContent: newComment,
           }),
@@ -415,7 +415,7 @@ function WagleDetail() {
 
   // 답글 작성
   const handleReplySubmit = async (parentCommentNo, replyContent) => {
-    if (!accessToken) {
+    if (!member) {
       alert("로그인이 필요한 서비스입니다.");
       navigate("/signin");
       return;
@@ -432,8 +432,8 @@ function WagleDetail() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
           },
+          credentials: "include",
           body: JSON.stringify({
             commentContent: replyContent,
             commentParentNo: parentCommentNo,
@@ -527,7 +527,7 @@ function WagleDetail() {
           <div className="wagle-detail-title-row">
             <h2 className="wagle-detail-title">{post.title}</h2>
             <div className="wagle-detail-btns">
-              {currentUser?.memberNo === post.memberNo && (
+              {member?.memberNo === post.memberNo && (
                 <>
                   <button className="edit">수정</button>
                   <button className="delete">삭제</button>
@@ -616,7 +616,7 @@ function WagleDetail() {
                   key={c.commentNo}
                   comment={c}
                   onReport={handleReport}
-                  currentUser={currentUser}
+                  currentUser={member}
                   onReplySubmit={handleReplySubmit}
                 />
               ))}
@@ -639,7 +639,7 @@ function WagleDetail() {
           onClose={() => setIsReportModalOpen(false)}
           onSubmit={handleReportSubmit}
           reportData={currentReportData}
-          currentUser={currentUser}
+          currentUser={member}
         />
       </div>
     </div>

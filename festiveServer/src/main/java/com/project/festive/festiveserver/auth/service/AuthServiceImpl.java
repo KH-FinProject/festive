@@ -279,5 +279,12 @@ public class AuthServiceImpl implements AuthService {
 	private String createAuthKey() {
 		return UUID.randomUUID().toString().substring(0, 6);
 	}
+
+	// 변경할 이메일 중복 검사 - 지현이가 추가함
+	@Override
+	public boolean isEmailDuplicate(String email) {
+			// MemberRepository를 사용하여 이메일 존재 여부 확인
+			return memberRepository.findByEmail(email).isPresent();
+	}
 	
 }

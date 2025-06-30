@@ -33,6 +33,13 @@ public interface MyPageMapper {
 
     // 정보 수정
     int updateMyInfo(MemberDto memberDto);
+    
+    // 프로필 정보 조회 (닉네임, 프로필 이미지, 이름)
+    MemberDto selectProfileInfo(@Param("memberNo") Long memberNo);
 
+    // 닉네임 중복 확인 (본인 닉네임 제외)
+    Integer countByNicknameExcludeSelf(@Param("nickname") String nickname, @Param("memberNo") Long memberNo);
 
+    // 프로필 업데이트 (닉네임, 프로필 이미지)
+    int updateProfile(@Param("memberNo") Long memberNo, @Param("nickname") String nickname, @Param("profileImage") String profileImage);
 }

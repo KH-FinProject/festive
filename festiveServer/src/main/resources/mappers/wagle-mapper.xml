@@ -174,7 +174,11 @@
             PARENT_COMMENT_NO, COMMENT_WRITE_DATE, COMMENT_DEL_FL
         ) VALUES (
             #{commentNo}, #{boardNo}, #{memberNo}, #{commentContent}, 
-            #{commentParentNo}, SYSDATE, 'N'
+            <choose>
+                <when test="commentParentNo != null and commentParentNo != 0">#{commentParentNo}</when>
+                <otherwise>NULL</otherwise>
+            </choose>, 
+            SYSDATE, 'N'
         )
     </insert>
 
@@ -191,6 +195,16 @@
         UPDATE "COMMENT" 
         SET COMMENT_DEL_FL = 'Y' 
         WHERE COMMENT_NO = #{commentNo}
+    </update>
+
+    <!-- 게시글 댓글 수 업데이트 -->
+    <update id="updateBoardCommentCount" parameterType="long">
+        UPDATE BOARD
+        SET BOARD_COMMENT_COUNT = (
+            SELECT COUNT(*) FROM "COMMENT" 
+            WHERE BOARD_NO = #{boardNo} AND COMMENT_DEL_FL = 'N'
+        )
+        WHERE BOARD_NO = #{boardNo}
     </update>
 
     <!-- 게시글 이미지 저장 -->
