@@ -1,10 +1,8 @@
 package com.project.festive.festiveserver.common.filter;
 
 import java.io.IOException;
-import java.time.Duration;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,88 +31,41 @@ public class JwtFilter extends OncePerRequestFilter {
   }
 
   @Override
-  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+  protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
-    String path = ((HttpServletRequest) request).getRequestURI();
-    if (path.startsWith("/ws")) {
-        filterChain.doFilter(request, response);
-        return;
-    }
     
     log.info("JWT Filter 시작: {} {}", method, requestURI);
     
     try {
-      // 쿠키에서 토큰 추출
+      // accessToken 추출 (쿠키 우선, 없으면 Authorization 헤더)
       Cookie cookie = WebUtils.getCookie(request, "accessToken");
       String accessToken = cookie != null ? cookie.getValue() : null;
 
-      // Authorization 헤더에서 accessToken 추출 (쿠키가 없을 때)
+      // Authorization 헤더에서 Bearer 토큰 추출
       if (accessToken == null) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-          accessToken = authHeader.substring(7);
-        }
+          String authHeader = request.getHeader("Authorization");
+          if (authHeader != null && authHeader.startsWith("Bearer ")) {
+              accessToken = authHeader.substring(7);
+          }
       }
 
-      // authorization 헤더 검증
-      if (accessToken == null) {
-        log.info("accessToken 쿠키 존재하지 않음: {} {}", method, requestURI);
-        filterChain.doFilter(request, response);
-        return;
-      }
-
-      if (!jwtUtil.isValidToken(accessToken)) {
-        log.info("토큰이 유효하지 않음 - Refresh Token 확인: {} {}", method, requestURI);
+      // accessToken이 존재하면서 accessToken이 유효한 경우에만 SecurityContext 설정
+      if (accessToken != null && jwtUtil.isValidToken(accessToken)) {
+        log.info("유효한 토큰 확인: {} {}", method, requestURI);
         
-        // Refresh Token 확인
-        Cookie refreshCookie = WebUtils.getCookie(request, "refreshToken");
-        String refreshToken = refreshCookie != null ? refreshCookie.getValue() : null;
-        
-        if (refreshToken != null && jwtUtil.isValidToken(refreshToken)) {
-          log.info("Refresh Token으로 새로운 Access Token 생성: {} {}", method, requestURI);
-          
-          // Refresh Token에서 정보 추출
-          Long memberNo = jwtUtil.getMemberNo(refreshToken);
-          String email = jwtUtil.getEmail(refreshToken);
-          String role = jwtUtil.getClaims(refreshToken).get("role", String.class);
-          
-          // 새로운 Access Token 생성
-          String newAccessToken = jwtUtil.generateAccessToken(memberNo, email, role);
-          
-          // 새로운 Access Token을 쿠키에 설정
-          ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
-              .httpOnly(true)
-              .secure(true)
-              .sameSite("Strict")
-              .maxAge(Duration.ofMinutes(30)) // 30분
-              .path("/")
-              .build();
-          
-          response.addHeader(HttpHeaders.SET_COOKIE, newAccessTokenCookie.toString());
+        // JWT에서 사용자 정보 추출
+        Long memberNo = jwtUtil.getMemberNo(accessToken);
+        String email = jwtUtil.getEmail(accessToken);
+        String role = jwtUtil.getClaims(accessToken).get("role", String.class);
 
-          createAuthenticationToken(memberNo, email, role);
-          
-          filterChain.doFilter(request, response);
-          return;
-          
-        } else {
-          log.warn("Refresh Token도 유효하지 않음: {} {}", method, requestURI);
-          filterChain.doFilter(request, response);
-          return;
-        }
+        // SecurityContext에 인증 정보 저장
+        createAuthenticationToken(memberNo, email, role);
+      } else {
+        log.debug("토큰 없음 또는 유효하지 않음: {} {}", method, requestURI);
       }
       
-      // 토큰이 유효한 경우 - Spring Security 인증 토큰 생성
-      log.info("유효한 토큰 확인: {} {}", method, requestURI);
-      
-      // JWT에서 사용자 정보 추출
-      Long memberNo = jwtUtil.getMemberNo(accessToken);
-      String email = jwtUtil.getEmail(accessToken);
-      String role = jwtUtil.getClaims(accessToken).get("role", String.class);
-      
-      createAuthenticationToken(memberNo, email, role);
-      
+      // 항상 다음 필터로 진행 (인증 실패 여부는 SecurityConfig에서 처리)
       filterChain.doFilter(request, response);
       
     } catch (Exception e) {
@@ -123,43 +74,17 @@ public class JwtFilter extends OncePerRequestFilter {
     }
   }
   
-  @Override
-  protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-    String path = request.getRequestURI();
-    
-    // 정적 리소스 및 특정 경로 제외
-    return path.contains("/favicon.ico") ||
-           path.contains("/static/") ||
-           path.contains("/css/") ||
-           path.startsWith("/admin/") || // 나중에 로그인 다 구현되면 빼기
-           path.startsWith("/member/") ||
-           path.contains("/js/") ||
-           path.contains("/images/") ||
-           path.contains("/assets/") ||
-           path.contains("/error") ||
-           path.contains("/actuator/") ||
-           path.startsWith("/auth/") || // 인증 관련 경로 제외
-           path.startsWith("/oauth2/") || // OAuth2 관련 경로 제외
-           path.endsWith(".ico") ||
-           path.endsWith(".css") ||
-           path.endsWith(".js") ||
-           path.endsWith(".png") ||
-           path.endsWith(".jpg") ||
-           path.endsWith(".jpeg") ||
-           path.endsWith(".gif") ||
-           path.endsWith(".svg");
-  }
-  
   /**
    * JWT 토큰 정보로 직접 CustomUserDetails 생성하여 Spring Security 인증 토큰 생성
    */
   private void createAuthenticationToken(Long memberNo, String email, String role) {
     try {
       // JWT 정보로 직접 MemberDto 생성 (DB 조회 없음)
-      MemberDto memberDto = new MemberDto();
-      memberDto.setMemberNo(memberNo);
-      memberDto.setEmail(email);
-      memberDto.setRole(role);
+      MemberDto memberDto = MemberDto.builder()
+        .memberNo(memberNo)
+        .email(email)
+        .role(role)
+        .build();
       
       // CustomUserDetails 생성
       CustomUserDetails userDetails = new CustomUserDetails(memberDto);
@@ -172,6 +97,7 @@ public class JwtFilter extends OncePerRequestFilter {
       SecurityContextHolder.getContext().setAuthentication(authToken);
       
       log.debug("인증 토큰 생성 완료: {}", email);
+      
     } catch (Exception e) {
       log.error("인증 토큰 생성 실패: {} - {}", email, e.getMessage());
     }

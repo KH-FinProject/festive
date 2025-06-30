@@ -364,6 +364,8 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   });
 
   const [validationErrors, setValidationErrors] = useState({});
+  const [isEmailLoading, setIsEmailLoading] = useState(false); // 이메일 인증 로딩 상태
+  const [isTelLoading, setIsTelLoading] = useState(false); // 전화번호 인증 로딩 상태
 
   // 2. useRef (race condition 방지)
   // [lastRequestedValue] : 중복확인 요청의 마지막 값을 기억하여 응답 순서 꼬임(race condition) 방지
@@ -478,17 +480,13 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           authKey: debounced.authKey
         });
 
-        if (res.data === 1) {
+        if (res.data.success) {
           setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: true, message: '인증 성공!' } }));
-          
-        } else if (res.data === 2) {
-          setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: false, message: '인증번호가 일치하지 않습니다.' } }));
-        
         } else {
-          setDuplicateStatus(prev => ({ ...prev, authKey: { checked: false, available: false, message: '' } }));
+          setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: false, message: res.data.message || '인증번호가 일치하지 않습니다.' } }));
         }
 
-      } catch {
+      } catch (error) {
         setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: false, message: '서버 오류' } }));
       }
     };
@@ -531,9 +529,9 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // [handleAuthKeyVerification] : 인증번호 확인(추후 구현)
   // [handleAddressSearch] : 주소 검색(추후 구현)
   const handleSmsVerification = async () => {
-    const { authMethod, email, tel } = formData;
-    
-    if (authMethod === 'email') {
+    const { email, tel } = formData;
+
+    if (formData.authMethod === 'email') {
       if (!email) {
         alert('이메일을 입력해주세요.');
         return;
@@ -550,15 +548,22 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       }
 
       // 이메일 인증
-      const response = await axiosAPI.post(`/auth/email`, { email });
-      if(response.data === 1) {
-        alert('이메일로 인증번호가 전송되었습니다.');
-        setFormData(prev => ({ ...prev, authMethod: 'email', authKey: '' }));
-        if (authKeyInputRef.current) {
-          authKeyInputRef.current.focus();
+      try {
+        setIsEmailLoading(true);
+        const response = await axiosAPI.post(`/auth/email`, { email });
+        if(response.data.success) {
+          alert('이메일로 인증번호가 전송되었습니다.');
+          setFormData(prev => ({ ...prev, authMethod: 'email', authKey: '' }));
+          if (authKeyInputRef.current) {
+            authKeyInputRef.current.focus();
+          }
+        } else {
+          alert('이메일로 인증번호 전송에 실패했습니다.');
         }
-      } else {
+      } catch (error) {
         alert('이메일로 인증번호 전송에 실패했습니다.');
+      } finally {
+        setIsEmailLoading(false);
       }
 
     } else {
@@ -566,8 +571,17 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
         alert('전화번호를 입력해주세요.');
         return;
       }
+      
       // SMS 인증
-      alert('전화번호로 인증번호가 전송되었습니다.');
+      try {
+        setIsTelLoading(true);
+        // SMS 인증 로직 (실제 구현 시)
+        alert('전화번호로 인증번호가 전송되었습니다.');
+      } catch (error) {
+        alert('전화번호로 인증번호 전송에 실패했습니다.');
+      } finally {
+        setIsTelLoading(false);
+      }
     }
   };
 
@@ -732,8 +746,8 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
               ref={authKeyInputRef}
               maxLength={6}
             />
-            <button type="button" className="action-btn" onClick={handleSmsVerification}>
-              {formData.authMethod === 'email' ? '이메일 인증' : '전화번호 인증'}
+            <button type="button" className="action-btn" onClick={handleSmsVerification} disabled={isEmailLoading || isTelLoading}>
+              {isEmailLoading || isTelLoading ? '인증중...' : (formData.authMethod === 'email' ? '이메일 인증' : '전화번호 인증')}
             </button>
           </div>
           {getStatusMessage('authKey')}

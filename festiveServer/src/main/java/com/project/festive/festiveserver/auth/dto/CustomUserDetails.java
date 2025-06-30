@@ -35,27 +35,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     public String getUsername() {
         return memberDto.getEmail();
     }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-
+    
     // OAuth2User 구현
     @Override
     public Map<String, Object> getAttributes() {
