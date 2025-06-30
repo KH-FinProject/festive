@@ -766,3 +766,75 @@
   border-color: #ccc;
   cursor: not-allowed;
 }
+
+/* 답글 입력 폼 스타일 */
+.reply-input-form {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 0 48px;
+  padding: 12px 0 0 24px;
+  width: calc(100% - 48px);
+  box-sizing: border-box;
+}
+
+.reply-input-form input {
+  flex: 1;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1rem;
+}
+
+.reply-input-form button {
+  background: #60a5fa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.reply-input-form button:hover {
+  background: #7bb0f7;
+}
+
+/* 댓글 수정 폼 스타일 */
+.edit-comment-form {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0 8px 48px;
+  align-items: center;
+}
+
+.edit-comment-form input {
+  flex: 1;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 1rem;
+}
+
+.edit-comment-form button {
+  background: #60a5fa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.edit-comment-form button:hover {
+  background: #7bb0f7;
+}
+
+.edit-comment-form button[type="button"] {
+  background: #6c757d;
+}
+
+.edit-comment-form button[type="button"]:hover {
+  background: #5a6268;
+}

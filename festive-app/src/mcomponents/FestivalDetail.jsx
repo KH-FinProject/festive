@@ -219,7 +219,6 @@ const FestivalDetail = () => {
       const response = await fetch(url);
       const data = await response.json();
       const items = data?.response?.body?.items?.item;
-      console.log("test3================ : ", lDongRegnCd);
       if (!items || !Array.isArray(items)) return;
       const mapped = items.map((item) => {
         return {

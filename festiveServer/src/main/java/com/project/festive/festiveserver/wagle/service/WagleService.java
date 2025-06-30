@@ -26,6 +26,9 @@ public interface WagleService {
     // 게시글 좋아요 토글
     Map<String, Object> toggleBoardLike(Long boardNo, Long memberNo);
     
+    // 게시글 좋아요 상태 확인
+    boolean checkBoardLike(Long boardNo, Long memberNo);
+    
     // 댓글 목록 조회
     List<CommentDto> getCommentList(Long boardNo);
     

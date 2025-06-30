@@ -102,4 +102,11 @@ public class JwtFilter extends OncePerRequestFilter {
       log.error("인증 토큰 생성 실패: {} - {}", email, e.getMessage());
     }
   }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    String path = request.getRequestURI();
+    // WebSocket handshake 경로는 필터 적용 안 함
+    return path.startsWith("/ws");
+  }
 }

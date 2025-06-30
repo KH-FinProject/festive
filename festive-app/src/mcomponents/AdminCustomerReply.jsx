@@ -17,7 +17,9 @@ const AdminCustomerReply = () => {
   useEffect(() => {
     const fetchInquiryDetail = async (boardNo) => {
       try {
-        const res = await axiosApi.get(`/api/customer/boards/${boardNo}`);
+        const res = await axiosApi.get(
+          `http://localhost:8080/api/customer/boards/${boardNo}`
+        );
         setInquiry(res.data);
       } catch {
         navigate("/admin/customer");
@@ -61,7 +63,7 @@ const AdminCustomerReply = () => {
       };
 
       const response = await axiosApi.post(
-        `/api/customer/boards/${inquiry.boardNo}/comments`,
+        `http://localhost:8080/api/customer/boards/${inquiry.boardNo}/comments`,
         replyData
       );
 
@@ -69,7 +71,7 @@ const AdminCustomerReply = () => {
         // 문의 상태를 "답변완료"로 업데이트
         try {
           await axiosApi.patch(
-            `/api/customer/boards/${inquiry.boardNo}/status`,
+            `http://localhost:8080/api/customer/boards/${inquiry.boardNo}/status`,
             null,
             {
               params: { status: "답변완료" },
