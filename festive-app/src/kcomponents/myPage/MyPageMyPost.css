@@ -53,6 +53,7 @@
 /* Posts List */
 .posts-list {
     margin-bottom: 40px;
+    cursor: pointer;
 }
 
 .post-item {

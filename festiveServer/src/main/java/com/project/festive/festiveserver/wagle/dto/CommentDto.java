@@ -26,6 +26,9 @@ public class CommentDto {
     private String commentDeleteYn;
     private List<CommentDto> replies;
     
+    // 지현이가 추가함
+    private Long likes; // XML의 LIKE_COUNT와 매핑되는 필드 추가
+    
     // 목록 조회용 생성자
     public CommentDto(Long commentNo, Long boardNo, Long memberNo, String memberNickname,
                      String commentContent, Long commentParentNo, LocalDateTime commentCreateDate) {
