@@ -395,4 +395,4 @@ gradle-app.setting
 /.metadata/
 
 
-/bin/
+bin/
