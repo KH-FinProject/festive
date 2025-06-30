@@ -164,45 +164,33 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String sendEmail(String htmlName, String email) {
 		try {
+			// 이메일 발송 핵심 상황만 로그
 			log.info("이메일 발송 시작: {}", email);
-			
+
 			String authKey = createAuthKey();
-			log.info("인증키 생성 완료: {}", authKey);
-			
-			// 인증키를 데이터베이스에 저장
-			AuthKey authKeyEntity = AuthKey.builder()
-					.email(email)
-					.authKey(authKey)
-					.createTime(LocalDateTime.now())
-					.build();
-			
-			log.info("AuthKey 엔티티 생성 완료: {}", authKeyEntity);
-			
-			if (!storeAuthKey(authKeyEntity)) {
+
+			if (!storeAuthKey(AuthKey.builder().email(email).authKey(authKey).createTime(LocalDateTime.now()).build())) {
 				log.error("인증키 저장 실패");
 				throw new RuntimeException("인증키 저장에 실패했습니다.");
 			}
-			
-			log.info("인증키 저장 완료");
-			
-			// 이메일 전송
+
 			MimeMessage message = mailSender.createMimeMessage();
+
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-			
 			helper.setTo(email);
 			helper.setSubject("[Festive] 회원가입 인증번호");
 			helper.setText(loadHtml(authKey, htmlName), true);
-			
-			log.info("이메일 메시지 생성 완료, 발송 시도...");
+
 			mailSender.send(message);
-			
+
 			log.info("이메일 발송 성공: {}", email);
+
 			return "인증번호가 이메일로 전송되었습니다.";
-			
+
 		} catch (MessagingException e) {
 			log.error("이메일 전송 중 오류 발생: {}", e.getMessage(), e);
 			throw new RuntimeException("이메일 전송에 실패했습니다.");
-
+			
 		} catch (Exception e) {
 			log.error("인증키 생성 중 오류 발생: {}", e.getMessage(), e);
 			throw new RuntimeException("인증키 생성에 실패했습니다.");

@@ -4,6 +4,7 @@ import mainLogo from "../assets/festiveLogo.png";
 import useAuthStore from "../store/useAuthStore";
 import { useAdminNotification } from '../mcomponents/AdminNotificationContext.jsx';
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
+import axiosApi from "../api/axiosAPI.js";
 import "./HeaderFooter.css";
 
 const Header = () => {
@@ -16,7 +17,10 @@ const Header = () => {
     setLogin(isLoggedIn);
   }, [isLoggedIn]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // 로그아웃 시 토큰 삭제
+    await axiosApi.post("/auth/logout");
+    // authStore state 초기화
     useAuthStore.getState().logout();
     navigate("/");
   };

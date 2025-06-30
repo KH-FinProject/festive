@@ -30,8 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("auth")
 @RequiredArgsConstructor
-//@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
-// -> 이미 WebConfig에서 전역적으로 처리해주고 있기 때문에 작성해주지 않아도 됨
 public class AuthController {
 
     // 의존성 주입(DI)
@@ -40,135 +38,75 @@ public class AuthController {
 
     @GetMapping("userInfo")
     public ResponseEntity<?> userInfo(HttpServletRequest request) {
-        log.info("=== userInfo API 호출 시작 ===");
-        
+        log.info("userInfo API 호출");
+
         try {
-            // 쿠키에서 accessToken 추출
             Cookie cookie = WebUtils.getCookie(request, "accessToken");
             String accessToken = cookie != null ? cookie.getValue() : null;
-            log.info("쿠키에서 accessToken 추출: {}", accessToken != null ? "존재" : "없음");
-            
-            // Authorization 헤더에서 Bearer 토큰 추출
-            if (accessToken == null) {
-                String authHeader = request.getHeader("Authorization");
-                log.info("Authorization 헤더 확인: {}", authHeader != null ? "존재" : "없음");
-                
-                if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                    accessToken = authHeader.substring(7);
-                    log.info("Authorization 헤더에서 accessToken 추출 완료");
-                }
-            }
-            
+
             Long memberNo = null;
             String email = null;
             String socialId = null;
-            
-            // accessToken이 있는 경우 유효성 검사
+
             if (accessToken != null) {
-                log.info("최종 accessToken 확인: {}", accessToken.substring(0, Math.min(20, accessToken.length())) + "...");
-                
                 boolean isTokenValid = jwtUtil.isValidToken(accessToken);
-                log.info("토큰 유효성 검사 결과: {}", isTokenValid);
-                
+
                 if (isTokenValid) {
-                    // 유효한 토큰인 경우
-                    log.info("토큰 유효성 검사 통과");
                     memberNo = jwtUtil.getMemberNo(accessToken);
                     email = jwtUtil.getEmail(accessToken);
                     socialId = jwtUtil.getSocialId(accessToken);
-                    
-                    log.info("JWT 토큰에서 추출한 정보 - memberNo: {}, email: {}, socialId: {}", 
-                            memberNo, email, socialId);
-                    
+
                     Member member = authService.findMember(memberNo);
                     if (member == null) {
                         log.warn("회원을 찾을 수 없습니다. memberNo: {}", memberNo);
                         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("회원을 찾을 수 없습니다.");
                     }
-                    
-                    log.info("회원 정보 조회 완료 - memberNo: {}, email: {}, name: {}, nickname: {}, socialId: {}", 
-                            member.getMemberNo(), member.getEmail(), member.getName(), 
-                            member.getNickname(), member.getSocialId());
-
-                    log.info("응답 데이터 생성 완료");
-                    log.info("=== userInfo API 호출 종료 ===");
 
                     return ResponseEntity.ok(createUserInfoResponse(member));
-                } else {
-                    log.info("accessToken이 만료되어 refreshToken으로 새로운 토큰 발급 시도");
                 }
-            } else {
-                log.info("accessToken이 없어서 refreshToken으로 새로운 토큰 발급 시도");
             }
-            
-            // accessToken이 없거나 만료된 경우 refreshToken으로 새로운 accessToken 발급 시도
+
             Cookie refreshCookie = WebUtils.getCookie(request, "refreshToken");
             if (refreshCookie == null) {
-                log.warn("refreshToken이 없습니다.");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
-            
+
             String refreshToken = refreshCookie.getValue();
             if (refreshToken == null || refreshToken.isEmpty()) {
-                log.warn("refreshToken이 비어있습니다.");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
-            
-            log.info("refreshToken 확인: {}", refreshToken.substring(0, Math.min(20, refreshToken.length())) + "...");
-            
-            // refreshToken 유효성 검사
+
             if (!jwtUtil.isValidToken(refreshToken)) {
-                log.warn("refreshToken이 유효하지 않습니다.");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
-            
-            // refreshToken에서 사용자 정보 추출
+
             memberNo = jwtUtil.getMemberNo(refreshToken);
             email = jwtUtil.getEmail(refreshToken);
             socialId = jwtUtil.getSocialId(refreshToken);
-            
-            log.info("refreshToken에서 추출한 정보 - memberNo: {}, email: {}, socialId: {}", 
-                    memberNo, email, socialId);
-            
-            // DB에 저장된 refreshToken과 일치하는지 확인
+
             String savedRefreshToken = authService.findRefreshToken(memberNo);
             if (!refreshToken.equals(savedRefreshToken)) {
-                log.warn("DB에 저장된 refreshToken과 일치하지 않습니다.");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
-            
-            // DB에 저장된 RefreshToken 만료 여부 확인
+
             LocalDateTime expirationDate = authService.findRefreshTokenExpiration(memberNo);
             if (expirationDate.isBefore(LocalDateTime.now())) {
-                log.warn("refreshToken이 만료되었습니다.");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
             }
-            
-            // 새로운 accessToken 발급
+
             Member member = authService.findMember(memberNo);
             if (member == null) {
                 log.warn("회원을 찾을 수 없습니다. memberNo: {}", memberNo);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("회원을 찾을 수 없습니다.");
             }
-            
+
             String newAccessToken = jwtUtil.generateAccessToken(memberNo, email, member.getRole(), member.getSocialId());
-            log.info("새로운 accessToken 발급 완료");
-            
-            // 새로운 accessToken을 쿠키로 설정
             ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
                     .httpOnly(true)
-                    .maxAge(30 * 60) // 30분
+                    .maxAge(30 * 60)
                     .path("/")
                     .build();
-            
-            log.info("회원 정보 조회 완료 - memberNo: {}, email: {}, name: {}, nickname: {}, socialId: {}", 
-                    member.getMemberNo(), member.getEmail(), member.getName(), 
-                    member.getNickname(), member.getSocialId());
-            
-            log.info("응답 데이터 생성 완료");
-            log.info("=== userInfo API 호출 종료 ===");
-            
-            // 응답에 새로운 쿠키 포함
+
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, newAccessTokenCookie.toString())
                     .body(createUserInfoResponse(member));
@@ -183,7 +121,9 @@ public class AuthController {
      * 회원 정보를 응답 형식에 맞게 변환하는 헬퍼 메서드
      */
     private Map<String, Object> createUserInfoResponse(Member member) {
+        
         Map<String, Object> map = new HashMap<>();
+
         map.put("memberNo", member.getMemberNo());
         map.put("email", member.getEmail());
         map.put("name", member.getName());
@@ -191,136 +131,130 @@ public class AuthController {
         map.put("role", member.getRole());
         map.put("profileImage", member.getProfileImage());
         map.put("socialId", member.getSocialId());
+        
         return map;
     }
 
     @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        // JSON 형식으로 비동기 요청을 하기 때문에, @ModelAttribute가 아닌, @RequestBody 활용
-        // id, password (LoginRequest) -> 기본적인 회원정보 + 토큰 (LoginResponse)
-        
-        // 1. 로그인 처리 및 토큰 생성 (서비스에서 Access + Refresh 생성 및 DB 저장)
+        log.info("login API 호출");
+
         Map<String, Object> result = authService.login(request);
-        
-        // 2. 로그인 실패 시
+
         if (!(Boolean) result.get("success")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(result.get("message"));
         }
-        
-        // 3. 로그인 성공 시
+
         try {
-            // 쿠키로 전달(보안상 절대 Body에 보내면 안됨(XSS 공격에 취약)
             ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", (String)result.get("accessToken"))
                     .httpOnly(true)
-                    // .secure(true)
-                    // .sameSite("Strict")
-                    .maxAge(30 * 60) // 30분
+                    .maxAge(30 * 60)
                     .path("/")
                     .build();
 
             ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", (String)result.get("refreshToken"))
-                    .httpOnly(true) // HttpOnly 쿠키 (JS에서 접근 불가 -> XSS에 안전)
-                    // .secure(true) HTTPS에서만 전송하도록 제한(개발모드에서 false 괜찮음, 배포모드 반드시 true)
-                    // .sameSite("Strict") 어떤 요청 상황에서 브라우저가 서버에 전송할지를 제한
-                    // Strict : 자기 사이트에서만 전송됨
-                    // Lax : 기본값. GET 방식 같은 일부 외부 요청엔 쿠키 전송 가능
-                    // None	: 모든 요청에 쿠키 전송, 단 Secure=true도 반드시 함께 설정해야 함 (특히 CORS 상황에서 사용)
-                    .maxAge(7 * 24 * 60 * 60) // 7일
-                    .path("/") // 모든 경로에서 사용 가능하도록 변경
+                    .httpOnly(true)
+                    .maxAge(7 * 24 * 60 * 60)
+                    .path("/")
                     .build();
 
-            // 4. 응답 헤더에 쿠키 추가
-            // accessToken & refreshToken 모두 httpOnly 쿠키로 전달
             ResponseEntity<Object> response = ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                     .body(result.get("loginResponse"));
-            
+
             return response;
-                    
+
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("로그인 처리 중 오류 발생", e);
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "로그인 처리 중 오류가 발생했습니다.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
+
+    @PostMapping("logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        Cookie refreshTokenCookie = WebUtils.getCookie(request, "refreshToken");
+        Long memberNo = null;
+
+        if (refreshTokenCookie != null) {
+            String refreshToken = refreshTokenCookie.getValue();
+            memberNo = jwtUtil.getMemberNo(refreshToken);
+            authService.logout(memberNo);
+        }
+
+        ResponseCookie expiredAccessToken = ResponseCookie.from("accessToken", "")
+            .httpOnly(true).path("/").maxAge(0).build();
+        ResponseCookie expiredRefreshToken = ResponseCookie.from("refreshToken", "")
+            .httpOnly(true).path("/").maxAge(0).build();
+
+        log.info("로그아웃 처리 완료 - memberNo: {}", memberNo);
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, expiredAccessToken.toString())
+            .header(HttpHeaders.SET_COOKIE, expiredRefreshToken.toString())
+            .body(Map.of("success", true, "message", "로그아웃 완료"));
+    }
     
     @PostMapping("refresh")
     public ResponseEntity<?> refresh(HttpServletRequest request) {
-        
+        log.info("refresh API 호출");
+
         Map<String, Object> responseBody = new HashMap<>();
-        
-        // 1. 쿠키에서 Refresh Token 추출
+
         Cookie cookie = WebUtils.getCookie(request, "refreshToken");
-        
         if (cookie == null) {
             responseBody.put("success", false);
             responseBody.put("message", "쿠키 없음");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
-        // refreshToken이 쿠키에 있으면 꺼내오기
+
         String refreshToken = cookie.getValue();
-        
-        // refreshToken이 없다면
         if (refreshToken == null) {
             responseBody.put("success", false);
             responseBody.put("message", "isEmpty");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
-        
-        // 2. 토큰 유효성 검사
-        // 클라이언트가 보낸 토큰 자체를 검사하기 위해 작성
+
         if (!jwtUtil.isValidToken(refreshToken)) {
             responseBody.put("success", false);
             responseBody.put("message", "expired");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
-        
-        // 3. 사용자 이메일 추출 및 사용자 번호 조회
+
         String userEmail = jwtUtil.getEmail(refreshToken);
         Long memberNo = jwtUtil.getMemberNo(refreshToken);
         Member member = authService.findMember(memberNo);
-        
-        // refreshToken에 해당하는 사용자 정보 없음
+
         if (member == null) {
             responseBody.put("success", false);
             responseBody.put("message", "nobody");
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
-        
-        // 4. DB에 저장된 refreshToken과 요청 시 쿠키에 담겨온 refreshToken이 일치하는지 확인
+
         String savedToken = authService.findRefreshToken(memberNo);
         if (!refreshToken.equals(savedToken)) {
             responseBody.put("success", false);
-            responseBody.put("message", "invalid");  // 저장된 토큰과 일치하지 않음
+            responseBody.put("message", "invalid");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
-        
-        // 5. DB에 저장된 RefreshToken 만료 여부 확인
-        // - 클라이언트가 만료된 토큰을 일부러 수정하거나 변조해서 보내는 것을 막기 위해
-        // - 또는 토큰이 탈취되어도 서버에서 수동 만료 처리하거나 기간을 단축할 수 있도록 하기 위해
-        // -> 보안 목적에서 토큰 자체의 만료 + DB 만료시간을 이중 체크
+
         LocalDateTime expirationDate = authService.findRefreshTokenExpiration(memberNo);
         if (expirationDate.isBefore(LocalDateTime.now())) {
             responseBody.put("success", false);
-            responseBody.put("message", "expired"); // 리프레시 토큰 만료
+            responseBody.put("message", "expired");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
-        
-        // 6. 위 모든 경우가 아니라면 새로운 Access Token 발급
+
         String newAccessToken = jwtUtil.generateAccessToken(memberNo, userEmail, member.getRole(), member.getSocialId());
-        
-        // 7. 성공 응답
         responseBody.put("success", true);
         responseBody.put("message", "success");
 
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
         .httpOnly(true)
-        // .secure(true)
-        // .sameSite("Strict")
-        .maxAge(30 * 60) // 30분
+        .maxAge(30 * 60)
         .path("/")
         .build();
 
