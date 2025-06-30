@@ -30,6 +30,8 @@ public class BoardDto {
     private String boardDeleteYn;
     private List<String> boardImages;
     
+    
+    
     // 목록 조회용 생성자
     public BoardDto(Long boardNo, String boardTitle, String memberNickname, 
                    LocalDateTime boardCreateDate, Integer boardViewCount, 

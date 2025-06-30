@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
@@ -42,12 +43,8 @@ public class SecurityConfig {
         // CORS(Cross-Origin Resource Sharing) 기본 설정을 활성화
         http.cors(Customizer.withDefaults())
 
-        // CSRF(Cross-Site Request Forgery) 보호를 비활성화
+        // CSRF(Cross-Site Request Forgery) 보호를 비활성화 (JWT 사용 시)
         .csrf(auth -> auth.disable())
-        
-        // JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
-        // formLogin, oauth2Login 모두에 JWT 필터가 적용됨
-        .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
         
         // formLogin 비활성화 (사용자 지정 로그인 사용)
         .formLogin(auth -> auth.disable())
@@ -63,10 +60,51 @@ public class SecurityConfig {
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
-        .requestMatchers("/**").permitAll() //admin 로그인 완전구현 이후 "관리자만 접근" 주석풀고 여기꺼 삭제
-        .requestMatchers("/myPage/**").authenticated() // 인증된 사용자만 접근
-//        .requestMatchers("/admin/**").hasRole("ADMIN") // 관리자만 접근
-        .anyRequest().authenticated())
+
+            // WebSocket 관련 경로 - Spring Security 권장 방식
+            .requestMatchers("/ws/**", "/websocket/**").permitAll()
+
+            // 인증/회원/로그인 관련
+            .requestMatchers("/auth/**", "/oauth2/**", "/member/**").permitAll()
+
+            // 와글 게시판 - 읽기는 공개, 쓰기/수정/삭제는 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/wagle/boards").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/wagle/boards/*").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/wagle/boards/*/comments").permitAll()
+            .requestMatchers("/api/wagle/**").authenticated()
+
+            // 고객센터 - 읽기는 공개, 쓰기/수정/삭제는 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/customer/boards").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/customer/boards/*").permitAll()
+            .requestMatchers("/api/customer/**").authenticated()
+            .requestMatchers(HttpMethod.POST, "/api/customer/boards/*/comments").hasRole("ADMIN")
+            .requestMatchers("/api/customer/statistics", "/api/customer/unanswered", "/api/customer/boards/*/status").hasRole("ADMIN")
+
+            // AI 서비스 - 공개
+            .requestMatchers("/api/ai/chat", "/api/ai/health").permitAll()
+
+            // 신고 - 등록/상세만 공개, 나머지는 관리자
+            .requestMatchers(HttpMethod.POST, "/api/reports").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/reports/*", "/api/reports/*/detail").permitAll()
+            .requestMatchers("/api/reports/**").hasRole("ADMIN")
+
+            // 마이페이지 - 인증 필요
+            .requestMatchers("/mypage/**").authenticated()
+
+            // 관리자 페이지
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+
+            // 정적 리소스/시스템 경로 - Spring Security 권장 방식
+            .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
+            .requestMatchers("/*.ico", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg").permitAll()
+            .requestMatchers("/error", "/actuator/**", "/.well-known/**").permitAll()
+
+            // 그 외 모든 요청은 인증 필요
+            .anyRequest().authenticated())
+        
+        // JWT 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
+        // permitAll 경로는 JWT 필터를 거치지만 인증 실패 시에도 통과
+        .addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
         
         //세션 설정 : STATELESS
         .sessionManagement(session -> session
