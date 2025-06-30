@@ -174,7 +174,11 @@
             PARENT_COMMENT_NO, COMMENT_WRITE_DATE, COMMENT_DEL_FL
         ) VALUES (
             #{commentNo}, #{boardNo}, #{memberNo}, #{commentContent}, 
-            #{commentParentNo}, SYSDATE, 'N'
+            <choose>
+                <when test="commentParentNo != null and commentParentNo != 0">#{commentParentNo}</when>
+                <otherwise>NULL</otherwise>
+            </choose>, 
+            SYSDATE, 'N'
         )
     </insert>
 

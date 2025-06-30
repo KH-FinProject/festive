@@ -176,6 +176,27 @@ public class WagleController {
     }
     
     /**
+     * 댓글 작성 (테스트용 - 인증 없음)
+     */
+    @PostMapping("/boards/{boardNo}/comments/test")
+    public ResponseEntity<String> createCommentTest(@PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
+        try {
+            // 테스트용으로 memberNo를 1로 고정
+            commentDto.setMemberNo(1L);
+            commentDto.setBoardNo(boardNo);
+            int result = wagleService.createComment(commentDto);
+            if (result > 0) {
+                return ResponseEntity.ok("댓글이 작성되었습니다.");
+            } else {
+                return ResponseEntity.badRequest().body("댓글 작성에 실패했습니다.");
+            }
+        } catch (Exception e) {
+            log.error("댓글 작성 실패: boardNo = {}", boardNo, e);
+            return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
+        }
+    }
+    
+    /**
      * 댓글 작성
      */
     @PostMapping("/boards/{boardNo}/comments")
