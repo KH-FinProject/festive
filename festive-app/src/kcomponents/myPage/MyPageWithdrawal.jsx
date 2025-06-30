@@ -2,13 +2,16 @@ import React, { useState } from "react";
 import "./MyPageWithdrawal.css";
 import MyPageSideBar from "./MyPageSideBar";
 import useAuthStore from "../../store/useAuthStore";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const MyPageWithdrawal = () => {
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
   const { member } = useAuthStore();
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const { name, profileImageUrl } = location.state || {};
 
   const handleWithdrawal = async (e) => {
     e.preventDefault();
@@ -63,7 +66,10 @@ const MyPageWithdrawal = () => {
   return (
     <div className="page-container">
       <main className="main-content">
-        <MyPageSideBar />
+        <MyPageSideBar
+          name={name}
+          profileImageUrl={profileImageUrl}
+        />
 
         <section className="withdrawal-section">
           <div className="profile-header">

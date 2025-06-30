@@ -41,5 +41,15 @@ public interface MyPageMapper {
     Integer countByNicknameExcludeSelf(@Param("nickname") String nickname, @Param("memberNo") Long memberNo);
 
     // 프로필 업데이트 (닉네임, 프로필 이미지)
-    int updateProfile(@Param("memberNo") Long memberNo, @Param("nickname") String nickname, @Param("profileImage") String profileImage);
+    int updateProfile(@Param("memberNo") Long memberNo,
+            @Param("nickname") String nickname,
+            @Param("profileImagePath") String profileImagePath);
+    
+    // 찜 목록 가져오기
+    List<String> findFavoriteContentIdsByMemberNo(long memberNo);
+    
+    // 찜 해제하기
+    void deleteFavorite(@Param("memberNo") long memberNo, @Param("contentId") String contentId);
+
+ 
 }
