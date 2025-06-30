@@ -114,7 +114,7 @@ public class MyPageServiceImpl implements MyPageService {
 
         String profileImagePath = null;
 
-        // 2. 프로필 이미지 파일 처리
+        // 2. 프로필 이미지 파일 처리 (파일이 있을 때만)
         if (profileImageFile != null && !profileImageFile.isEmpty()) {
             try {
                 // 파일 저장 디렉토리 생성
@@ -125,7 +125,6 @@ public class MyPageServiceImpl implements MyPageService {
             	        log.info("업로드 디렉토리 생성 성공: {}", uploadDir);
             	    } else {
             	        log.error("업로드 디렉토리 생성 실패: {}", uploadDir);
-            	        // 디렉토리 생성 실패 시 예외를 던져야 프론트엔드에 오류 전달
             	        throw new IOException("Failed to create upload directory at " + uploadDir);
             	    }
             	}
@@ -137,15 +136,15 @@ public class MyPageServiceImpl implements MyPageService {
                 File targetFile = new File(uploadDir, savedFileName);
 
                 profileImageFile.transferTo(targetFile); // 파일 저장
-                profileImagePath = "/profile-images/" + savedFileName; // 클라이언트에서 접근할 경로 (정적 리소스 매핑 필요)
+                profileImagePath = "/profile-images/" + savedFileName; // 클라이언트에서 접근할 경로
                 log.info("프로필 이미지 저장 완료: {}", profileImagePath);
             } catch (IOException e) {
                 log.error("프로필 이미지 저장 중 오류 발생 (memberNo: {}): {}", memberNo, e.getMessage(), e);
                 throw new RuntimeException("프로필 이미지 저장에 실패했습니다.");
             }
         }
-        // 3. DB 업데이트
-        // 닉네임만 변경되거나, 이미지 파일만 변경되거나, 둘 다 변경될 수 있음
+        
+        // 3. DB 업데이트 (닉네임만 변경되거나, 이미지 파일만 변경되거나, 둘 다 변경될 수 있음)
         int result = mapper.updateProfile(memberNo, nickname, profileImagePath);
         log.info("프로필 업데이트 시도 결과 (memberNo: {}): {} rows affected", memberNo, result);
         return result > 0;

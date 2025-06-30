@@ -11,16 +11,16 @@ function CustomerWrite() {
   const navigate = useNavigate();
   const editorRef = useRef();
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("기타");
-  const [priority, setPriority] = useState("일반");
+  const [category] = useState("기타");
+  const [priority] = useState("일반");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { accessToken } = useAuthStore();
+  const { member } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // 로그인 체크
-    if (!accessToken) {
+    if (!member) {
       alert("로그인이 필요한 서비스입니다.");
       navigate("/signin");
       return;
