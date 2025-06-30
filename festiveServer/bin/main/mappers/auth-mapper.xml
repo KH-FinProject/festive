@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.project.festive.festiveserver.auth.mapper.AuthMapper">
+
+  <insert id="insertRefreshToken" parameterType="RefreshToken">
+    INSERT INTO REFRESH_TOKEN (
+      MEMBER_NO,
+      REFRESH_TOKEN,
+      EXPIRATION_DATE
+    ) VALUES (
+      #{memberNo},
+      #{refreshToken},
+      #{expirationDate}
+    )
+  </insert>
+
+  <update id="updateRefreshToken" parameterType="RefreshToken">
+    UPDATE REFRESH_TOKEN SET
+      REFRESH_TOKEN = #{refreshToken},
+      EXPIRATION_DATE = #{expirationDate}
+    WHERE MEMBER_NO = #{memberNo}
+  </update>
+
+  <delete id="deleteRefreshToken" parameterType="Long">
+    DELETE FROM REFRESH_TOKEN WHERE MEMBER_NO = #{memberNo}
+  </delete>
+
+</mapper>

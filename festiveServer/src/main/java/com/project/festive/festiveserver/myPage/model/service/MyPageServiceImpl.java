@@ -2,16 +2,27 @@ package com.project.festive.festiveserver.myPage.model.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.festive.festiveserver.member.dto.MemberDto;
+import com.project.festive.festiveserver.myPage.dto.MyCalendarDto;
 import com.project.festive.festiveserver.myPage.model.mapper.MyPageMapper;
 import com.project.festive.festiveserver.wagle.dto.BoardDto;
 import com.project.festive.festiveserver.wagle.dto.CommentDto;
@@ -29,6 +40,13 @@ public class MyPageServiceImpl implements MyPageService {
     private final PasswordEncoder passwordEncoder;
     @Value("${file.upload-dir}") // 설정 파일에서 경로를 주입받음
     private String uploadDir;
+    
+    @Autowired
+    private final RestTemplate restTemplate; // Bean으로 등록하여 사용
+    private final ObjectMapper objectMapper; // Bean으로 등록하여 사용
+
+    @Value("${tour.api.service-key}")
+    private String serviceKey;
 
 
     // 회원 탈퇴
@@ -55,6 +73,14 @@ public class MyPageServiceImpl implements MyPageService {
         return false;
     }
     
+    // 비밀번호 변경 시 현재 비밀번호 확인
+    @Override
+    public boolean checkPassword(Long memberNo, String rawPassword) {
+        String encodedPassword = mapper.selectPw(memberNo);
+        if (encodedPassword == null) return false;
+        return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+    
     // 내가 작성한 게시글 조회
     @Override
     public List<BoardDto> getMyPosts(Long memberNo) {
@@ -77,13 +103,13 @@ public class MyPageServiceImpl implements MyPageService {
     @Override
     public boolean updateMyInfo(Long memberNo, MemberDto updatedInfo) {
         // 현재 비밀번호 조회 (DB에 저장된 암호화된 비밀번호)
-        String currentEncodedPw = mapper.selectPw(memberNo);
-
-        // 프론트에서 넘어온 비밀번호(updatedInfo.getPassword()가 아니라 updatedInfo.getCurrentPassword())와 DB 비밀번호 비교
-        if (!passwordEncoder.matches(updatedInfo.getCurrentPassword(), currentEncodedPw)) {
-            // 비밀번호 불일치
-            return false;
-        }
+//        String currentEncodedPw = mapper.selectPw(memberNo);
+//
+//        // 프론트에서 넘어온 비밀번호(updatedInfo.getPassword()가 아니라 updatedInfo.getCurrentPassword())와 DB 비밀번호 비교
+//        if (!passwordEncoder.matches(updatedInfo.getCurrentPassword(), currentEncodedPw)) {
+//            // 비밀번호 불일치
+//            return false;
+//        }
 
         // 비밀번호 일치 시 정보 수정
         updatedInfo.setMemberNo(memberNo); // memberNo는 JWT에서 추출한 것으로 설정
@@ -104,50 +130,105 @@ public class MyPageServiceImpl implements MyPageService {
     }
 
     @Override
-    public boolean updateProfile(Long memberNo, String nickname, MultipartFile profileImageFile, String password) {
-        // 1. 비밀번호 확인
-        String currentEncodedPw = mapper.selectPw(memberNo);
-        if (!passwordEncoder.matches(password, currentEncodedPw)) {
-            log.warn("프로필 업데이트 실패: 비밀번호 불일치 (memberNo: {})", memberNo);
-            return false; // 비밀번호 불일치
-        }
-
+    public boolean updateProfile(Long memberNo, String nickname, MultipartFile profileImageFile) {
         String profileImagePath = null;
 
-        // 2. 프로필 이미지 파일 처리 (파일이 있을 때만)
+        // 1. 프로필 이미지 파일 처리 (파일이 있을 때만)
         if (profileImageFile != null && !profileImageFile.isEmpty()) {
             try {
-                // 파일 저장 디렉토리 생성
-            	File directory = new File(uploadDir);
-            	if (!directory.exists()) {
-            	    boolean created = directory.mkdirs();
-            	    if (created) {
-            	        log.info("업로드 디렉토리 생성 성공: {}", uploadDir);
-            	    } else {
-            	        log.error("업로드 디렉토리 생성 실패: {}", uploadDir);
-            	        throw new IOException("Failed to create upload directory at " + uploadDir);
-            	    }
-            	}
+                File directory = new File(uploadDir);
+                if (!directory.exists()) {
+                    boolean created = directory.mkdirs();
+                    if (!created) {
+                        throw new IOException("Failed to create upload directory at " + uploadDir);
+                    }
+                }
 
-                // 파일명 중복 방지를 위해 UUID 사용
                 String originalFilename = profileImageFile.getOriginalFilename();
                 String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
                 String savedFileName = UUID.randomUUID().toString() + extension;
                 File targetFile = new File(uploadDir, savedFileName);
 
-                profileImageFile.transferTo(targetFile); // 파일 저장
-                profileImagePath = "/profile-images/" + savedFileName; // 클라이언트에서 접근할 경로
-                log.info("프로필 이미지 저장 완료: {}", profileImagePath);
+                profileImageFile.transferTo(targetFile);
+                profileImagePath = "/profile-images/" + savedFileName;
             } catch (IOException e) {
                 log.error("프로필 이미지 저장 중 오류 발생 (memberNo: {}): {}", memberNo, e.getMessage(), e);
                 throw new RuntimeException("프로필 이미지 저장에 실패했습니다.");
             }
         }
-        
-        // 3. DB 업데이트 (닉네임만 변경되거나, 이미지 파일만 변경되거나, 둘 다 변경될 수 있음)
+
+        // 2. DB 업데이트 (닉네임만 변경되거나, 이미지 파일만 변경되거나, 둘 다 변경될 수 있음)
         int result = mapper.updateProfile(memberNo, nickname, profileImagePath);
-        log.info("프로필 업데이트 시도 결과 (memberNo: {}): {} rows affected", memberNo, result);
         return result > 0;
+    }
+
+    @Override
+    public List<MyCalendarDto> getFavoriteFestivals(long memberNo) {
+        List<String> contentIds = mapper.findFavoriteContentIdsByMemberNo(memberNo);
+
+        if (contentIds == null || contentIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return contentIds.stream()
+                .map(this::fetchFestivalDetails)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Override
+    public void removeFavorite(long memberNo, String contentId) {
+        mapper.deleteFavorite(memberNo, contentId);
+    }
+
+    private MyCalendarDto fetchFestivalDetails(String contentId) {
+        String tourApiUrl = "http://api.visitkorea.or.kr/openapi/service/rest/KorService1/detailCommon1";
+
+        URI uri = UriComponentsBuilder.fromHttpUrl(tourApiUrl)
+                .queryParam("ServiceKey", serviceKey)
+                .queryParam("contentId", contentId)
+                .queryParam("defaultYN", "Y")
+                .queryParam("firstImageYN", "Y")
+                .queryParam("addrinfoYN", "Y")
+                .queryParam("overviewYN", "Y")
+                .queryParam("MobileOS", "ETC")
+                .queryParam("MobileApp", "AppTest")
+                .queryParam("_type", "json")
+                .build(true)
+                .toUri();
+
+        try {
+            String response = restTemplate.getForObject(uri, String.class);
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode item = root.path("response").path("body").path("items").path("item");
+
+            if (item.isMissingNode()) {
+                log.warn("No item found for contentId: {}", contentId);
+                return null;
+            }
+            
+            // YYYYMMDD 형식을 YYYY-MM-DD 로 변환
+            DateTimeFormatter apiFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+            String startDateStr = item.path("eventstartdate").asText();
+            String endDateStr = item.path("eventenddate").asText();
+
+            LocalDate startDate = LocalDate.parse(startDateStr, apiFormatter);
+            LocalDate endDate = LocalDate.parse(endDateStr, apiFormatter);
+
+            return new MyCalendarDto(
+                    item.path("contentid").asText(),
+                    item.path("title").asText(),
+                    startDate.format(dbFormatter),
+                    endDate.format(dbFormatter),
+                    item.path("firstimage").asText(null)
+            );
+        } catch (Exception e) {
+            log.error("Failed to fetch details for contentId: {}", contentId, e);
+            return null;
+        }
     }
 
 
