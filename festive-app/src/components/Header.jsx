@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import mainLogo from "../assets/festiveLogo.png";
 import useAuthStore from "../store/useAuthStore";
 import { useAdminNotification } from '../mcomponents/AdminNotificationContext.jsx';
@@ -10,10 +10,16 @@ const Header = () => {
   const [login, setLogin] = useState(false);
   const { member, isLoggedIn } = useAuthStore();
   const { hasNewReport } = useAdminNotification();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLogin(isLoggedIn);
   }, [isLoggedIn]);
+
+  const handleLogout = () => {
+    useAuthStore.getState().logout();
+    navigate("/");
+  };
 
   return (
     <header className="header">
@@ -68,8 +74,8 @@ const Header = () => {
           <Weather />
         </div>
         {login ? (
-          <a href={"/mypage/profile"}>
-            <div className="header-user-info">
+          <div className="header-user-info">
+            <Link to="/mypage/profile">
               <img
                 src={member?.profileImage || "/logo.png"}
                 alt="프로필"
@@ -79,8 +85,11 @@ const Header = () => {
               <span className="header-user-nickname">
                 {member?.nickname || member?.name}
               </span>
-            </div>
-          </a>
+            </Link>
+            <span onClick={handleLogout} className="headernav-link hover-grow">
+              Sign Out
+            </span>
+          </div>
         ) : (
           <>
             <Link to="/signin" className="headernav-link hover-grow">
