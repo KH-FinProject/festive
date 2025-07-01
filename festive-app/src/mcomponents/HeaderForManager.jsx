@@ -3,12 +3,12 @@ import mainLogo from "../assets/festiveLogo.png";
 import "./HeaderForManager.css";
 
 function HeaderForManager() {
-    return (
+  return (
     <header className="header">
       <div className="headerlogo">
-          <a href="/admin">
-              <img src={mainLogo} alt="festive logo" />
-          </a>
+        <a href="/admin">
+          <img src={mainLogo} alt="festive logo" />
+        </a>
       </div>
     </header>
   );

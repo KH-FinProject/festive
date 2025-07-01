@@ -1,7 +1,9 @@
 package com.project.festive.festiveserver.common.config;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -27,4 +29,11 @@ public class WebConfig implements WebMvcConfigurer {
       registry.addResourceHandler("/profile-images/**")
               .addResourceLocations("file:///C:/upload/festive/profile/"); // 실제 저장 경로와 일치
   }
+  
+  // 찜달력(MypageServiceImpl) - 지현이가 추가함
+  @Bean
+  public RestTemplate restTemplate() {
+      return new RestTemplate();
+  }
+  
 }

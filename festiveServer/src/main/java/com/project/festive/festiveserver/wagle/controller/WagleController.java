@@ -162,6 +162,36 @@ public class WagleController {
     }
     
     /**
+     * 게시글 좋아요 상태 확인
+     */
+    @GetMapping("/boards/{boardNo}/like/check")
+    public ResponseEntity<Map<String, Object>> checkBoardLike(@PathVariable("boardNo") Long boardNo) {
+        try {
+            // 안전한 인증 정보 추출
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).build();
+            }
+            
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof CustomUserDetails)) {
+                log.error("인증 정보 타입 오류: {}", principal.getClass().getName());
+                return ResponseEntity.status(401).build();
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            Long memberNo = userDetails.getMemberNo();
+            
+            boolean liked = wagleService.checkBoardLike(boardNo, memberNo);
+            Map<String, Object> result = Map.of("liked", liked);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("게시글 좋아요 상태 확인 실패: boardNo = {}", boardNo, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
      * 댓글 목록 조회
      */
     @GetMapping("/boards/{boardNo}/comments")

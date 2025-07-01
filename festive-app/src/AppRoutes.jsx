@@ -5,6 +5,7 @@ import Signin from "./jcomponents/Signin/Signin.jsx";
 import Signup from "./jcomponents/Signup/Signup.jsx";
 import WaglePage from "./ycomponents/wagle/WaglePage.jsx";
 import WritePage from "./ycomponents/wagle/WritePage.jsx";
+import EditPage from "./ycomponents/wagle/EditPage.jsx";
 import Find from "./jcomponents/Find/Find.jsx";
 import FestivalMainPage from "./scomponents/monthFestive/This-month-festive.jsx";
 import WagleDetail from "./ycomponents/wagle/WagleDetail.jsx";
@@ -24,6 +25,7 @@ import LocalFestive from "./jcomponents/LocalFestive/LocalFestive.jsx";
 import FestivalDetail from "./mcomponents/FestivalDetail";
 import CustomerCenter from "./ycomponents/customerCenter/CustomerCenter.jsx";
 import CustomerWrite from "./ycomponents/customerCenter/CustomerWrite.jsx";
+import CustomerEdit from "./ycomponents/customerCenter/CustomerEdit.jsx";
 import CustomerDetail from "./ycomponents/customerCenter/CustomerDetail.jsx";
 
 const AppRoutes = () => {
@@ -37,6 +39,7 @@ const AppRoutes = () => {
         <Route path="/festival/local" element={<LocalFestive />} />
         <Route path="/wagle" element={<WaglePage />} />
         <Route path="/wagle/write" element={<WritePage />} />
+        <Route path="/wagle/edit/:id" element={<EditPage />} />
         <Route path="/wagle/:id" element={<WagleDetail />} />
         <Route path="/this-month" element={<FestivalMainPage />} />
         <Route path="/ai-travel" element={<AITravelCourse />} />
@@ -57,6 +60,7 @@ const AppRoutes = () => {
         />
         <Route path="/customer-center" element={<CustomerCenter />} />
         <Route path="/customer-center/write" element={<CustomerWrite />} />
+        <Route path="/customer-center/edit/:id" element={<CustomerEdit />} />
         <Route path="/customer-center/:id" element={<CustomerDetail />} />
       </Routes>
     </>

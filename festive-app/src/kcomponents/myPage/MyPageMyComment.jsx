@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./MyPageWithdrawal.css";
 import "./MyPageMyComment.css";
 import MyPageSideBar from "./MyPageSideBar";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 
 const MyPageMyComment = () => {
@@ -10,6 +10,10 @@ const MyPageMyComment = () => {
   const [comments, setComments] = useState([]);
   const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 구현 시 필요
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const { name, profileImageUrl } = location.state || {};
+
 
   useEffect(() => {
     if (!member) {
@@ -29,7 +33,10 @@ const MyPageMyComment = () => {
   return (
     <div className="page-container">
       <main className="main-content">
-        <MyPageSideBar />
+        <MyPageSideBar
+          name={name}
+          profileImageUrl={profileImageUrl}
+        />
         <section className="withdrawal-section">
           <div className="profile-header">
             <h1>내가 쓴 게시글 및 댓글</h1>
@@ -39,7 +46,11 @@ const MyPageMyComment = () => {
           <div className="mypage-tabs">
             <button
               className="mypage-tab"
-              onClick={() => navigate("/mypage/mypost")}
+              onClick={() =>
+                navigate("/mypage/mypost", {
+                  state: { name, profileImageUrl },
+                })
+              }
             >
               게시글
             </button>

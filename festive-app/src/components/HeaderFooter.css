@@ -54,6 +54,11 @@
   width: 100%;
 }
 
+/* 활성 링크 스타일 */
+.headernav-link.active::after {
+  width: 100%;
+}
+
 .headerheader-right {
   display: flex;
   flex-wrap: wrap;
