@@ -389,9 +389,12 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
 
     if (!rules) return '';
     if (rules.required && !value) return rules.message.required;
+
     if (rules.minLength && value.length < rules.minLength) return rules.message.minLength;
     if (rules.maxLength && value.length > rules.maxLength) return rules.message.maxLength;
+
     if (rules.pattern && !rules.pattern.test(value)) return rules.message.pattern;
+    
     if (field === 'passwordConfirm' && value !== compareValue) return rules.message.match;
     if (field === 'authKey' && value.length !== 6) return rules.message.length;
 

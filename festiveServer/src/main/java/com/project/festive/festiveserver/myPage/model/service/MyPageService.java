@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.project.festive.festiveserver.member.dto.MemberDto;
+import com.project.festive.festiveserver.myPage.dto.MyCalendarDto;
 import com.project.festive.festiveserver.wagle.dto.BoardDto;
 import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
@@ -36,7 +37,16 @@ public interface MyPageService {
     boolean checkNicknameDuplicate(String nickname, Long memberNo);
 
     // 프로필 업데이트 (닉네임, 프로필 이미지)
-    boolean updateProfile(Long memberNo, String nickname, MultipartFile profileImageFile, String password);
+    boolean updateProfile(Long memberNo, String nickname, MultipartFile profileImageFile);
+
+    // 현재 비밀번호 확인(비밀번호 변경 창)
+    boolean checkPassword(Long memberNo, String rawPassword);
+    
+    // 찜 목록 가져오기
+    List<MyCalendarDto> getFavoriteFestivals(long memberNo);
+    
+    // 찜 해제
+    void removeFavorite(long memberNo, String contentId);
 
 
 

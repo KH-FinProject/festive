@@ -393,6 +393,9 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/java,react,node,jetbrains+all,visualstudiocode,gradle,maven,windows
 /.metadata/
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> bc38a2a5bf91903fe6ed59f7e11b35ba8a512ab4
 bin/

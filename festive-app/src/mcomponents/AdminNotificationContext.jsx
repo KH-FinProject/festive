@@ -39,15 +39,16 @@ export function AdminNotificationProvider({ children }) {
 
           if (event.data.includes("CONNECTED")) {
             console.log("STOMP 연결 완료!");
-
             // 구독 프레임 전송
             const subscribeFrame =
               "SUBSCRIBE\nid:sub-0\ndestination:/topic/admin-alerts\n\n\x00";
             ws.send(subscribeFrame);
             console.log("/topic/admin-alerts 구독 요청 전송");
-          } else if (event.data.includes("/topic/admin-alerts")) {
-            console.log("관리자 알림 메시지 받음!");
-            // 신고 또는 문의글 알림 모두 처리
+            return;
+          }
+
+          // 기존 방식: /topic/admin-alerts 메시지 수신 시 바로 NEW 처리
+          if (event.data.includes("/topic/admin-alerts")) {
             setHasNewReport(true);
           }
         };

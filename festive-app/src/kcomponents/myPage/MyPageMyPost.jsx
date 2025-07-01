@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./MyPageMyPost.css";
 import MyPageSideBar from "./MyPageSideBar";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 
 const MyPageMyPost = () => {
   const [posts, setPosts] = useState([]);
   const navigate = useNavigate();
   const { member } = useAuthStore();
+
+  const location = useLocation();
+  const { name, profileImageUrl } = location.state || {};
 
   useEffect(() => {
     if (!member) {
@@ -21,12 +24,15 @@ const MyPageMyPost = () => {
       .then((res) => res.json())
       .then((data) => setPosts(data))
       .catch((err) => console.error(err));
-  }, [member]);
+  }, [member, navigate]); // useEffect 종속성 배열에 navigate 추가
 
   return (
     <div className="page-container">
       <main className="main-content">
-        <MyPageSideBar />
+        <MyPageSideBar
+          name={name}
+          profileImageUrl={profileImageUrl}
+        />
         <section className="withdrawal-section">
           <div className="profile-header">
             <h1>내가 쓴 게시글 및 댓글</h1>
@@ -34,9 +40,14 @@ const MyPageMyPost = () => {
           </div>
           <div className="mypage-tabs">
             <button className="mypage-tab active">게시글 {posts.length}</button>
+
             <button
               className="mypage-tab"
-              onClick={() => navigate("/mypage/mycomment")}
+              onClick={() =>
+                navigate("/mypage/mycomment", {
+                  state: { name, profileImageUrl },
+                })
+              }
             >
               댓글
             </button>

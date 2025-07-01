@@ -2,13 +2,13 @@ import axios from "axios";
 import useAuthStore from "../store/useAuthStore";
 
 const axiosApi = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}`,
-    withCredentials: true
-    // headers : {"Content-Type" : "application/json"}
-    // withCredentials : true // 쿠키 포함 설정
-    // 서버에서도 클라이언트가 보낸 쿠키를 받아줄 준비해야함!
-    // credential 허용 설정
-})
+  baseURL: `${import.meta.env.VITE_API_URL}`,
+  withCredentials: true,
+  // headers : {"Content-Type" : "application/json"}
+  // withCredentials : true // 쿠키 포함 설정
+  // 서버에서도 클라이언트가 보낸 쿠키를 받아줄 준비해야함!
+  // credential 허용 설정
+});
 
 // 토큰 갱신 중인지 확인하는 플래그
 let isRefreshing = false;
@@ -17,15 +17,15 @@ let failedQueue = [];
 
 // 대기 중인 요청들을 처리하는 함수
 const processQueue = (error, token = null) => {
-    failedQueue.forEach(prom => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
-        }
-    });
-    
-    failedQueue = [];
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
 };
 
 // 응답 인터셉터 - 401 오류 시 토큰 갱신 처리
@@ -48,13 +48,6 @@ axiosApi.interceptors.response.use(
                 const { logout } = useAuthStore.getState();
                 logout();
                 
-                return Promise.reject(error);
-            }
-
-            // /auth/userInfo 요청인 경우는 토큰 갱신을 시도하지 않음
-            // (초기 상태에서 무한 루프 방지)
-            if (originalRequest.url?.includes('/auth/userInfo')) {
-                console.log("사용자 정보 요청이므로 토큰 갱신 시도하지 않음");
                 return Promise.reject(error);
             }
 
@@ -104,6 +97,7 @@ axiosApi.interceptors.response.use(
                     console.log("원래 요청 재시도");
                     return axiosApi(originalRequest);
                 }
+                
             } catch (refreshError) {
                 // 토큰 갱신 실패 시 대기 중인 요청들도 모두 실패 처리
                 processQueue(refreshError, null);
@@ -121,9 +115,9 @@ axiosApi.interceptors.response.use(
             }
         }
 
-        // 401이 아닌 오류이거나 이미 재시도한 요청인 경우
-        return Promise.reject(error);
-    }
+    // 401이 아닌 오류이거나 이미 재시도한 요청인 경우
+    return Promise.reject(error);
+  }
 );
 
 export default axiosApi;

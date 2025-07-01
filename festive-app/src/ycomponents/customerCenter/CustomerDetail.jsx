@@ -89,6 +89,44 @@ function CustomerDetail() {
     );
   };
 
+  // 게시글 수정 핸들러
+  const handleEditPost = () => {
+    navigate(`/customer-center/edit/${id}`);
+  };
+
+  // 게시글 삭제 핸들러
+  const handleDeletePost = async () => {
+    if (!currentUser) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/signin");
+      return;
+    }
+
+    if (!window.confirm("문의글을 삭제하시겠습니까?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/customer/boards/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        alert("문의글이 삭제되었습니다.");
+        navigate("/customer-center");
+      } else {
+        alert("문의글 삭제에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("문의글 삭제 실패:", err);
+      alert("문의글 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
   // 로딩 상태
   if (loading) {
     return (
@@ -220,6 +258,48 @@ function CustomerDetail() {
                 {post.status}
               </span>
             </div>
+            {/* 작성자만 수정/삭제 버튼 표시 */}
+            {currentUser?.memberNo === post.memberNo && (
+              <div
+                className="customer-detail-btns"
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  gap: "10px",
+                }}
+              >
+                <button
+                  className="customer-detail-edit-btn"
+                  onClick={handleEditPost}
+                  style={{
+                    padding: "6px 12px",
+                    background: "#3498db",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  수정
+                </button>
+                <button
+                  className="customer-detail-delete-btn"
+                  onClick={handleDeletePost}
+                  style={{
+                    padding: "6px 12px",
+                    background: "#e74c3c",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  삭제
+                </button>
+              </div>
+            )}
           </div>
           <div className="customer-detail-meta">
             <span className="customer-detail-profile-img"></span>

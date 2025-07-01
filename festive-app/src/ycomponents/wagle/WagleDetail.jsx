@@ -12,10 +12,20 @@ import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons";
 import GeneralBoard from "./GeneralBoard";
 import NoticeBoard from "./NoticeBoard";
 import useAuthStore from "../../store/useAuthStore";
+import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 
-function CommentItem({ comment, onReport, currentUser, onReplySubmit }) {
+function CommentItem({
+  comment,
+  onReport,
+  currentUser,
+  onReplySubmit,
+  onEditComment,
+  onDeleteComment,
+}) {
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyContent, setReplyContent] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(comment.commentContent);
 
   const formatDate = (dateString) => {
     return new Date(dateString)
@@ -42,6 +52,19 @@ function CommentItem({ comment, onReport, currentUser, onReplySubmit }) {
     setShowReplyInput(false);
   };
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editContent.trim()) return;
+    await onEditComment(comment.commentNo, editContent);
+    setIsEditing(false);
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm("댓글을 삭제하시겠습니까?")) {
+      await onDeleteComment(comment.commentNo);
+    }
+  };
+
   return (
     <li className="wagle-detail-comment-item">
       <div className="comment-main-row">
@@ -57,8 +80,15 @@ function CommentItem({ comment, onReport, currentUser, onReplySubmit }) {
         <div className="comment-actions">
           {isCommentAuthor && (
             <>
-              <button className="comment-btn">수정</button>
-              <button className="comment-btn">삭제</button>
+              <button
+                className="comment-btn"
+                onClick={() => setIsEditing(true)}
+              >
+                수정
+              </button>
+              <button className="comment-btn" onClick={handleDelete}>
+                삭제
+              </button>
             </>
           )}
           <button
@@ -87,7 +117,22 @@ function CommentItem({ comment, onReport, currentUser, onReplySubmit }) {
           </button>
         </div>
       </div>
-      <div className="comment-content">{comment.commentContent}</div>
+      {isEditing ? (
+        <form onSubmit={handleEditSubmit} className="edit-comment-form">
+          <input
+            type="text"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            style={{ width: "80%", marginRight: 8 }}
+          />
+          <button type="submit">저장</button>
+          <button type="button" onClick={() => setIsEditing(false)}>
+            취소
+          </button>
+        </form>
+      ) : (
+        <div className="comment-content">{comment.commentContent}</div>
+      )}
       {showReplyInput && (
         <form onSubmit={handleReplySubmit} className="reply-input-form">
           <input
@@ -121,8 +166,32 @@ function CommentItem({ comment, onReport, currentUser, onReplySubmit }) {
                 <div className="comment-actions">
                   {isReplyAuthor && (
                     <>
-                      <button className="comment-btn">수정</button>
-                      <button className="comment-btn">삭제</button>
+                      <button
+                        className="comment-btn"
+                        onClick={() => {
+                          if (window.confirm("답글을 수정하시겠습니까?")) {
+                            const newContent = prompt(
+                              "답글 내용을 입력하세요:",
+                              reply.commentContent
+                            );
+                            if (newContent && newContent.trim()) {
+                              onEditComment(reply.commentNo, newContent.trim());
+                            }
+                          }
+                        }}
+                      >
+                        수정
+                      </button>
+                      <button
+                        className="comment-btn"
+                        onClick={() => {
+                          if (window.confirm("답글을 삭제하시겠습니까?")) {
+                            onDeleteComment(reply.commentNo);
+                          }
+                        }}
+                      >
+                        삭제
+                      </button>
                     </>
                   )}
                   <button
@@ -172,6 +241,10 @@ function ReportModal({ isOpen, onClose, onSubmit, reportData, currentUser }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!reason.trim()) {
+      alert("신고 사유를 입력해주세요.");
+      return;
+    }
 
     try {
       const reportPayload = {
@@ -338,15 +411,43 @@ function WagleDetail() {
     }
   };
 
+  // 좋아요 상태 확인
+  const checkLikeStatus = async () => {
+    if (!member) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/boards/${id}/like/check`,
+        {
+          credentials: "include",
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setLiked(data.liked);
+      }
+    } catch (err) {
+      console.error("좋아요 상태 확인 실패:", err);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       fetchPostDetail();
       fetchComments();
+      checkLikeStatus();
     }
   }, [id]);
 
   // 좋아요 토글
   const handleLikeToggle = async () => {
+    if (!member) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/signin");
+      return;
+    }
+
     try {
       const response = await fetch(
         `http://localhost:8080/api/wagle/boards/${id}/like`,
@@ -355,6 +456,7 @@ function WagleDetail() {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
         }
       );
 
@@ -362,9 +464,12 @@ function WagleDetail() {
         const data = await response.json();
         setLiked(data.action === "like");
         setPost((prev) => ({ ...prev, likes: data.likeCount }));
+      } else {
+        alert("좋아요 처리에 실패했습니다.");
       }
     } catch (err) {
       console.error("좋아요 처리 실패:", err);
+      alert("좋아요 처리 중 오류가 발생했습니다.");
     }
   };
 
@@ -415,6 +520,11 @@ function WagleDetail() {
       navigate("/signin");
       return;
     }
+    
+    // 닉네임 체크
+    const canProceed = await checkNicknameForSocialUser(navigate);
+    if (!canProceed) return;
+
     try {
       const response = await fetch(
         `http://localhost:8080/api/wagle/boards/${id}/comments`,
@@ -439,6 +549,101 @@ function WagleDetail() {
     } catch (err) {
       console.error("답글 작성 실패:", err);
       alert("답글 작성 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 댓글 수정
+  const handleEditComment = async (commentNo, newContent) => {
+    if (!member) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/signin");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/comments/${commentNo}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            commentContent: newContent,
+          }),
+        }
+      );
+      if (response.ok) {
+        fetchComments();
+        fetchPostDetail();
+      } else {
+        alert("댓글 수정에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("댓글 수정 실패:", err);
+      alert("댓글 수정 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 댓글 삭제
+  const handleDeleteComment = async (commentNo) => {
+    if (!member) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/signin");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/comments/${commentNo}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        fetchComments();
+        fetchPostDetail();
+      } else {
+        alert("댓글 삭제에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("댓글 삭제 실패:", err);
+      alert("댓글 삭제 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 게시글 수정
+  const handleEditPost = () => {
+    navigate(`/wagle/edit/${id}`);
+  };
+
+  // 게시글 삭제
+  const handleDeletePost = async () => {
+    if (!member) {
+      alert("로그인이 필요한 서비스입니다.");
+      navigate("/signin");
+      return;
+    }
+    if (!window.confirm("게시글을 삭제하시겠습니까?")) {
+      return;
+    }
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/wagle/boards/${id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        alert("게시글이 삭제되었습니다.");
+        navigate("/wagle");
+      } else {
+        alert("게시글 삭제에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("게시글 삭제 실패:", err);
+      alert("게시글 삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -519,8 +724,12 @@ function WagleDetail() {
             <div className="wagle-detail-btns">
               {member?.memberNo === post.memberNo && (
                 <>
-                  <button className="edit">수정</button>
-                  <button className="delete">삭제</button>
+                  <button className="edit" onClick={handleEditPost}>
+                    수정
+                  </button>
+                  <button className="delete" onClick={handleDeletePost}>
+                    삭제
+                  </button>
                 </>
               )}
             </div>
@@ -608,6 +817,8 @@ function WagleDetail() {
                   onReport={handleReport}
                   currentUser={member}
                   onReplySubmit={handleReplySubmit}
+                  onEditComment={handleEditComment}
+                  onDeleteComment={handleDeleteComment}
                 />
               ))}
             </ul>

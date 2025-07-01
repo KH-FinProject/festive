@@ -43,4 +43,10 @@ public class NaverResponse implements OAuth2Response {
         return value != null ? value.toString() : "";
     }
 
+    @Override
+    public String getTel() {
+        Object value = attribute.get("mobile");
+        return value != null ? value.toString() : "";
+    }
+
 }

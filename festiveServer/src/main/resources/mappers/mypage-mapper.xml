@@ -19,7 +19,6 @@
 		MEMBER_NO = #{memberNo}
 	</update>
 
-
 	<!-- 회원 탈퇴 -->
 	<update id="withdrawal">
 		UPDATE "MEMBER" SET
@@ -34,19 +33,25 @@
 
 		SELECT
 		b.BOARD_NO as boardNo,
-		b.BOARD_TITLE as boardTitle,
+		b.BOARD_TITLE as
+		boardTitle,
 		m.NICKNAME as memberNickname,
-		b.BOARD_CREAT_DATE as boardCreateDate,
+		b.BOARD_CREAT_DATE as
+		boardCreateDate,
 		b.READ_COUNT as boardViewCount,
-		COUNT(l.MEMBER_NO) AS boardLikeCount
+		COUNT(l.MEMBER_NO) AS
+		boardLikeCount
 		FROM BOARD b
 		JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
 		LEFT JOIN "LIKE" l ON b.BOARD_NO = l.BOARD_NO
-		WHERE b.MEMBER_NO = #{memberNo}
+		WHERE b.MEMBER_NO =
+		#{memberNo}
 		AND b.BOARD_DEL_FL = 'N'
-		GROUP BY b.BOARD_NO, b.BOARD_TITLE, m.NICKNAME, b.BOARD_CREAT_DATE,
+		GROUP BY b.BOARD_NO, b.BOARD_TITLE,
+		m.NICKNAME, b.BOARD_CREAT_DATE,
 		b.READ_COUNT
-		ORDER BY b.BOARD_CREAT_DATE DESC
+		ORDER BY b.BOARD_CREAT_DATE
+		DESC
 	</select>
 
 	<!-- 내가 작성한 댓글 조회 -->
@@ -56,7 +61,8 @@
 		c.COMMENT_CONTENT,
 		c.COMMENT_WRITE_DATE as commentCreateDate,
 		c.BOARD_NO,
-		m.NICKNAME as memberNickname,
+		m.NICKNAME as
+		memberNickname,
 		COALESCE(cl_agg.LIKE_COUNT, 0) AS likes
 		FROM "COMMENT" c
 		JOIN MEMBER m ON c.MEMBER_NO = m.MEMBER_NO
@@ -65,11 +71,14 @@
 		COMMENT_NO,
 		COUNT(MEMBER_NO) AS LIKE_COUNT
 		FROM "COMMENT_LIKE"
-		GROUP BY COMMENT_NO
+		GROUP BY
+		COMMENT_NO
 		) cl_agg ON c.COMMENT_NO = cl_agg.COMMENT_NO
-		WHERE c.MEMBER_NO = #{memberNo}
+		WHERE
+		c.MEMBER_NO = #{memberNo}
 		AND c.COMMENT_DEL_FL = 'N'
-		ORDER BY c.COMMENT_WRITE_DATE DESC
+		ORDER BY
+		c.COMMENT_WRITE_DATE DESC
 	</select>
 
 	<!-- 회원 정보 조회 -->
@@ -117,11 +126,25 @@
 			<if test="nickname != null and nickname != ''">
 				NICKNAME = #{nickname},
 			</if>
-			<if test="profileImage != null">
-				PROFILE_IMAGE = #{profileImage},
+			<if test="profileImagePath != null">
+				PROFILE_IMAGE = #{profileImagePath},
 			</if>
 		</set>
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
+
+	<!-- 찜 목록 가져오기 -->
+	<select id="findFavoriteContentIdsByMemberNo"
+		parameterType="long" resultType="string">
+		SELECT CONTENT_ID
+		FROM FAVORITES
+		WHERE MEMBER_NO = #{memberNo}
+	</select>
+
+	<!-- 찜 해제하기 -->
+	<delete id="deleteFavorite" parameterType="map">
+		DELETE FROM FAVORITES
+		WHERE MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
+	</delete>
 
 </mapper>

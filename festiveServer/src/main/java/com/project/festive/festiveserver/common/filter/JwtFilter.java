@@ -58,9 +58,13 @@ public class JwtFilter extends OncePerRequestFilter {
         Long memberNo = jwtUtil.getMemberNo(accessToken);
         String email = jwtUtil.getEmail(accessToken);
         String role = jwtUtil.getClaims(accessToken).get("role", String.class);
+        String socialId = jwtUtil.getSocialId(accessToken);
+        
+        log.info("JWT 토큰에서 추출한 정보 - memberNo: {}, email: {}, role: {}, socialId: {}", 
+                memberNo, email, role, socialId);
 
         // SecurityContext에 인증 정보 저장
-        createAuthenticationToken(memberNo, email, role);
+        createAuthenticationToken(memberNo, email, role, socialId);
       } else {
         log.debug("토큰 없음 또는 유효하지 않음: {} {}", method, requestURI);
       }
@@ -77,13 +81,14 @@ public class JwtFilter extends OncePerRequestFilter {
   /**
    * JWT 토큰 정보로 직접 CustomUserDetails 생성하여 Spring Security 인증 토큰 생성
    */
-  private void createAuthenticationToken(Long memberNo, String email, String role) {
+  private void createAuthenticationToken(Long memberNo, String email, String role, String socialId) {
     try {
       // JWT 정보로 직접 MemberDto 생성 (DB 조회 없음)
       MemberDto memberDto = MemberDto.builder()
         .memberNo(memberNo)
         .email(email)
         .role(role)
+        .socialId(socialId)
         .build();
       
       // CustomUserDetails 생성
@@ -101,5 +106,12 @@ public class JwtFilter extends OncePerRequestFilter {
     } catch (Exception e) {
       log.error("인증 토큰 생성 실패: {} - {}", email, e.getMessage());
     }
+  }
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    String path = request.getRequestURI();
+    // WebSocket handshake 경로는 필터 적용 안 함
+    return path.startsWith("/ws");
   }
 }

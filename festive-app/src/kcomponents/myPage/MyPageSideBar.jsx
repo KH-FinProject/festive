@@ -4,6 +4,8 @@ import './MyPageSideBar.css';
 const MyPageSideBar = ({ name, profileImageUrl }) => {
   const location = useLocation();
 
+  console.log("name : ", name);
+
   return (
     <aside className="mypage-sidebar">
       <br /><br />
@@ -22,6 +24,7 @@ const MyPageSideBar = ({ name, profileImageUrl }) => {
         </NavLink>
         <NavLink
           to="/mypage/info"
+          state={{ name, profileImageUrl }}
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }
@@ -30,6 +33,7 @@ const MyPageSideBar = ({ name, profileImageUrl }) => {
         </NavLink>
         <NavLink
           to="/mypage/pw"
+          state={{ name, profileImageUrl }}
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }
@@ -38,6 +42,7 @@ const MyPageSideBar = ({ name, profileImageUrl }) => {
         </NavLink>
         <NavLink
           to="/mypage/mycalendar"
+          state={{ name, profileImageUrl }}
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }
@@ -46,6 +51,7 @@ const MyPageSideBar = ({ name, profileImageUrl }) => {
         </NavLink>
         <NavLink
           to="/mypage/mypost"
+          state={{ name, profileImageUrl }}
           className={() =>
             location.pathname === "/mypage/mypost" ||
               location.pathname === "/mypage/mycomment"
@@ -57,6 +63,7 @@ const MyPageSideBar = ({ name, profileImageUrl }) => {
         </NavLink>
         <NavLink
           to="/mypage/withdrawal"
+          state={{ name, profileImageUrl }}
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }

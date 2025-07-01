@@ -37,9 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
+	private final BCryptPasswordEncoder bcrypt;
 	private final MemberRepository memberRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
-	private final BCryptPasswordEncoder bcrypt;
 	private final AuthKeyRepository authKeyRepository;
 	private final JwtUtil jwtUtil;
 	private final JavaMailSender mailSender;
@@ -68,8 +68,8 @@ public class AuthServiceImpl implements AuthService {
 		}
 		
 		// 3. 로그인 성공 시 토큰 생성
-		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole());
-		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole());
+		String accessToken = jwtUtil.generateAccessToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
+		String refreshToken = jwtUtil.generateRefreshToken(member.getMemberNo(), member.getEmail(), member.getRole(), member.getSocialId());
 		Date expirationDate = jwtUtil.getExpirationDate(refreshToken);
 		LocalDateTime localExpirationDate = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 		
@@ -164,45 +164,33 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String sendEmail(String htmlName, String email) {
 		try {
+			// 이메일 발송 핵심 상황만 로그
 			log.info("이메일 발송 시작: {}", email);
-			
+
 			String authKey = createAuthKey();
-			log.info("인증키 생성 완료: {}", authKey);
-			
-			// 인증키를 데이터베이스에 저장
-			AuthKey authKeyEntity = AuthKey.builder()
-					.email(email)
-					.authKey(authKey)
-					.createTime(LocalDateTime.now())
-					.build();
-			
-			log.info("AuthKey 엔티티 생성 완료: {}", authKeyEntity);
-			
-			if (!storeAuthKey(authKeyEntity)) {
+
+			if (!storeAuthKey(AuthKey.builder().email(email).authKey(authKey).createTime(LocalDateTime.now()).build())) {
 				log.error("인증키 저장 실패");
 				throw new RuntimeException("인증키 저장에 실패했습니다.");
 			}
-			
-			log.info("인증키 저장 완료");
-			
-			// 이메일 전송
+
 			MimeMessage message = mailSender.createMimeMessage();
+
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-			
 			helper.setTo(email);
 			helper.setSubject("[Festive] 회원가입 인증번호");
 			helper.setText(loadHtml(authKey, htmlName), true);
-			
-			log.info("이메일 메시지 생성 완료, 발송 시도...");
+
 			mailSender.send(message);
-			
+
 			log.info("이메일 발송 성공: {}", email);
+
 			return "인증번호가 이메일로 전송되었습니다.";
-			
+
 		} catch (MessagingException e) {
 			log.error("이메일 전송 중 오류 발생: {}", e.getMessage(), e);
 			throw new RuntimeException("이메일 전송에 실패했습니다.");
-
+			
 		} catch (Exception e) {
 			log.error("인증키 생성 중 오류 발생: {}", e.getMessage(), e);
 			throw new RuntimeException("인증키 생성에 실패했습니다.");
@@ -285,6 +273,20 @@ public class AuthServiceImpl implements AuthService {
 	public boolean isEmailDuplicate(String email) {
 			// MemberRepository를 사용하여 이메일 존재 여부 확인
 			return memberRepository.findByEmail(email).isPresent();
+	}
+	
+	@Override
+	public void saveRefreshToken(Long memberNo, String refreshToken, LocalDateTime expirationDate) {
+		RefreshToken refreshTokenEntity = RefreshToken.builder()
+			.memberNo(memberNo)
+			.refreshToken(refreshToken)
+			.expirationDate(expirationDate)
+			.build();
+
+		int updateResult = authMapper.updateRefreshToken(refreshTokenEntity);
+		if (updateResult == 0) {
+			authMapper.insertRefreshToken(refreshTokenEntity);
+		}
 	}
 	
 }

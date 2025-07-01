@@ -107,4 +107,9 @@ public class MemberServiceImpl implements MemberService {
 
         return 1;
     }
+
+    @Override
+    public Member findByMemberNo(Long memberNo) {
+        return memberRepository.findByMemberNo(memberNo);
+    }
 } 

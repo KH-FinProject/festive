@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
 import com.project.festive.festiveserver.member.entity.Member;
 import com.project.festive.festiveserver.member.service.MemberService;
 
@@ -19,14 +22,81 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/member")
+@RequestMapping("member")
 @RequiredArgsConstructor
 public class MemberController {
 
     private final MemberService memberService;
     
+    /**
+     * 소셜 계정 사용자의 닉네임 체크
+     */
+    @GetMapping("check-nickname")
+    public ResponseEntity<Map<String, Object>> checkNicknameForSocialUser() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 현재 인증된 사용자 정보 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            
+            if (authentication == null || authentication.getPrincipal() == null) {
+                response.put("success", false);
+                response.put("message", "인증 정보가 없습니다.");
+                return ResponseEntity.status(401).body(response);
+            }
+            
+            Object principal = authentication.getPrincipal();
+            
+            if (!(principal instanceof CustomUserDetails)) {
+                response.put("success", false);
+                response.put("message", "유효하지 않은 인증 정보입니다.");
+                return ResponseEntity.status(401).body(response);
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            
+            // 소셜 계정 사용자인지 확인 (socialId가 있으면 소셜 계정)
+            if (userDetails.getSocialId() != null && !userDetails.getSocialId().isEmpty()) {
+                String nickname = userDetails.getNickname();
+                
+                if (nickname == null || nickname.trim().isEmpty()) {
+                    response.put("success", false);
+                    response.put("message", "닉네임을 먼저 설정해주세요.");
+                    response.put("error", "NICKNAME_REQUIRED");
+                    response.put("redirect", "/mypage/profile");
+                    response.put("isSocialUser", true);
+                    response.put("hasNickname", false);
+                    
+                    return ResponseEntity.ok(response);
+                } else {
+                    response.put("success", true);
+                    response.put("message", "닉네임이 설정되어 있습니다.");
+                    response.put("isSocialUser", true);
+                    response.put("hasNickname", true);
+                    response.put("nickname", nickname);
+                    
+                    return ResponseEntity.ok(response);
+                }
+            } else {
+                // 일반 계정 사용자
+                response.put("success", true);
+                response.put("message", "일반 계정 사용자입니다.");
+                response.put("isSocialUser", false);
+                response.put("hasNickname", true);
+                
+                return ResponseEntity.ok(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("닉네임 체크 중 오류 발생", e);
+            response.put("success", false);
+            response.put("message", "서버 오류가 발생했습니다.");
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+    
     // 단일 쿼리스트링 엔드포인트: /member/exists?type=id&value=xxx
-    @GetMapping("/exists")
+    @GetMapping("exists")
     public ResponseEntity<Map<String, Object>> checkExists(@RequestParam("type") String type, @RequestParam("value") String value) {
         Map<String, Object> response = new HashMap<>();
         boolean isAvailable = false;
@@ -70,11 +140,10 @@ public class MemberController {
                     
                 case "email":
                     if (value == null || value.trim().isEmpty()) {
-                        code = "INVALID_FORMAT";
+                        code = "TOO_SHORT";
                         break;
                     }
-                    String emailRegex = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
-                    if (!value.matches(emailRegex)) {
+                    if (!value.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
                         code = "INVALID_FORMAT";
                         break;
                     }
@@ -83,20 +152,23 @@ public class MemberController {
                     break;
                     
                 default:
-                    response.put("available", false);
-                    response.put("code", "UNSUPPORTED_TYPE");
-                    return ResponseEntity.badRequest().body(response);
+                    code = "INVALID_TYPE";
+                    break;
             }
+            
+            response.put("success", true);
             response.put("available", isAvailable);
-            response.put("code", code);
+            if (code != null) {
+                response.put("code", code);
+            }
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            response.put("available", false);
-            response.put("code", "SERVER_ERROR");
-            
-            return ResponseEntity.badRequest().body(response);
+            log.error("중복 체크 중 오류 발생: type={}, value={}", type, value, e);
+            response.put("success", false);
+            response.put("message", "서버 오류가 발생했습니다.");
+            return ResponseEntity.internalServerError().body(response);
         }
     }
     
