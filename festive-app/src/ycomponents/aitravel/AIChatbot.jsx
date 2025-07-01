@@ -326,17 +326,32 @@ const AIChatbot = () => {
     // 🎪 축제 검색인지 여행코스 검색인지 구분
     const isFestivalOnly = travelInfo.requestType === "festival_only";
 
-    if (isFestivalOnly) {
-      // 🎪 축제 검색: 단순한 마커만 표시 (Day 그룹화 없음, 연결선 없음, 거리 표시 없음)
-      console.log(`🎪 축제 검색 모드: ${locations.length}개 마커 단순 표시`);
+    console.log(
+      `🗺️ 마커 표시 모드: ${isFestivalOnly ? "축제" : "여행"}, ${
+        locations.length
+      }개 마커`
+    );
 
+    if (isFestivalOnly) {
+      // 🎪 축제 검색: 단순한 마커만 표시 (연결선 없음, 거리 표시 없음)
       locations.forEach((location, index) => {
-        const markerPosition = new window.kakao.maps.LatLng(
-          location.latitude || location.lat,
-          location.longitude || location.lng
+        const lat = location.latitude || location.lat;
+        const lng = location.longitude || location.lng;
+
+        if (!lat || !lng) {
+          console.warn(`⚠️ 축제 좌표 없음: ${location.name}`, location);
+          return;
+        }
+
+        console.log(
+          `🎪 축제 마커 ${index + 1}: ${
+            location.name
+          } - 위도: ${lat}, 경도: ${lng}`
         );
 
-        // 축제 전용 마커 (번호 없이 축제 아이콘)
+        const markerPosition = new window.kakao.maps.LatLng(lat, lng);
+
+        // 축제 전용 마커 (빨간색 축제 아이콘)
         const festivalMarker = new window.kakao.maps.CustomOverlay({
           position: markerPosition,
           content: `<div style="
@@ -348,46 +363,17 @@ const AIChatbot = () => {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 2px solid white;
-          ">F</div>`,
+            cursor: pointer;
+          ">🎪</div>`,
           yAnchor: 1,
         });
 
         festivalMarker.setMap(map);
         map._markers.push(festivalMarker);
-
-        // 축제명 라벨
-        const labelPosition = new window.kakao.maps.LatLng(
-          (location.latitude || location.lat) + 0.001,
-          location.longitude || location.lng
-        );
-
-        const labelOverlay = new window.kakao.maps.CustomOverlay({
-          position: labelPosition,
-          content: `<div style="
-            background: rgba(255,255,255,0.95);
-            border: 1px solid #FF6B6B;
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #333;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            text-align: center;
-            white-space: nowrap;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          ">${location.name}</div>`,
-          yAnchor: 1,
-        });
-
-        labelOverlay.setMap(map);
-        map._markers.push(labelOverlay);
-        bounds.extend(markerPosition);
 
         // 축제 인포윈도우
         const imageContent = location.image
@@ -397,13 +383,15 @@ const AIChatbot = () => {
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
             ${imageContent}
-            <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 축제</div>
+            <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 ${
+              location.category || "축제"
+            }</div>
             <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
               location.name
             }</div>
-            <span style="background:#FF6B6B;color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${
-              location.category || "축제"
-            }</span>
+            <div style="color:#666;font-size:11px;">${
+              location.description || ""
+            }</div>
           </div>`,
         });
 
@@ -415,9 +403,11 @@ const AIChatbot = () => {
           infowindow.open(map, festivalMarker);
           map._currentInfoWindow = infowindow;
         });
+
+        bounds.extend(markerPosition);
       });
     } else {
-      // 🗺️ 여행코스 검색: 기존 Day별 그룹화, 연결선, 거리 표시
+      // 🗺️ 여행코스 검색: Day별 그룹화, 연결선, 거리 표시
       console.log(`🗺️ 여행코스 검색 모드: Day별 그룹화 및 연결선 표시`);
 
       // Day별로 그룹화
@@ -429,58 +419,45 @@ const AIChatbot = () => {
         dayGroups[location.day].push(location);
       });
 
-      // 각 Day별로 마커 생성 및 연결선 그리기 (Day별 최대 4개까지만)
+      // 각 Day별로 마커 생성 및 연결선 그리기
       Object.keys(dayGroups).forEach((day) => {
-        // 🎯 Day별로 최대 4개만 표시 (백엔드 데이터와 일치)
-        const dayLocations = dayGroups[day].slice(0, 4);
+        const dayLocations = dayGroups[day];
         const dayColor = DAY_COLORS[parseInt(day)] || "#FF6B6B";
         const polylinePath = [];
 
-        console.log(
-          `📍 Day ${day} 마커 표시: ${dayLocations.length}개 (원본: ${dayGroups[day].length}개)`
-        );
+        console.log(`📍 Day ${day} 마커 표시: ${dayLocations.length}개`);
 
         dayLocations.forEach((location, index) => {
-          // 좌표 데이터 디버깅
-          console.log(`🔍 마커 ${index + 1} 좌표 확인:`, {
-            name: location.name,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            lat: location.lat,
-            lng: location.lng,
-            mapX: location.mapX,
-            mapY: location.mapY,
-            image: location.image,
-            category: location.category,
-            final_lat: location.latitude || location.lat,
-            final_lng: location.longitude || location.lng,
-          });
+          const lat = location.latitude || location.lat;
+          const lng = location.longitude || location.lng;
 
-          const markerPosition = new window.kakao.maps.LatLng(
-            location.latitude || location.lat,
-            location.longitude || location.lng
-          );
+          if (!lat || !lng) {
+            console.warn(`⚠️ 여행지 좌표 없음: ${location.name}`, location);
+            return;
+          }
 
           console.log(
-            `📍 마커 ${index + 1} 최종 위치:`,
-            markerPosition.getLat(),
-            markerPosition.getLng()
+            `📍 여행 마커 ${index + 1}: ${
+              location.name
+            } - 위도: ${lat}, 경도: ${lng}`
           );
 
-          // 커스텀 오버레이로 마커 생성
-          const customOverlay = new window.kakao.maps.CustomOverlay({
+          const markerPosition = new window.kakao.maps.LatLng(lat, lng);
+
+          // 여행지 마커 (Day별 색상과 번호)
+          const travelMarker = new window.kakao.maps.CustomOverlay({
             position: markerPosition,
             content: createMarkerContent(location.day, index + 1),
             yAnchor: 1,
           });
 
-          customOverlay.setMap(map);
-          map._markers.push(customOverlay);
+          travelMarker.setMap(map);
+          map._markers.push(travelMarker);
 
           // 장소명 라벨 추가 (마커 위에)
           const labelPosition = new window.kakao.maps.LatLng(
-            (location.latitude || location.lat) + 0.001, // 마커보다 약간 위에 위치
-            location.longitude || location.lng
+            lat + 0.001, // 마커보다 약간 위에 위치
+            lng
           );
 
           const labelOverlay = new window.kakao.maps.CustomOverlay({
@@ -505,38 +482,39 @@ const AIChatbot = () => {
 
           labelOverlay.setMap(map);
           map._markers.push(labelOverlay);
-          bounds.extend(markerPosition);
 
-          // 폴리라인 경로에 추가
-          polylinePath.push(markerPosition);
-
-          // 인포윈도우 - 이미지 포함
+          // 여행지 인포윈도우
           const imageContent = location.image
             ? `<img src="${location.image}" alt="${location.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
-            : "";
-
-          const categoryBadge = location.category
-            ? `<span style="background:${dayColor};color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${location.category}</span>`
             : "";
 
           const infowindow = new window.kakao.maps.InfoWindow({
             content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
               ${imageContent}
-              <div style="color:${dayColor};font-weight:bold;margin-bottom:4px;">Day ${location.day}</div>
-              <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${location.name}</div>
-              ${categoryBadge}
+              <div style="color:${dayColor};font-weight:bold;margin-bottom:4px;">Day ${
+              location.day
+            }</div>
+              <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
+                location.name
+              }</div>
+              <span style="background:${dayColor};color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${
+              location.category || "관광지"
+            }</span>
             </div>`,
           });
 
-          // 클릭 이벤트 - 카카오맵 API 방식으로 수정
-          window.kakao.maps.event.addListener(customOverlay, "click", () => {
-            // 기존 인포윈도우 모두 닫기
+          // 클릭 이벤트
+          window.kakao.maps.event.addListener(travelMarker, "click", () => {
             if (map._currentInfoWindow) {
               map._currentInfoWindow.close();
             }
-            infowindow.open(map, customOverlay);
+            infowindow.open(map, travelMarker);
             map._currentInfoWindow = infowindow;
           });
+
+          // 폴리라인 경로에 추가
+          polylinePath.push(markerPosition);
+          bounds.extend(markerPosition);
         });
 
         // 같은 Day끼리 연결선 그리기
@@ -598,6 +576,8 @@ const AIChatbot = () => {
     if (locations.length > 0) {
       map.setBounds(bounds);
     }
+
+    console.log(`✅ 마커 표시 완료: ${locations.length}개`);
   }, [locations, travelInfo.requestType]);
 
   // 스크롤 자동 조정
@@ -638,9 +618,10 @@ const AIChatbot = () => {
         .replace(/오전 (\d+):(\d+)/g, "🌅 오전 $1:$2")
         .replace(/오후 (\d+):(\d+)/g, "🌆 오후 $1:$2")
 
-        // 연속된 공백과 줄바꿈 정리
-        .replace(/\n\s*\n/g, "\n")
-        .replace(/\s+/g, " ")
+        // 연속된 줄바꿈 정리 (3개 이상을 2개로)
+        .replace(/\n{3,}/g, "\n\n")
+        // 줄바꿈은 보존하고 공백과 탭만 정리
+        .replace(/[ \t]+/g, " ")
         .trim()
     );
   };
@@ -824,8 +805,8 @@ const AIChatbot = () => {
         // 괄호 안의 특수문자들 제거
         .replace(/\[[^\]]*\]/g, "") // [내용] 형태 제거
 
-        // 여러 공백을 하나로 정리
-        .replace(/\s+/g, " ")
+        // 여러 공백을 하나로 정리 (줄바꿈은 보존)
+        .replace(/[ \t]+/g, " ") // 공백과 탭만 정리, 줄바꿈은 보존
         .trim()
     );
   };
@@ -845,117 +826,8 @@ const AIChatbot = () => {
 
       const trimmedLine = line.trim();
 
-      // Day 헤더 스타일링
-      if (trimmedLine.match(/^Day\s+\d+$/)) {
-        return (
-          <h3
-            key={index}
-            style={{
-              margin: "20px 0 12px 0",
-              color: "#2563eb",
-              fontSize: "18px",
-              fontWeight: "bold",
-              borderBottom: "2px solid #e5e7eb",
-              paddingBottom: "8px",
-            }}
-          >
-            {trimmedLine}
-          </h3>
-        );
-      }
-
-      // 장소명 (- 로 시작하는 줄) 스타일링
-      if (trimmedLine.startsWith("- ")) {
-        return (
-          <div
-            key={index}
-            style={{
-              margin: "8px 0 4px 0",
-              padding: "8px 12px",
-              background: "#f8fafc",
-              borderLeft: "4px solid #3b82f6",
-              borderRadius: "4px",
-            }}
-          >
-            <span
-              style={{
-                color: "#1e40af",
-                fontSize: "15px",
-                fontWeight: "600",
-              }}
-            >
-              {trimmedLine.substring(2)} {/* "- " 제거 */}
-            </span>
-          </div>
-        );
-      }
-
-      // 포인트 텍스트 스타일링
-      if (trimmedLine.startsWith("포인트:")) {
-        return (
-          <div
-            key={index}
-            style={{
-              margin: "8px 0 16px 0",
-              padding: "12px",
-              background: "#fefce8",
-              border: "1px solid #fbbf24",
-              borderRadius: "8px",
-              borderLeftWidth: "4px",
-              borderLeftColor: "#f59e0b",
-            }}
-          >
-            <span
-              style={{
-                color: "#92400e",
-                fontSize: "14px",
-                lineHeight: "1.6",
-                fontStyle: "italic",
-              }}
-            >
-              {trimmedLine}
-            </span>
-          </div>
-        );
-      }
-
-      // 인사말 및 마무리 메시지 스타일링
-      if (
-        trimmedLine.startsWith("네!") ||
-        trimmedLine.includes("추천해드리겠습니다") ||
-        trimmedLine.includes("즐거운 여행")
-      ) {
-        return (
-          <p
-            key={index}
-            style={{
-              margin: "12px 0",
-              lineHeight: "1.6",
-              color: "#059669",
-              fontSize: "15px",
-              fontWeight: "600",
-              textAlign: "center",
-            }}
-          >
-            {trimmedLine}
-          </p>
-        );
-      }
-
-      // 기본 텍스트 스타일링
-      return (
-        <p
-          key={index}
-          style={{
-            margin: "6px 0",
-            lineHeight: "1.6",
-            color: "#374151",
-            fontSize: "14px",
-          }}
-        >
-          {trimmedLine}
-        </p>
-      );
+      // 모든 텍스트를 기본 스타일로 표시 (줄바꿈만 처리)
+      return <p key={index}>{trimmedLine}</p>;
     });
   };
 

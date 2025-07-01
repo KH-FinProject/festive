@@ -45,10 +45,13 @@ public class ChatResponse {
         private String contact;     // 연락처
         private String contentId;   // TourAPI contentId
         private String contentTypeId; // 콘텐츠 타입
-        private String mapX;        // 경도
-        private String mapY;        // 위도
+        private String mapX;        // 경도 (String)
+        private String mapY;        // 위도 (String)
         private String addr1;       // 주소
         private String tel;         // 전화번호
+        // 🗺️ 카카오맵 호환을 위한 Double 타입 좌표
+        private Double latitude;    // 위도 (Double)
+        private Double longitude;   // 경도 (Double)
     }
     
     @Data
