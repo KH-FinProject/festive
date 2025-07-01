@@ -160,54 +160,6 @@ public class MyPageServiceImpl implements MyPageService {
         return result > 0;
     }
     
- // 실제 환경에서는 config로 빼는 게 좋음
-    private static final String SERVICE_KEY = "여기에_API_KEY_입력";
-    private static final String FESTIVAL_DETAIL_URL =
-            "https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=%s&MobileOS=ETC&MobileApp=Festive&_type=json&contentId=%s";
-    private static final String FESTIVAL_IMAGE_URL =
-            "https://apis.data.go.kr/B551011/KorService2/detailImage2?serviceKey=%s&MobileApp=Festive&MobileOS=ETC&_type=json&contentId=%s&imageYN=Y";
-
-    @Override
-    public List<MyCalendarDto> getFavoriteFestivals(Long memberNo) {
-        List<String> contentIds = mapper.selectFavoriteContentIds(memberNo);
-
-        List<MyCalendarDto> result = new ArrayList<>();
-        RestTemplate restTemplate = new RestTemplate();
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        for (String contentId : contentIds) {
-            try {
-                // 축제 상세 정보 호출 (여기서는 contentId별 호출, 병렬처리 권장)
-                String url = String.format("https://apis.data.go.kr/B551011/KorService2/detailCommon2?serviceKey=%s&MobileApp=Festive&MobileOS=ETC&_type=json&contentId=%s&defaultYN=Y&overviewYN=Y&addrinfoYN=Y", SERVICE_KEY, contentId);
-                String json = restTemplate.getForObject(url, String.class);
-
-                JsonNode root = objectMapper.readTree(json);
-                JsonNode item = root.at("/response/body/items/item").get(0);
-
-                MyCalendarDto dto = new MyCalendarDto();
-                dto.setContentId(contentId);
-                dto.setTitle(item.path("title").asText());
-                dto.setStartDate(item.path("eventstartdate").asText().replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3")); // 20250101 → 2025-01-01
-                dto.setEndDate(item.path("eventenddate").asText().replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3"));
-                dto.setImageUrl(item.path("firstimage").asText());
-                dto.setFirstImage(item.path("firstimage").asText());
-                dto.setAddr1(item.path("addr1").asText());
-                dto.setOverview(item.path("overview").asText());
-
-                result.add(dto);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
-    }
-
-    @Override
-    @Transactional
-    public void deleteFavoriteFestival(Long memberNo, String contentId) {
-        mapper.deleteFavoriteFestival(memberNo, contentId);
-    }
-    
 
 }
 
