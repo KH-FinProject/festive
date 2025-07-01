@@ -1,6 +1,7 @@
 import './LocalFestive.css';
 import React, {useEffect, useState} from "react";
 import ScrollToTop from "../../scomponents/monthFestive/ScrollToTop.jsx";
+import { useNavigate } from 'react-router-dom';
 
 const LocalFestive = () => {
   // 축제 목록 상태
@@ -9,7 +10,7 @@ const LocalFestive = () => {
   const [listFestivals, setListFestivals] = useState([]);
   const [searchDate, setSearchDate] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  
+  const navigate = useNavigate();
   
   useEffect(() => {
     const fetchFestivals = async () => {
@@ -79,9 +80,8 @@ const LocalFestive = () => {
   
   // 축제 클릭 핸들러
   const handleFestivalClick = (festivalId) => {
-    // 실제로는 React Router로 상세페이지 이동
     console.log(`축제 ${festivalId} 상세페이지로 이동`);
-    // navigate(`/festival/${festivalId}`);
+    navigate(`/festival/detail/${festivalId}`);
   };
   
   // 정렬 옵션 변경 핸들러
