@@ -161,6 +161,74 @@ public class MyPageServiceImpl implements MyPageService {
         int result = mapper.updateProfile(memberNo, nickname, profileImagePath);
         return result > 0;
     }
+    
+    
+    
+    
+    
+    
+    private MyCalendarDto fetchFestivalDetails(String contentId) {
+        String tourApiUrl = "http://api.visitkorea.or.kr/openapi/service/rest/KorService1/detailCommon1";
+
+        URI uri = UriComponentsBuilder.fromHttpUrl(tourApiUrl)
+                .queryParam("ServiceKey", serviceKey)
+                .queryParam("contentId", contentId)
+                .queryParam("defaultYN", "Y")
+                .queryParam("firstImageYN", "Y")
+                .queryParam("addrinfoYN", "Y")
+                .queryParam("overviewYN", "Y")
+                .queryParam("MobileOS", "ETC")
+                .queryParam("MobileApp", "AppTest")
+                .queryParam("_type", "json")
+                .build(true)
+                .toUri();
+
+        try {
+            // API 호출 전 로그 추가
+            log.info("Requesting TourAPI for contentId: {}", contentId);
+            log.debug("Request URI: {}", uri);
+
+            String response = restTemplate.getForObject(uri, String.class);
+            // API 응답 로그 추가
+            log.debug("Response from TourAPI for contentId {}: {}", contentId, response);
+
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode item = root.path("response").path("body").path("items").path("item");
+
+            if (item.isMissingNode() || item.isEmpty()) { // item이 비어있는 경우도 체크
+                log.warn("No item found in TourAPI response for contentId: {}", contentId);
+                return null;
+            }
+
+            // 날짜 파싱 포맷터
+            DateTimeFormatter apiFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+            DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+            String startDateStr = item.path("eventstartdate").asText(null); // 날짜가 없을 경우 null 반환
+            String endDateStr = item.path("eventenddate").asText(null);   // 날짜가 없을 경우 null 반환
+
+            // 시작일 또는 종료일이 없는 경우, 해당 축제는 캘린더에 추가하지 않음
+            if (startDateStr == null || endDateStr == null) {
+                log.warn("Start date or end date is missing for contentId: {}. Skipping.", contentId);
+                return null;
+            }
+
+            LocalDate startDate = LocalDate.parse(startDateStr, apiFormatter);
+            LocalDate endDate = LocalDate.parse(endDateStr, apiFormatter);
+
+            return new MyCalendarDto(
+                    item.path("contentid").asText(),
+                    item.path("title").asText(),
+                    startDate.format(dbFormatter),
+                    endDate.format(dbFormatter),
+                    item.path("firstimage").asText(null) // 이미지가 없을 수 있으므로 null 처리
+            );
+        } catch (Exception e) {
+            // 어떤 contentId에서 오류가 발생했는지 명확하게 로그 기록
+            log.error("Failed to fetch or parse festival details for contentId: {}. Error: {}", contentId, e.getMessage(), e);
+            return null; // 오류 발생 시 null을 반환하여 다른 축제 정보 처리에 영향 없도록 함
+        }
+    }
 
     @Override
     public List<MyCalendarDto> getFavoriteFestivals(long memberNo) {
@@ -182,54 +250,7 @@ public class MyPageServiceImpl implements MyPageService {
         mapper.deleteFavorite(memberNo, contentId);
     }
 
-    private MyCalendarDto fetchFestivalDetails(String contentId) {
-        String tourApiUrl = "http://api.visitkorea.or.kr/openapi/service/rest/KorService1/detailCommon1";
-
-        URI uri = UriComponentsBuilder.fromHttpUrl(tourApiUrl)
-                .queryParam("ServiceKey", serviceKey)
-                .queryParam("contentId", contentId)
-                .queryParam("defaultYN", "Y")
-                .queryParam("firstImageYN", "Y")
-                .queryParam("addrinfoYN", "Y")
-                .queryParam("overviewYN", "Y")
-                .queryParam("MobileOS", "ETC")
-                .queryParam("MobileApp", "AppTest")
-                .queryParam("_type", "json")
-                .build(true)
-                .toUri();
-
-        try {
-            String response = restTemplate.getForObject(uri, String.class);
-            JsonNode root = objectMapper.readTree(response);
-            JsonNode item = root.path("response").path("body").path("items").path("item");
-
-            if (item.isMissingNode()) {
-                log.warn("No item found for contentId: {}", contentId);
-                return null;
-            }
-            
-            // YYYYMMDD 형식을 YYYY-MM-DD 로 변환
-            DateTimeFormatter apiFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-            DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-            String startDateStr = item.path("eventstartdate").asText();
-            String endDateStr = item.path("eventenddate").asText();
-
-            LocalDate startDate = LocalDate.parse(startDateStr, apiFormatter);
-            LocalDate endDate = LocalDate.parse(endDateStr, apiFormatter);
-
-            return new MyCalendarDto(
-                    item.path("contentid").asText(),
-                    item.path("title").asText(),
-                    startDate.format(dbFormatter),
-                    endDate.format(dbFormatter),
-                    item.path("firstimage").asText(null)
-            );
-        } catch (Exception e) {
-            log.error("Failed to fetch details for contentId: {}", contentId, e);
-            return null;
-        }
-    }
+   
 
 
 
