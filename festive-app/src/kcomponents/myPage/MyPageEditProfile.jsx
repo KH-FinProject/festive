@@ -6,10 +6,12 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import axiosApi from "../../api/axiosAPI";
 
-// 닉네임 유효성 검사 함수
+// 닉네임 유효성 검사 함수 (공백 허용X, 2~15자)
 const isValidNickname = (nickname) => {
-  if (!nickname) return false;
-  return nickname.length >= 2 && nickname.length <= 15;
+
+    if (!nickname) return false;
+    if (/\s/.test(nickname)) return false; // 공백 포함시 false
+    return nickname.length >= 2 && nickname.length <= 15;
 };
 
 const MyPageEditProfile = () => {
@@ -100,6 +102,7 @@ const MyPageEditProfile = () => {
     return () => {
       if (nicknameCheckTimeout.current)
         clearTimeout(nicknameCheckTimeout.current);
+
     };
   }, [profileData.nickname]);
 
