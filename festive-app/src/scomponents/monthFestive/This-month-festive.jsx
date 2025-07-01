@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 
 const FestivalMainPage = () => {
   // 축제 목록 상태
-  const [festivals, setFestivals] = useState([]);
   const [sortType, setSortType] = useState("date"); // 'date', 'distance', 'popularity'
   const [sliderFestivals, setSliderFestivals] = useState([]);
   const [listFestivals, setListFestivals] = useState([]);
@@ -43,6 +42,7 @@ const FestivalMainPage = () => {
               item.firstimage ||
               "https://via.placeholder.com/300x200?text=No+Image",
             startDate: start,
+            endDate: end,
             status: getFestivalStatus(start, end),
           };
         });
@@ -52,14 +52,19 @@ const FestivalMainPage = () => {
           a.startDate.localeCompare(b.startDate)
         );
 
-        // 진행중 축제 중 5개 슬라이더용
-        const slider = sorted.filter((f) => f.status === "진행중").slice(0, 5);
+        // 오늘 날짜 기준으로 개최된 축제 중 가장 최근에 개최된 축제 5개 (슬라이더용)
+        const todayStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+
+        const recentFestivals = sorted
+          .filter((f) => f.startDate <= todayStr) // 오늘 이전에 시작한 축제들
+          .sort((a, b) => b.startDate.localeCompare(a.startDate)) // 최근 날짜순으로 정렬
+          .slice(0, 5); // 상위 5개
 
         // 슬라이더 제외 나머지
-        const sliderIds = new Set(slider.map((f) => f.id));
+        const sliderIds = new Set(recentFestivals.map((f) => f.id));
         const list = sorted.filter((f) => !sliderIds.has(f.id));
 
-        setSliderFestivals(slider);
+        setSliderFestivals(recentFestivals);
         setListFestivals(list);
       } catch (error) {
         console.error("축제 정보 로드 실패:", error);
@@ -103,7 +108,10 @@ const FestivalMainPage = () => {
       <div className="festival-main">
         {/* 슬라이더 공간 - 여기에 슬라이더 컴포넌트가 들어갈 예정 */}
         <div className="slider-container">
-          <ExpandingCards festivals={sliderFestivals} />
+          <ExpandingCards
+            festivals={sliderFestivals}
+            onFestivalClick={handleFestivalClick}
+          />
         </div>
 
         {/* 축제 목록 섹션 */}
