@@ -2068,9 +2068,12 @@ public class AITravelServiceImpl implements AITravelService {
             dailySchedule.setDay(day);
             dailySchedule.setTheme("Day " + day + " 일정");
             
+            // 🎯 람다 표현식에서 사용하기 위해 final 변수로 복사
+            final int currentDay = day;
+            
             // 해당 날짜의 장소들 필터링
             List<ChatResponse.LocationInfo> dayLocations = locations.stream()
-                .filter(location -> location.getDay() == day)
+                .filter(location -> location.getDay() == currentDay)
                 .collect(Collectors.toList());
             
             List<ChatResponse.PlaceInfo> places = new ArrayList<>();
