@@ -45,7 +45,7 @@ public class MyPageServiceImpl implements MyPageService {
     private final RestTemplate restTemplate; // Bean으로 등록하여 사용
     private final ObjectMapper objectMapper; // Bean으로 등록하여 사용
 
-    @Value("${tour.api.service-key}")
+    @Value("${tour.api.service-key:}")
     private String serviceKey;
 
 
