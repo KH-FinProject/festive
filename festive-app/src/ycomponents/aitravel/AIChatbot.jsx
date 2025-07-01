@@ -33,7 +33,17 @@ const aiAPI = {
 const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴트입니다.
 
 여행하고 싶은 지역과 기간을 말씀해주시면 맞춤형 여행코스를 추천해드릴게요!
-또한 검색하고 싶은 축제나 행사가 있으시면 축제 검색도 가능합니다.`;
+
+✈️ 이용 방법:
+• "서울 2박3일 여행계획 짜줘" - 다양한 타입 랜덤 추천
+• "부산 1박2일 관광지 위주로 추천해줘" - 관광지 중심
+• "제주도 당일치기 음식점 위주로 짜줘" - 맛집 탐방
+• "경주 2박3일 여행코스 위주로 계획해줘" - 여행코스 중심
+• "대구 1박2일 문화시설 위주로 추천" - 문화/박물관 중심
+• "인천 당일치기 레포츠 위주로 짜줘" - 레포츠/체험 중심
+• "광주 1박2일 쇼핑 위주로 계획해줘" - 쇼핑몰/시장 중심
+
+🎪 축제 검색도 가능합니다!`;
 
 // 두 지점 간의 거리 계산 함수 (Haversine 공식)
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -419,10 +429,10 @@ const AIChatbot = () => {
         dayGroups[location.day].push(location);
       });
 
-      // 각 Day별로 마커 생성 및 연결선 그리기 (Day별 최대 3개까지만)
+      // 각 Day별로 마커 생성 및 연결선 그리기 (Day별 최대 4개까지만)
       Object.keys(dayGroups).forEach((day) => {
-        // 🎯 Day별로 최대 3개만 표시 (AI 임의 데이터 제한)
-        const dayLocations = dayGroups[day].slice(0, 3);
+        // 🎯 Day별로 최대 4개만 표시 (백엔드 데이터와 일치)
+        const dayLocations = dayGroups[day].slice(0, 4);
         const dayColor = DAY_COLORS[parseInt(day)] || "#FF6B6B";
         const polylinePath = [];
 
@@ -723,6 +733,9 @@ const AIChatbot = () => {
       const finalFestivals = data.festivals || [];
       console.log("✅ 백엔드 축제 데이터:", finalFestivals.length, "개");
 
+      // 🚫 거부된 요청인지 확인
+      const isRejectedRequest = data.requestType === "rejected";
+
       setTravelInfo({
         requestType: data.requestType,
         festivals: finalFestivals,
@@ -739,10 +752,15 @@ const AIChatbot = () => {
           nearestStation: "대중교통 이용 가능",
           recommendedMode: "AI 최적 경로 분석 완료",
         },
+        isRejected: isRejectedRequest, // 거부 상태 추가
       });
 
       console.log("✅ 백엔드 중심 보안 시스템 완료 - 타입:", data.requestType);
-      console.log("🔐 TourAPI 서비스키 완전 보호, 모든 처리 백엔드 완료");
+      if (isRejectedRequest) {
+        console.log("🚫 일반 대화 요청 거부됨 - 여행/축제 안내 메시지 표시");
+      } else {
+        console.log("🔐 TourAPI 서비스키 완전 보호, 모든 처리 백엔드 완료");
+      }
     } catch (error) {
       console.error("❌ 메시지 전송 오류:", error);
 
@@ -825,18 +843,117 @@ const AIChatbot = () => {
         return <br key={index} />;
       }
 
-      // 모든 텍스트를 동일한 스타일로 표시
+      const trimmedLine = line.trim();
+
+      // Day 헤더 스타일링
+      if (trimmedLine.match(/^Day\s+\d+$/)) {
+        return (
+          <h3
+            key={index}
+            style={{
+              margin: "20px 0 12px 0",
+              color: "#2563eb",
+              fontSize: "18px",
+              fontWeight: "bold",
+              borderBottom: "2px solid #e5e7eb",
+              paddingBottom: "8px",
+            }}
+          >
+            {trimmedLine}
+          </h3>
+        );
+      }
+
+      // 장소명 (- 로 시작하는 줄) 스타일링
+      if (trimmedLine.startsWith("- ")) {
+        return (
+          <div
+            key={index}
+            style={{
+              margin: "8px 0 4px 0",
+              padding: "8px 12px",
+              background: "#f8fafc",
+              borderLeft: "4px solid #3b82f6",
+              borderRadius: "4px",
+            }}
+          >
+            <span
+              style={{
+                color: "#1e40af",
+                fontSize: "15px",
+                fontWeight: "600",
+              }}
+            >
+              {trimmedLine.substring(2)} {/* "- " 제거 */}
+            </span>
+          </div>
+        );
+      }
+
+      // 포인트 텍스트 스타일링
+      if (trimmedLine.startsWith("포인트:")) {
+        return (
+          <div
+            key={index}
+            style={{
+              margin: "8px 0 16px 0",
+              padding: "12px",
+              background: "#fefce8",
+              border: "1px solid #fbbf24",
+              borderRadius: "8px",
+              borderLeftWidth: "4px",
+              borderLeftColor: "#f59e0b",
+            }}
+          >
+            <span
+              style={{
+                color: "#92400e",
+                fontSize: "14px",
+                lineHeight: "1.6",
+                fontStyle: "italic",
+              }}
+            >
+              {trimmedLine}
+            </span>
+          </div>
+        );
+      }
+
+      // 인사말 및 마무리 메시지 스타일링
+      if (
+        trimmedLine.startsWith("네!") ||
+        trimmedLine.includes("추천해드리겠습니다") ||
+        trimmedLine.includes("즐거운 여행")
+      ) {
+        return (
+          <p
+            key={index}
+            style={{
+              margin: "12px 0",
+              lineHeight: "1.6",
+              color: "#059669",
+              fontSize: "15px",
+              fontWeight: "600",
+              textAlign: "center",
+            }}
+          >
+            {trimmedLine}
+          </p>
+        );
+      }
+
+      // 기본 텍스트 스타일링
       return (
         <p
           key={index}
           style={{
             margin: "6px 0",
             lineHeight: "1.6",
-            color: "#333",
+            color: "#374151",
             fontSize: "14px",
           }}
         >
-          {line}
+          {trimmedLine}
         </p>
       );
     });
@@ -972,7 +1089,8 @@ const AIChatbot = () => {
         {!loading &&
           !currentStreamMessage &&
           travelInfo.requestType &&
-          travelInfo.requestType !== "general_chat" && (
+          travelInfo.requestType !== "general_chat" &&
+          !travelInfo.isRejected && (
             <div className="ai-chatbot-travel-summary">
               <div className="ai-chatbot-travel-info-grid">
                 {/* 축제 정보 섹션 - festival_only 또는 festival_with_travel일 때만 표시 */}
@@ -1142,12 +1260,12 @@ const AIChatbot = () => {
                             dayGroups[location.day].push(location);
                           });
 
-                          // Day별로 최대 3개씩만 가져와서 한 줄로 배치
+                          // Day별로 최대 4개씩만 가져와서 한 줄로 배치
                           const allDisplayLocations = [];
                           Object.keys(dayGroups)
                             .sort((a, b) => parseInt(a) - parseInt(b))
                             .forEach((day) => {
-                              const dayLocations = dayGroups[day].slice(0, 3);
+                              const dayLocations = dayGroups[day].slice(0, 4);
                               dayLocations.forEach((location, index) => {
                                 allDisplayLocations.push({
                                   ...location,
@@ -1391,9 +1509,9 @@ const AIChatbot = () => {
                                     paddingLeft: "16px",
                                   }}
                                 >
-                                  {/* 🎯 카카오맵과 동일하게 Day별로 최대 3개까지만 표시 */}
+                                  {/* 🎯 카카오맵과 동일하게 Day별로 최대 4개까지만 표시 */}
                                   {dayGroups[day]
-                                    .slice(0, 3)
+                                    .slice(0, 4)
                                     .map((location, index) => (
                                       <li
                                         key={index}
@@ -1472,29 +1590,30 @@ const AIChatbot = () => {
 
               {/* 저장/공유 버튼 - 추천 여행코스일 때만 표시 */}
               {(travelInfo.requestType === "festival_with_travel" ||
-                travelInfo.requestType === "travel_only") && (
-                <div className="ai-chatbot-button-group">
-                  <button
-                    className="ai-chatbot-action-btn"
-                    onClick={() => {
-                      alert("여행 계획이 저장되었습니다!");
-                    }}
-                  >
-                    저장하기
-                  </button>
-                  <button
-                    className="ai-chatbot-action-btn"
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        messages[messages.length - 1]?.content || ""
-                      );
-                      alert("여행 계획이 클립보드에 복사되었습니다!");
-                    }}
-                  >
-                    공유하기
-                  </button>
-                </div>
-              )}
+                travelInfo.requestType === "travel_only") &&
+                !travelInfo.isRejected && (
+                  <div className="ai-chatbot-button-group">
+                    <button
+                      className="ai-chatbot-action-btn"
+                      onClick={() => {
+                        alert("여행 계획이 저장되었습니다!");
+                      }}
+                    >
+                      저장하기
+                    </button>
+                    <button
+                      className="ai-chatbot-action-btn"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          messages[messages.length - 1]?.content || ""
+                        );
+                        alert("여행 계획이 클립보드에 복사되었습니다!");
+                      }}
+                    >
+                      공유하기
+                    </button>
+                  </div>
+                )}
             </div>
           )}
       </div>
