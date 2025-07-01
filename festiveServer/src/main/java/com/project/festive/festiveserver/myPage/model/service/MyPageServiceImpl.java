@@ -2,13 +2,9 @@ package com.project.festive.festiveserver.myPage.model.service;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.myPage.dto.MyCalendarDto;
@@ -29,6 +23,8 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -38,15 +34,17 @@ public class MyPageServiceImpl implements MyPageService {
 	
 	private final MyPageMapper mapper;
     private final PasswordEncoder passwordEncoder;
-    @Value("${file.upload-dir}") // 설정 파일에서 경로를 주입받음
-    private String uploadDir;
     
     @Autowired
-    private final RestTemplate restTemplate; // Bean으로 등록하여 사용
-    private final ObjectMapper objectMapper; // Bean으로 등록하여 사용
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
-    @Value("${tour.api.service-key:}")
+    @Value("${tour.api.key}")
     private String serviceKey;
+    
+    
+    @Value("${file.upload-dir}") // 설정 파일에서 경로를 주입받음
+    private String uploadDir;
 
 
     // 회원 탈퇴
@@ -162,96 +160,65 @@ public class MyPageServiceImpl implements MyPageService {
         return result > 0;
     }
     
-    
-    
-    
-    
-    
-    private MyCalendarDto fetchFestivalDetails(String contentId) {
-        String tourApiUrl = "http://api.visitkorea.or.kr/openapi/service/rest/KorService1/detailCommon1";
+ // TourAPI 환경변수 등에서 가져오는 방식 추천
+    private static final String TOURAPI_KEY = System.getenv("TOURAPI_KEY");
+    private static final String TOURAPI_URL = "https://apis.data.go.kr/B551011/KorService2/detailCommon2";
 
-        URI uri = UriComponentsBuilder.fromHttpUrl(tourApiUrl)
-                .queryParam("ServiceKey", serviceKey)
-                .queryParam("contentId", contentId)
-                .queryParam("defaultYN", "Y")
-                .queryParam("firstImageYN", "Y")
-                .queryParam("addrinfoYN", "Y")
-                .queryParam("overviewYN", "Y")
-                .queryParam("MobileOS", "ETC")
-                .queryParam("MobileApp", "AppTest")
-                .queryParam("_type", "json")
-                .build(true)
-                .toUri();
-
-        try {
-            // API 호출 전 로그 추가
-            log.info("Requesting TourAPI for contentId: {}", contentId);
-            log.debug("Request URI: {}", uri);
-
-            String response = restTemplate.getForObject(uri, String.class);
-            // API 응답 로그 추가
-            log.debug("Response from TourAPI for contentId {}: {}", contentId, response);
-
-            JsonNode root = objectMapper.readTree(response);
-            JsonNode item = root.path("response").path("body").path("items").path("item");
-
-            if (item.isMissingNode() || item.isEmpty()) { // item이 비어있는 경우도 체크
-                log.warn("No item found in TourAPI response for contentId: {}", contentId);
-                return null;
-            }
-
-            // 날짜 파싱 포맷터
-            DateTimeFormatter apiFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-            DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-            String startDateStr = item.path("eventstartdate").asText(null); // 날짜가 없을 경우 null 반환
-            String endDateStr = item.path("eventenddate").asText(null);   // 날짜가 없을 경우 null 반환
-
-            // 시작일 또는 종료일이 없는 경우, 해당 축제는 캘린더에 추가하지 않음
-            if (startDateStr == null || endDateStr == null) {
-                log.warn("Start date or end date is missing for contentId: {}. Skipping.", contentId);
-                return null;
-            }
-
-            LocalDate startDate = LocalDate.parse(startDateStr, apiFormatter);
-            LocalDate endDate = LocalDate.parse(endDateStr, apiFormatter);
-
-            return new MyCalendarDto(
-                    item.path("contentid").asText(),
-                    item.path("title").asText(),
-                    startDate.format(dbFormatter),
-                    endDate.format(dbFormatter),
-                    item.path("firstimage").asText(null) // 이미지가 없을 수 있으므로 null 처리
-            );
-        } catch (Exception e) {
-            // 어떤 contentId에서 오류가 발생했는지 명확하게 로그 기록
-            log.error("Failed to fetch or parse festival details for contentId: {}. Error: {}", contentId, e.getMessage(), e);
-            return null; // 오류 발생 시 null을 반환하여 다른 축제 정보 처리에 영향 없도록 함
-        }
-    }
+//    @Override
+//    public List<MyCalendarDto> getMyFavoriteFestivals(Long memberNo) {
+//        List<String> contentIdList = mapper.findFavoriteContentIds(memberNo);
+//        List<MyCalendarDto> result = new ArrayList<>();
+//        for (String contentId : contentIdList) {
+//            // 각 contentId마다 TourAPI 호출
+//            try {
+//                RestTemplate restTemplate = new RestTemplate();
+//                String url = TOURAPI_URL + "?serviceKey=" + TOURAPI_KEY
+//                        + "&MobileOS=ETC"
+//                        + "&MobileApp=Festive"
+//                        + "&_type=json"
+//                        + "&contentId=" + contentId
+//                        + "&defaultYN=Y"
+//                        + "&firstImageYN=Y"
+//                        + "&overviewYN=Y";
+//                String apiResponse = restTemplate.getForObject(url, String.class);
+//
+////                // 응답에서 필요한 정보 파싱
+////                JSONObject root = new JSONObject(apiResponse);
+////                JSONObject response = root.getJSONObject("response");
+////                JSONObject body = response.getJSONObject("body");
+////                JSONObject items = body.getJSONObject("items");
+////                JSONArray itemArr = items.getJSONArray("item");
+////                JSONObject item = itemArr.getJSONObject(0);
+////                
+////             // 기간 정보 (null 안전 처리)
+////                String startDate = item.optString("eventstartdate", "").replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3");
+////                String endDate = item.optString("eventenddate", "").replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3");
+////                if (startDate.isEmpty()) startDate = "";
+////                if (endDate.isEmpty()) endDate = startDate;
+//
+//                // Dto에 담기
+//                MyCalendarDto dto = MyCalendarDto.builder()
+//                        .contentId(contentId)
+//                        .title(item.optString("title", "무제"))
+//                        .firstImage(item.optString("firstimage", ""))
+//                        .addr1(item.optString("addr1", ""))
+//                        .overview(item.optString("overview", ""))
+//                        .startDate(startDate)
+//                        .endDate(endDate)
+//                        .build();
+//                result.add(dto);
+//
+//            } catch (Exception e) {
+//                // 에러 로그는 출력만 하고, 해당 축제는 건너뜀
+//                e.printStackTrace();
+//            }
+//        }
+//        return result;
+//    }
 
     @Override
-    public List<MyCalendarDto> getFavoriteFestivals(long memberNo) {
-        List<String> contentIds = mapper.findFavoriteContentIdsByMemberNo(memberNo);
-
-        if (contentIds == null || contentIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        return contentIds.stream()
-                .map(this::fetchFestivalDetails)
-                .filter(java.util.Objects::nonNull)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    @Override
-    public void removeFavorite(long memberNo, String contentId) {
+    public void deleteFavorite(Long memberNo, String contentId) {
         mapper.deleteFavorite(memberNo, contentId);
     }
-
-   
-
-
-
 }
+

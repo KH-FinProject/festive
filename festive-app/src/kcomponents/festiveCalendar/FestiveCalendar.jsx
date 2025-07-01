@@ -12,10 +12,16 @@ function formatDate(yyyymmdd) {
     return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
 }
 
+// 오늘 날짜 yyyy-mm-dd 반환 함수
+function getTodayStr() {
+    return new Date().toISOString().slice(0, 10);
+}
+
 const FestiveCalendar = () => {
     const [festivals, setFestivals] = useState([]);
     const [selectedDateFestivals, setSelectedDateFestivals] = useState([]);
-    const [clickedDate, setClickedDate] = useState(null);
+    // 초기값을 오늘 날짜로!
+    const [clickedDate, setClickedDate] = useState(() => getTodayStr());
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 4;
 
@@ -30,8 +36,6 @@ const FestiveCalendar = () => {
     const pageGroupStart = Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize + 1;
     const pageGroupEnd = Math.min(pageGroupStart + pageGroupSize - 1, totalPages);
 
-
-
     useEffect(() => {
         const today = new Date();
         const yyyymmdd = today.toISOString().slice(0, 10).replace(/-/g, '');
@@ -40,7 +44,6 @@ const FestiveCalendar = () => {
     }, []);
 
     async function fetchFestivalEventsByDate(dateStr, filterDate) {
-
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
 
         try {
@@ -77,7 +80,6 @@ const FestiveCalendar = () => {
             });
 
             // 시작 날짜순 정렬 추가
-            // festivalCards.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
             festivalCards.sort((a, b) => {
                 const statusPriority = {
                     '진행중': 1,
@@ -103,7 +105,6 @@ const FestiveCalendar = () => {
                 }
             });
 
-
             const filteredFestivals = festivalCards.filter((festival) => {
                 const start = new Date(festival.startDate);
                 const end = new Date(festival.endDate);
@@ -119,7 +120,6 @@ const FestiveCalendar = () => {
 
     const handleDateClick = (info) => {
         const clicked = info.dateStr;
-
         setClickedDate(clicked);
         fetchFestivalEventsByDate(clicked.replace(/-/g, ''), clicked);
         setCurrentPage(1);
@@ -161,15 +161,10 @@ const FestiveCalendar = () => {
     };
 
     const handleEventClick = (info) => {
-        // 이벤트가 클릭된 날짜 정보 가져오기
         const clickedDate = info.event.startStr;
-
-        // handleDateClick과 동일한 로직 실행
         setClickedDate(clickedDate);
         fetchFestivalEventsByDate(clickedDate.replace(/-/g, ''), clickedDate);
         setCurrentPage(1);
-
-        // 이벤트 기본 동작 방지 (페이지 이동 등)
         info.jsEvent.preventDefault();
     };
 
@@ -178,11 +173,8 @@ const FestiveCalendar = () => {
         return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
     }
 
-    // FestiveCalendar.jsx에서 수정할 부분
-
     // 1. 색상을 결정하는 함수 추가
     function getEventColor(count) {
-        // 각 구간별 색상 분류
         const lowRanges = [
             [0, 10], [31, 40], [61, 70], [91, 100]
         ];
@@ -193,43 +185,33 @@ const FestiveCalendar = () => {
             [21, 30], [51, 60], [81, 90], [111, 120]
         ];
 
-        // low 범위 확인
         for (const [min, max] of lowRanges) {
             if (count >= min && count <= max) {
                 return 'skyblue';
             }
         }
-
-        // medium 범위 확인
         for (const [min, max] of mediumRanges) {
             if (count >= min && count <= max) {
                 return 'lightseagreen';
             }
         }
-
-        // high 범위 확인
         for (const [min, max] of highRanges) {
             if (count >= min && count <= max) {
                 return 'orange';
             }
         }
-
-        // 정의되지 않은 범위는 기본값 (121개 이상 등)
         return 'lightgray';
     }
 
-    // 2. groupedCalendarEvents 생성 부분 수정
     const groupedCalendarEvents = Object.entries(groupedByDate).map(([date, count]) => ({
         title: `${count}개`,
         date,
-        backgroundColor: getEventColor(count), // 배경색 추가
-        borderColor: getEventColor(count),     // 테두리색 추가
-        textColor: 'black'                     // 텍스트 색상 유지
+        backgroundColor: getEventColor(count),
+        borderColor: getEventColor(count),
+        textColor: 'black'
     }));
 
-    // 2. getEventClassNames 함수 추가 (eventClassNames에서 사용할 함수)
     function getEventClassNames(count) {
-        // 각 구간별 클래스명 분류
         const lowRanges = [
             [0, 10], [41, 50], [81, 90], [121, 130], [161, 170], [201, 210]
         ];
@@ -243,43 +225,32 @@ const FestiveCalendar = () => {
             [31, 40], [71, 80], [111, 120], [151, 160], [191, 200], [231, 240]
         ];
 
-        // low 범위 확인
         for (const [min, max] of lowRanges) {
             if (count >= min && count <= max) {
                 return 'festival-low';
             }
         }
-
-        // medium 범위 확인
         for (const [min, max] of mediumoneRanges) {
             if (count >= min && count <= max) {
                 return 'festival-mediumone';
             }
         }
-
         for (const [min, max] of mediumtwoRanges) {
             if (count >= min && count <= max) {
                 return 'festival-mediumtwo';
             }
         }
-
-        // high 범위 확인
         for (const [min, max] of highRanges) {
             if (count >= min && count <= max) {
                 return 'festival-high';
             }
         }
-
-        // 정의되지 않은 범위는 기본값
         return 'festival-default';
     }
 
     const handleFestivalClick = (festivalId) => {
-        // 실제로는 React Router로 상세페이지 이동
-        console.log(`축제 ${festivalId} 상세페이지로 이동`);
         navigate(`/festival/detail/${festivalId}`);
     };
-
 
     return (
         <div className="app-container">
@@ -312,12 +283,10 @@ const FestiveCalendar = () => {
                             <p style={{ fontSize: "24px" }}>
                                 {formatKoreanDate(clickedDate)}의 축제
                             </p>
-
                         </div>
                     )}
 
                     <div>
-                        {/* 카드 그리드와 페이지네이션을 같은 div로 묶는다 */}
                         <div className="calendar-festivals-grid">
                             {currentFestivals.map((festival) => (
                                 <div
@@ -331,13 +300,10 @@ const FestiveCalendar = () => {
                                             alt={festival.title}
                                             className="calendar-festival-image"
                                         />
-
-
                                         <div className={`calendar-festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
                                             {festival.status}
                                         </div>
                                     </div>
-
                                     <div className="calendar-festival-info">
                                         <h3 className="calendar-festival-title">{festival.title}</h3>
                                         <p className="calendar-festival-location">
@@ -348,7 +314,6 @@ const FestiveCalendar = () => {
                                             </span>
                                             <span className="location-text">{festival.location}</span>
                                         </p>
-
                                         <p className="calendar-festival-date">
                                             <svg className="calendar-icon" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
@@ -360,11 +325,8 @@ const FestiveCalendar = () => {
                             ))}
                         </div>
 
-                        {/* 바로 아래에 페이지네이션 표시 */}
                         {totalPages > 1 && (
                             <div className="pagination-container">
-
-                                {/* 맨 처음으로 */}
                                 <button
                                     className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
                                     onClick={() => handlePageChange(1)}
@@ -372,8 +334,6 @@ const FestiveCalendar = () => {
                                 >
                                     &laquo;
                                 </button>
-
-                                {/* 이전 그룹 */}
                                 <button
                                     className={`pagination-btn ${pageGroupStart === 1 ? 'disabled' : ''}`}
                                     onClick={() => handlePageChange(pageGroupStart - 1)}
@@ -381,8 +341,6 @@ const FestiveCalendar = () => {
                                 >
                                     &lsaquo;
                                 </button>
-
-                                {/* 현재 그룹 페이지 번호 출력 */}
                                 <div className="pagination-numbers">
                                     {Array.from({ length: pageGroupEnd - pageGroupStart + 1 }, (_, idx) => {
                                         const pageNumber = pageGroupStart + idx;
@@ -397,8 +355,6 @@ const FestiveCalendar = () => {
                                         );
                                     })}
                                 </div>
-
-                                {/* 다음 그룹 */}
                                 <button
                                     className={`pagination-btn ${pageGroupEnd === totalPages ? 'disabled' : ''}`}
                                     onClick={() => handlePageChange(pageGroupEnd + 1)}
@@ -406,8 +362,6 @@ const FestiveCalendar = () => {
                                 >
                                     &rsaquo;
                                 </button>
-
-                                {/* 맨 끝으로 */}
                                 <button
                                     className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
                                     onClick={() => handlePageChange(totalPages)}
@@ -417,10 +371,8 @@ const FestiveCalendar = () => {
                                 </button>
                             </div>
                         )}
-
                     </div>
                 </section>
-
             </main>
         </div>
     );
