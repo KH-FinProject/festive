@@ -17,6 +17,7 @@ public class ChatResponse {
     private List<FestivalInfo> festivals; // 축제 정보 리스트 (TourAPI 데이터)
     private TravelCourse travelCourse;   // 구조화된 여행코스
     private boolean isStreaming;         // 스트리밍 여부
+    private Map<String, Object> analysisInfo; // 프론트엔드 TourAPI 호출용 분석 정보
     
     @Data
     @NoArgsConstructor
@@ -27,6 +28,8 @@ public class ChatResponse {
         private Double longitude;   // 경도
         private Integer day;        // 몇째 날
         private String description; // 설명
+        private String image;       // 이미지 URL (TourAPI)
+        private String category;    // 카테고리 (관광지, 문화시설 등)
     }
     
     @Data
