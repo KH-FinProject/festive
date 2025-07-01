@@ -282,18 +282,22 @@ public class MyPageController {
         }
     }
     
- // 1. 찜한 축제 목록 조회 (내 캘린더에 표시용)
-//    @GetMapping("/mycalendar")
-//    public List<MyCalendarDto> getMyFavoriteFestivals(HttpSession session) {
-//        Long memberNo = (Long) session.getAttribute("memberNo");
-//        return service.getMyFavoriteFestivals(memberNo);
-//    }
+ // 찜한 축제 목록 조회
+    @GetMapping("/mycalendar")
+    public ResponseEntity<List<MyCalendarDto>> getFavoriteFestivals(HttpServletRequest request) {
+    	String accessToken = getAccessTokenFromCookie(request);
+    	Long memberNo = jwtUtil.getMemberNo(accessToken);
+        List<MyCalendarDto> list = service.getFavoriteFestivals(memberNo);
+        return ResponseEntity.ok(list);
+    }
 
-    // 2. 찜 해제
+    // 찜 해제
     @DeleteMapping("/favorites/{contentId}")
-    public void deleteFavorite(@PathVariable("contentId") String contentId, HttpSession session) {
-        Long memberNo = (Long) session.getAttribute("memberNo");
-        service.deleteFavorite(memberNo, contentId);
+    public ResponseEntity<Void> unfavoriteFestival(@PathVariable String contentId, HttpServletRequest request) {
+    	String accessToken = getAccessTokenFromCookie(request);
+    	Long memberNo = jwtUtil.getMemberNo(accessToken);
+        service.deleteFavoriteFestival(memberNo, contentId);
+        return ResponseEntity.noContent().build();
     }
 
 }
