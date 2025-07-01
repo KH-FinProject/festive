@@ -134,7 +134,7 @@
 	</update>
 	
 	<!-- 찜한 축제 contentId 목록 조회 -->
-    <select id="selectFavoriteContentIds" parameterType="long" resultType="string">
+    <select id="selectFavoriteContentIds">
         SELECT CONTENT_ID
         FROM FAVORITES
         WHERE MEMBER_NO = #{memberNo}

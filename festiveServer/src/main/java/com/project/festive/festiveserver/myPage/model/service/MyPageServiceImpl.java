@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.myPage.dto.MyCalendarDto;
@@ -24,6 +23,8 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -207,4 +208,6 @@ public class MyPageServiceImpl implements MyPageService {
         mapper.deleteFavoriteFestival(memberNo, contentId);
     }
     
+
 }
+

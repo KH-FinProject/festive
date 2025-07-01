@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
+import com.project.festive.festiveserver.detail.model.dto.LikesDto;
 import com.project.festive.festiveserver.detail.model.mapper.DetailMapper;
 
 @Service
@@ -36,12 +37,42 @@ public class DetailServiceImpl implements DetailService{
 		boolean currFavorite = favorites.isCurrFavorite();
 		
 		if(currFavorite) {
-			System.out.println("currFavorite 거짓일때 DB에 insert: " + currFavorite);
+			System.out.println("currFavorite true DB에 insert: " + currFavorite);
 			checkResult = mapper.deleteFavorite(favorites);
 			result = -1;
 		} else {
-			System.out.println("currFavorite 참일때 delete : " + currFavorite);
+			System.out.println("currFavorite false delete : " + currFavorite);
 			checkResult = mapper.insertFavorite(favorites);
+			result = 1;
+		}
+		
+		return result;
+	}
+
+	// 좋아요 갯수 가져오기
+	@Override
+	public int selectLikes(String contentId) {
+		System.out.println("contentId : " + contentId);
+		return mapper.selectLikes(contentId);
+	}
+	
+	// 좋아요 상태 변경
+	@Override
+	public int changeLikes(LikesDto likes) {
+		
+		int result = 0;
+		int checkResult = 0;
+		boolean currLike = likes.isCurrLike();
+		
+		if(currLike) {
+			System.out.println("currLike true 일때 DB에 delete: " + currLike);
+			checkResult = mapper.deleteLike(likes);
+			System.out.println("checkResult : " + checkResult);
+			result = -1;
+		} else {
+			System.out.println("currLike false 일때 DB에 insert : " + currLike);
+			checkResult = mapper.insertLike(likes);
+			System.out.println("checkResult : " + checkResult);
 			result = 1;
 		}
 		

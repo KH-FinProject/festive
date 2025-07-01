@@ -5,6 +5,7 @@
   align-items: center;
   justify-content: center;
   min-height: 24px;
+  gap: 6px;
 }
 
 /* 하트 버튼 */
@@ -43,6 +44,16 @@
 
 .heart-button:hover .heart-image {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.like {
+  margin-top: 2px;
+}
+.like span {
+  margin-right: 10px;
+  line-height: 1;
+  position: relative;
+  top: -3px;
 }
 
 /* 파티클 효과 */

@@ -8,14 +8,13 @@ import axiosApi from "../../api/axiosAPI";
 
 // 닉네임 유효성 검사 함수 (공백 허용X, 2~15자)
 const isValidNickname = (nickname) => {
-
-    if (!nickname) return false;
-    if (/\s/.test(nickname)) return false; // 공백 포함시 false
-    return nickname.length >= 2 && nickname.length <= 15;
+  if (!nickname) return false;
+  if (/\s/.test(nickname)) return false; // 공백 포함시 false
+  return nickname.length >= 2 && nickname.length <= 15;
 };
 
 const MyPageEditProfile = () => {
-  const { member, updateNickname, updateProfileImage } = useAuthStore();
+  const { updateNickname, updateProfileImage } = useAuthStore();
   const [showModal, setShowModal] = useState(false);
   const [profileData, setProfileData] = useState({
     name: "",
@@ -44,20 +43,16 @@ const MyPageEditProfile = () => {
         nickname: data.nickname,
         profileImageUrl: data.profileImage,
       });
+      updateProfileImage(data.profileImage); // store도 즉시 갱신!
       originalNicknameRef.current = data.nickname;
       setIsNicknameAvailable(null);
       setNewProfileImageFile(null);
       setPreviewImageUrl(null);
-
-      // 프로필 이미지가 변경되었으면 스토어 업데이트
-      if (data.profileImage && data.profileImage !== member?.profileImage) {
-        updateProfileImage(data.profileImage);
-      }
     } catch (err) {
       console.error("회원 프로필 정보 조회 실패", err);
       alert("프로필 정보를 불러오는데 실패했습니다.");
     }
-  }, []);
+  }, [updateProfileImage]);
 
   // 컴포넌트 마운트 시에만 프로필 정보 로드
   useEffect(() => {
@@ -102,7 +97,6 @@ const MyPageEditProfile = () => {
     return () => {
       if (nicknameCheckTimeout.current)
         clearTimeout(nicknameCheckTimeout.current);
-
     };
   }, [profileData.nickname]);
 
@@ -206,6 +200,14 @@ const MyPageEditProfile = () => {
   const defaultProfileSvg =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E";
 
+  // 프로필 이미지 경로 보정 함수
+  const getProfileImageSrc = (url) => {
+    if (!url) return defaultProfileSvg;
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("/profile-images/")) return url;
+    return `/profile-images/${url}`;
+  };
+
   return (
     <div className="page-container">
       <main className="main-content">
@@ -225,8 +227,7 @@ const MyPageEditProfile = () => {
                 <img
                   src={
                     previewImageUrl ||
-                    profileData.profileImageUrl ||
-                    defaultProfileSvg
+                    getProfileImageSrc(profileData.profileImageUrl)
                   }
                   alt="프로필"
                 />
