@@ -8,16 +8,9 @@ import axiosApi from "../../api/axiosAPI";
 
 // 닉네임 유효성 검사 함수 (공백 허용X, 2~15자)
 const isValidNickname = (nickname) => {
-<<<<<<< HEAD
   if (!nickname) return false;
   if (/\s/.test(nickname)) return false; // 공백 포함시 false
   return nickname.length >= 2 && nickname.length <= 15;
-=======
-
-    if (!nickname) return false;
-    if (/\s/.test(nickname)) return false; // 공백 포함시 false
-    return nickname.length >= 2 && nickname.length <= 15;
->>>>>>> 36f76a74b59be0a2da7b66a12a6a79ad4cb6d889
 };
 
 const MyPageEditProfile = () => {
@@ -55,14 +48,6 @@ const MyPageEditProfile = () => {
       setIsNicknameAvailable(null);
       setNewProfileImageFile(null);
       setPreviewImageUrl(null);
-<<<<<<< HEAD
-=======
-
-      // 프로필 이미지가 변경되었으면 스토어 업데이트
-      if (data.profileImage && data.profileImage !== member?.profileImage) {
-        updateProfileImage(data.profileImage);
-      }
->>>>>>> 36f76a74b59be0a2da7b66a12a6a79ad4cb6d889
     } catch (err) {
       console.error("회원 프로필 정보 조회 실패", err);
       alert("프로필 정보를 불러오는데 실패했습니다.");
@@ -112,10 +97,6 @@ const MyPageEditProfile = () => {
     return () => {
       if (nicknameCheckTimeout.current)
         clearTimeout(nicknameCheckTimeout.current);
-<<<<<<< HEAD
-=======
-
->>>>>>> 36f76a74b59be0a2da7b66a12a6a79ad4cb6d889
     };
   }, [profileData.nickname]);
 

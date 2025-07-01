@@ -28,7 +28,7 @@ import net.minidev.json.JSONObject;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
-//@RequiredArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class MyPageServiceImpl implements MyPageService {
 	

@@ -25,7 +25,7 @@ const Header = () => {
     useAuthStore.getState().logout();
     navigate("/");
   };
-  
+
   // 현재 경로가 해당 링크와 일치하는지 확인하는 함수
   const isActiveLink = (path) => {
     if (path === "/") {
@@ -53,35 +53,35 @@ const Header = () => {
           ...(member?.role === "ADMIN"
             ? [{ name: "관리자", path: "/admin" }]
             : []),
-        ].map((item) =>(
-            <Link
-              key={item.name}
-              to={item.path}
-              className={`headernav-link hover-grow ${
-                isActiveLink(item.path) ? "active" : ""
-              }`}
-            >
-              {item.name}
-              {item.name === "관리자" && hasNewReport && (
-                <span
-                  style={{
-                    background: "#ff4757",
-                    color: "white",
-                    borderRadius: "8px",
-                    fontSize: "10px",
-                    fontWeight: "bold",
-                    padding: "1px 6px",
-                    marginLeft: "6px",
-                    verticalAlign: "middle",
-                    position: "relative",
-                    top: "-7px",
-                    animation: "popIn 0.3s",
-                  }}
-                >
-                  new!
-                </span>
-              )}
-            </Link>
+        ].map((item) => (
+          <Link
+            key={item.name}
+            to={item.path}
+            className={`headernav-link hover-grow ${
+              isActiveLink(item.path) ? "active" : ""
+            }`}
+          >
+            {item.name}
+            {item.name === "관리자" && hasNewReport && (
+              <span
+                style={{
+                  background: "#ff4757",
+                  color: "white",
+                  borderRadius: "8px",
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                  padding: "1px 6px",
+                  marginLeft: "6px",
+                  verticalAlign: "middle",
+                  position: "relative",
+                  top: "-7px",
+                  animation: "popIn 0.3s",
+                }}
+              >
+                new!
+              </span>
+            )}
+          </Link>
         ))}
       </nav>
       <div className="headerheader-right">
@@ -92,7 +92,13 @@ const Header = () => {
           <div className="header-user-info">
             <Link to="/mypage/profile">
               <img
-                src={member?.profileImage || "/logo.png"}
+                src={
+                  member?.profileImage
+                    ? member.profileImage.startsWith("/profile-images/")
+                      ? member.profileImage + "?t=" + Date.now()
+                      : member.profileImage
+                    : "/logo.png"
+                }
                 alt="프로필"
                 className="header-user-profile"
                 onError={(e) => {
