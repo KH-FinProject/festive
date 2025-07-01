@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
+import com.project.festive.festiveserver.detail.model.dto.LikesDto;
 
 @Mapper
 public interface DetailMapper {
@@ -29,5 +30,11 @@ public interface DetailMapper {
 	 * @author 미애
 	 */
 	int deleteFavorite(FavoritesDto favorites);
+
+	int selectLikes(String contentId);
+
+	int deleteLike(LikesDto likes);
+
+	int insertLike(LikesDto likes);
 
 }
