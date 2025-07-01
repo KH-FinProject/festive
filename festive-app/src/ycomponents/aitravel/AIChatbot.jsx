@@ -221,413 +221,7 @@ const createMarkerContent = (day, index) => {
   `;
 };
 
-// 🔍 사용자 메시지에서 지역명 추출 함수 (시군구 포함)
-const extractRegionFromMessage = (message) => {
-  // 시군구 우선 검색 (더 구체적인 지역)
-  const sigunguList = [
-    // 서울특별시
-    "강남구",
-    "강동구",
-    "강북구",
-    "강서구",
-    "관악구",
-    "광진구",
-    "구로구",
-    "금천구",
-    "노원구",
-    "도봉구",
-    "동대문구",
-    "동작구",
-    "마포구",
-    "서대문구",
-    "서초구",
-    "성동구",
-    "성북구",
-    "송파구",
-    "양천구",
-    "영등포구",
-    "용산구",
-    "은평구",
-    "종로구",
-    "중구",
-    "중랑구",
-
-    // 부산광역시
-    "부산진구",
-    "동래구",
-    "해운대구",
-    "사하구",
-    "금정구",
-    "강서구",
-    "연제구",
-    "수영구",
-    "사상구",
-    "기장군",
-
-    // 경기도 주요 시/군
-    "수원시",
-    "성남시",
-    "고양시",
-    "용인시",
-    "부천시",
-    "안산시",
-    "안양시",
-    "남양주시",
-    "화성시",
-    "평택시",
-    "의정부시",
-    "시흥시",
-    "파주시",
-    "김포시",
-    "광명시",
-    "광주시",
-
-    // 강원특별자치도
-    "춘천시",
-    "원주시",
-    "강릉시",
-    "동해시",
-    "태백시",
-    "속초시",
-    "삼척시",
-    "홍천군",
-    "횡성군",
-    "영월군",
-    "평창군",
-    "정선군",
-    "철원군",
-    "화천군",
-    "양구군",
-    "인제군",
-    "고성군",
-    "양양군",
-
-    // 충청북도
-    "청주시",
-    "충주시",
-    "제천시",
-    "보은군",
-    "옥천군",
-    "영동군",
-    "증평군",
-    "진천군",
-    "괴산군",
-    "음성군",
-    "단양군",
-
-    // 충청남도
-    "천안시",
-    "공주시",
-    "보령시",
-    "아산시",
-    "서산시",
-    "논산시",
-    "계룡시",
-    "당진시",
-    "금산군",
-    "부여군",
-    "서천군",
-    "청양군",
-    "홍성군",
-    "예산군",
-    "태안군",
-
-    // 전북특별자치도
-    "전주시",
-    "군산시",
-    "익산시",
-    "정읍시",
-    "남원시",
-    "김제시",
-    "완주군",
-    "진안군",
-    "무주군",
-    "장수군",
-    "임실군",
-    "순창군",
-    "고창군",
-    "부안군",
-
-    // 전라남도
-    "목포시",
-    "여수시",
-    "순천시",
-    "나주시",
-    "광양시",
-    "담양군",
-    "곡성군",
-    "구례군",
-    "고흥군",
-    "보성군",
-    "화순군",
-    "장흥군",
-    "강진군",
-    "해남군",
-    "영암군",
-    "무안군",
-    "함평군",
-    "영광군",
-    "장성군",
-    "완도군",
-    "진도군",
-    "신안군",
-
-    // 경상북도
-    "포항시",
-    "경주시",
-    "김천시",
-    "안동시",
-    "구미시",
-    "영주시",
-    "영천시",
-    "상주시",
-    "문경시",
-    "경산시",
-    "군위군",
-    "의성군",
-    "청송군",
-    "영양군",
-    "영덕군",
-    "청도군",
-    "고령군",
-    "성주군",
-    "칠곡군",
-    "예천군",
-    "봉화군",
-    "울진군",
-    "울릉군",
-
-    // 경상남도
-    "창원시",
-    "진주시",
-    "통영시",
-    "사천시",
-    "김해시",
-    "밀양시",
-    "거제시",
-    "양산시",
-    "의령군",
-    "함안군",
-    "창녕군",
-    "고성군",
-    "남해군",
-    "하동군",
-    "산청군",
-    "함양군",
-    "거창군",
-    "합천군",
-
-    // 제주도
-    "제주시",
-    "서귀포시",
-  ];
-
-  // 시군구 먼저 확인
-  for (const sigungu of sigunguList) {
-    if (message.includes(sigungu)) {
-      console.log(`🏘️ 시군구 감지: ${sigungu}`);
-      return sigungu;
-    }
-  }
-
-  // 광역시/도 확인
-  const regions = [
-    "서울",
-    "부산",
-    "대구",
-    "인천",
-    "광주",
-    "대전",
-    "울산",
-    "세종",
-    "경기",
-    "강원",
-    "충북",
-    "충남",
-    "전북",
-    "전남",
-    "경북",
-    "경남",
-    "제주",
-  ];
-
-  for (const region of regions) {
-    if (message.includes(region)) {
-      console.log(`🗺️ 광역시/도 감지: ${region}`);
-      return region;
-    }
-  }
-
-  return "전국"; // 기본값
-};
-
-// 🔍 사용자 메시지에서 키워드 추출 함수
-const extractKeywordFromMessage = (message) => {
-  const festivalKeywords = [
-    "불꽃",
-    "축제",
-    "페스티벌",
-    "행사",
-    "공연",
-    "문화제",
-    "음악제",
-    "영화제",
-    "벚꽃",
-    "단풍",
-    "바다",
-    "해변",
-    "산",
-    "등불",
-    "랜턴",
-    "크리스마스",
-  ];
-
-  for (const keyword of festivalKeywords) {
-    if (message.includes(keyword)) {
-      return keyword;
-    }
-  }
-  return "축제"; // 기본값
-};
-
-// 🎯 TourAPI 호출 함수들 - 백엔드에서 이동
-const callTourAPI = async (url, description) => {
-  console.log(`🌐 TourAPI 요청 시작: ${description}`);
-  console.log(`📡 요청 URL: ${url}`);
-
-  try {
-    const response = await fetch(url);
-    const responseText = await response.text();
-
-    console.log(`✅ TourAPI 응답 수신: ${description}`);
-    console.log(`📊 응답 상태: ${response.status}`);
-    console.log(`📄 응답 크기: ${responseText.length} bytes`);
-    console.log(`📄 응답 내용 (처음 500자):`, responseText.substring(0, 500));
-
-    if (!response.ok) {
-      console.error(`❌ TourAPI 오류: ${response.status}`);
-      return null;
-    }
-
-    return responseText;
-  } catch (error) {
-    console.error(`❌ TourAPI 호출 실패: ${description}`, error);
-    return null;
-  }
-};
-
-const parseTourAPIResponse = (responseText) => {
-  try {
-    if (!responseText) return [];
-
-    // XML 파싱
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(responseText, "text/xml");
-
-    // 에러 체크
-    const errorElements = xmlDoc.getElementsByTagName("errMsg");
-    if (errorElements.length > 0) {
-      console.warn("❌ TourAPI XML 에러:", errorElements[0].textContent);
-      return [];
-    }
-
-    const items = xmlDoc.getElementsByTagName("item");
-    const spots = [];
-
-    console.log(`📋 파싱할 아이템 수: ${items.length}`);
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      const title = item.getElementsByTagName("title")[0]?.textContent;
-      const addr1 = item.getElementsByTagName("addr1")[0]?.textContent;
-      const mapx = item.getElementsByTagName("mapx")[0]?.textContent;
-      const mapy = item.getElementsByTagName("mapy")[0]?.textContent;
-      const contentTypeId =
-        item.getElementsByTagName("contenttypeid")[0]?.textContent;
-      const firstimage =
-        item.getElementsByTagName("firstimage")[0]?.textContent ||
-        item.getElementsByTagName("firstimage2")[0]?.textContent;
-      const tel = item.getElementsByTagName("tel")[0]?.textContent;
-      const contentId = item.getElementsByTagName("contentid")[0]?.textContent;
-
-      if (
-        title &&
-        mapx &&
-        mapy &&
-        parseFloat(mapx) > 0 &&
-        parseFloat(mapy) > 0
-      ) {
-        spots.push({
-          title: title,
-          addr1: addr1 || "",
-          mapX: mapx,
-          mapY: mapy,
-          contentTypeId: contentTypeId,
-          firstimage: firstimage || "",
-          tel: tel || "",
-          contentId: contentId || "",
-          category: getContentTypeName(contentTypeId),
-        });
-      }
-    }
-
-    console.log(`✅ 파싱 완료: ${spots.length}개 관광지`);
-    return spots;
-  } catch (error) {
-    console.error("❌ TourAPI 응답 파싱 실패:", error);
-    return [];
-  }
-};
-
-const getContentTypeName = (contentTypeId) => {
-  const typeMap = {
-    12: "관광지",
-    14: "문화시설",
-    15: "축제공연행사",
-    25: "여행코스",
-    28: "레포츠",
-    32: "숙박",
-    38: "쇼핑",
-    39: "음식점",
-  };
-  return typeMap[contentTypeId] || "기타";
-};
-
-// 🎯 사용자 입력 분석하여 적절한 API 결정
-const analyzeUserInput = (message) => {
-  const messageLower = message.toLowerCase();
-
-  // 현재 진행중인 축제 검색
-  if (
-    messageLower.includes("현재") ||
-    messageLower.includes("지금") ||
-    messageLower.includes("열리고")
-  ) {
-    if (messageLower.includes("축제")) {
-      return "searchFestival2";
-    }
-  }
-
-  // 키워드 기반 축제 검색
-  if (
-    messageLower.includes("불꽃") ||
-    messageLower.includes("벚꽃") ||
-    (messageLower.includes("축제") && !messageLower.includes("여행코스"))
-  ) {
-    return "searchKeyword2";
-  }
-
-  // 일반 여행코스 검색
-  if (messageLower.includes("여행코스") || messageLower.includes("추천")) {
-    return "areaBasedList2";
-  }
-
-  return "areaBasedList2"; // 기본값
-};
-
-// ⚠️ 보안상 TourAPI 호출이 백엔드로 이동됨
-// 이제 모든 TourAPI 호출은 백엔드에서 안전하게 처리되어
-// 서비스키가 브라우저에 노출되지 않습니다.
+// ✅ 모든 TourAPI 호출과 AI 분석이 백엔드에서 안전하게 처리됩니다
 
 // React 컴포넌트
 const AIChatbot = () => {
@@ -1007,6 +601,40 @@ const AIChatbot = () => {
     }
   }, [messages, currentStreamMessage]);
 
+  // 🎯 AI 응답을 사용자 친화적으로 정리하는 함수
+  const cleanAIResponseForUser = (content) => {
+    if (!content) return content;
+
+    return (
+      content
+        // @location, @day 태그 완전 제거
+        .replace(/@location:\s*\[\d+\.\d+\s*,\s*\d+\.\d+\]\s*@day:\d+/g, "")
+        .replace(/@location:\s*@day:\d+/g, "")
+        .replace(/@location:/g, "")
+        .replace(/@day:\d+/g, "")
+
+        // 위치정보 관련 텍스트 제거
+        .replace(/위치정보:\s*/g, "")
+
+        // 불필요한 기술적 문구 제거
+        .replace(/\(유명 관광지 보완\)/g, "")
+        .replace(/\(TourAPI 데이터 기반\)/g, "")
+        .replace(/TourAPI 우선 \+ AI 보완 방식으로/g, "")
+
+        // Day 형식 정리 (Day 1, Day 2 등을 더 예쁘게)
+        .replace(/Day (\d+)/g, "📅 $1일차")
+
+        // 시간 형식 정리 (오전/오후 강조)
+        .replace(/오전 (\d+):(\d+)/g, "🌅 오전 $1:$2")
+        .replace(/오후 (\d+):(\d+)/g, "🌆 오후 $1:$2")
+
+        // 연속된 공백과 줄바꿈 정리
+        .replace(/\n\s*\n/g, "\n")
+        .replace(/\s+/g, " ")
+        .trim()
+    );
+  };
+
   // 🛡️ 보안 강화된 메시지 전송 처리 - 백엔드 중심 (TourAPI 서비스키 보호)
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -1037,13 +665,8 @@ const AIChatbot = () => {
       const content = data.content || "죄송합니다. 응답을 생성할 수 없습니다.";
       console.log("🔐 서비스키가 안전하게 보호된 상태로 데이터 수신 완료");
 
-      // @location과 @day 태그를 제거하고 이모지도 제거한 깔끔한 텍스트 생성
-      const cleanContent = removeEmojisFromText(
-        content
-          .replace(/@location:\s*\[\d+\.\d+\s*,\s*\d+\.\d+\]\s*@day:\d+/g, "")
-          .replace(/위치정보:\s*/g, "")
-          .trim()
-      );
+      // 🎨 사용자 친화적으로 응답 정리
+      const cleanContent = cleanAIResponseForUser(content);
 
       // 스트리밍 시뮬레이션
       let displayedResponse = "";
@@ -1052,7 +675,7 @@ const AIChatbot = () => {
       for (const chunk of chunks) {
         displayedResponse += chunk;
         setCurrentStreamMessage(removeEmojisFromText(displayedResponse));
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 30)); // 더 빠르게
       }
 
       setMessages((prev) => [
@@ -1079,6 +702,7 @@ const AIChatbot = () => {
             lat: location.lat,
             lng: location.lng,
             day: location.day,
+            time: location.time,
             mapX: location.mapX,
             mapY: location.mapY,
             image: location.image,
@@ -1086,6 +710,7 @@ const AIChatbot = () => {
           });
         });
 
+        // 🎯 백엔드에서 이미 day별로 분배된 데이터를 직접 사용
         setTimeout(() => {
           setLocations(data.locations);
         }, 500);

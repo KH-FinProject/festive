@@ -27,6 +27,7 @@ public class ChatResponse {
         private Double latitude;    // 위도
         private Double longitude;   // 경도
         private Integer day;        // 몇째 날
+        private String time;        // 방문 시간 (예: 오전 09:00)
         private String description; // 설명
         private String image;       // 이미지 URL (TourAPI)
         private String category;    // 카테고리 (관광지, 문화시설 등)

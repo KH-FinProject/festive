@@ -150,21 +150,21 @@ public class AITravelServiceImpl implements AITravelService {
         try {
             log.info("🎯 AI 여행 추천 시작: {}", request.getMessage());
             
-            // 🔄 TourAPI 데이터 기반 재생성 요청인지 확인 (프론트엔드에서 TourAPI 호출 후)
+            // 🔄 TourAPI 데이터 기반 재생성 요청인지 확인 (레거시 지원)
             if (request.getTourApiData() != null && !request.getTourApiData().isEmpty()) {
-                log.info("🌐 프론트엔드 TourAPI 데이터 기반 AI 응답 재생성: {}개 관광지", request.getTourApiData().size());
+                log.info("🌐 레거시 TourAPI 데이터 기반 AI 응답 재생성: {}개 관광지", request.getTourApiData().size());
                 return regenerateWithTourAPIData(request);
             }
             
-            // 🎯 1단계: 사용자 요청 분석
-            TravelAnalysis analysis = analyzeUserRequestWithAI(request.getMessage());
-            log.info("📊 요청 분석 완료 - 타입: {}, 지역: {}, 키워드: {}", 
-                    analysis.getRequestType(), analysis.getRegion(), analysis.getKeyword());
+            // 🚀 속도 개선: AI 분석 없이 직접 파싱으로 빠른 처리
+            TravelAnalysis analysis = createFastAnalysis(request.getMessage());
+            log.info("⚡ 빠른 분석 완료 - 타입: {}, 지역: {}, 기간: {}", 
+                    analysis.getRequestType(), analysis.getRegion(), analysis.getDuration());
 
-            // 🌐 2단계: 프론트엔드에서 TourAPI 호출을 위한 분석 정보 제공
+            // 🌐 2단계: 백엔드에서 모든 처리 완료
             ChatResponse response = generateInitialResponseWithAnalysis(request.getMessage(), analysis);
             
-            log.info("✅ AI 여행 추천 분석 완료 - 프론트엔드에서 TourAPI 호출 대기");
+            log.info("✅ AI 여행 추천 완료");
             return response;
 
         } catch (Exception e) {
@@ -217,7 +217,7 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 🌐 백엔드에서 안전하게 TourAPI 데이터 수집 (사용 안함, 하위 호환성 유지)
+     * 🌐 백엔드에서 안전하게 TourAPI 데이터 수집
      */
     private List<TourAPIResponse.Item> collectTourismDataSecurely(TravelAnalysis analysis) {
         List<TourAPIResponse.Item> allItems = new ArrayList<>();
@@ -300,13 +300,52 @@ public class AITravelServiceImpl implements AITravelService {
                 .map(this::convertToMap)
                 .collect(Collectors.toList());
             
+            // 🎯 요청 기간 정보 추출
+            String duration = analysis.getDuration() != null ? analysis.getDuration() : "2박3일";
+            int requiredPlaces = calculateRequiredPlaces(duration);
+            int totalDays = getTotalDaysFromDuration(duration);
+            
             // 기존 재생성 로직 활용
             ChatRequest tempRequest = new ChatRequest();
             tempRequest.setMessage(originalMessage);
             tempRequest.setTourApiData(tourApiDataMaps);
             tempRequest.setStrictMode(true); // 엄격 모드로 실제 데이터만 사용
             
-            return regenerateWithTourAPIData(tempRequest);
+            // 🎯 직접 응답 생성 (regenerateWithTourAPIData 로직 사용하지 않고)
+            ChatResponse response = new ChatResponse();
+            
+            // AI 응답 생성
+            String keyword = extractKeywordFromRequest(originalMessage);
+            List<Map<String, Object>> travelCourses = tourApiDataMaps.stream()
+                .filter(spot -> "25".equals(String.valueOf(spot.get("contenttypeid"))))
+                .collect(Collectors.toList());
+            List<Map<String, Object>> otherSpots = tourApiDataMaps.stream()
+                .filter(spot -> !"25".equals(String.valueOf(spot.get("contenttypeid"))))
+                .collect(Collectors.toList());
+            
+            String aiResponse = createTourAPIFirstRecommendation(travelCourses, otherSpots, originalMessage, keyword);
+            
+            response.setContent(aiResponse);
+            response.setRequestType(analysis.getRequestType());
+            response.setStreaming(false);
+            
+            // 🎯 요청 기간에 맞게 위치 정보 생성
+            List<ChatResponse.LocationInfo> locations = createLocationsFromTourAPIDataWithLimit(
+                    tourApiDataMaps, requiredPlaces, totalDays);
+            response.setLocations(locations);
+            
+            // 축제 정보 생성
+            List<ChatResponse.FestivalInfo> festivals = createFestivalInfoFromTourAPI(tourApiDataMaps);
+            response.setFestivals(festivals);
+            
+            // 여행 코스 정보 생성
+            ChatResponse.TravelCourse travelCourse = createTravelCourseFromTourAPI(locations, tourApiDataMaps);
+            response.setTravelCourse(travelCourse);
+            
+            log.info("🎯 직접 생성된 응답 - 위치: {}개, 축제: {}개, 기간: {}", 
+                    locations.size(), festivals.size(), duration);
+            
+            return response;
             
         } catch (Exception e) {
             log.error("TourAPI 데이터 기반 AI 응답 생성 실패", e);
@@ -340,7 +379,57 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 🧠 AI가 사용자 요청을 분석하여 여행 의도 파악
+     * 🚀 속도 개선: AI 없이 빠른 직접 분석
+     */
+    private TravelAnalysis createFastAnalysis(String userMessage) {
+        try {
+            log.info("⚡ 빠른 분석 시작: {}", userMessage);
+            
+            // 요청 타입 판별
+            String requestType = "travel_only";
+            String lowerMessage = userMessage.toLowerCase();
+            
+            if (lowerMessage.contains("축제") && (lowerMessage.contains("여행") || lowerMessage.contains("코스"))) {
+                requestType = "festival_with_travel";
+            } else if (lowerMessage.contains("축제") || lowerMessage.contains("불꽃") || lowerMessage.contains("벚꽃")) {
+                requestType = "festival_only";
+            } else if (!lowerMessage.contains("여행") && !lowerMessage.contains("코스") && !lowerMessage.contains("추천")) {
+                requestType = "general_chat";
+            }
+            
+            // 지역 정보 추출
+            RegionInfo regionInfo = extractRegionInfo(userMessage);
+            
+            // 여행 기간 추출 - 더 강화된 로직
+            String duration = extractDurationFromMessageEnhanced(userMessage);
+            
+            // 키워드 추출
+            String keyword = extractKeywordFromRequest(userMessage);
+            
+            TravelAnalysis analysis = new TravelAnalysis(
+                requestType, 
+                regionInfo.getRegionName(), 
+                keyword, 
+                duration, 
+                "빠른 분석 완료"
+            );
+            
+            analysis.setAreaCode(regionInfo.getAreaCode());
+            analysis.setSigunguCode(regionInfo.getSigunguCode());
+            
+            log.info("⚡ 빠른 분석 완료 - 타입: {}, 지역: {}, 기간: {}, 키워드: {}", 
+                    requestType, regionInfo.getRegionName(), duration, keyword);
+            
+            return analysis;
+            
+        } catch (Exception e) {
+            log.error("빠른 분석 실패, 기본값 사용", e);
+            return createDefaultAnalysis(userMessage);
+        }
+    }
+
+    /**
+     * 🧠 AI가 사용자 요청을 분석하여 여행 의도 파악 (레거시)
      */
     private TravelAnalysis analyzeUserRequestWithAI(String userMessage) {
         try {
@@ -359,7 +448,16 @@ public class AITravelServiceImpl implements AITravelService {
                 "1. festival_only: 축제만 검색/추천\n" +
                 "2. festival_with_travel: 축제 + 여행코스\n" +
                 "3. travel_only: 일반 여행코스만\n" +
-                "4. general_chat: 일반 대화";
+                "4. general_chat: 일반 대화\n\n" +
+                "기간 인식 규칙:\n" +
+                "- '당일치기', '당일' → 당일치기\n" +
+                "- '1박2일', '1박 2일' → 1박2일\n" +
+                "- '2박3일', '2박 3일' → 2박3일\n" +
+                "- '3박4일', '3박 4일' → 3박4일\n" +
+                "- '4박5일', '4박 5일' → 4박5일\n" +
+                "- '5박6일', '5박 6일' → 5박6일\n" +
+                "- '6박7일', '6박 7일' → 6박7일\n" +
+                "- 숫자만 있는 경우: '2일' → 1박2일, '3일' → 2박3일, '4일' → 3박4일";
             
             String analysisResult = callOpenAI(analysisPrompt);
             log.info("📋 AI 분석 결과: {}", analysisResult);
@@ -394,54 +492,83 @@ public class AITravelServiceImpl implements AITravelService {
         String region = analysis.getRegion() != null ? analysis.getRegion() : "서울";
         String keyword = analysis.getKeyword() != null ? analysis.getKeyword() : "여행";
         
-        // 여행 기간에 맞는 추천 개수 계산
+        log.info("🎯 AI 응답 생성 준비 - 지역: {}, 기간: {}, 키워드: {}", region, duration, keyword);
+        
+        // 여행 기간에 맞는 일수와 추천 개수 계산
+        int totalDays;
         int recommendCount;
+        
         if ("당일치기".equals(duration)) {
+            totalDays = 1;
             recommendCount = 3;
         } else if ("1박2일".equals(duration)) {
+            totalDays = 2;
             recommendCount = 4;
         } else if ("2박3일".equals(duration)) {
+            totalDays = 3;
             recommendCount = 6;
+        } else if ("3박4일".equals(duration)) {
+            totalDays = 4;
+            recommendCount = 8;
+        } else if ("4박5일".equals(duration)) {
+            totalDays = 5;
+            recommendCount = 10;
+        } else if ("5박6일".equals(duration)) {
+            totalDays = 6;
+            recommendCount = 12;
         } else {
+            // 기본값 또는 다른 형태의 기간 처리
+            log.warn("⚠️ 인식되지 않은 기간: {}, 기본값 사용", duration);
+            totalDays = 2;
             recommendCount = 4;
         }
         
+        log.info("📊 여행 계획 설정 - 총 {}일, {}개 장소 추천", totalDays, recommendCount);
+        
+        // Day별 장소 개수 계산 (균등 분배 + 첫날 조금 더)
+        int placesPerDay = recommendCount / totalDays;
+        int extraPlaces = recommendCount % totalDays;
+        
+        // Day별 배치 계획 생성
+        StringBuilder dayPlanBuilder = new StringBuilder();
+        for (int day = 1; day <= totalDays; day++) {
+            int placesForThisDay = placesPerDay + (day <= extraPlaces ? 1 : 0);
+            dayPlanBuilder.append(String.format("   - Day %d: %d개 장소 필수\n", day, placesForThisDay));
+        }
+        
         String travelPrompt = String.format(
-            "%s %s 여행코스를 추천해주세요\n\n" +
+            "🎯 %s %s 여행코스 추천 (총 %d일간 %d개 장소)\n\n" +
             "사용자 요청: \"%s\"\n" +
             "목적지: %s\n" +
-            "여행 기간: %s (%d개 장소 추천)\n" +
+            "여행 기간: %s\n" +
             "테마: %s\n\n" +
-            "**절대 금지 사항**:\n" +
-            "- 이모지, 특수기호, 아이콘 절대 사용 금지\n" +
-            "- 화살표, 별표, 하트, 원형, 사각형 등 모든 특수기호 금지\n" +
-            "- 마크다운 기호(**, *, ###) 사용 금지\n" +
-            "- 오직 한글, 영문, 숫자, 기본 구두점만 사용\n\n" +
-            "**생성 지시사항**:\n" +
-            "1. %s이므로 정확히 %d개만 추천\n" +
-            "2. 반드시 아래 형식 사용:\n" +
-            "   정확한 장소명 @location:[위도,경도] @day:숫자\n" +
-            "   설명: 장소 설명\n\n" +
-            "3. **장소명 작성 규칙**:\n" +
-            "   - 실제 존재하는 구체적인 장소명 사용\n" +
-            "   - '관광지', 'day별 추천관광지', '여행지' 등 일반적인 표현 금지\n" +
-            "   - 장소의 정확한 고유명사 사용\n" +
-            "   - 2글자 이상 30글자 이하로 제한\n\n" +
-            "4. %s인 경우:\n" +
-            "   - Day 1: %d개\n" +
-            "   - Day 2: %d개 (1박2일 이상인 경우만)\n" +
-            "   - Day 3: %d개 (2박3일 이상인 경우만)\n\n" +
-            "5. 실제 관광지 위치에 맞는 정확한 좌표 사용\n" +
-            "6. 지리적 동선을 고려한 효율적인 순서로 배치\n\n" +
-            "중요: 각 장소는 반드시 실제 존재하는 구체적인 이름으로 작성하고 이모지나 특수기호는 절대 사용하지 마세요.\n\n" +
-            "위 지시사항에 따라 %s %s 여행코스를 생성해주세요.",
-            region, duration, originalMessage, region, duration, recommendCount, keyword,
-            duration, recommendCount, duration,
-            "당일치기".equals(duration) ? 3 : ("1박2일".equals(duration) ? 2 : 2),
-            "당일치기".equals(duration) ? 0 : ("1박2일".equals(duration) ? 2 : 2),
-            "당일치기".equals(duration) || "1박2일".equals(duration) ? 0 : 2,
+            "🚨 **Day별 배치 필수 규칙**:\n" +
+            "%s" +
+            "\n" +
+            "📋 **출력 형식 (정확히 준수)**:\n" +
+            "장소명 @location:[위도,경도] @day:숫자\n" +
+            "설명: 간단한 장소 설명\n\n" +
+            "⚠️ **절대 금지사항**:\n" +
+            "- 이모지, 특수기호, 마크다운 기호 사용 금지\n" +
+            "- @day:1 없이 장소만 나열하는 것 금지\n" +
+            "- 모든 장소가 Day 1에만 몰리는 것 절대 금지\n\n" +
+            "✅ **필수 준수사항**:\n" +
+            "1. 총 %d일 모든 날짜에 장소 배치 필수\n" +
+            "2. Day 1: @day:1, Day 2: @day:2, Day 3: @day:3 등 구분 필수\n" +
+            "3. 하루에 너무 많은 장소 배치 금지 (최대 3-4개)\n" +
+            "4. 실제 존재하는 관광지 이름만 사용\n" +
+            "5. 정확한 위도/경도 좌표 제공\n\n" +
+            "🔥 **중요**: %d일 동안 총 %d개 장소를 Day별로 균등 분배하여 추천하세요!\n" +
+            "Day 1에만 모든 장소를 배치하면 안 됩니다. 반드시 %d일 모두에 고르게 분배하세요.\n\n" +
+            "지금 %s %s 여행코스를 위 규칙에 따라 생성해주세요:",
+            region, duration, totalDays, recommendCount, originalMessage, region, duration, keyword,
+            dayPlanBuilder.toString(),
+            totalDays,
+            totalDays, recommendCount, totalDays,
             region, duration
         );
+        
+        log.info("🤖 AI 프롬프트 전송 - 총 {}일, {}개 장소 요청", totalDays, recommendCount);
         
         return callOpenAI(travelPrompt);
     }
@@ -536,15 +663,125 @@ public class AITravelServiceImpl implements AITravelService {
         // 사용자 메시지에서 지역 정보 추출
         RegionInfo regionInfo = extractRegionInfo(userMessage);
         
-        TravelAnalysis analysis = new TravelAnalysis(defaultType, regionInfo.getRegionName(), null, "당일치기", "여행 추천 요청");
+        // 사용자 메시지에서 여행 기간 추출
+        String duration = extractDurationFromMessage(userMessage);
+        
+        TravelAnalysis analysis = new TravelAnalysis(defaultType, regionInfo.getRegionName(), null, duration, "여행 추천 요청");
         analysis.setAreaCode(regionInfo.getAreaCode());
         analysis.setSigunguCode(regionInfo.getSigunguCode());
         
-        log.info("🎯 기본 분석 - 지역: {}, 지역코드: {}, 시군구코드: {}", 
-                regionInfo.getRegionName(), regionInfo.getAreaCode(), 
+        log.info("🎯 기본 분석 - 지역: {}, 기간: {}, 지역코드: {}, 시군구코드: {}", 
+                regionInfo.getRegionName(), duration, regionInfo.getAreaCode(), 
                 regionInfo.getSigunguCode() != null ? regionInfo.getSigunguCode() : "없음");
         
         return analysis;
+    }
+
+    /**
+     * 🚀 강화된 여행 기간 추출 - 더 정확한 인식
+     */
+    private String extractDurationFromMessageEnhanced(String message) {
+        if (message == null) return "당일치기";
+        
+        String lowerMessage = message.toLowerCase().replaceAll("\\s+", "");
+        log.info("🔍 기간 추출 분석: '{}'", lowerMessage);
+        
+        // 1. 명확한 박수일 패턴 매칭 (공백 제거된 상태)
+        if (lowerMessage.contains("1박2일")) { log.info("✅ 1박2일 인식"); return "1박2일"; }
+        if (lowerMessage.contains("2박3일")) { log.info("✅ 2박3일 인식"); return "2박3일"; }
+        if (lowerMessage.contains("3박4일")) { log.info("✅ 3박4일 인식"); return "3박4일"; }
+        if (lowerMessage.contains("4박5일")) { log.info("✅ 4박5일 인식"); return "4박5일"; }
+        if (lowerMessage.contains("5박6일")) { log.info("✅ 5박6일 인식"); return "5박6일"; }
+        if (lowerMessage.contains("6박7일")) { log.info("✅ 6박7일 인식"); return "6박7일"; }
+        
+        // 2. 공백이 있는 패턴도 확인
+        String originalLower = message.toLowerCase();
+        if (originalLower.contains("1박 2일")) { log.info("✅ 1박 2일 인식"); return "1박2일"; }
+        if (originalLower.contains("2박 3일")) { log.info("✅ 2박 3일 인식"); return "2박3일"; }
+        if (originalLower.contains("3박 4일")) { log.info("✅ 3박 4일 인식"); return "3박4일"; }
+        if (originalLower.contains("4박 5일")) { log.info("✅ 4박 5일 인식"); return "4박5일"; }
+        if (originalLower.contains("5박 6일")) { log.info("✅ 5박 6일 인식"); return "5박6일"; }
+        if (originalLower.contains("6박 7일")) { log.info("✅ 6박 7일 인식"); return "6박7일"; }
+        
+        // 3. 정규식으로 박/일 패턴 찾기
+        Pattern nightDayPattern = Pattern.compile("(\\d+)박\\s?(\\d+)일");
+        Matcher nightDayMatcher = nightDayPattern.matcher(originalLower);
+        if (nightDayMatcher.find()) {
+            int nights = Integer.parseInt(nightDayMatcher.group(1));
+            int days = Integer.parseInt(nightDayMatcher.group(2));
+            String result = nights + "박" + days + "일";
+            log.info("✅ 정규식으로 {}박{}일 인식 -> {}", nights, days, result);
+            return result;
+        }
+        
+        // 4. 일수만 있는 경우 (예: "3일 여행", "4일간", "3일코스")
+        Pattern dayOnlyPattern = Pattern.compile("(\\d+)일");
+        Matcher dayMatcher = dayOnlyPattern.matcher(lowerMessage);
+        if (dayMatcher.find()) {
+            int days = Integer.parseInt(dayMatcher.group(1));
+            String result = switch (days) {
+                case 1 -> "당일치기";
+                case 2 -> "1박2일";
+                case 3 -> "2박3일";
+                case 4 -> "3박4일";
+                case 5 -> "4박5일";
+                case 6 -> "5박6일";
+                case 7 -> "6박7일";
+                default -> days > 7 ? "6박7일" : "2박3일";
+            };
+            log.info("✅ {}일 -> {} 변환", days, result);
+            return result;
+        }
+        
+        // 5. 당일치기 패턴
+        if (lowerMessage.contains("당일") || lowerMessage.contains("하루") || lowerMessage.contains("데이")) {
+            log.info("✅ 당일치기 인식");
+            return "당일치기";
+        }
+        
+        log.info("❌ 기간 인식 실패, 기본값 사용: 당일치기");
+        return "당일치기"; // 기본값
+    }
+
+    /**
+     * 사용자 메시지에서 여행 기간 추출 (레거시)
+     */
+    private String extractDurationFromMessage(String message) {
+        if (message == null) return "당일치기";
+        
+        String lowerMessage = message.toLowerCase();
+        
+        // 박수일 패턴 매칭
+        if (lowerMessage.contains("1박2일") || lowerMessage.contains("1박 2일")) return "1박2일";
+        if (lowerMessage.contains("2박3일") || lowerMessage.contains("2박 3일")) return "2박3일";
+        if (lowerMessage.contains("3박4일") || lowerMessage.contains("3박 4일")) return "3박4일";
+        if (lowerMessage.contains("4박5일") || lowerMessage.contains("4박 5일")) return "4박5일";
+        if (lowerMessage.contains("5박6일") || lowerMessage.contains("5박 6일")) return "5박6일";
+        if (lowerMessage.contains("6박7일") || lowerMessage.contains("6박 7일")) return "6박7일";
+        
+        // 일수만 있는 경우 (예: "3일 여행", "4일간")
+        Pattern dayPattern = Pattern.compile("(\\d+)일");
+        Matcher matcher = dayPattern.matcher(lowerMessage);
+        if (matcher.find()) {
+            int days = Integer.parseInt(matcher.group(1));
+            switch (days) {
+                case 1: return "당일치기";
+                case 2: return "1박2일";
+                case 3: return "2박3일";
+                case 4: return "3박4일";
+                case 5: return "4박5일";
+                case 6: return "5박6일";
+                case 7: return "6박7일";
+                default: return "2박3일";
+            }
+        }
+        
+        // 당일치기 패턴
+        if (lowerMessage.contains("당일") || lowerMessage.contains("하루")) {
+            return "당일치기";
+        }
+        
+        return "당일치기"; // 기본값
     }
     
     /**
@@ -1357,10 +1594,6 @@ public class AITravelServiceImpl implements AITravelService {
             List<Map<String, Object>> tourApiData = request.getTourApiData();
             String originalMessage = request.getMessage();
             
-            // 엄격 모드를 기본값으로 설정 (가짜 데이터 사용 방지)
-            boolean strictMode = request.getStrictMode() != null ? request.getStrictMode() : true;
-            log.info("엄격 모드 활성화: {}", strictMode);
-            
             // 여행코스 데이터와 일반 관광지 데이터 분리
             List<Map<String, Object>> travelCourses = tourApiData.stream()
                 .filter(spot -> "25".equals(String.valueOf(spot.get("contenttypeid"))))
@@ -1375,29 +1608,14 @@ public class AITravelServiceImpl implements AITravelService {
             // 키워드 추출
             String keyword = extractKeywordFromRequest(originalMessage);
             
-            // AI 응답 생성 (최대 3회 시도, 엄격 모드 지원)
-            String aiResponse = null;
-            for (int attempt = 1; attempt <= 3; attempt++) {
-                log.info("🤖 AI 응답 생성 시도 {}/3 (엄격 모드: {})", attempt, strictMode);
-                
-                aiResponse = createDataBasedRecommendation(travelCourses, otherSpots, originalMessage, keyword, attempt, strictMode);
-                
-                // 금지된 장소 사용 여부 검사 (엄격 모드에서 더 강화)
-                if (!containsForbiddenPlaces(aiResponse)) {
-                    log.info("✅ 적절한 AI 응답 생성 완료 (시도 {})", attempt);
-                    break;
-                } else {
-                    log.warn("⚠️ 금지된 장소 감지 - 재생성 필요 (시도 {})", attempt);
-                    if (attempt == 3) {
-                        log.error("❌ 3회 시도 후에도 적절한 응답 생성 실패");
-                        if (strictMode && !travelCourses.isEmpty()) {
-                            // 엄격 모드에서 실패 시 실제 데이터만으로 간단한 응답 생성
-                            aiResponse = createSimpleDataBasedResponse(travelCourses, otherSpots, originalMessage);
-                            log.info("🔒 엄격 모드 폴백: 간단한 실제 데이터 응답 생성");
-                        }
-                    }
-                }
-            }
+            // 🎯 요청 기간 추출
+            String duration = extractDurationFromMessageEnhanced(originalMessage);
+            int requiredPlaces = calculateRequiredPlaces(duration);
+            int totalDays = getTotalDaysFromDuration(duration);
+            
+            // ✅ TourAPI 우선 + AI 보완 방식으로 AI 응답 생성
+            String aiResponse = createTourAPIFirstRecommendation(travelCourses, otherSpots, originalMessage, keyword);
+            log.info("✅ TourAPI 우선 AI 응답 생성 완료");
             
             // 최종 응답 구성
             ChatResponse response = new ChatResponse();
@@ -1405,8 +1623,9 @@ public class AITravelServiceImpl implements AITravelService {
             response.setRequestType(determineRequestType(originalMessage));
             response.setStreaming(false);
             
-            // 위치 정보 생성 (TourAPI 데이터 기반)
-            List<ChatResponse.LocationInfo> locations = createLocationsFromTourAPIData(tourApiData);
+            // 🎯 요청 기간에 맞게 위치 정보 생성 (제한된 개수)
+            List<ChatResponse.LocationInfo> locations = createLocationsFromTourAPIDataWithLimit(
+                    tourApiData, requiredPlaces, totalDays);
             response.setLocations(locations);
             
             // 축제 정보 생성
@@ -1417,8 +1636,8 @@ public class AITravelServiceImpl implements AITravelService {
             ChatResponse.TravelCourse travelCourse = createTravelCourseFromTourAPI(locations, tourApiData);
             response.setTravelCourse(travelCourse);
             
-            log.info("📍 생성된 데이터 - 위치: {}개, 축제: {}개, 여행코스: {}", 
-                    locations.size(), festivals.size(), travelCourse != null ? "생성" : "없음");
+            log.info("📍 생성된 데이터 - 위치: {}개, 축제: {}개, 여행코스: {}, 요청기간: {}", 
+                    locations.size(), festivals.size(), travelCourse != null ? "생성" : "없음", duration);
             
             log.info("🎯 TourAPI 기반 응답 재생성 완료");
             return response;
@@ -1430,44 +1649,113 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 금지된 일반 관광지 사용 여부 검사
+     * 요청 기간에 맞게 제한된 LocationInfo 생성
      */
-    private boolean containsForbiddenPlaces(String aiResponse) {
-        String[] forbiddenPlaces = {
-            "경복궁", "북촌", "인사동", "명동", "청계천", "남산타워", "동대문",
-            "이태원", "홍대", "강남", "롯데월드", "63빌딩", "한강공원", "서울숲",
-            "광화문", "덕수궁", "창덕궁", "종묘", "남대문", "동대문시장",
-            "여의도", "반포", "압구정", "청담", "가로수길", "삼청동"
-        };
+    private List<ChatResponse.LocationInfo> createLocationsFromTourAPIDataWithLimit(
+            List<Map<String, Object>> tourApiData, int requiredPlaces, int totalDays) {
         
-        String responseUpper = aiResponse.toUpperCase();
-        for (String place : forbiddenPlaces) {
-            if (responseUpper.contains(place.toUpperCase())) {
-                log.warn("⚠️ 금지된 장소 감지: {}", place);
-                return true;
+        List<ChatResponse.LocationInfo> locations = new ArrayList<>();
+        
+        int dayCounter = 1;
+        int placesPerDay = Math.max(1, requiredPlaces / totalDays);
+        int extraPlaces = requiredPlaces % totalDays;
+        int currentDayPlaceCount = 0;
+        int processedCount = 0;
+        
+        log.info("🎯 위치 생성 계획 - 총 {}개, {}일 일정, 일당 {}개", requiredPlaces, totalDays, placesPerDay);
+        
+        for (Map<String, Object> data : tourApiData) {
+            if (processedCount >= requiredPlaces) break; // 필요한 개수만큼만 처리
+            
+            try {
+                String mapX = String.valueOf(data.get("mapx"));
+                String mapY = String.valueOf(data.get("mapy"));
+                String title = String.valueOf(data.get("title"));
+                String addr1 = String.valueOf(data.get("addr1"));
+                
+                // 좌표가 있는 데이터만 처리
+                if (!"null".equals(mapX) && !"null".equals(mapY) && 
+                    !"null".equals(title) && !mapX.isEmpty() && !mapY.isEmpty()) {
+                    
+                    ChatResponse.LocationInfo location = new ChatResponse.LocationInfo();
+                    location.setName(title);
+                    location.setLatitude(Double.parseDouble(mapY)); // 위도
+                    location.setLongitude(Double.parseDouble(mapX)); // 경도
+                    
+                    // 🎯 Day별 정확한 분배
+                    location.setDay(dayCounter);
+                    
+                    // 🏠 실제 주소 정보 설정
+                    if (!"null".equals(addr1) && !addr1.isEmpty()) {
+                        location.setDescription(addr1);
+                    } else {
+                        location.setDescription("주소 정보 없음");
+                    }
+                    
+                    // 🖼️ 이미지 설정
+                    String firstImage = String.valueOf(data.get("firstimage"));
+                    if (!"null".equals(firstImage) && !firstImage.isEmpty()) {
+                        location.setImage(firstImage);
+                    }
+                    
+                    // 콘텐츠 타입별 카테고리 설정
+                    String contentTypeId = String.valueOf(data.get("contenttypeid"));
+                    location.setCategory(getContentTypeNameByCode(contentTypeId));
+                    
+                    // 시간 정보 설정 (장소 순서에 따라)
+                    if (currentDayPlaceCount == 0) {
+                        location.setTime("오전 09:00");
+                    } else if (currentDayPlaceCount == 1) {
+                        location.setTime("오후 13:00");
+                    } else if (currentDayPlaceCount == 2) {
+                        location.setTime("오후 16:00");
+                    }
+                    
+                    locations.add(location);
+                    processedCount++;
+                    
+                    // Day 카운터 증가 로직 (현재 Day에 필요한 만큼 채웠는지 확인)
+                    int placesForCurrentDay = placesPerDay + (dayCounter <= extraPlaces ? 1 : 0);
+                    currentDayPlaceCount++;
+                    
+                    if (currentDayPlaceCount >= placesForCurrentDay && dayCounter < totalDays) {
+                        dayCounter++;
+                        currentDayPlaceCount = 0;
+                    }
+                    
+                    log.info("📍 위치 생성: {} (Day {}, {}) - 주소: {}", 
+                            title, location.getDay(), location.getTime(), location.getDescription());
+                }
+            } catch (Exception e) {
+                log.debug("위치 정보 생성 실패: {}", data.get("title"), e);
             }
         }
-        return false;
+        
+        log.info("📍 요청 기간에 맞게 위치 정보 생성 완료: {}개, 총 {}일 일정", 
+                locations.size(), Math.min(dayCounter, totalDays));
+        return locations;
     }
     
+    // ✅ 엄격모드 제거: 모든 관광지 사용 허용
+    
     /**
-     * TourAPI 데이터 기반 추천 생성 (간소화된 프롬프트)
+     * ✅ TourAPI 우선 + AI 보완 방식 추천 생성
      */
-    private String createDataBasedRecommendation(List<Map<String, Object>> travelCourses, 
-                                               List<Map<String, Object>> otherSpots, 
-                                               String originalMessage, 
-                                               String keyword, 
-                                               int attempt,
-                                               boolean strictMode) {
+    private String createTourAPIFirstRecommendation(List<Map<String, Object>> travelCourses, 
+                                                   List<Map<String, Object>> otherSpots, 
+                                                   String originalMessage, 
+                                                   String keyword) {
         
-        // 사용 가능한 실제 장소들만 수집
+        // 🎯 1단계: TourAPI 실제 데이터 수집
         List<String> realPlaces = new ArrayList<>();
+        List<Map<String, Object>> realPlaceDetails = new ArrayList<>();
         
         // 여행코스 우선 추가
         for (Map<String, Object> course : travelCourses) {
             String title = String.valueOf(course.get("title"));
             if (title != null && !title.equals("null")) {
                 realPlaces.add(title);
+                realPlaceDetails.add(course);
             }
         }
         
@@ -1476,97 +1764,109 @@ public class AITravelServiceImpl implements AITravelService {
             String title = String.valueOf(spot.get("title"));
             if (title != null && !title.equals("null")) {
                 realPlaces.add(title);
+                realPlaceDetails.add(spot);
             }
         }
         
-        // 실제 데이터가 없으면 폴백 응답
-        if (realPlaces.isEmpty()) {
-            return "죄송합니다. 해당 지역의 여행 정보를 찾을 수 없습니다. 다른 지역이나 키워드로 다시 시도해주세요.";
-        }
+        log.info("🌐 TourAPI 실제 데이터: {}개 수집 완료", realPlaces.size());
         
-        // 간소화된 프롬프트 생성
+        // 🎯 2단계: 사용자 요청에서 기간 분석
+        String duration = extractDurationFromMessageEnhanced(originalMessage);
+        int requiredPlaces = calculateRequiredPlaces(duration);
+        
+        // 🎯 Day별 분배 계산
+        int totalDays = getTotalDaysFromDuration(duration);
+        int placesPerDay = Math.max(1, requiredPlaces / totalDays);
+        int extraPlaces = requiredPlaces % totalDays;
+        
+        log.info("📊 요청 분석 - 기간: {}, 총 {}일, 일당 {}개 장소, 필요 총 {}개, 보유 데이터: {}개", 
+                duration, totalDays, placesPerDay, requiredPlaces, realPlaces.size());
+        
+        // 🎯 3단계: TourAPI 우선 + AI 보완 프롬프트 생성
         StringBuilder prompt = new StringBuilder();
-        prompt.append("다음 실제 관광지들을 사용해서 ").append(originalMessage).append(" 요청에 맞는 여행코스를 추천해주세요.\n\n");
         
-        prompt.append("사용할 실제 장소들:\n");
-        for (int i = 0; i < Math.min(10, realPlaces.size()); i++) {
-            prompt.append("- ").append(realPlaces.get(i)).append("\n");
+        prompt.append("🎯 ").append(originalMessage).append(" 요청에 맞는 Day별 여행코스를 추천해주세요.\n\n");
+        
+        if (!realPlaces.isEmpty()) {
+            prompt.append("✅ **우선 사용할 실제 TourAPI 데이터** (한국관광공사 검증):\n");
+            for (int i = 0; i < Math.min(realPlaces.size(), requiredPlaces); i++) {
+                Map<String, Object> details = realPlaceDetails.get(i);
+                prompt.append(String.format("%d. %s\n", i+1, realPlaces.get(i)));
+                if (details.get("addr1") != null && !details.get("addr1").toString().equals("null")) {
+                    prompt.append(String.format("   - 위치: %s\n", details.get("addr1")));
+                }
+                prompt.append(String.format("   - 좌표: [%s,%s]\n", 
+                    details.get("mapy"), details.get("mapx")));
+            }
+            prompt.append("\n");
         }
         
-        prompt.append("\n규칙:\n");
-        prompt.append("1. 위에 나열된 실제 장소명만 사용해주세요\n");
-        prompt.append("2. 이모지나 특수기호는 사용하지 마세요\n");
-        prompt.append("3. 각 장소마다 @location:[위도,경도] @day:1 형식을 포함해주세요\n");
-        prompt.append("4. 2박 3일이면 총 6개 정도의 장소를 추천해주세요\n");
-        prompt.append("5. 한국어로 자연스럽게 작성해주세요\n\n");
+        prompt.append("📋 **Day별 여행 일정 생성 규칙**:\n");
+        prompt.append("1. ").append(duration).append("(총 ").append(totalDays).append("일)에 맞춰 Day별로 명확히 구분해주세요\n");
         
-        prompt.append("예시 형식:\n");
-        prompt.append("서울 2박 3일 여행코스를 추천드립니다.\n\n");
-        prompt.append("첫째 날은 ").append(realPlaces.get(0));
-        prompt.append(" @location:[37.5665,126.9780] @day:1에서 시작합니다.\n");
-        if (realPlaces.size() > 1) {
-            prompt.append("이어서 ").append(realPlaces.get(1));
-            prompt.append(" @location:[37.5665,126.9780] @day:1을 방문해보세요.\n\n");
+        // Day별 배치 계획 상세 명시
+        for (int day = 1; day <= totalDays; day++) {
+            int placesForThisDay = placesPerDay + (day <= extraPlaces ? 1 : 0);
+            prompt.append("   - **Day ").append(day).append("**: 정확히 ")
+                  .append(placesForThisDay).append("개 장소 추천 (필수)\n");
         }
+        
+        prompt.append("2. 위의 TourAPI 실제 데이터를 **최대한 우선적으로** 사용해주세요\n");
+        prompt.append("3. 데이터가 부족하면 유명한 관광지로 보완하되, 반드시 Day별 개수를 맞춰주세요\n");
+        prompt.append("4. 각 장소마다 '@location:[위도,경도] @day:숫자' 형식 필수 포함\n");
+        prompt.append("5. Day별로 시간순 배치 (오전 9시 → 오후 1시 → 오후 4시 순)\n");
+        prompt.append("6. 이모지나 특수기호는 사용하지 마세요\n");
+        prompt.append("7. 자연스러운 한국어로 작성해주세요\n\n");
+        
+        prompt.append("🗓️ **응답 형식 예시**:\n");
+        prompt.append("Day 1\n");
+        prompt.append("오전 9:00 - [장소명1] @location:[위도,경도] @day:1\n");
+        prompt.append("오후 1:00 - [장소명2] @location:[위도,경도] @day:1\n");
+        prompt.append("오후 4:00 - [장소명3] @location:[위도,경도] @day:1\n\n");
+        prompt.append("Day 2\n");
+        prompt.append("오전 9:00 - [장소명4] @location:[위도,경도] @day:2\n");
+        prompt.append("...\n\n");
+        
+        prompt.append("🎯 **").append(duration).append(" 일정으로 총 ").append(totalDays)
+              .append("일간 Day별 여행코스를 정확히 추천해주세요!**\n");
+        prompt.append("(TourAPI 실제 데이터 우선 + 부족한 부분만 AI 보완 + Day별 정확한 분배)");
         
         return callOpenAI(prompt.toString());
     }
     
     /**
-     * 엄격 모드 폴백: 간단한 실제 데이터 기반 응답 생성 (완전 텍스트만 사용)
+     * 여행 기간에서 총 일수 추출
      */
-    private String createSimpleDataBasedResponse(List<Map<String, Object>> travelCourses, 
-                                               List<Map<String, Object>> otherSpots, 
-                                               String originalMessage) {
-        StringBuilder response = new StringBuilder();
-        
-        response.append("실제 TourAPI 데이터 기반 추천\n\n");
-        response.append("한국관광공사에서 제공하는 검증된 여행 정보를 소개해드립니다.\n\n");
-        
-        // 여행코스 우선 표시
-        if (!travelCourses.isEmpty()) {
-            response.append("[추천 여행코스]\n");
-            int count = 0;
-            for (Map<String, Object> course : travelCourses) {
-                if (count >= 3) break; // 최대 3개
-                response.append(String.format("%d. %s\n", count + 1, course.get("title")));
-                if (course.get("addr1") != null && !course.get("addr1").toString().isEmpty()) {
-                    response.append(String.format("   위치: %s\n", course.get("addr1")));
-                }
-                response.append("   유형: 여행코스\n\n");
-                count++;
-            }
+    private int getTotalDaysFromDuration(String duration) {
+        switch (duration) {
+            case "당일치기": return 1;
+            case "1박2일": return 2;
+            case "2박3일": return 3;
+            case "3박4일": return 4;
+            case "4박5일": return 5;
+            case "5박6일": return 6;
+            case "6박7일": return 7;
+            default: return 2;
         }
-        
-        // 일반 관광지 표시
-        if (!otherSpots.isEmpty()) {
-            response.append("[추천 관광지]\n");
-            int count = 0;
-            for (Map<String, Object> spot : otherSpots) {
-                if (count >= 3) break; // 최대 3개로 확대
-                String category = getContentTypeNameByCode(String.valueOf(spot.get("contenttypeid")));
-                response.append(String.format("%d. %s\n", count + 1, spot.get("title")));
-                if (spot.get("addr1") != null && !spot.get("addr1").toString().isEmpty()) {
-                    response.append(String.format("   위치: %s\n", spot.get("addr1")));
-                }
-                response.append(String.format("   유형: %s\n\n", category));
-                count++;
-            }
-        }
-        
-        response.append("위 정보는 한국관광공사 TourAPI에서 제공하는 실제 데이터입니다.");
-        
-        // 완전히 깔끔한 텍스트만 반환 (이모지 제거 필수 적용)
-        String finalResponse = removeEmojis(response.toString());
-        
-        // 추가 검증: 혹시 남은 특수문자들 제거
-        finalResponse = finalResponse
-            .replaceAll("[^\\p{L}\\p{N}\\p{P}\\p{Z}\\n\\r]", "") // 문자, 숫자, 구두점, 공백만 허용
-            .replaceAll("\\s+", " ")
-            .trim();
-            
-        return finalResponse;
     }
+    
+    /**
+     * 기간별 필요 장소 수 계산
+     */
+    private int calculateRequiredPlaces(String duration) {
+        switch (duration) {
+            case "당일치기": return 3;
+            case "1박2일": return 4;
+            case "2박3일": return 6;
+            case "3박4일": return 8;
+            case "4박5일": return 10;
+            case "5박6일": return 12;
+            case "6박7일": return 14;
+            default: return 6;
+        }
+    }
+    
+    // ✅ 엄격모드 제거로 불필요해진 메서드 제거됨
     
     /**
      * 콘텐츠 타입 코드를 이름으로 변환
@@ -1599,16 +1899,28 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * TourAPI 데이터에서 직접 LocationInfo 생성
+     * TourAPI 데이터에서 직접 LocationInfo 생성 (요청 기간에 맞게 제한)
      */
     private List<ChatResponse.LocationInfo> createLocationsFromTourAPIData(List<Map<String, Object>> tourApiData) {
         List<ChatResponse.LocationInfo> locations = new ArrayList<>();
         
+        // 🎯 필요한 개수 계산 (요청 메시지에서 기간 추출)
+        // 현재 요청된 기간에 맞게 제한
+        int maxLocations = Math.min(tourApiData.size(), 15); // 최대 15개로 제한
+        
+        int dayCounter = 1;
+        int placesPerDay = 3; // 하루에 3개 장소 기준
+        int currentDayPlaceCount = 0;
+        int processedCount = 0;
+        
         for (Map<String, Object> data : tourApiData) {
+            if (processedCount >= maxLocations) break; // 필요한 개수만큼만 처리
+            
             try {
                 String mapX = String.valueOf(data.get("mapx"));
                 String mapY = String.valueOf(data.get("mapy"));
                 String title = String.valueOf(data.get("title"));
+                String addr1 = String.valueOf(data.get("addr1"));
                 
                 // 좌표가 있는 데이터만 처리
                 if (!"null".equals(mapX) && !"null".equals(mapY) && 
@@ -1618,29 +1930,60 @@ public class AITravelServiceImpl implements AITravelService {
                     location.setName(title);
                     location.setLatitude(Double.parseDouble(mapY)); // 위도
                     location.setLongitude(Double.parseDouble(mapX)); // 경도
-                    location.setDay(1); // 기본값
-                    location.setDescription(String.valueOf(data.get("addr1")));
-                    location.setImage(String.valueOf(data.get("firstimage")));
+                    
+                    // 🎯 Day별 균등 분배 로직
+                    location.setDay(dayCounter);
+                    
+                    // 🏠 실제 주소 정보 설정
+                    if (!"null".equals(addr1) && !addr1.isEmpty()) {
+                        location.setDescription(addr1);
+                    } else {
+                        location.setDescription("주소 정보 없음");
+                    }
+                    
+                    // 🖼️ 이미지 설정
+                    String firstImage = String.valueOf(data.get("firstimage"));
+                    if (!"null".equals(firstImage) && !firstImage.isEmpty()) {
+                        location.setImage(firstImage);
+                    }
                     
                     // 콘텐츠 타입별 카테고리 설정
                     String contentTypeId = String.valueOf(data.get("contenttypeid"));
                     location.setCategory(getContentTypeNameByCode(contentTypeId));
                     
+                    // 시간 정보 설정 (장소 순서에 따라)
+                    if (currentDayPlaceCount == 0) {
+                        location.setTime("오전 09:00");
+                    } else if (currentDayPlaceCount == 1) {
+                        location.setTime("오후 13:00");
+                    } else if (currentDayPlaceCount == 2) {
+                        location.setTime("오후 16:00");
+                    }
+                    
                     locations.add(location);
+                    processedCount++;
+                    
+                    // Day 카운터 증가 로직
+                    currentDayPlaceCount++;
+                    if (currentDayPlaceCount >= placesPerDay) {
+                        dayCounter++;
+                        currentDayPlaceCount = 0;
+                    }
+                    
+                    log.info("📍 위치 생성: {} (Day {}, {}) - 주소: {}", 
+                            title, location.getDay(), location.getTime(), location.getDescription());
                 }
             } catch (Exception e) {
                 log.debug("위치 정보 생성 실패: {}", data.get("title"), e);
             }
         }
         
-        log.info("📍 TourAPI에서 위치 정보 생성: {}개", locations.size());
+        log.info("📍 TourAPI에서 위치 정보 생성: {}개, 총 {}일 일정 (요청 기간에 맞게 제한)", 
+                locations.size(), dayCounter);
         return locations;
     }
     
-    private List<ChatResponse.LocationInfo> extractLocationsFromTourAPIData(String aiResponse, List<Map<String, Object>> tourApiData) {
-        // 이전 방식 (사용 안함, 하위 호환성 유지)
-        return extractLocationsFromAIResponse(aiResponse, createDefaultAnalysis(""));
-    }
+
     
     private List<ChatResponse.FestivalInfo> createFestivalInfoFromTourAPI(List<Map<String, Object>> tourApiData) {
         List<ChatResponse.FestivalInfo> festivals = tourApiData.stream()
@@ -1709,26 +2052,30 @@ public class AITravelServiceImpl implements AITravelService {
         
         travelCourse.setCourseTitle(courseTitle);
         
-        // 총 일수 계산 (위치 개수 기반)
-        int totalDays = Math.max(1, (int) Math.ceil(locations.size() / 3.0)); // 하루에 3개 장소 기준
-        travelCourse.setTotalDays(totalDays);
+        // 🎯 실제 위치 개수와 Day 정보를 기반으로 총 일수 계산
+        int maxDay = locations.stream()
+            .mapToInt(ChatResponse.LocationInfo::getDay)
+            .max()
+            .orElse(1);
+        
+        travelCourse.setTotalDays(maxDay);
         
         // 일별 일정 생성
         List<ChatResponse.DailySchedule> dailySchedules = new ArrayList<>();
         
-        for (int day = 1; day <= totalDays; day++) {
+        for (int day = 1; day <= maxDay; day++) {
             ChatResponse.DailySchedule dailySchedule = new ChatResponse.DailySchedule();
             dailySchedule.setDay(day);
             dailySchedule.setTheme("Day " + day + " 일정");
             
-            // 해당 날짜의 장소들 생성
-            List<ChatResponse.PlaceInfo> places = new ArrayList<>();
-            int startIndex = (day - 1) * 3;
-            int endIndex = Math.min(startIndex + 3, locations.size());
+            // 해당 날짜의 장소들 필터링
+            List<ChatResponse.LocationInfo> dayLocations = locations.stream()
+                .filter(location -> location.getDay() == day)
+                .collect(Collectors.toList());
             
-            for (int i = startIndex; i < endIndex; i++) {
-                ChatResponse.LocationInfo location = locations.get(i);
-                
+            List<ChatResponse.PlaceInfo> places = new ArrayList<>();
+            
+            for (ChatResponse.LocationInfo location : dayLocations) {
                 ChatResponse.PlaceInfo place = new ChatResponse.PlaceInfo();
                 place.setName(location.getName());
                 place.setType("attraction");
@@ -1736,7 +2083,7 @@ public class AITravelServiceImpl implements AITravelService {
                 place.setDescription(location.getCategory() + " - " + location.getName());
                 place.setLatitude(location.getLatitude());
                 place.setLongitude(location.getLongitude());
-                place.setVisitTime("오전"); // 기본값
+                place.setVisitTime(location.getTime() != null ? location.getTime() : "시간 미정");
                 place.setDuration("2시간"); // 기본값
                 place.setCategory(location.getCategory());
                 
@@ -1750,7 +2097,7 @@ public class AITravelServiceImpl implements AITravelService {
         travelCourse.setDailySchedule(dailySchedules);
         
         log.info("🗺️ 여행코스 생성: {}, {}일 일정, 총 {}개 장소", 
-                courseTitle, totalDays, locations.size());
+                courseTitle, maxDay, locations.size());
         
         return travelCourse;
     }

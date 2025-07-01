@@ -253,8 +253,8 @@ const MyPageEditProfile = () => {
                                                 닉네임은 2~15자여야 합니다.
                                             </p>
                                         )}
-                                    {isValidNickname(profileData.nickname.trim() || "") &&
-                                        profileData.nickname.trim() !== originalNicknameRef.current &&
+                                    {isValidNickname(profileData.nickname?.trim() || "") &&
+                                        profileData.nickname?.trim() !== originalNicknameRef.current &&
                                         (
                                             nicknameCheckLoading ? (
                                                 <p className="nickname-message info">중복 확인 중...</p>
