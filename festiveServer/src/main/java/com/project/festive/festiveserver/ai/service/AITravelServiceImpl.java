@@ -29,7 +29,7 @@ public class AITravelServiceImpl implements AITravelService {
     @Value("${openai.api.key:}")
     private String openAiApiKey;
     
-    @Value("${tour.api.service.key:}")
+    @Value("${tour.api.service-key:}")
     private String tourApiServiceKey;
     
     // 지역코드 및 시군구 코드 매핑
