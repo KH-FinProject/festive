@@ -1,4 +1,4 @@
-// src/components/MyPage/MyPageCalendar.js
+// src/components/MyPage/MyPageCalendar.jsx
 import React, { useState, useEffect } from 'react';
 import './MyPageWithdrawal.css'; // 필요한 스타일은 유지
 import './MyPageCalendar.css';   // 캘린더 관련 스타일
@@ -13,7 +13,7 @@ import useAuthStore from "../../store/useAuthStore"; // Zustand 스토어 예시
 const addOneDay = (dateStr) => {
     const date = new Date(dateStr);
     date.setDate(date.getDate() + 1);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD 형식으로 반환
+    return date.toISOString().split('T')[0]; // yyyy-MM-dd 형식으로 반환
 };
 
 
@@ -40,16 +40,23 @@ const MyPageCalendar = () => {
         })
             .then(res => {
                 if (!res.ok) {
-                    throw new Error('데이터를 불러오는 데 실패했습니다.');
+                    // 응답이 실패했을 때 응답 객체 자체를 에러로 던져서 catch에서 확인
+                    throw res;
                 }
                 return res.json();
             })
             .then(data => {
+                console.log("서버로부터 받은 찜 목록 데이터:", data); // 성공 시 받은 데이터 확인용 로그
                 setFestivals(data);
             })
             .catch(err => {
+                // 오류 객체 전체를 로그로 출력하여 상태 코드 등 상세 정보 확인
                 console.error("찜한 축제 목록 조회 에러:", err);
-                alert(err.message);
+                // err.text()를 통해 서버가 보낸 에러 메시지를 볼 수 있음
+                err.text().then(errorMessage => {
+                    console.error("서버 에러 메시지:", errorMessage);
+                    alert('데이터를 불러오는 데 실패했습니다. 콘솔을 확인해주세요.');
+                });
             });
     }, [member, navigate]);
 
@@ -71,12 +78,16 @@ const MyPageCalendar = () => {
                         prevFestivals.filter(festival => festival.contentId !== contentId)
                     );
                 } else {
-                    throw new Error("찜 해제에 실패했습니다.");
+                    // 여기서도 에러 객체를 던져서 상세히 확인
+                    throw res;
                 }
             })
             .catch(err => {
                 console.error("찜 해제 에러:", err);
-                alert(err.message);
+                err.text().then(errorMessage => {
+                    console.error("서버 에러 메시지:", errorMessage);
+                    alert('찜 해제에 실패했습니다. 콘솔을 확인해주세요.');
+                });
             });
     };
 

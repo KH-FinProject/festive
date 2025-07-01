@@ -6,9 +6,10 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import axiosApi from "../../api/axiosAPI";
 
-// 닉네임 유효성 검사 함수
+// 닉네임 유효성 검사 함수 (공백 허용X, 2~15자)
 const isValidNickname = (nickname) => {
     if (!nickname) return false;
+    if (/\s/.test(nickname)) return false; // 공백 포함시 false
     return nickname.length >= 2 && nickname.length <= 15;
 };
 
@@ -36,7 +37,6 @@ const MyPageEditProfile = () => {
         try {
             const response = await axiosApi.get(`/mypage/profile`);
             const data = response.data;
-            console.log(data);
             setProfileData({
                 name: data.name,
                 nickname: data.nickname,
@@ -58,7 +58,7 @@ const MyPageEditProfile = () => {
 
     // --- 닉네임 중복체크 (입력 시 debounce로 자동) ---
     useEffect(() => {
-        const nickname = profileData.nickname?.trim() || "";
+        const nickname = profileData.nickname || "";
 
         // 자기 닉네임 그대로면 항상 통과
         if (nickname === originalNicknameRef.current) {
@@ -66,7 +66,7 @@ const MyPageEditProfile = () => {
             setNicknameCheckLoading(false);
             return;
         }
-        // 닉네임이 유효성 조건(2~15자) 미달이면 미체크
+        // 닉네임 유효성 체크 (공백 포함시 미체크)
         if (!isValidNickname(nickname)) {
             setIsNicknameAvailable(null);
             setNicknameCheckLoading(false);
@@ -78,10 +78,9 @@ const MyPageEditProfile = () => {
         nicknameCheckTimeout.current = setTimeout(async () => {
             try {
                 const response = await axiosApi.get(
-                  `/mypage/profile/checkNickname?nickname=${nickname}`
+                    `/mypage/profile/checkNickname?nickname=${nickname}`
                 );
                 const data = response.data;
-                console.log(data);
                 setIsNicknameAvailable(!data.isDuplicate);
             } catch (error) {
                 setIsNicknameAvailable(null);
@@ -98,12 +97,21 @@ const MyPageEditProfile = () => {
     // --- 입력 값 변경 핸들러 ---
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setProfileData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        if (name === "nickname") {
+            // 닉네임 내 모든 공백 자동 제거 (입력 불가)
+            const noSpaceValue = value.replace(/\s/g, "");
+            setProfileData((prev) => ({
+                ...prev,
+                [name]: noSpaceValue,
+            }));
+        } else {
+            setProfileData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
     };
-  
+
     // --- 프로필 이미지 파일 선택 핸들러 (모달 내부) ---
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -130,10 +138,10 @@ const MyPageEditProfile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // 닉네임 유효성 체크
-        const nickname = profileData.nickname?.trim() || "";
+        const nickname = profileData.nickname || "";
+        // 닉네임 유효성 체크 (공백 체크 포함)
         if (!isValidNickname(nickname)) {
-            alert("닉네임은 2~15자로 입력해주세요.");
+            alert("닉네임은 공백 없이 2~15자만 입력 가능합니다.");
             return;
         }
         // 자기 닉네임 아니고 사용 불가(중복) 상태
@@ -237,17 +245,19 @@ const MyPageEditProfile = () => {
                                         />
                                     </div>
                                     {/* 닉네임 안내/검사 메시지 */}
-                                    {profileData.nickname?.trim() === "" && (
+                                    {profileData.nickname === "" && (
                                         <p className="nickname-message info">닉네임을 입력하세요.</p>
                                     )}
-                                    {profileData.nickname?.trim() &&
-                                        !isValidNickname(profileData.nickname.trim()) && (
+                                    {/* 유효성 검사: 공백/길이 조건 */}
+                                    {profileData.nickname &&
+                                        !isValidNickname(profileData.nickname) && (
                                             <p className="nickname-message error">
-                                                닉네임은 2~15자여야 합니다.
+                                                닉네임은 공백 없이 2~15자여야 합니다.
                                             </p>
                                         )}
-                                    {isValidNickname(profileData.nickname?.trim() || "") &&
-                                        profileData.nickname?.trim() !== originalNicknameRef.current &&
+                                    {/* 중복검사 메시지 */}
+                                    {isValidNickname(profileData.nickname) &&
+                                        profileData.nickname !== originalNicknameRef.current &&
                                         (
                                             nicknameCheckLoading ? (
                                                 <p className="nickname-message info">중복 확인 중...</p>
