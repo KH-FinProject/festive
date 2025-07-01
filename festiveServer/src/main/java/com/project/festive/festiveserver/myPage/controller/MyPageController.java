@@ -6,9 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +30,7 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -283,37 +282,18 @@ public class MyPageController {
         }
     }
     
-    @GetMapping("/mycalendar")
-    public ResponseEntity<List<MyCalendarDto>> getMyFavoriteFestivals(
-            @AuthenticationPrincipal CustomUserDetails userDetails) { // Spring Security를 통해 로그인한 사용자 정보 가져오기
-    	// 안전한 인증 정보 추출
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        Object principal = authentication.getPrincipal();
-    	userDetails = (CustomUserDetails) principal;
-    	
-        // 로그인하지 않은 사용자 처리 (Security 설정에서 처리하는 것이 더 좋음)
-        if (userDetails == null) {
-            return ResponseEntity.status(401).build();
-        }
+ // 1. 찜한 축제 목록 조회 (내 캘린더에 표시용)
+//    @GetMapping("/mycalendar")
+//    public List<MyCalendarDto> getMyFavoriteFestivals(HttpSession session) {
+//        Long memberNo = (Long) session.getAttribute("memberNo");
+//        return service.getMyFavoriteFestivals(memberNo);
+//    }
 
-        long memberNo = userDetails.getMemberNo(); // UserDetails에서 회원번호 가져오기
-        List<MyCalendarDto> festivals = service.getFavoriteFestivals(memberNo);
-        return ResponseEntity.ok(festivals);
-    }
-    
+    // 2. 찜 해제
     @DeleteMapping("/favorites/{contentId}")
-    public ResponseEntity<Void> unfavoriteFestival(
-            @PathVariable("contentId") String contentId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-            
-        if (userDetails == null) {
-            return ResponseEntity.status(401).build();
-        }
-        
-        long memberNo = userDetails.getMemberNo();
-        service.removeFavorite(memberNo, contentId);
-        return ResponseEntity.ok().build();
+    public void deleteFavorite(@PathVariable("contentId") String contentId, HttpSession session) {
+        Long memberNo = (Long) session.getAttribute("memberNo");
+        service.deleteFavorite(memberNo, contentId);
     }
 
 }

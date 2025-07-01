@@ -43,10 +43,10 @@ public interface MyPageService {
     boolean checkPassword(Long memberNo, String rawPassword);
     
     // 찜 목록 가져오기
-    List<MyCalendarDto> getFavoriteFestivals(long memberNo);
+//    List<MyCalendarDto> getMyFavoriteFestivals(Long memberNo);
     
     // 찜 해제
-    void removeFavorite(long memberNo, String contentId);
+    void deleteFavorite(Long memberNo, String contentId);
 
 
 
