@@ -16,6 +16,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import PublicCarPark from "./MapApi";
 import StayModal from "./StayModal";
 import DetailWeather from "./DetailWeatherAPI";
+import LikeButton from "./LikeButton";
 
 // 축제 상태 진행
 const getFestivalStatus = (start, end) => {
@@ -326,6 +327,7 @@ const FestivalDetail = () => {
                   {festivalDetail.eventstartdate} ~{" "}
                   {festivalDetail.eventenddate}
                 </span>
+                <LikeButton contentId={contentId} />
               </div>
             </div>
 

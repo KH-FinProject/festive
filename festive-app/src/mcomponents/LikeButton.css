@@ -1,0 +1,104 @@
+/* 좋아요 버튼 */
+/* 컨테이너 */
+.like-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+
+/* 하트 버튼 */
+.heart-button {
+  position: relative;
+  padding: 2px 5px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  transform: scale(1);
+  border-radius: 50%;
+}
+
+.heart-button:hover {
+  transform: scale(1.1);
+}
+
+.heart-button:active {
+  transform: scale(0.95);
+}
+
+/* 좋아요 상태일 때 통통 튀는 효과 */
+/* .heart-button.liked {
+  animation: heartPop 0.3s ease-out;
+}
+ */
+/* 하트 이미지 */
+.heart-image {
+  width: 18px;
+  height: 18px;
+  display: block;
+  transition: all 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.heart-button:hover .heart-image {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+/* 파티클 효과 */
+/* .particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #ff6b9d;
+  border-radius: 50%;
+  animation: particleFloat 0.8s ease-out forwards;
+} */
+
+/* 하트 팝 애니메이션 */
+/* @keyframes heartPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 파티클 플로팅 애니메이션 */
+/*@keyframes particleFloat {
+  0% {
+    transform: scale(0) translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1) translateY(-10px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0) translateY(-20px);
+    opacity: 0;
+  }
+} */
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .heart-image {
+    width: 40px;
+    height: 40px;
+  }
+
+  .particle {
+    width: 4px;
+    height: 4px;
+  }
+}
