@@ -4,6 +4,7 @@ import "./MyPageWithdrawal.css"; // 공통 스타일 유지
 import MyPageSideBar from "./MyPageSideBar.jsx";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
+import axiosApi from "../../api/axiosAPI";
 
 // 닉네임 유효성 검사 함수
 const isValidNickname = (nickname) => {
@@ -32,16 +33,10 @@ const MyPageEditProfile = () => {
 
     // --- 초기 프로필 정보 로드 ---
     const fetchProfileInfo = useCallback(async () => {
-        if (!member) {
-            alert("로그인이 필요합니다.");
-            navigate("/signin");
-            return;
-        }
         try {
-            const response = await fetch(`http://localhost:8080/mypage/profile`, {
-                credentials: "include",
-            });
-            const data = await response.json();
+            const response = await axiosApi.get(`/mypage/profile`);
+            const data = response.data;
+            console.log(data);
             setProfileData({
                 name: data.name,
                 nickname: data.nickname,
@@ -82,13 +77,11 @@ const MyPageEditProfile = () => {
         setNicknameCheckLoading(true);
         nicknameCheckTimeout.current = setTimeout(async () => {
             try {
-                const response = await fetch(
-                    `http://localhost:8080/mypage/profile/checkNickname?nickname=${encodeURIComponent(
-                        nickname
-                    )}`,
-                    { credentials: "include" }
+                const response = await axiosApi.get(
+                  `/mypage/profile/checkNickname?nickname=${nickname}`
                 );
-                const data = await response.json();
+                const data = response.data;
+                console.log(data);
                 setIsNicknameAvailable(!data.isDuplicate);
             } catch (error) {
                 setIsNicknameAvailable(null);
@@ -110,7 +103,7 @@ const MyPageEditProfile = () => {
             [name]: value,
         }));
     };
-
+  
     // --- 프로필 이미지 파일 선택 핸들러 (모달 내부) ---
     const handleFileChange = (e) => {
         const file = e.target.files[0];

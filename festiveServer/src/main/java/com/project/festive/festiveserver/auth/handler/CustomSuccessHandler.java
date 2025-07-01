@@ -2,7 +2,11 @@ package com.project.festive.festiveserver.auth.handler;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -10,6 +14,7 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
+import com.project.festive.festiveserver.auth.service.AuthService;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 
 import jakarta.servlet.ServletException;
@@ -27,55 +32,53 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     this.jwtUtil = jwtUtil;
   }
 
+  // 순환 참조 방지를 위해 필드 주입 사용
+  @Autowired
+  private AuthService authService;
+
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
       Authentication authentication) throws IOException, ServletException {
 
-    log.info("OAuth2 로그인 성공 처리 시작");
-
+    // 핵심 상황만 로그 남김
+    log.info("OAuth2 로그인 성공 처리");
     try {
       CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
-      
-      // 사용자 권한 정보 추출
       String role = authentication.getAuthorities().iterator().next().getAuthority();
-
-      String accessToken = jwtUtil.generateAccessToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
-      String refreshToken = jwtUtil.generateRefreshToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role);
-
-      log.info("JWT 토큰 생성 완료");
-
-      // Access Token 쿠키 설정
+      String accessToken = jwtUtil.generateAccessToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role, customUserDetails.getSocialId());
+      String refreshToken = jwtUtil.generateRefreshToken(customUserDetails.getMemberNo(), customUserDetails.getEmail(), role, customUserDetails.getSocialId());
+      
+      // 토큰 발급 성공 로그
+      log.info("JWT 토큰 발급 완료");
       ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
           .httpOnly(true)
-          // .secure(true)
-          // .sameSite("Strict")
+          .secure(false)
+          .sameSite("Lax")
           .maxAge(Duration.ofMinutes(30))
           .path("/")
           .build();
-          
 
-      // Refresh Token 쿠키 설정
       ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
           .httpOnly(true)
-          // .secure(true)
-          // .sameSite("Strict")
-          .maxAge(Duration.ofDays(7)) // 7일
-          .path("/") // 모든 경로에서 사용 가능하도록 변경
+          .secure(false)
+          .sameSite("Lax")
+          .maxAge(Duration.ofDays(7))
+          .path("/")
           .build();
 
       response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
       response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-      log.info("토큰 쿠키 설정 완료");
-
-      log.info("OAuth2 로그인 성공 처리 완료");
+      Date expirationDate = jwtUtil.getExpirationDate(refreshToken);
+      LocalDateTime localExpirationDate = expirationDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
       
-      // 프론트엔드 메인 페이지로 리다이렉트
+      authService.saveRefreshToken(customUserDetails.getMemberNo(), refreshToken, localExpirationDate);
+      
       response.sendRedirect("http://localhost:5173/");
 
     } catch (Exception e) {
-      log.error("OAuth2 로그인 성공 처리 중 오류 발생", e);
-
+      log.error("OAuth2 로그인 성공 처리 중 오류 발생: {}", e.getMessage(), e);
+      
       if (!response.isCommitted()) {
         response.sendRedirect("http://localhost:5173/signin?error=oauth_failed");
       }

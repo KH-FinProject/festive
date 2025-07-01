@@ -10,13 +10,13 @@ import com.project.festive.festiveserver.member.entity.Member;
 public interface AuthService {
 	Map<String, Object> login(LoginRequest request) throws RuntimeException;
 
+	void logout(Long memberNo);
+
 	Member findMember(Long memberNo);
 
 	String findRefreshToken(Long memberNo);
 
 	LocalDateTime findRefreshTokenExpiration(Long memberNo);
-
-	void logout(Long memberNo);
 
 	int updatePasswordByMemberNo(Long memberNo, String string);
 	
@@ -39,4 +39,9 @@ public interface AuthService {
 
 	// 변경할 이메일 중복 검사 - 지현이가 추가한 코드
 	boolean isEmailDuplicate(String email);
+
+	/**
+	 * OAuth2 및 일반 로그인 시 refreshToken을 DB에 저장하는 메서드
+	 */
+	void saveRefreshToken(Long memberNo, String refreshToken, LocalDateTime expirationDate);
 }

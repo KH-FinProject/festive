@@ -13,6 +13,7 @@ import {
 import "./GeneralBoard.css";
 import { useNavigate } from "react-router-dom";
 import Pagination, { usePagination } from "./Pagination";
+import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 
 const PAGE_SIZE = 7;
 
@@ -25,6 +26,14 @@ function GeneralBoard({ hideTitle, hideWriteBtn }) {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+
+  // 글쓰기 버튼 클릭 핸들러
+  const handleWriteClick = async () => {
+    const canProceed = await checkNicknameForSocialUser(navigate);
+    if (canProceed) {
+      navigate("/wagle/write");
+    }
+  };
 
   // API에서 게시글 목록 가져오기
   const fetchPosts = async (
@@ -227,7 +236,7 @@ function GeneralBoard({ hideTitle, hideWriteBtn }) {
           {!hideWriteBtn && (
             <button
               className="wagle-write-btn"
-              onClick={() => navigate("/wagle/write")}
+              onClick={handleWriteClick}
             >
               글쓰기
             </button>

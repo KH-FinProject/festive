@@ -44,4 +44,10 @@ public class GoogleResponse implements OAuth2Response {
         return value != null ? value.toString() : "";
     }
 
+    @Override
+    public String getTel() {
+        Object value = attribute.get("phone_number");
+        return value != null ? value.toString() : "";
+    }
+
 }

@@ -6,6 +6,7 @@ import Pagination from "../wagle/Pagination";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 
 const CustomerCenter = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,8 +25,12 @@ const CustomerCenter = () => {
     setTotalPages(pages);
   };
 
-  const handleWriteClick = () => {
-    navigate("/customer-center/write");
+  // 글쓰기 버튼 클릭 핸들러
+  const handleWriteClick = async () => {
+    const canProceed = await checkNicknameForSocialUser(navigate);
+    if (canProceed) {
+      navigate("/customer-center/write");
+    }
   };
 
   const handleSearch = () => {
