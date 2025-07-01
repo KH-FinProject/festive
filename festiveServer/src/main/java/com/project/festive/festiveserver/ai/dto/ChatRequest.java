@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -15,6 +16,9 @@ public class ChatRequest {
     private List<ChatMessage> history; // 대화 기록
     private FestivalData festivalData; // 축제 정보 (TourAPI)
     private List<NearbySpot> nearbySpots; // 주변 관광지 정보 (TourAPI)
+    private List<Map<String, Object>> tourApiData; // 프론트엔드에서 받은 TourAPI 데이터
+    private Map<String, Object> analysisInfo; // 분석 정보
+    private Boolean strictMode; // 엄격 모드 (실제 TourAPI 데이터만 사용)
     
     @Data
     @NoArgsConstructor
