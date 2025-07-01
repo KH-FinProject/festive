@@ -12,6 +12,7 @@ const VerticalSlider = () => {
       navigate(path);
     }
   };
+
   // 축제 슬라이드 데이터
   const slides = [
     {
@@ -78,10 +79,10 @@ const VerticalSlider = () => {
   }, []);
 
   return (
-    <div className="slider-container">
+    <div className="vertical-slider-container">
       {/* 왼쪽 텍스트 슬라이드 */}
       <div
-        className="left-slide"
+        className="vertical-left-slide"
         style={{
           top: `${-(slides.length - 1) * 100}%`,
           transform: `translateY(${activeSlideIndex * 100}%)`,
@@ -104,7 +105,7 @@ const VerticalSlider = () => {
 
       {/* 오른쪽 이미지 슬라이드 */}
       <div
-        className="right-slide"
+        className="vertical-right-slide"
         style={{
           transform: `translateY(${-activeSlideIndex * 100}%)`,
         }}
@@ -121,21 +122,21 @@ const VerticalSlider = () => {
         ))}
       </div>
 
-      {/*/!* 컨트롤 버튼 *!/*/}
-      {/*<div className="action-buttons">*/}
-      {/*  <button*/}
-      {/*    className="slider-button down-button"*/}
-      {/*    onClick={() => changeSlide("down")}*/}
-      {/*  >*/}
-      {/*    <ChevronDown size={20} />*/}
-      {/*  </button>*/}
-      {/*  <button*/}
-      {/*    className="slider-button up-button"*/}
-      {/*    onClick={() => changeSlide("up")}*/}
-      {/*  >*/}
-      {/*    <ChevronUp size={20} />*/}
-      {/*  </button>*/}
-      {/*</div>*/}
+      {/* 컨트롤 버튼 */}
+      <div className="vertical-action-buttons">
+        <button
+          className="vertical-slider-button vertical-down-button"
+          onClick={() => changeSlide("down")}
+        >
+          <ChevronDown size={20} />
+        </button>
+        <button
+          className="vertical-slider-button vertical-up-button"
+          onClick={() => changeSlide("up")}
+        >
+          <ChevronUp size={20} />
+        </button>
+      </div>
     </div>
   );
 };

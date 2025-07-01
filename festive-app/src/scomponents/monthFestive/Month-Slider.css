@@ -1,153 +1,223 @@
-/* Month-Slider.css */
-.slider-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 0;
-    overflow: hidden;
-    height: 500px;
+/* Month-Slider.css (Festival Slick 슬라이더용으로 업데이트) */
+
+.festival-slider-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 6rem; /* 좌우 패딩 증가로 화살표 공간 확보 */
+  overflow: visible; /* 화살표가 보이도록 변경 */
+  height: 500px;
 }
 
-.slider-container .container {
-    display: flex;
-    width: 70%;
-    height: 50vh;
+.festival-slick-wrapper {
+  width: 70%;
+  height: 50vh;
+  position: relative;
 }
 
-.slider-container .panel {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    height: 100%;
-    border-radius: 50px;
-    color: #fff;
-    cursor: pointer;
-    flex: 0.5;
-    margin: 10px;
-    position: relative;
-    transition: flex 0.7s ease-in;
-    -webkit-transition: flex 0.7s ease-in;
-    overflow: hidden;
+.festival-slide-panel {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 50vh;
+  border-radius: 50px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  outline: none; /* Slick에서 생기는 outline 제거 */
 }
 
-.slider-container .panel.active {
-    flex: 5;
+.festival-slide-panel .festival-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.9) 0%,
+    rgba(0, 0, 0, 0.6) 50%,
+    transparent 100%
+  );
+  color: #fff;
+  padding: 2rem 1.5rem 1.5rem;
+  box-sizing: border-box;
 }
 
-.panel .overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.6) 50%, transparent 100%);
-    color: #fff;
-    padding: 2rem 1.5rem 1.5rem;
-    box-sizing: border-box;
+.festival-slide-panel .festival-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 0 0.5rem 0;
+  color: #ffffff !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+  line-height: 1.2;
 }
 
-/* 슬라이더 내부 텍스트는 고정 크기 유지 */
-.panel .festival-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin: 0 0 0.5rem 0;
-    color: #ffffff !important;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.festival-slide-panel .festival-location,
+.festival-slide-panel .festival-date {
+  font-size: 0.95rem;
+  margin: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ffffff !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
 }
 
-.panel .festival-location,
-.panel .festival-date {
-    font-size: 0.95rem;
-    margin: 0.25rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #ffffff !important;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.festival-slide-panel .icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: #ffffff !important;
 }
 
-.panel .icon {
-    width: 1rem;
-    height: 1rem;
-    flex-shrink: 0;
-    color: #ffffff !important;
+/* Slick 슬라이더 커스텀 스타일 */
+.slick-dots {
+  bottom: 20px;
 }
 
-/* 모바일에서도 텍스트 크기 고정 */
+.slick-dots li button:before {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0.8;
+}
+
+.slick-dots li.slick-active button:before {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* 커스텀 화살표 스타일 - 슬라이더 밖으로 이동 */
+.festival-custom-arrow {
+  width: 50px;
+  height: 50px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.festival-custom-arrow:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.festival-custom-arrow svg {
+  color: white;
+}
+
+.festival-custom-prev-arrow {
+  left: -80px; /* 슬라이더 왼쪽 바깥으로 이동 */
+}
+
+.festival-custom-next-arrow {
+  right: -80px; /* 슬라이더 오른쪽 바깥으로 이동 */
+}
+
+/* 기본 화살표 숨기기 (커스텀 화살표 사용시) */
+.slick-prev:before,
+.slick-next:before {
+  display: none;
+}
+
+/* 모바일 반응형 */
 @media (max-width: 768px) {
-    .slider-container {
-        height: 70vh;
-        padding: 1rem 0;
-    }
+  .festival-slider-container {
+    height: 70vh;
+    padding: 1rem 4rem; /* 모바일에서도 화살표 공간 확보 */
+  }
 
-    .slider-container .container {
-        width: 95vw;
-        height: 60vh;
-    }
+  .festival-slick-wrapper {
+    width: 95vw;
+    height: 60vh;
+  }
 
-    .slider-container .panel {
-        margin: 5px;
-        border-radius: 30px;
-    }
+  .festival-slide-panel {
+    height: 60vh;
+    border-radius: 30px;
+  }
 
-    .panel .overlay {
-        padding: 1.5rem 1rem 1rem;
-    }
+  .festival-slide-panel .festival-overlay {
+    padding: 1.5rem 1rem 1rem;
+  }
 
-    /* 텍스트 크기는 그대로 유지 */
-    .panel .festival-title {
-        font-size: 1.5rem;
-    }
+  .festival-slide-panel .festival-title {
+    font-size: 1.5rem;
+  }
 
-    .panel .festival-location,
-    .panel .festival-date {
-        font-size: 0.95rem;
-    }
+  .festival-slide-panel .festival-location,
+  .festival-slide-panel .festival-date {
+    font-size: 0.95rem;
+  }
+
+  /* 모바일에서 화살표 크기 조정 */
+  .festival-custom-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .festival-custom-prev-arrow {
+    left: -60px;
+  }
+
+  .festival-custom-next-arrow {
+    right: -60px;
+  }
+
+  .slick-dots {
+    bottom: 15px;
+  }
 }
 
 @media (max-width: 480px) {
-    .slider-container {
-        height: 60vh;
-        padding: 0.5rem 0;
-    }
+  .festival-slider-container {
+    height: 60vh;
+    padding: 0.5rem 2rem; /* 작은 화면에서 패딩 조정 */
+  }
 
-    .slider-container .container {
-        width: 100vw;
-        height: 50vh;
-    }
+  .festival-slick-wrapper {
+    width: 100vw;
+    height: 50vh;
+  }
 
-    .slider-container .panel {
-        margin: 3px;
-        border-radius: 20px;
-    }
+  .festival-slide-panel {
+    height: 50vh;
+    border-radius: 20px;
+  }
 
-    .slider-container .panel:nth-of-type(4),
-    .slider-container .panel:nth-of-type(5) {
-        display: none;
-    }
+  .festival-slide-panel .festival-overlay {
+    padding: 1rem 0.75rem 0.75rem;
+  }
 
-    .panel .overlay {
-        padding: 1rem 0.75rem 0.75rem;
-    }
+  .festival-slide-panel .festival-title {
+    font-size: 1.3rem;
+  }
 
-    /* 가장 작은 화면에서만 텍스트 크기 약간 축소 */
-    .panel .festival-title {
-        font-size: 1.3rem;
-    }
+  .festival-slide-panel .festival-location,
+  .festival-slide-panel .festival-date {
+    font-size: 0.9rem;
+  }
 
-    .panel .festival-location,
-    .panel .festival-date {
-        font-size: 0.9rem;
-    }
+  .festival-slide-panel .icon {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
 
-    .panel .icon {
-        width: 0.9rem;
-        height: 0.9rem;
-    }
+  .slick-dots {
+    bottom: 10px;
+  }
+
+  .slick-dots li button:before {
+    font-size: 12px;
+  }
+
+  /* 매우 작은 화면에서는 화살표 숨기기 */
+  .festival-custom-arrow {
+    display: none !important;
+  }
 }
