@@ -19,14 +19,36 @@ const useAuthStore = create(
 
       // 상태 설정 함수
       login: (userInfo) => set({ isLoggedIn: true, member: userInfo }),
-      logout: () => set({ isLoggedIn: false, member: null })
+      logout: () => set({ isLoggedIn: false, member: null }),
+
+      // 닉네임 업데이트 함수
+      updateNickname: (newNickname) =>
+        set((state) => ({
+          member: state.member
+            ? { ...state.member, nickname: newNickname }
+            : null,
+        })),
+
+      // 프로필 이미지 업데이트 함수
+      updateProfileImage: (newProfileImage) =>
+        set((state) => ({
+          member: state.member
+            ? { ...state.member, profileImage: newProfileImage }
+            : null,
+        })),
+
+      // 프로필 정보 전체 업데이트 함수
+      updateProfile: (profileData) =>
+        set((state) => ({
+          member: state.member ? { ...state.member, ...profileData } : null,
+        })),
     }),
     {
       // localStorage에 저장될 때 사용할 키 이름
       name: "auth-store",
       // JSON 형태로 localStorage에 저장하도록 설정
       // createJSONStorage는 객체를 JSON 문자열로 변환하여 저장하고, 읽을 때는 다시 객체로 변환해줌
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
