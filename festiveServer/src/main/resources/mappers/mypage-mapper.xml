@@ -132,19 +132,16 @@
 		</set>
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
+	
+	<select id="findFavoriteContentIds" resultType="string">
+        SELECT CONTENT_ID
+        FROM FAVORITES
+        WHERE MEMBER_NO = #{memberNo}
+    </select>
 
-	<!-- 찜한 목록 반환 -->
-	<select id="findFavoriteContentIdsByMemberNo"
-		resultType="string">
-		SELECT CONTENT_ID
-		FROM FAVORITES
-		WHERE MEMBER_NO = #{memberNo}
-	</select>
-
-	<!-- 찜 해제 -->
-	<delete id="deleteFavorite">
-		DELETE FROM FAVORITES
-		WHERE MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
-	</delete>
+    <delete id="deleteFavorite">
+        DELETE FROM FAVORITES
+        WHERE MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
+    </delete>
 
 </mapper>
