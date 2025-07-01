@@ -60,9 +60,6 @@ const Signup = () => {
             
             {currentStep === 1 && (
                 <div className="nav-buttons">
-                  <button className="prev-btn" onClick={handlePrev}>
-                    이전
-                  </button>
                   <button className="next-btn" onClick={handleNext}>
                     다음
                   </button>

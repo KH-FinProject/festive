@@ -112,4 +112,19 @@ public class MemberServiceImpl implements MemberService {
     public Member findByMemberNo(Long memberNo) {
         return memberRepository.findByMemberNo(memberNo);
     }
+
+    @Override
+    public Member findMemberByNameAndEmail(String name, String email) {
+        return memberRepository.findByNameAndEmail(name, email).orElse(null);
+    }
+
+    @Override
+    public Member findMemberByNameAndTel(String name, String tel) {
+        return memberRepository.findByNameAndTel(name, tel).orElse(null);
+    }
+
+    @Override
+    public Member findMemberByIdAndEmail(String id, String email) {
+        return memberRepository.findByIdAndEmail(id, email).orElse(null);
+    }
 } 

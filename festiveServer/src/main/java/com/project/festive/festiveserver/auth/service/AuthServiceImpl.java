@@ -178,7 +178,7 @@ public class AuthServiceImpl implements AuthService {
 
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 			helper.setTo(email);
-			helper.setSubject("[Festive] 회원가입 인증번호");
+			helper.setSubject("[Festive] 인증번호 발송");
 			helper.setText(loadHtml(authKey, htmlName), true);
 
 			mailSender.send(message);
