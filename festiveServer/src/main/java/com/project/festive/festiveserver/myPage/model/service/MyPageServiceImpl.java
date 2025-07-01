@@ -160,65 +160,54 @@ public class MyPageServiceImpl implements MyPageService {
         return result > 0;
     }
     
- // TourAPI 환경변수 등에서 가져오는 방식 추천
-    private static final String TOURAPI_KEY = System.getenv("TOURAPI_KEY");
-    private static final String TOURAPI_URL = "https://apis.data.go.kr/B551011/KorService2/detailCommon2";
-
-//    @Override
-//    public List<MyCalendarDto> getMyFavoriteFestivals(Long memberNo) {
-//        List<String> contentIdList = mapper.findFavoriteContentIds(memberNo);
-//        List<MyCalendarDto> result = new ArrayList<>();
-//        for (String contentId : contentIdList) {
-//            // 각 contentId마다 TourAPI 호출
-//            try {
-//                RestTemplate restTemplate = new RestTemplate();
-//                String url = TOURAPI_URL + "?serviceKey=" + TOURAPI_KEY
-//                        + "&MobileOS=ETC"
-//                        + "&MobileApp=Festive"
-//                        + "&_type=json"
-//                        + "&contentId=" + contentId
-//                        + "&defaultYN=Y"
-//                        + "&firstImageYN=Y"
-//                        + "&overviewYN=Y";
-//                String apiResponse = restTemplate.getForObject(url, String.class);
-//
-////                // 응답에서 필요한 정보 파싱
-////                JSONObject root = new JSONObject(apiResponse);
-////                JSONObject response = root.getJSONObject("response");
-////                JSONObject body = response.getJSONObject("body");
-////                JSONObject items = body.getJSONObject("items");
-////                JSONArray itemArr = items.getJSONArray("item");
-////                JSONObject item = itemArr.getJSONObject(0);
-////                
-////             // 기간 정보 (null 안전 처리)
-////                String startDate = item.optString("eventstartdate", "").replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3");
-////                String endDate = item.optString("eventenddate", "").replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3");
-////                if (startDate.isEmpty()) startDate = "";
-////                if (endDate.isEmpty()) endDate = startDate;
-//
-//                // Dto에 담기
-//                MyCalendarDto dto = MyCalendarDto.builder()
-//                        .contentId(contentId)
-//                        .title(item.optString("title", "무제"))
-//                        .firstImage(item.optString("firstimage", ""))
-//                        .addr1(item.optString("addr1", ""))
-//                        .overview(item.optString("overview", ""))
-//                        .startDate(startDate)
-//                        .endDate(endDate)
-//                        .build();
-//                result.add(dto);
-//
-//            } catch (Exception e) {
-//                // 에러 로그는 출력만 하고, 해당 축제는 건너뜀
-//                e.printStackTrace();
-//            }
-//        }
-//        return result;
-//    }
+ // 실제 환경에서는 config로 빼는 게 좋음
+    private static final String SERVICE_KEY = "여기에_API_KEY_입력";
+    private static final String FESTIVAL_DETAIL_URL =
+            "https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=%s&MobileOS=ETC&MobileApp=Festive&_type=json&contentId=%s";
+    private static final String FESTIVAL_IMAGE_URL =
+            "https://apis.data.go.kr/B551011/KorService2/detailImage2?serviceKey=%s&MobileApp=Festive&MobileOS=ETC&_type=json&contentId=%s&imageYN=Y";
 
     @Override
-    public void deleteFavorite(Long memberNo, String contentId) {
-        mapper.deleteFavorite(memberNo, contentId);
+    public List<MyCalendarDto> getFavoriteFestivals(Long memberNo) {
+        List<String> contentIds = mapper.selectFavoriteContentIds(memberNo);
+
+        List<MyCalendarDto> result = new ArrayList<>();
+        RestTemplate restTemplate = new RestTemplate();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        for (String contentId : contentIds) {
+            try {
+                // 축제 상세 정보 호출 (여기서는 contentId별 호출, 병렬처리 권장)
+                String url = String.format("https://apis.data.go.kr/B551011/KorService2/detailCommon2?serviceKey=%s&MobileApp=Festive&MobileOS=ETC&_type=json&contentId=%s&defaultYN=Y&overviewYN=Y&addrinfoYN=Y", SERVICE_KEY, contentId);
+                String json = restTemplate.getForObject(url, String.class);
+
+                JsonNode root = objectMapper.readTree(json);
+                JsonNode item = root.at("/response/body/items/item").get(0);
+
+                MyCalendarDto dto = new MyCalendarDto();
+                dto.setContentId(contentId);
+                dto.setTitle(item.path("title").asText());
+                dto.setStartDate(item.path("eventstartdate").asText().replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3")); // 20250101 → 2025-01-01
+                dto.setEndDate(item.path("eventenddate").asText().replaceAll("(\\d{4})(\\d{2})(\\d{2})", "$1-$2-$3"));
+                dto.setImageUrl(item.path("firstimage").asText());
+                dto.setFirstImage(item.path("firstimage").asText());
+                dto.setAddr1(item.path("addr1").asText());
+                dto.setOverview(item.path("overview").asText());
+
+                result.add(dto);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
     }
+
+    @Override
+    @Transactional
+    public void deleteFavoriteFestival(Long memberNo, String contentId) {
+        mapper.deleteFavoriteFestival(memberNo, contentId);
+    }
+    
+
 }
 

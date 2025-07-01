@@ -14,6 +14,7 @@
     MEMBER_NO,
     ID,
     NAME,
+    NICKNAME,
     EMAIL,
     PASSWORD,
     ROLE,
@@ -23,6 +24,7 @@
   ) VALUES (
     SEQ_MEMBER_NO.NEXTVAL,
     #{email},
+    #{name},
     #{name},
     #{email},
     #{password},

@@ -51,22 +51,13 @@ const MyPageCalendar = () => {
                 return res.json();
             })
             .then(data => {
-                // API 응답 데이터 검증 및 정제
-                if (Array.isArray(data)) {
-                    setFestivals(data.filter(f =>
-                        f.contentId && f.title && f.startDate // 필수값 필터
-                    ));
-                } else {
-                    setError('데이터 형식이 올바르지 않습니다.');
-                    setFestivals([]);
-                }
+                setFestivals(data);
             })
             .catch(err => {
-                setError(err.message || '데이터를 불러오는 데 실패했습니다.');
-                setFestivals([]);
-            })
-            .finally(() => {
-                setLoading(false);
+                err.text().then(errorMessage => {
+                    alert('데이터를 불러오는 데 실패했습니다. 콘솔을 확인해주세요.');
+                    console.error("서버 에러 메시지:", errorMessage);
+                });
             });
     }, [member, navigate]);
 
@@ -75,14 +66,26 @@ const MyPageCalendar = () => {
         if (!window.confirm("정말로 찜 해제 하시겠습니까?")) {
             return;
         }
-        try {
-            const response = await fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+
+        fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
+            method: 'DELETE',
+            credentials: 'include', // 반드시 유지!
+        })
+            .then(res => {
+                if (res.ok) {
+                    alert("찜 해제되었습니다.");
+                    setFestivals(prevFestivals =>
+                        prevFestivals.filter(festival => festival.contentId !== contentId)
+                    );
+                } else {
+                    throw res;
                 }
+            })
+            .catch(err => {
+                err.text().then(errorMessage => {
+                    alert('찜 해제에 실패했습니다. 콘솔을 확인해주세요.');
+                    console.error("서버 에러 메시지:", errorMessage);
+                });
             });
 
             if (response.ok) {
@@ -164,7 +167,7 @@ const MyPageCalendar = () => {
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
                             events={calendarEvents}
-                            eventClick={info => {
+                            eventClick={(info) => {
                                 navigate(`/festival/${info.event.extendedProps.contentId}`);
                             }}
                             height="650px"
