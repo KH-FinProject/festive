@@ -19,7 +19,9 @@
                     b.READ_COUNT as boardViewCount,
                     b.BOARD_CREAT_DATE as boardCreateDate,
                     b.BOARD_UPDATE_DATE as boardUpdateDate,
-                    b.BOARD_DEL_FL as boardDeleteYn
+                    b.BOARD_DEL_FL as boardDeleteYn,
+                    (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
+                    (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
                 FROM BOARD b
                 JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
                 JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
@@ -84,7 +86,9 @@
             b.READ_COUNT as boardViewCount,
             b.BOARD_CREAT_DATE as boardCreateDate,
             b.BOARD_UPDATE_DATE as boardUpdateDate,
-            b.BOARD_DEL_FL as boardDeleteYn
+            b.BOARD_DEL_FL as boardDeleteYn,
+            (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
+            (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
         FROM BOARD b
         JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
         JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
@@ -130,20 +134,20 @@
 
     <!-- 게시글 좋아요 추가 (LIKE 테이블 사용) -->
     <insert id="insertBoardLike">
-        INSERT INTO LIKE (BOARD_NO, MEMBER_NO)
+        INSERT INTO "LIKE" (BOARD_NO, MEMBER_NO)
         VALUES (#{boardNo}, #{memberNo})
     </insert>
 
     <!-- 게시글 좋아요 삭제 -->
     <delete id="deleteBoardLike">
-        DELETE FROM LIKE 
+        DELETE FROM "LIKE" 
         WHERE BOARD_NO = #{boardNo} AND MEMBER_NO = #{memberNo}
     </delete>
 
     <!-- 게시글 좋아요 여부 확인 -->
     <select id="selectBoardLikeCheck" resultType="int">
         SELECT COUNT(*) 
-        FROM LIKE 
+        FROM "LIKE" 
         WHERE BOARD_NO = #{boardNo} AND MEMBER_NO = #{memberNo}
     </select>
 
@@ -174,7 +178,11 @@
             PARENT_COMMENT_NO, COMMENT_WRITE_DATE, COMMENT_DEL_FL
         ) VALUES (
             #{commentNo}, #{boardNo}, #{memberNo}, #{commentContent}, 
-            #{commentParentNo}, SYSDATE, 'N'
+            <choose>
+                <when test="commentParentNo != null and commentParentNo != 0">#{commentParentNo}</when>
+                <otherwise>NULL</otherwise>
+            </choose>, 
+            SYSDATE, 'N'
         )
     </insert>
 

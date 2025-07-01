@@ -1,77 +1,78 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import './MyPageWithdrawal.css';
-import './MyPageEditInfo.css';
-import MyPageSideBar from './MyPageSideBar';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import "./MyPageWithdrawal.css";
+import "./MyPageEditInfo.css";
+import MyPageSideBar from "./MyPageSideBar";
+import { useLocation, useNavigate } from "react-router-dom";
+import useAuthStore from "../../store/useAuthStore";
 
 const MyPageEditInfo = () => {
     const [showEmailModal, setShowEmailModal] = useState(false);
 
     // 사용자 현재 정보 상태
     const [memberInfo, setMemberInfo] = useState({
-        tel: { carrier: '', middle: '', last: '' },
-        email: { local: '', domain: '' },
-        address: { zipcode: '', detail: '', extra: '' },
-        password: '', // 현재 비밀번호 확인용
+        tel: { carrier: "", middle: "", last: "" },
+        email: { local: "", domain: "" },
+        address: { zipcode: "", detail: "", extra: "" },
+        password: "", // 현재 비밀번호 확인용
     });
 
     // 이메일 변경 모달 관련 상태
-    const [newEmailLocal, setNewEmailLocal] = useState('');
-    const [newEmailDomain, setNewEmailDomain] = useState('');
-    const [inputCode, setInputCode] = useState('');
+    const [newEmailLocal, setNewEmailLocal] = useState("");
+    const [newEmailDomain, setNewEmailDomain] = useState("");
+    const [inputCode, setInputCode] = useState("");
     const [isEmailVerified, setIsEmailVerified] = useState(false); // 이메일 인증 여부
     const [timeLeft, setTimeLeft] = useState(0); // 초 단위
     const timerRef = useRef(null);
 
+    const location = useLocation();
+    const { name, profileImageUrl } = location.state || {};
+
     const navigate = useNavigate();
+    const { member } = useAuthStore();
 
     // 이메일 도메인 옵션
     const emailDomains = [
-        { value: '', label: '선택하세요' },
-        { value: 'gmail.com', label: 'gmail.com' },
-        { value: 'naver.com', label: 'naver.com' },
-        { value: 'hanmail.net', label: 'hanmail.net' },
-        { value: 'daum.net', label: 'daum.net' },
-        { value: 'yahoo.com', label: 'yahoo.com' },
-        { value: 'hotmail.com', label: 'hotmail.com' },
-        { value: 'outlook.com', label: 'outlook.com' },
-        { value: 'custom', label: '직접입력' }
+        { value: "", label: "선택하세요" },
+        { value: "gmail.com", label: "gmail.com" },
+        { value: "naver.com", label: "naver.com" },
+        { value: "hanmail.net", label: "hanmail.net" },
+        { value: "daum.net", label: "daum.net" },
+        { value: "yahoo.com", label: "yahoo.com" },
+        { value: "hotmail.com", label: "hotmail.com" },
+        { value: "outlook.com", label: "outlook.com" },
+        { value: "custom", label: "직접입력" },
     ];
 
     // 통신사 옵션
     const phoneCarriers = [
-        { value: '', label: '선택' },
-        { value: '010', label: '010' },
-        { value: '011', label: '011' },
-        { value: '016', label: '016' },
-        { value: '017', label: '017' },
-        { value: '018', label: '018' },
-        { value: '019', label: '019' }
+        { value: "", label: "선택" },
+        { value: "010", label: "010" },
+        { value: "011", label: "011" },
+        { value: "016", label: "016" },
+        { value: "017", label: "017" },
+        { value: "018", label: "018" },
+        { value: "019", label: "019" },
     ];
 
     // --- 초기 정보 로드 ---
     const fetchMyInfo = useCallback(async () => {
-        const accessToken = JSON.parse(localStorage.getItem("auth-store"))?.state?.accessToken;
-
-        if (!accessToken) {
-            alert('로그인이 필요합니다.');
-            navigate('/signin');
+        if (!member) {
+            alert("로그인이 필요합니다.");
+            navigate("/signin");
             return;
         }
 
         try {
             const response = await fetch(`http://localhost:8080/mypage/info`, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
+                credentials: "include",
             });
             if (!response.ok) {
-                throw new Error('Failed to fetch member info');
+                throw new Error("Failed to fetch member info");
             }
             const data = await response.json();
             console.log("Fetched Member Info:", data);
 
-            let parsedTel = { carrier: '', middle: '', last: '' };
+            let parsedTel = { carrier: "", middle: "", last: "" };
             if (data.tel && data.tel.length === 11) {
                 parsedTel = {
                     carrier: data.tel.substring(0, 3),
@@ -80,33 +81,37 @@ const MyPageEditInfo = () => {
                 };
             }
 
-            let parsedEmail = { local: '', domain: '' };
-            if (data.email && data.email.includes('@')) {
-                const emailParts = data.email.split('@');
+            let parsedEmail = { local: "", domain: "" };
+            if (data.email && data.email.includes("@")) {
+                const emailParts = data.email.split("@");
                 parsedEmail = {
                     local: emailParts[0],
                     domain: emailParts[1],
                 };
             }
 
-            let parsedAddress = { zipcode: '', detail: '', extra: '' };
+            let parsedAddress = { zipcode: "", detail: "", extra: "" };
             if (data.address) {
                 const fullAddress = data.address;
                 const match = fullAddress.match(/^(\d{5})\s(.*?)(\s\(.*\))?$/); // "우편번호 전체주소 (상세주소)" 패턴
                 if (match) {
                     parsedAddress.zipcode = match[1]; // 우편번호
                     parsedAddress.detail = match[2].trim(); // 기본 주소
-                    parsedAddress.extra = match[3] ? match[3].replace(/^\s*\(|\)\s*$/g, '') : ''; // 괄호 안 상세주소
+                    parsedAddress.extra = match[3]
+                        ? match[3].replace(/^\s*\(|\)\s*$/g, "")
+                        : ""; // 괄호 안 상세주소
                 } else {
                     // 괄호 없는 주소는 detail에 모두 넣고, extra는 비워둠
-                    const firstSpaceIndex = fullAddress.indexOf(' ');
+                    const firstSpaceIndex = fullAddress.indexOf(" ");
                     if (firstSpaceIndex !== -1) {
                         parsedAddress.zipcode = fullAddress.substring(0, firstSpaceIndex);
-                        parsedAddress.detail = fullAddress.substring(firstSpaceIndex + 1).trim();
+                        parsedAddress.detail = fullAddress
+                            .substring(firstSpaceIndex + 1)
+                            .trim();
                     } else {
                         parsedAddress.detail = fullAddress;
                     }
-                    parsedAddress.extra = '';
+                    parsedAddress.extra = "";
                 }
             }
 
@@ -114,19 +119,17 @@ const MyPageEditInfo = () => {
                 tel: parsedTel,
                 email: parsedEmail,
                 address: parsedAddress,
-                password: '',
+                password: "",
             });
 
             // 모달 내 새로운 이메일 입력 필드에도 현재 이메일 정보로 초기화
             setNewEmailLocal(parsedEmail.local);
             setNewEmailDomain(parsedEmail.domain);
-
-
         } catch (error) {
-            console.error('회원 정보 불러오기 실패:', error);
-            alert('회원 정보를 불러오는데 실패했습니다.');
+            console.error("회원 정보 불러오기 실패:", error);
+            alert("회원 정보를 불러오는데 실패했습니다.");
         }
-    }, [navigate]);
+    }, [member, navigate]);
 
     useEffect(() => {
         fetchMyInfo();
@@ -141,44 +144,38 @@ const MyPageEditInfo = () => {
 
     const handleGenerateVerificationCode = async () => {
         let newFullEmail;
-        if (newEmailDomain === 'custom') {
-            newFullEmail = `${newEmailLocal}@${newEmailDomain}`; // custom 입력창의 값이 newEmailDomain에 저장된다고 가정
+        if (newEmailDomain === "custom") {
+            newFullEmail = `${newEmailLocal}@${newEmailDomain}`;
         } else {
             newFullEmail = `${newEmailLocal}@${newEmailDomain}`;
         }
 
         if (!newFullEmail || !/\S+@\S+\.\S+/.test(newFullEmail)) {
-            alert('유효한 이메일 주소를 입력해주세요.');
+            alert("유효한 이메일 주소를 입력해주세요.");
             return;
         }
 
         // --- 이메일 중복 확인 로직 추가 ---
         try {
-            const accessToken = JSON.parse(localStorage.getItem("auth-store"))?.state?.accessToken;
-            if (!accessToken) {
-                alert('로그인이 필요합니다.');
-                navigate('/signin');
-                return;
-            }
-
-            const checkDuplicateResponse = await fetch('http://localhost:8080/auth/email/send', {
-                method: 'POST',
+            const response = await fetch("http://localhost:8080/auth/email/send", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ email: newFullEmail }), // send API에서 중복 확인도 같이 수행
+                credentials: "include",
+                body: JSON.stringify({ email: newFullEmail }),
             });
 
-            const duplicateData = await checkDuplicateResponse.json();
+            const duplicateData = await response.json();
 
-            if (!checkDuplicateResponse.ok) {
-                if (checkDuplicateResponse.status === 409) { // HTTP CONFLICT (409)는 중복을 의미
+            if (!response.ok) {
+                if (response.status === 409) {
+                    // HTTP CONFLICT (409)는 중복을 의미
                     alert(duplicateData.message); // "현재 다른 회원이 사용 중인 이메일입니다."
                     return; // 중복이면 더 이상 진행하지 않음
                 } else {
                     // 다른 종류의 에러
-                    throw new Error(duplicateData.message || '인증번호 발송 실패');
+                    throw new Error(duplicateData.message || "인증번호 발송 실패");
                 }
             }
             // --- 이메일 중복 확인 로직 끝 ---
@@ -187,13 +184,13 @@ const MyPageEditInfo = () => {
             alert(duplicateData.message); // "인증번호가 이메일로 전송되었습니다."
             setTimeLeft(300); // 5분
             setIsEmailVerified(false);
-            setInputCode('');
+            setInputCode("");
 
             if (timerRef.current) {
                 clearInterval(timerRef.current);
             }
             timerRef.current = setInterval(() => {
-                setTimeLeft(prev => {
+                setTimeLeft((prev) => {
                     if (prev <= 1) {
                         clearInterval(timerRef.current);
                         return 0;
@@ -201,45 +198,37 @@ const MyPageEditInfo = () => {
                     return prev - 1;
                 });
             }, 1000);
-
         } catch (error) {
-            console.error('이메일 인증 코드 발송 오류:', error);
+            console.error("이메일 인증 코드 발송 오류:", error);
             alert(`인증번호 발송 중 오류가 발생했습니다: ${error.message}`);
         }
     };
 
     const handleVerifyEmailCode = async () => {
         let newFullEmail;
-        if (newEmailDomain === 'custom') {
+        if (newEmailDomain === "custom") {
             newFullEmail = `${newEmailLocal}@${newEmailDomain}`;
         } else {
             newFullEmail = `${newEmailLocal}@${newEmailDomain}`;
         }
 
         if (timeLeft === 0) {
-            alert('인증 시간이 만료되었습니다.');
+            alert("인증 시간이 만료되었습니다.");
             return;
         }
 
         if (!inputCode) {
-            alert('인증번호를 입력해주세요.');
+            alert("인증번호를 입력해주세요.");
             return;
         }
 
         try {
-            const accessToken = JSON.parse(localStorage.getItem("auth-store"))?.state?.accessToken;
-            if (!accessToken) {
-                alert('로그인이 필요합니다.');
-                navigate('/signin');
-                return;
-            }
-
-            const response = await fetch('http://localhost:8080/auth/email/verify', {
-                method: 'POST',
+            const response = await fetch("http://localhost:8080/auth/email/verify", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
                 },
+                credentials: "include",
                 body: JSON.stringify({ email: newFullEmail, authKey: inputCode }),
             });
 
@@ -249,22 +238,21 @@ const MyPageEditInfo = () => {
                 setIsEmailVerified(true);
                 clearInterval(timerRef.current);
 
-                setMemberInfo(prev => ({
+                setMemberInfo((prev) => ({
                     ...prev,
                     email: {
                         local: newEmailLocal,
                         domain: newEmailDomain,
-                    }
+                    },
                 }));
                 setShowEmailModal(false);
-
             } else {
                 alert(`인증 실패: ${data.message}`);
                 setIsEmailVerified(false);
             }
         } catch (error) {
-            console.error('이메일 인증 확인 오류:', error);
-            alert('이메일 인증 중 오류가 발생했습니다. 다시 시도해주세요.');
+            console.error("이메일 인증 코드 확인 오류:", error);
+            alert(`인증번호 확인 중 오류가 발생했습니다: ${error.message}`);
         }
     };
 
@@ -272,35 +260,35 @@ const MyPageEditInfo = () => {
         new window.daum.Postcode({
             oncomplete: function (data) {
                 let fullAddress = data.address; // 기본 주소 (도로명 또는 지번 주소)
-                let extraAddress = ''; // 건물명, 동명 등 추가 정보
+                let extraAddress = ""; // 건물명, 동명 등 추가 정보
 
-                if (data.bname !== '' && /[동|로|가]$/g.test(data.bname)) {
+                if (data.bname !== "" && /[동|로|가]$/g.test(data.bname)) {
                     extraAddress += data.bname;
                 }
-                if (data.buildingName !== '' && data.apartment === 'Y') {
-                    extraAddress += (extraAddress !== '' ? ', ' + data.buildingName : data.buildingName);
+                if (data.buildingName !== "" && data.apartment === "Y") {
+                    extraAddress +=
+                        extraAddress !== "" ? ", " + data.buildingName : data.buildingName;
                 }
 
-                setMemberInfo(prev => ({
+                setMemberInfo((prev) => ({
                     ...prev,
                     address: {
                         zipcode: data.zonecode, // 우편번호
                         detail: fullAddress, // 도로명 or 지번 주소 (예: "서울 강남구 테헤란로 123")
-                        extra: extraAddress // 다음 주소에서 제공하는 상세 주소 부분을 extra에 넣어줍니다.
+                        extra: extraAddress, // 다음 주소에서 제공하는 상세 주소 부분을 extra에 넣어줍니다.
                         // 사용자가 추가로 입력하는 필드는 별도로 두거나, 이 extra를 수정하도록 안내합니다.
-                    }
+                    },
                 }));
-            }
+            },
         }).open();
     }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const accessToken = JSON.parse(localStorage.getItem("auth-store"))?.state?.accessToken;
-        if (!accessToken) {
-            alert('로그인이 필요합니다.');
-            navigate('/signin');
+        if (!member) {
+            alert("로그인이 필요한 서비스입니다.");
+            navigate("/signin");
             return;
         }
 
@@ -320,12 +308,12 @@ const MyPageEditInfo = () => {
         };
 
         try {
-            const response = await fetch('http://localhost:8080/mypage/info', {
-                method: 'POST',
+            const response = await fetch("http://localhost:8080/mypage/edit-info", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
                 },
+                credentials: "include",
                 body: JSON.stringify(updatedData),
             });
 
@@ -334,13 +322,13 @@ const MyPageEditInfo = () => {
             if (response.ok) {
                 alert(data.message);
                 fetchMyInfo();
-                setMemberInfo(prev => ({ ...prev, password: '' }));
+                setMemberInfo((prev) => ({ ...prev, password: "" }));
             } else {
                 alert(`정보 수정 실패: ${data.message}`);
             }
         } catch (error) {
-            console.error('정보 수정 중 오류 발생:', error);
-            alert('정보 수정 중 오류가 발생했습니다. 다시 시도해주세요.');
+            console.error("정보 수정 중 오류 발생:", error);
+            alert("정보 수정 중 오류가 발생했습니다. 다시 시도해주세요.");
         }
     };
 
@@ -355,18 +343,28 @@ const MyPageEditInfo = () => {
     const formatTime = (seconds) => {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+        return `${String(minutes).padStart(2, "0")}:${String(
+            remainingSeconds
+        ).padStart(2, "0")}`;
     };
 
     return (
         <div className="page-container">
             <main className="main-content">
-                <MyPageSideBar />
+                <MyPageSideBar
+                    name={name}
+                    profileImageUrl={profileImageUrl}
+                />
 
                 <section className="profile-main">
                     <div className="profile-header">
                         <h1>개인정보 수정</h1>
-                        <p>현재 비밀번호가 일치하는 경우, 원하시는 개인정보를 수정할 수 있습니다.<br /><br /></p>
+                        <p>
+                            현재 비밀번호가 일치하는 경우, 원하시는 개인정보를 수정할 수
+                            있습니다.
+                            <br />
+                            <br />
+                        </p>
                     </div>
 
                     <form onSubmit={handleSubmit}>
@@ -378,9 +376,14 @@ const MyPageEditInfo = () => {
                                     <select
                                         className="form-input phone-carrier"
                                         value={memberInfo.tel.carrier}
-                                        onChange={(e) => setMemberInfo(prev => ({ ...prev, tel: { ...prev.tel, carrier: e.target.value } }))}
+                                        onChange={(e) =>
+                                            setMemberInfo((prev) => ({
+                                                ...prev,
+                                                tel: { ...prev.tel, carrier: e.target.value },
+                                            }))
+                                        }
                                     >
-                                        {phoneCarriers.map(carrier => (
+                                        {phoneCarriers.map((carrier) => (
                                             <option key={carrier.value} value={carrier.value}>
                                                 {carrier.label}
                                             </option>
@@ -392,9 +395,14 @@ const MyPageEditInfo = () => {
                                         className="form-input phone-middle"
                                         placeholder="0000"
                                         maxLength="4"
-                                        style={{ width: '100px' }}
+                                        style={{ width: "100px" }}
                                         value={memberInfo.tel.middle}
-                                        onChange={(e) => setMemberInfo(prev => ({ ...prev, tel: { ...prev.tel, middle: e.target.value } }))}
+                                        onChange={(e) =>
+                                            setMemberInfo((prev) => ({
+                                                ...prev,
+                                                tel: { ...prev.tel, middle: e.target.value },
+                                            }))
+                                        }
                                     />
                                     <span className="phone-separator">-</span>
                                     <input
@@ -402,9 +410,14 @@ const MyPageEditInfo = () => {
                                         className="form-input phone-last"
                                         placeholder="0000"
                                         maxLength="4"
-                                        style={{ width: '100px' }}
+                                        style={{ width: "100px" }}
                                         value={memberInfo.tel.last}
-                                        onChange={(e) => setMemberInfo(prev => ({ ...prev, tel: { ...prev.tel, last: e.target.value } }))}
+                                        onChange={(e) =>
+                                            setMemberInfo((prev) => ({
+                                                ...prev,
+                                                tel: { ...prev.tel, last: e.target.value },
+                                            }))
+                                        }
                                     />
                                 </div>
                             </div>
@@ -420,7 +433,7 @@ const MyPageEditInfo = () => {
                                             className="form-input email-local"
                                             placeholder="이메일 아이디"
                                             value={memberInfo.email.local}
-                                            style={{ width: '180px' }}
+                                            style={{ width: "180px" }}
                                             readOnly
                                         />
                                         <span className="email-separator">@</span>
@@ -428,7 +441,7 @@ const MyPageEditInfo = () => {
                                             type="text"
                                             className="form-input email-domain-static"
                                             value={memberInfo.email.domain}
-                                            style={{ width: '180px' }}
+                                            style={{ width: "180px" }}
                                             readOnly
                                         />
                                     </div>
@@ -483,8 +496,13 @@ const MyPageEditInfo = () => {
                                         type="text"
                                         className="form-input full-width"
                                         placeholder="상세주소"
-                                        value={memberInfo.address.extra || ''}
-                                        onChange={(e) => setMemberInfo(prev => ({ ...prev, address: { ...prev.address, extra: e.target.value } }))}
+                                        value={memberInfo.address.extra || ""}
+                                        onChange={(e) =>
+                                            setMemberInfo((prev) => ({
+                                                ...prev,
+                                                address: { ...prev.address, extra: e.target.value },
+                                            }))
+                                        }
                                     />
                                 </div>
                             </div>
@@ -493,13 +511,20 @@ const MyPageEditInfo = () => {
                             {/* 본인 확인 비밀번호 */}
                             <div className="password-form-row">
                                 <label className="form-label">본인 확인</label>
-                                <p className="form-note">*비밀번호 확인 후 정보 수정이 가능합니다.</p>
+                                <p className="form-note">
+                                    *비밀번호 확인 후 정보 수정이 가능합니다.
+                                </p>
                                 <input
                                     type="password"
                                     className="form-input full-width"
                                     placeholder="비밀번호"
                                     value={memberInfo.password}
-                                    onChange={(e) => setMemberInfo(prev => ({ ...prev, password: e.target.value }))}
+                                    onChange={(e) =>
+                                        setMemberInfo((prev) => ({
+                                            ...prev,
+                                            password: e.target.value,
+                                        }))
+                                    }
                                     required
                                 />
                             </div>
@@ -507,16 +532,33 @@ const MyPageEditInfo = () => {
 
                             {/* 폼 버튼 */}
                             <div className="password-form-buttons">
-                                <button type="submit" className="submit-btn">수정하기</button>
-                                <button type="button" className="cancel-btn" onClick={() => navigate('/mypage/info')}>취소하기</button>
+                                <button type="submit" className="submit-btn">
+                                    수정하기
+                                </button>
+                                <button
+                                    type="button"
+                                    className="cancel-btn"
+                                    onClick={() => navigate("/mypage/info")}
+                                >
+                                    취소하기
+                                </button>
                             </div>
                         </div>
                     </form>
 
                     {/* Email Modal */}
                     {showEmailModal && (
-                        <div className="modal-overlay" onClick={() => setShowEmailModal(false)}>
-                            <div className="modal-content" style={{ width: '600px' }} onClick={(e) => e.stopPropagation()}> {/* 가로 길이 500px로 설정 */}
+                        <div
+                            className="modal-overlay"
+                            onClick={() => setShowEmailModal(false)}
+                        >
+                            <div
+                                className="modal-content"
+                                style={{ width: "600px" }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {" "}
+                                {/* 가로 길이 500px로 설정 */}
                                 <div className="modal-header">
                                     <h3>이메일 변경안내</h3>
                                     <button
@@ -540,7 +582,7 @@ const MyPageEditInfo = () => {
                                                     placeholder="아이디"
                                                     value={newEmailLocal}
                                                     onChange={(e) => setNewEmailLocal(e.target.value)}
-                                                    style={{ width: '150px' }}
+                                                    style={{ width: "130px" }}
                                                     disabled={isEmailVerified}
                                                 />
                                                 <span className="email-separator">@</span>
@@ -549,20 +591,22 @@ const MyPageEditInfo = () => {
                                                     value={newEmailDomain}
                                                     onChange={handleNewEmailDomainChange}
                                                     disabled={isEmailVerified}
-                                                    style={{ width: '130px' }}
+                                                    style={{ width: "130px" }}
                                                 >
-                                                    {emailDomains.map(domain => (
+                                                    {emailDomains.map((domain) => (
                                                         <option key={domain.value} value={domain.value}>
                                                             {domain.label}
                                                         </option>
                                                     ))}
                                                 </select>
-                                                {newEmailDomain === 'custom' && (
+                                                {newEmailDomain === "custom" && (
                                                     <input
                                                         type="text"
                                                         className="email-input email-custom-domain"
                                                         placeholder="도메인 입력"
-                                                        value={newEmailDomain === 'custom' ? '' : newEmailDomain} // 'custom'일 땐 비워두고, 실제 입력값을 받도록
+                                                        value={
+                                                            newEmailDomain === "custom" ? "" : newEmailDomain
+                                                        } // 'custom'일 땐 비워두고, 실제 입력값을 받도록
                                                         onChange={(e) => setNewEmailDomain(e.target.value)}
                                                         disabled={isEmailVerified}
                                                     />
@@ -573,9 +617,18 @@ const MyPageEditInfo = () => {
                                                 className="verify-btn"
                                                 onClick={handleGenerateVerificationCode}
                                                 // 이메일 입력이 유효하고, 인증되지 않았으며, 타이머가 작동 중이 아닐 때 활성화
-                                                disabled={isEmailVerified || (timeLeft > 0 && timeLeft < 300) || !newEmailLocal || !newEmailDomain || (newEmailDomain === 'custom' && !newEmailDomain.includes('.'))}
+                                                disabled={
+                                                    isEmailVerified ||
+                                                    (timeLeft > 0 && timeLeft < 300) ||
+                                                    !newEmailLocal ||
+                                                    !newEmailDomain ||
+                                                    (newEmailDomain === "custom" &&
+                                                        !newEmailDomain.includes("."))
+                                                }
                                             >
-                                                {timeLeft > 0 && !isEmailVerified ? '재전송 (' + formatTime(timeLeft) + ')' : '인증'}
+                                                {timeLeft > 0 && !isEmailVerified
+                                                    ? "재전송"
+                                                    : "인증"}
                                             </button>
                                         </div>
                                         <div className="email-input-group">
@@ -592,14 +645,19 @@ const MyPageEditInfo = () => {
                                                 type="button"
                                                 className="confirm-btn"
                                                 onClick={handleVerifyEmailCode}
-                                                disabled={isEmailVerified || timeLeft === 0 || !newEmailLocal || !newEmailDomain}
+                                                disabled={
+                                                    isEmailVerified ||
+                                                    timeLeft === 0 ||
+                                                    !newEmailLocal ||
+                                                    !newEmailDomain
+                                                }
                                             >
                                                 확인
                                             </button>
                                         </div>
                                         {timeLeft > 0 && !isEmailVerified && (
-                                            <p style={{ color: 'red', fontSize: '13px' }}>
-                                                <span style={{ marginLeft: '115px' }}>
+                                            <p style={{ color: "red", fontSize: "13px" }}>
+                                                <span style={{ marginLeft: "115px" }}>
                                                     남은 시간: {formatTime(timeLeft)}
                                                 </span>
                                             </p>

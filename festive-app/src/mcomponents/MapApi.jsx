@@ -137,7 +137,7 @@ export default function PublicCarParkWithMap({
     }
   };
 
-  console.log(
+  /*   console.log(
     "지도 로딩 상태:",
     loading,
     "준비 상태:",
@@ -146,7 +146,7 @@ export default function PublicCarParkWithMap({
     retryCount.current,
     "주차장 데이터:",
     listCarPark.length
-  );
+  ); */
 
   if (error) {
     return (

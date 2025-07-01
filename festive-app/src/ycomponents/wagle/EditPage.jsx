@@ -1,24 +1,54 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Editor } from "@toast-ui/react-editor";
 import "@toast-ui/editor/dist/toastui-editor.css";
 import Title from "./Title";
 import "./WritePage.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axiosApi from "../../api/axiosAPI";
 import useAuthStore from "../../store/useAuthStore";
 
-function WritePage() {
+function EditPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const editorRef = useRef();
   const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { member } = useAuthStore();
+
+  // 기존 게시글 데이터 불러오기
+  useEffect(() => {
+    const fetchBoardData = async () => {
+      try {
+        const response = await axiosApi.get(`/api/wagle/boards/${id}`);
+        const boardData = response.data;
+
+        // 작성자 확인
+        if (boardData.memberNo !== member?.memberNo) {
+          alert("본인이 작성한 게시글만 수정할 수 있습니다.");
+          navigate("/wagle");
+          return;
+        }
+
+        setTitle(boardData.boardTitle);
+        setContent(boardData.boardContent);
+      } catch (error) {
+        console.error("게시글 데이터 불러오기 실패:", error);
+        alert("게시글을 불러올 수 없습니다.");
+        navigate("/wagle");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (member && id) {
+      fetchBoardData();
+    }
+  }, [id, member, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // 디버깅용 로그
-    console.log("현재 member:", member);
 
     // 로그인 체크
     if (!member) {
@@ -34,8 +64,8 @@ function WritePage() {
     }
 
     // 내용 검증
-    const content = editorRef.current.getInstance().getMarkdown();
-    if (!content.trim()) {
+    const editorContent = editorRef.current.getInstance().getMarkdown();
+    if (!editorContent.trim()) {
       alert("내용을 입력해주세요.");
       return;
     }
@@ -45,30 +75,26 @@ function WritePage() {
     try {
       const boardData = {
         boardTitle: title.trim(),
-        boardContent: content.trim(),
-        boardTypeNo: 1, // 일반 게시판
+        boardContent: editorContent.trim(),
       };
 
-      const response = await axiosApi.post("/api/wagle/boards", boardData);
+      const response = await axiosApi.put(`/api/wagle/boards/${id}`, boardData);
 
       if (response.status === 200) {
-        alert("게시글이 성공적으로 작성되었습니다.");
-        navigate("/wagle");
+        alert("게시글이 성공적으로 수정되었습니다.");
+        navigate(`/wagle/${id}`);
       }
     } catch (error) {
-      console.error("게시글 작성 실패:", error);
+      console.error("게시글 수정 실패:", error);
 
       if (error.response) {
-        // 서버에서 응답이 온 경우
         const errorMessage =
-          error.response.data || "게시글 작성에 실패했습니다.";
+          error.response.data || "게시글 수정에 실패했습니다.";
         alert(errorMessage);
       } else if (error.request) {
-        // 요청은 보냈지만 응답을 받지 못한 경우
         alert("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
       } else {
-        // 요청 자체를 보내지 못한 경우
-        alert("게시글 작성 중 오류가 발생했습니다.");
+        alert("게시글 수정 중 오류가 발생했습니다.");
       }
     } finally {
       setIsSubmitting(false);
@@ -77,16 +103,27 @@ function WritePage() {
 
   const handleCancel = () => {
     const confirmCancel = window.confirm(
-      "작성 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?"
+      "수정 중인 내용이 저장되지 않습니다. 정말 취소하시겠습니까?"
     );
     if (confirmCancel) {
-      navigate("/wagle");
+      navigate(`/wagle/${id}`);
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="wagle-write-outer">
+        <Title currentPage="게시글 수정" />
+        <div className="wagle-write-form-container">
+          <div style={{ textAlign: "center", padding: "2rem" }}>로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="wagle-write-outer">
-      <Title currentPage="게시글 작성" />
+      <Title currentPage="게시글 수정" />
       <div className="wagle-write-form-container">
         <form onSubmit={handleSubmit} className="wagle-write-form">
           <input
@@ -106,6 +143,7 @@ function WritePage() {
             placeholder="내용을 입력하세요"
             previewStyle="vertical"
             disabled={isSubmitting}
+            initialValue={content}
           />
           <div className="wagle-write-btns">
             <button
@@ -121,7 +159,7 @@ function WritePage() {
               className="wagle-write-submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "작성 중..." : "글작성"}
+              {isSubmitting ? "수정 중..." : "수정완료"}
             </button>
           </div>
         </form>
@@ -130,4 +168,4 @@ function WritePage() {
   );
 }
 
-export default WritePage;
+export default EditPage;
