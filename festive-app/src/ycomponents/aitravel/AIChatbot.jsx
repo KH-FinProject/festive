@@ -5,31 +5,6 @@ import AItitle from "./AItitle";
 // 백엔드 API 기본 URL
 const API_BASE_URL = "http://localhost:8080/api";
 
-// 백엔드 API 호출 함수
-const aiAPI = {
-  async generateResponse(
-    message,
-    region = null,
-    history = [],
-    festivalData = null,
-    nearbySpots = []
-  ) {
-    const response = await fetch(`${API_BASE_URL}/ai/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message,
-        region,
-        history,
-        festivalData,
-        nearbySpots,
-      }),
-    });
-    if (!response.ok) throw new Error("AI 서비스 오류가 발생했습니다.");
-    return response.json();
-  },
-};
-
 const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴트입니다.
 
 여행하고 싶은 지역과 기간을 말씀해주시면 맞춤형 여행코스를 추천해드릴게요!
@@ -44,150 +19,6 @@ const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴�
 • "광주 1박2일 쇼핑 위주로 계획해줘" - 쇼핑몰/시장 중심
 
 🎪 축제 검색도 가능합니다!`;
-
-// 두 지점 간의 거리 계산 함수 (Haversine 공식)
-const calculateDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 6371; // 지구의 반지름 (km)
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-  return distance;
-};
-
-// nearbySpots에서 가장 가까운 관광지 찾기 함수
-const findNearestSpot = (lat, lng, spots) => {
-  if (!spots || spots.length === 0) return null;
-
-  let minDistance = Infinity;
-  let nearestSpot = null;
-
-  spots.forEach((spot) => {
-    if (spot.mapx && spot.mapy) {
-      const distance = calculateDistance(
-        lat,
-        lng,
-        parseFloat(spot.mapy),
-        parseFloat(spot.mapx)
-      );
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestSpot = spot;
-      }
-    }
-  });
-
-  console.log(
-    `🎯 가장 가까운 관광지: ${nearestSpot?.title} (거리: ${minDistance.toFixed(
-      2
-    )}km)`
-  );
-  return nearestSpot;
-};
-
-// 응답 처리 함수 (nearbySpots 활용)
-const processResponse = (response, availableSpots = []) => {
-  console.log("원본 응답:", response);
-  console.log("활용 가능한 관광지:", availableSpots.length + "개");
-
-  const newLocations = [];
-  let cleanResponse = response;
-
-  try {
-    // 위치 정보와 day 정보 추출
-    const regex = /@location:\s*\[(\d+\.\d+)\s*,\s*(\d+\.\d+)\]\s*@day:(\d+)/g;
-    let match;
-    let spotIndex = 0; // nearbySpots 인덱스
-
-    while ((match = regex.exec(response)) !== null) {
-      const lat = parseFloat(match[1]);
-      const lng = parseFloat(match[2]);
-      const day = parseInt(match[3]);
-
-      if (!isNaN(lat) && !isNaN(lng) && !isNaN(day) && day > 0 && day <= 10) {
-        let placeName = "";
-        let timeInfo = "";
-
-        // 방법 1: 좌표와 가장 가까운 실제 관광지 찾기
-        const nearestSpot = findNearestSpot(lat, lng, availableSpots);
-        if (nearestSpot) {
-          placeName = nearestSpot.title;
-          console.log(`✅ 관광지 매칭: ${placeName}`);
-        }
-        // 방법 2: 순서대로 nearbySpots 사용 (fallback)
-        else if (spotIndex < availableSpots.length) {
-          placeName = availableSpots[spotIndex].title;
-          console.log(`✅ 순서 매칭: ${placeName}`);
-          spotIndex++;
-        }
-        // 방법 3: 기본값 (최후의 수단)
-        else {
-          placeName = `Day ${day} 코스 ${
-            newLocations.filter((loc) => loc.day === day).length + 1
-          }`;
-          console.log(`⚠️ 기본값 사용: ${placeName}`);
-        }
-
-        // AI 응답에서 시간 정보 추출 시도
-        const beforeLocation = response.substring(0, match.index);
-        const lines = beforeLocation.split("\n");
-
-        for (
-          let i = lines.length - 1;
-          i >= Math.max(0, lines.length - 3);
-          i--
-        ) {
-          const line = lines[i]?.trim() || "";
-          const timeMatch = line.match(/\*\*([^*]*(?:오전|오후)[^*]*)\*\*/);
-          if (timeMatch) {
-            timeInfo = timeMatch[1].trim();
-            console.log(`✅ 시간 추출: ${timeInfo}`);
-            break;
-          }
-        }
-
-        // 기본 시간 설정
-        if (!timeInfo) {
-          const courseIndex =
-            newLocations.filter((loc) => loc.day === day).length + 1;
-          if (courseIndex === 1) timeInfo = "오전 09:00";
-          else if (courseIndex === 2) timeInfo = "오후 12:00";
-          else if (courseIndex === 3) timeInfo = "오후 15:00";
-          else timeInfo = `코스 ${courseIndex}`;
-        }
-
-        newLocations.push({
-          lat,
-          lng,
-          name: placeName,
-          day: day,
-          time: timeInfo,
-        });
-
-        console.log(
-          `📍 최종 위치 추가: ${placeName} (Day ${day}, ${timeInfo})`
-        );
-      }
-    }
-
-    // 위치 정보 텍스트 제거
-    cleanResponse = response
-      .replace(/@location:\s*\[\d+\.\d+\s*,\s*\d+\.\d+\]\s*@day:\d+/g, "")
-      .replace(/위치정보:\s*/g, "")
-      .trim();
-  } catch (error) {
-    console.error("위치 정보 처리 중 오류:", error);
-  }
-
-  console.log("🎯 최종 추출된 위치들:", newLocations);
-  return { locations: newLocations, cleanResponse };
-};
 
 // Day별 색상 정의
 const DAY_COLORS = {
@@ -245,7 +76,6 @@ const AIChatbot = () => {
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [currentStreamMessage, setCurrentStreamMessage] = useState("");
-  const [nearbySpots, setNearbySpots] = useState([]);
   const [travelInfo, setTravelInfo] = useState({
     festival: {
       name: "",
