@@ -1,5 +1,5 @@
 import './LocalFestive.css';
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import ScrollToTop from "../../scomponents/monthFestive/ScrollToTop.jsx";
 import { useNavigate } from 'react-router-dom';
 
@@ -8,9 +8,12 @@ const LocalFestive = () => {
   const [festivals, setFestivals] = useState([]);
   const [sortType, setSortType] = useState('date'); // 'date', 'distance', 'popularity'
   const [listFestivals, setListFestivals] = useState([]);
-  const [searchDate, setSearchDate] = useState('');
+  const [searchStartDate, setSearchStartDate] = useState('');
+  const [searchEndDate, setSearchEndDate] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const navigate = useNavigate();
+  const startDateRef = useRef(null);
+  const endDateRef = useRef(null);
   
   useEffect(() => {
     const fetchFestivals = async () => {
@@ -74,7 +77,7 @@ const LocalFestive = () => {
   
   // 검색 핸들러
   const handleSearch = () => {
-    console.log(`검색: 날짜=${searchDate}, 지역=${searchLocation}`);
+    console.log(`검색: 날짜=${searchStartDate} ~ ${searchEndDate}, 지역=${searchLocation}`);
     // 실제로는 여기서 검색 API 호출
   };
   
@@ -101,37 +104,49 @@ const LocalFestive = () => {
         </div>
         
         {/* 검색 섹션 */}
-        <div className="search-section">
-          <div className="search-container">
-            <div className="search-input-group">
-              <div className="input-container">
-                <svg className="input-icon" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
+        <div className="search-container">
+          <div className="search-form-row">
+            <div className="input-block">
+              <span className="input-label">시작 날짜</span>
+              <input
+                id="searchStartDate"
+                type="date"
+                className="search-input date-input"
+                value={searchStartDate}
+                onChange={e => setSearchStartDate(e.target.value)}
+                placeholder="시작일"
+              />
+            </div>
+            <span className="date-range-tilde">~</span>
+            <div className="input-block">
+              <span className="input-label">끝 날짜</span>
+              <input
+                id="searchEndDate"
+                type="date"
+                className="search-input date-input"
+                value={searchEndDate}
+                onChange={e => setSearchEndDate(e.target.value)}
+                placeholder="종료일"
+              />
+            </div>
+            <div className="input-block">
+              <span className="input-label">지역</span>
+              <div className="input-with-icon">
                 <input
-                    type="date"
-                    className="search-input date-input"
-                    value={searchDate}
-                    onChange={(e) => setSearchDate(e.target.value)}
-                    placeholder="시기"
+                  type="text"
+                  className="search-input location-input"
+                  value={searchLocation}
+                  onChange={e => setSearchLocation(e.target.value)}
+                  placeholder="지역"
                 />
-              </div>
-              <div className="input-container">
                 <svg className="input-icon" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-                <input
-                    type="text"
-                    className="search-input location-input"
-                    value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
-                    placeholder="지역"
-                />
               </div>
-              <button className="search-button" onClick={handleSearch}>
-                검색
-              </button>
             </div>
+            <button className="search-button" onClick={handleSearch}>
+              검색
+            </button>
           </div>
         </div>
         
