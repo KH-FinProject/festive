@@ -3,6 +3,7 @@ package com.project.festive.festiveserver.customer.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 
@@ -22,13 +23,16 @@ public class CustomerInquiryDto {
     private Integer boardViewCount;
     private Integer boardLikeCount;
     private Integer boardCommentCount;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime boardCreateDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime boardUpdateDate;
     private String boardDeleteYn;
     
     // 고객센터 전용 정보
     private String inquiryStatus;     // 문의 상태 (대기중, 답변완료, 처리중)
     private boolean hasAnswer;        // 답변 여부
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime answerDate; // 답변 작성일
     private String answerContent;     // 답변 내용 (간단 요약)
     private Long answerMemberNo;      // 답변자 번호

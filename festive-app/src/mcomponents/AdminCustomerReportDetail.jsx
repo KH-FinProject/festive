@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./AdminCustomerReportDetail.css";
 import "./AdminCommon.css";
 import AdminSidebar from "./AdminSideBar";
+import axiosApi from "../api/axiosAPI";
 
 const AdminCustomerReportDetail = () => {
   const { reportNo } = useParams();
@@ -36,20 +37,13 @@ const AdminCustomerReportDetail = () => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("정말로 이 신고를 삭제(허위신고)하시겠습니까?")) return;
+    if (!window.confirm("정말로 이 신고를 삭제하시겠습니까?")) return;
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/reports/${reportNo}`,
-        { method: "DELETE" }
-      );
-      if (response.ok) {
-        alert("신고가 삭제되었습니다.");
-        navigate("/admin/customer");
-      } else {
-        alert("신고 삭제에 실패했습니다.");
-      }
+      await axiosApi.delete(`/api/reports/${reportNo}`);
+      alert("신고가 삭제되었습니다.");
+      navigate("/admin/customer");
     } catch {
-      alert("신고 삭제 중 오류가 발생했습니다.");
+      alert("신고 삭제에 실패했습니다.");
     }
   };
 
@@ -67,24 +61,9 @@ const AdminCustomerReportDetail = () => {
     setIsSanctioning(true);
 
     try {
-      const sanctionRes = await fetch(
-        `http://localhost:8080/api/reports/sanction/${detail.memberNo}`,
-        { method: "POST" }
-      );
-      if (!sanctionRes.ok) {
-        alert("회원 제재에 실패했습니다.");
-        return;
-      }
-      const processRes = await fetch(
-        `http://localhost:8080/api/reports/${reportNo}/status?status=1`,
-        { method: "PUT" }
-      );
-      if (!processRes.ok) {
-        alert("회원 제재는 성공했으나, 신고 처리완료에는 실패했습니다.");
-        return;
-      }
+      await axiosApi.post(`/api/reports/sanction/${detail.memberNo}`);
+      await axiosApi.put(`/api/reports/${reportNo}/status?status=1`);
       alert("회원 제재 및 신고 처리완료가 모두 적용되었습니다.");
-
       await fetchDetail();
     } catch {
       alert("회원 제재/신고 처리 중 오류가 발생했습니다.");
@@ -100,23 +79,8 @@ const AdminCustomerReportDetail = () => {
       return;
     setIsSanctioning(true);
     try {
-      const res = await fetch(
-        `http://localhost:8080/api/reports/sanction-cancel/${detail.memberNo}`,
-        { method: "POST" }
-      );
-      if (!res.ok) {
-        alert("회원 제재 취소에 실패했습니다.");
-        return;
-      }
-      // 신고상태를 대기로 변경
-      const processRes = await fetch(
-        `http://localhost:8080/api/reports/${reportNo}/status?status=0`,
-        { method: "PUT" }
-      );
-      if (!processRes.ok) {
-        alert("제재 취소는 성공했으나, 신고상태 대기 전환에는 실패했습니다.");
-        return;
-      }
+      await axiosApi.post(`/api/reports/sanction-cancel/${detail.memberNo}`);
+      await axiosApi.put(`/api/reports/${reportNo}/status?status=0`);
       alert(
         "회원 제재가 취소(카운트 1 감소)되고, 신고상태가 대기로 변경되었습니다."
       );

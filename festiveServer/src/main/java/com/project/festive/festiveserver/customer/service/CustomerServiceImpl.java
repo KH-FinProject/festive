@@ -88,6 +88,7 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             BoardDto boardDto = convertToBoardDto(inquiryDto);
             boardDto.setBoardTypeNo(CUSTOMER_BOARD_TYPE);
+
             return wagleService.createBoard(boardDto);
         } catch (Exception e) {
             log.error("고객센터 문의글 작성 실패", e);

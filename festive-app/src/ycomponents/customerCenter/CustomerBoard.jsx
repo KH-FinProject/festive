@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faThumbsUp, faEye } from "@fortawesome/free-solid-svg-icons";
+import { faEye } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
 const CustomerBoard = ({
@@ -38,27 +38,34 @@ const CustomerBoard = ({
 
       const data = await response.json();
 
+      console.log("고객센터 데이터:", data); // 디버깅용
+
       // 데이터 형식 변환 (inquiryList 사용)
-      const formattedPosts = (data.inquiryList || []).map((post) => ({
-        id: post.boardNo,
-        title: post.boardTitle,
-        author: post.memberNickname || "익명",
-        date: new Date(post.boardCreateDate)
-          .toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-          .replace(/\. /g, ".")
-          .replace(".", ".")
-          .slice(0, -1),
-        likes: post.boardLikeCount || 0,
-        views: post.boardViewCount || 0,
-        status: post.inquiryStatus || "대기중", // 고객센터 전용 상태 정보
-        hasAnswer: post.hasAnswer || false, // 답변 여부
-      }));
+      const formattedPosts = (data.inquiryList || []).map((post) => {
+        console.log("개별 게시글:", post); // 디버깅용
+        return {
+          id: post.boardNo,
+          title: post.boardTitle,
+          author: post.memberNickname || "익명",
+          date: post.boardCreateDate
+            ? new Date(post.boardCreateDate)
+                .toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+                .replace(/\. /g, ".")
+                .replace(".", ".")
+                .slice(0, -1)
+            : "날짜 없음",
+          likes: post.boardLikeCount || 0,
+          views: post.boardViewCount || 0,
+          status: post.inquiryStatus || "대기중", // 고객센터 전용 상태 정보
+          hasAnswer: post.hasAnswer || false, // 답변 여부
+        };
+      });
 
       setPosts(formattedPosts);
 
