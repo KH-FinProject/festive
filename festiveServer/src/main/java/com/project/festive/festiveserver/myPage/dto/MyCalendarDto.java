@@ -14,5 +14,10 @@ public class MyCalendarDto {
     private String startDate; // "YYYY-MM-DD" 형식
     private String endDate;   // "YYYY-MM-DD" 형식
     private String imageUrl;
+    
+    
+    private String firstImage;
+    private String addr1;
+    private String overview;
 
 }

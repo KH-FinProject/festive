@@ -45,11 +45,10 @@ public interface MyPageMapper {
             @Param("nickname") String nickname,
             @Param("profileImagePath") String profileImagePath);
     
-    // 찜 목록 가져오기
-    List<String> findFavoriteContentIdsByMemberNo(long memberNo);
+    // 찜 목록 조회
+    List<String> selectFavoriteContentIds(@Param("memberNo") Long memberNo);
     
-    // 찜 해제하기
-    void deleteFavorite(@Param("memberNo") long memberNo, @Param("contentId") String contentId);
-
+    // 찜 해제
+    void deleteFavoriteFestival(@Param("memberNo") Long memberNo, @Param("contentId") String contentId);
  
 }

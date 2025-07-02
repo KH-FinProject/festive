@@ -6,9 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +30,7 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -283,49 +282,22 @@ public class MyPageController {
         }
     }
     
- // 찜한 축제 목록을 캘린더에 표시
+ // 찜한 축제 목록 조회
     @GetMapping("/mycalendar")
-    public ResponseEntity<List<MyCalendarDto>> getMyFavoriteFestivals(HttpServletRequest request) { // 파라미터 변경
-        try {
-            // 1. 쿠키에서 accessToken 가져오기
-            String accessToken = getAccessTokenFromCookie(request);
-            if (accessToken == null) {
-                // 토큰이 없으면 401 Unauthorized 응답
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            // 2. 토큰에서 memberNo 추출
-            long memberNo = jwtUtil.getMemberNo(accessToken);
-
-            // 3. 서비스 호출
-            List<MyCalendarDto> festivals = service.getFavoriteFestivals(memberNo);
-            return ResponseEntity.ok(festivals);
-
-        } catch (Exception e) {
-            log.error("찜한 축제 목록 조회 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<List<MyCalendarDto>> getFavoriteFestivals(HttpServletRequest request) {
+    	String accessToken = getAccessTokenFromCookie(request);
+    	Long memberNo = jwtUtil.getMemberNo(accessToken);
+        List<MyCalendarDto> list = service.getFavoriteFestivals(memberNo);
+        return ResponseEntity.ok(list);
     }
 
     // 찜 해제
     @DeleteMapping("/favorites/{contentId}")
-    public ResponseEntity<Void> unfavoriteFestival(
-            @PathVariable("contentId") String contentId,
-            HttpServletRequest request) { // 파라미터 변경
-        try {
-            String accessToken = getAccessTokenFromCookie(request);
-            if (accessToken == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            long memberNo = jwtUtil.getMemberNo(accessToken);
-            service.removeFavorite(memberNo, contentId);
-            return ResponseEntity.ok().build();
-
-        } catch (Exception e) {
-            log.error("찜 해제 처리 중 오류 발생: contentId={}, memberNo={}", contentId, jwtUtil.getMemberNo(getAccessTokenFromCookie(request)), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public ResponseEntity<Void> unfavoriteFestival(@PathVariable String contentId, HttpServletRequest request) {
+    	String accessToken = getAccessTokenFromCookie(request);
+    	Long memberNo = jwtUtil.getMemberNo(accessToken);
+        service.deleteFavoriteFestival(memberNo, contentId);
+        return ResponseEntity.noContent().build();
     }
 
 }
