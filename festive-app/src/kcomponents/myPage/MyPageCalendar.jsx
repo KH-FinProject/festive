@@ -76,7 +76,6 @@ const MyPageCalendar = () => {
     if (!window.confirm("정말로 찜 해제 하시겠습니까?")) {
       return;
     }
-
     fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
       method: "DELETE",
       credentials: "include",
