@@ -336,7 +336,9 @@ const FestivalDetail = () => {
 
             {/* Festival Details 축제 상세설명*/}
             <div className="festival-details">
-              <p>{festival.overview}</p>
+              <p style={{ whiteSpace: "pre-line" }}>
+                {festival.overview?.replace(/<br\s*\/?>/gi, "\n")}
+              </p>
             </div>
 
             {/* Event Poster */}

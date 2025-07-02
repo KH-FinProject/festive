@@ -151,7 +151,6 @@ public class DetailController {
 		try {
 			int result = service.changeLikes(likes);
 
-			System.out.println("result 값을 본다!!! : " + result);
 			if (result > 0) {
 				return ResponseEntity.status(HttpStatus.OK).body("좋아요 추가");
 			} else if (result < 0) {

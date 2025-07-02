@@ -59,10 +59,17 @@
 }
 
 .admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 24px 32px 24px 10px;
   border-bottom: 1px solid #f1f3f4;
 }
 
+.button-group {
+  display: flex;
+  gap: 8px;
+}
 .admin-section-title {
   font-size: 20px;
   font-weight: 450;
@@ -87,10 +94,11 @@
 
 .header-row {
   display: grid;
-  grid-template-columns: 50px 1fr 1fr 1fr 2fr 80px 80px;
+  grid-template-columns: 50px 1fr 1fr 2fr 2fr 80px 80px;
   gap: 16px;
   padding: 16px 32px;
   align-items: center;
+  text-align: center;
 }
 
 .header-cell {
@@ -118,10 +126,11 @@
 
 .member-row {
   display: grid;
-  grid-template-columns: 50px 1fr 1fr 1fr 2fr 80px 80px;
+  grid-template-columns: 50px 1fr 1fr 2fr 2fr 80px 80px;
   gap: 16px;
   padding: 16px 32px;
   align-items: center;
+  text-align: center;
   border-bottom: 1px solid #f1f3f4;
   transition: background-color 0.2s ease;
   font-weight: 450;
@@ -167,7 +176,7 @@
 
 .delete-button:hover {
   background: #c82333;
-  transform: translateY(-1px);
+  /* transform: translateY(-1px); */
 }
 
 .restore-button {
@@ -177,7 +186,7 @@
 
 .restore-button:hover {
   background: #218838;
-  transform: translateY(-1px);
+  /* transform: translateY(-1px); */
 }
 
 /* 스크롤바 커스터마이징 */

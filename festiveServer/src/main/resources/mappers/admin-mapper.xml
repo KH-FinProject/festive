@@ -35,5 +35,26 @@
   )
 </insert>
 
+	<!-- 탈퇴 회원 조회 : 미애 -->
+	<select id="selectWithdrawMembers">
+		SELECT MEMBER_NO, ID, NAME, NICKNAME, WITHDRAW_DATE
+		FROM MEMBER
+		WHERE MEMBER_DEL_FL = 'Y'
+	</select>
+	
+	<!-- 회원 영구 삭제 : 미애 -->
+	<delete id="deleteWithdrawMember">
+		DELETE FROM MEMBER
+		WHERE MEMBER_NO = #{memberNo}
+		AND MEMBER_DEL_FL = 'Y'
+	</delete>
+	
+	<!-- 탈퇴 회원 복구 : 미애 -->
+	<update id = "updateWithdrawMember">
+		UPDATE MEMBER
+		SET MEMBER_DEL_FL = 'N',
+		WITHDRAW_DATE = NULL
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
 	
 </mapper>

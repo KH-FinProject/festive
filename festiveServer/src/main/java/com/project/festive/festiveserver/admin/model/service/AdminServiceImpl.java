@@ -1,5 +1,8 @@
 package com.project.festive.festiveserver.admin.model.service;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +59,55 @@ public class AdminServiceImpl implements AdminService{
 	        password.append(characters.charAt(index));
 	    }
 	    return password.toString();
+	}
+
+	// 탈퇴 회원 조회 by 미애
+	@Override
+	public List<MemberDto> selectWithdrawMembers() {
+		
+		List<MemberDto> result = mapper.selectWithdrawMembers();
+		
+		return result;
+	}
+
+	// 회원 영구 삭제 by 미애
+	@Override
+	public int deleteWithdrawMember(List<Integer> memberNoList) {
+		
+		int result = 0;
+		int deleteMember = 0;
+		
+		for (int memberNo : memberNoList) {
+			
+			deleteMember = mapper.deleteWithdrawMember(memberNo);
+			
+			if(deleteMember > 0) {
+				result ++;
+			} else {
+				log.debug("멤버 삭제 실패 : " + memberNo);
+			}
+		}
+		
+		return result;
+	}
+
+	// 탈퇴 회원 복구 by 미애
+	@Override
+	public int updateWithdrawMember(List<Integer> memberNoList) {
+		int result = 0;
+		int updateMember = 0;
+		
+		for (int memberNo : memberNoList) {
+			updateMember = mapper.updateWithdrawMember(memberNo);
+			
+			if(updateMember > 0) {
+				result ++;
+			} else {
+				log.debug("멤버 복구 실패 : " + memberNo);
+			}
+		}
+		
+		return result;
 	}
 
 
