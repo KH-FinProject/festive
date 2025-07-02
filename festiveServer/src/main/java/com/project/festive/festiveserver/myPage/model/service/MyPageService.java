@@ -41,12 +41,6 @@ public interface MyPageService {
 
     // 현재 비밀번호 확인(비밀번호 변경 창)
     boolean checkPassword(Long memberNo, String rawPassword);
-    
-    // 찜 목록 조회
-    List<MyCalendarDto> getFavoriteFestivals(Long memberNo);
-    
-    // 찜 해제
-    void deleteFavoriteFestival(Long memberNo, String contentId);
 
 
 
