@@ -60,17 +60,19 @@ const MyPageCalendar = () => {
       });
   }, [member, navigate]);
 
-  // 찜 해제 핸들러
-  const handleUnfavorite = (contentId) => {
-    if (!window.confirm("정말로 찜 해제 하시겠습니까?")) {
-      return;
-    }
-
+  try {
     fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
       method: "DELETE",
       credentials: "include",
     })
       .then((res) => {
+      
+        // 찜 해제 핸들러
+        const handleUnfavorite = (contentId) => {
+          if (!window.confirm("정말로 찜 해제 하시겠습니까?")) {
+            return;
+          }
+      
         if (res.ok) {
           alert("찜 해제되었습니다.");
           // 상태 업데이트: 찜 해제된 축제를 목록에서 제거
