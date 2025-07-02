@@ -61,12 +61,20 @@ const AdminCustomerReply = () => {
         commentContent: replyContent.trim(),
         memberNo: 46, // TODO: 실제 관리자 memberNo로 변경
       };
-
-      const response = await axiosApi.post(
-        `http://localhost:8080/api/customer/boards/${inquiry.boardNo}/comments`,
-        replyData
-      );
-
+      let response;
+      if (inquiry.answerCommentNo) {
+        // 답변 수정
+        response = await axiosApi.put(
+          `/api/customer/boards/${inquiry.boardNo}/comments/${inquiry.answerCommentNo}`,
+          replyData
+        );
+      } else {
+        // 답변 등록
+        response = await axiosApi.post(
+          `http://localhost:8080/api/customer/boards/${inquiry.boardNo}/comments`,
+          replyData
+        );
+      }
       if (response.status === 200) {
         // 문의 상태를 "답변완료"로 업데이트
         try {
@@ -80,8 +88,11 @@ const AdminCustomerReply = () => {
         } catch (statusError) {
           console.error("문의 상태 업데이트 실패:", statusError);
         }
-
-        alert("답변이 성공적으로 등록되었습니다.");
+        alert(
+          inquiry.answerCommentNo
+            ? "답변이 성공적으로 수정되었습니다."
+            : "답변이 성공적으로 등록되었습니다."
+        );
         navigate("/admin/customer");
       }
     } catch (error) {
@@ -195,6 +206,7 @@ const AdminCustomerReply = () => {
                 placeholder="답변 내용을 입력하세요"
                 previewStyle="vertical"
                 disabled={isSubmitting}
+                initialValue={inquiry?.answerContent || ""}
               />
 
               <div className="inquiry-actions">
