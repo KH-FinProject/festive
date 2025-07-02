@@ -22,6 +22,21 @@ const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴�
 
 🎪 축제 검색도 가능합니다!`;
 
+// 두 지점 간 거리 계산 함수 (Haversine 공식)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371; // 지구 반지름 (km)
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // 거리 (km)
+};
+
 // Day별 색상 정의
 const DAY_COLORS = {
   1: "#FF6B6B", // 빨강
@@ -39,6 +54,35 @@ const DAY_COLORS = {
 // Day별 색상 가져오기 함수
 const getDayColor = (day) => {
   return DAY_COLORS[day] || "#FF6B6B";
+};
+
+// 사용자 메시지에서 총 일수 계산
+const calculateTotalDaysFromMessage = (message) => {
+  if (!message) return 1;
+
+  const lowerMessage = message.toLowerCase().replace(/\s+/g, "");
+
+  // 명확한 박수일 패턴 매칭
+  if (lowerMessage.includes("1박2일")) return 2;
+  if (lowerMessage.includes("2박3일")) return 3;
+  if (lowerMessage.includes("3박4일")) return 4;
+  if (lowerMessage.includes("4박5일")) return 5;
+  if (lowerMessage.includes("5박6일")) return 6;
+  if (lowerMessage.includes("6박7일")) return 7;
+
+  // 일수만 있는 경우
+  const dayMatch = message.match(/(\d+)일/);
+  if (dayMatch) {
+    const days = parseInt(dayMatch[1]);
+    return days;
+  }
+
+  // 당일치기 패턴
+  if (lowerMessage.includes("당일") || lowerMessage.includes("하루")) {
+    return 1;
+  }
+
+  return 1; // 기본값
 };
 
 // 마커 HTML 생성 함수
@@ -577,8 +621,11 @@ const AIChatbot = () => {
         // 저장용 추가 정보
         regionName: data.regionName,
         areaCode: data.areaCode,
-        totalDays: data.totalDays,
+        totalDays:
+          data.travelCourse?.totalDays ||
+          calculateTotalDaysFromMessage(userMessage),
         originalMessage: userMessage,
+        courseDescription: data.courseDescription, // AI가 생성한 day별 코스 설명
       });
 
       // 🎯 여행코스 저장 가능 여부 확인 (축제가 아닌 여행 추천만)
@@ -1347,95 +1394,45 @@ const AIChatbot = () => {
                     </div>
                   )}
 
-                {/* 교통 안내 - 여행코스가 있을 때만 표시 */}
-                {travelInfo.travelCourse && travelInfo.transportation && (
-                  <div className="ai-chatbot-transportation-info">
-                    <h3>교통 안내</h3>
-                    {travelInfo.transportation.nearestStation && (
-                      <p>
-                        <strong>가장 가까운 역:</strong>{" "}
-                        {travelInfo.transportation.nearestStation}
-                      </p>
-                    )}
-                    {travelInfo.transportation.recommendedMode && (
-                      <p>
-                        <strong>추천 이동수단:</strong>{" "}
-                        {travelInfo.transportation.recommendedMode}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* 교통 안내 - 여행코스가 있고 데이터가 있을 때만 표시 */}
+                {travelInfo.travelCourse &&
+                  travelInfo.transportation &&
+                  travelInfo.requestType !== "no_data" && (
+                    <div className="ai-chatbot-transportation-info">
+                      <h3>교통 안내</h3>
+                      {travelInfo.transportation.nearestStation && (
+                        <p>
+                          <strong>가장 가까운 역:</strong>{" "}
+                          {travelInfo.transportation.nearestStation}
+                        </p>
+                      )}
+                      {travelInfo.transportation.recommendedMode && (
+                        <p>
+                          <strong>추천 이동수단:</strong>{" "}
+                          {travelInfo.transportation.recommendedMode}
+                        </p>
+                      )}
+                    </div>
+                  )}
               </div>
 
-              {/* 🔄 여행코스 저장 버튼 - 추천 여행코스일 때만 표시 */}
+              {/* 🔄 여행코스 저장 및 취소 버튼 - 추천 여행코스일 때만 표시 */}
               {canSaveCourse && !travelInfo.isRejected && (
                 <div className="ai-chatbot-button-group">
+                  {isLoggedIn && (
+                    <button
+                      className="ai-chatbot-action-btn save-btn"
+                      onClick={handleSaveButtonClick}
+                      disabled={isSaving}
+                    >
+                      저장
+                    </button>
+                  )}
                   <button
-                    className="ai-chatbot-action-btn save-btn"
-                    onClick={handleSaveButtonClick}
-                    disabled={isSaving}
-                    style={{
-                      background: isLoggedIn
-                        ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                        : "linear-gradient(135deg, #6c757d 0%, #495057 100%)",
-                      color: "white",
-                      border: "none",
-                      padding: "12px 24px",
-                      borderRadius: "10px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      boxShadow: isLoggedIn
-                        ? "0 4px 12px rgba(102, 126, 234, 0.3)"
-                        : "0 4px 12px rgba(108, 117, 125, 0.3)",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isSaving) {
-                        e.target.style.transform = "translateY(-2px)";
-                        e.target.style.boxShadow = isLoggedIn
-                          ? "0 6px 16px rgba(102, 126, 234, 0.4)"
-                          : "0 6px 16px rgba(108, 117, 125, 0.4)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = "translateY(0)";
-                      e.target.style.boxShadow = isLoggedIn
-                        ? "0 4px 12px rgba(102, 126, 234, 0.3)"
-                        : "0 4px 12px rgba(108, 117, 125, 0.3)";
-                    }}
+                    className="ai-chatbot-action-btn cancel-btn"
+                    onClick={() => window.location.reload()}
                   >
-                    {isLoggedIn
-                      ? "💾 이 여행코스 저장하기"
-                      : "🔒 로그인 후 저장하기"}
-                  </button>
-                  <button
-                    className="ai-chatbot-action-btn share-btn"
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        messages[messages.length - 1]?.content || ""
-                      );
-                      alert("여행 계획이 클립보드에 복사되었습니다!");
-                    }}
-                    style={{
-                      background: "#f8f9fa",
-                      color: "#6c757d",
-                      border: "2px solid #e9ecef",
-                      padding: "12px 24px",
-                      borderRadius: "10px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    📋 텍스트 복사
+                    새로고침
                   </button>
                 </div>
               )}
@@ -1455,6 +1452,7 @@ const AIChatbot = () => {
               totalDays: travelInfo.totalDays || 1,
               requestType: travelInfo.requestType || "travel_only",
               thumbnailImage: locations.length > 0 ? locations[0].image : null,
+              courseDescription: travelInfo.courseDescription, // AI가 생성한 day별 코스 설명
             }}
             loading={isSaving}
           />

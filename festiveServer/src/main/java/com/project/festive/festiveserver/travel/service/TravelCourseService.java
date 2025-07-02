@@ -53,4 +53,13 @@ public interface TravelCourseService {
      * @return 삭제 성공 여부
      */
     boolean deleteTravelCourse(Long courseNo, Long memberNo);
+    
+    /**
+     * 여행코스 공유 상태 변경
+     * @param courseNo 여행코스 번호
+     * @param memberNo 회원 번호 (소유자 확인용)
+     * @param isShared 공유 상태 (Y/N)
+     * @return 변경 성공 여부
+     */
+    boolean updateShareStatus(Long courseNo, Long memberNo, String isShared);
 } 

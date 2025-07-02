@@ -9,7 +9,6 @@ public class TravelCourseDetail {
     private Integer dayNumber;      // 몇일차
     private Integer visitOrder;     // 방문 순서
     private String placeName;       // 장소명
-    private String placeAddress;    // 장소 주소
     private Double latitude;        // 위도
     private Double longitude;       // 경도
     private String placeImage;      // 장소 이미지 URL
@@ -17,21 +16,21 @@ public class TravelCourseDetail {
     private String placeCategory;   // 장소 카테고리
     private String contentId;       // TourAPI ContentID
     private String contentTypeId;   // TourAPI ContentTypeID
+    private String placeOverview;    // 장소 개요/소개글 (TourAPI overview - 동적 로딩용)
 
     // 기본 생성자
     public TravelCourseDetail() {}
 
     // 전체 생성자
     public TravelCourseDetail(Long detailNo, Long courseNo, Integer dayNumber, Integer visitOrder,
-                             String placeName, String placeAddress, Double latitude, Double longitude,
+                             String placeName, Double latitude, Double longitude,
                              String placeImage, String placeTel, String placeCategory,
-                             String contentId, String contentTypeId) {
+                             String contentId, String contentTypeId, String placeOverview) {
         this.detailNo = detailNo;
         this.courseNo = courseNo;
         this.dayNumber = dayNumber;
         this.visitOrder = visitOrder;
         this.placeName = placeName;
-        this.placeAddress = placeAddress;
         this.latitude = latitude;
         this.longitude = longitude;
         this.placeImage = placeImage;
@@ -39,6 +38,7 @@ public class TravelCourseDetail {
         this.placeCategory = placeCategory;
         this.contentId = contentId;
         this.contentTypeId = contentTypeId;
+        this.placeOverview = placeOverview;
     }
 
     // Getter & Setter
@@ -56,9 +56,6 @@ public class TravelCourseDetail {
 
     public String getPlaceName() { return placeName; }
     public void setPlaceName(String placeName) { this.placeName = placeName; }
-
-    public String getPlaceAddress() { return placeAddress; }
-    public void setPlaceAddress(String placeAddress) { this.placeAddress = placeAddress; }
 
     public Double getLatitude() { return latitude; }
     public void setLatitude(Double latitude) { this.latitude = latitude; }
@@ -80,6 +77,9 @@ public class TravelCourseDetail {
 
     public String getContentTypeId() { return contentTypeId; }
     public void setContentTypeId(String contentTypeId) { this.contentTypeId = contentTypeId; }
+
+    public String getPlaceOverview() { return placeOverview; }
+    public void setPlaceOverview(String placeOverview) { this.placeOverview = placeOverview; }
 
     @Override
     public String toString() {

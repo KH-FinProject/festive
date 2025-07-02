@@ -47,4 +47,9 @@ public interface TravelCourseMapper {
      * 여행코스 삭제
      */
     int deleteTravelCourse(@Param("courseNo") Long courseNo, @Param("memberNo") Long memberNo);
+    
+    /**
+     * 여행코스 공유 상태 변경
+     */
+    int updateShareStatus(@Param("courseNo") Long courseNo, @Param("memberNo") Long memberNo, @Param("isShared") String isShared);
 } 

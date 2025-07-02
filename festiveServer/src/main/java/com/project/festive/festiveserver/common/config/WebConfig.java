@@ -7,6 +7,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -33,7 +35,18 @@ public class WebConfig implements WebMvcConfigurer {
   // 찜달력(MypageServiceImpl) - 지현이가 추가함
   @Bean
   public RestTemplate restTemplate() {
-      return new RestTemplate();
+      RestTemplate restTemplate = new RestTemplate();
+      
+      // UTF-8 인코딩을 위한 StringHttpMessageConverter 설정
+      StringHttpMessageConverter stringConverter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
+      stringConverter.setWriteAcceptCharset(false); // Accept-Charset 헤더 생성 방지
+      
+      // 기존 메시지 컨버터 중 StringHttpMessageConverter를 UTF-8로 교체
+      restTemplate.getMessageConverters().removeIf(converter -> 
+          converter instanceof StringHttpMessageConverter);
+      restTemplate.getMessageConverters().add(0, stringConverter);
+      
+      return restTemplate;
   }
   
 }

@@ -32,11 +32,21 @@ public class TravelCourseServiceImpl implements TravelCourseService {
             travelCourse.setMemberNo(memberNo);
             travelCourse.setCourseTitle(request.getCourseTitle());
             travelCourse.setThumbnailImage(request.getThumbnailImage());
-            travelCourse.setRegionName(request.getRegionName());
-            travelCourse.setAreaCode(request.getAreaCode());
+            
+            // areaCode가 null이거나 빈 문자열이면 "전국"으로 처리
+            String regionName = request.getRegionName();
+            String areaCode = request.getAreaCode();
+            if (areaCode == null || areaCode.trim().isEmpty()) {
+                regionName = "전국";
+                areaCode = "0"; // 전국 코드로 설정
+            }
+            
+            travelCourse.setRegionName(regionName);
+            travelCourse.setAreaCode(areaCode);
             travelCourse.setTotalDays(request.getTotalDays());
             travelCourse.setRequestType(request.getRequestType());
             travelCourse.setIsShared(request.getIsShared());
+            travelCourse.setCourseDescription(request.getCourseDescription()); // AI가 생성한 day별 코스 설명
             
             int courseResult = travelCourseMapper.insertTravelCourse(travelCourse);
             if (courseResult <= 0) {
@@ -55,7 +65,6 @@ public class TravelCourseServiceImpl implements TravelCourseService {
                     detail.setDayNumber(location.getDay());
                     detail.setVisitOrder(location.getOrder());
                     detail.setPlaceName(location.getName());
-                    detail.setPlaceAddress(location.getAddress());
                     detail.setLatitude(location.getLatitude());
                     detail.setLongitude(location.getLongitude());
                     detail.setPlaceImage(location.getImage());
@@ -120,6 +129,25 @@ public class TravelCourseServiceImpl implements TravelCourseService {
             return success;
         } catch (Exception e) {
             log.error("❌ 여행코스 삭제 실패", e);
+            return false;
+        }
+    }
+    
+    @Override
+    @Transactional
+    public boolean updateShareStatus(Long courseNo, Long memberNo, String isShared) {
+        log.info("🔄 여행코스 공유 상태 변경 - 코스번호: {}, 회원: {}, 공유상태: {}", courseNo, memberNo, isShared);
+        try {
+            int result = travelCourseMapper.updateShareStatus(courseNo, memberNo, isShared);
+            boolean success = result > 0;
+            if (success) {
+                log.info("✅ 여행코스 공유 상태 변경 완료 - 코스번호: {}, 공유상태: {}", courseNo, isShared);
+            } else {
+                log.warn("⚠️ 여행코스 공유 상태 변경 실패 - 권한 없음 또는 존재하지 않음");
+            }
+            return success;
+        } catch (Exception e) {
+            log.error("❌ 여행코스 공유 상태 변경 실패", e);
             return false;
         }
     }

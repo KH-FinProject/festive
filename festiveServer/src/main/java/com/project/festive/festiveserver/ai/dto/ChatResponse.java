@@ -18,6 +18,9 @@ public class ChatResponse {
     private TravelCourse travelCourse;   // 구조화된 여행코스
     private boolean isStreaming;         // 스트리밍 여부
     private Map<String, Object> analysisInfo; // 프론트엔드 TourAPI 호출용 분석 정보
+    private String regionName;           // 지역명 (여행코스 저장용)
+    private String areaCode;             // 지역코드 (여행코스 저장용)
+    private String courseDescription;    // AI가 생성한 day별 코스 설명 (프론트엔드 표시용)
     
     @Data
     @NoArgsConstructor
@@ -31,6 +34,8 @@ public class ChatResponse {
         private String description; // 설명
         private String image;       // 이미지 URL (TourAPI)
         private String category;    // 카테고리 (관광지, 문화시설 등)
+        private String contentId;   // TourAPI ContentID (DB 저장용)
+        private String contentTypeId; // TourAPI ContentTypeID (DB 저장용)
     }
     
     @Data

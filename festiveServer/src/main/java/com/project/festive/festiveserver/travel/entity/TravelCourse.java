@@ -15,7 +15,13 @@ public class TravelCourse {
     private Integer totalDays;       // 총 여행일수
     private String requestType;      // 요청타입
     private String isShared;         // 공유여부 (Y/N)
+    private String courseDescription; // AI가 생성한 day별 코스 설명
     private LocalDateTime createdDate; // 생성일시
+    
+    // 조인으로 가져올 회원 정보
+    private String memberNickname;   // 회원 닉네임
+    private String memberName;       // 회원 이름
+    private String memberProfileImage; // 회원 프로필 이미지
 
     // 기본 생성자
     public TravelCourse() {}
@@ -23,7 +29,7 @@ public class TravelCourse {
     // 전체 생성자
     public TravelCourse(Long courseNo, Long memberNo, String courseTitle, String thumbnailImage, 
                        String regionName, String areaCode, Integer totalDays, String requestType, 
-                       String isShared, LocalDateTime createdDate) {
+                       String isShared, String courseDescription, LocalDateTime createdDate) {
         this.courseNo = courseNo;
         this.memberNo = memberNo;
         this.courseTitle = courseTitle;
@@ -33,6 +39,7 @@ public class TravelCourse {
         this.totalDays = totalDays;
         this.requestType = requestType;
         this.isShared = isShared;
+        this.courseDescription = courseDescription;
         this.createdDate = createdDate;
     }
 
@@ -64,8 +71,20 @@ public class TravelCourse {
     public String getIsShared() { return isShared; }
     public void setIsShared(String isShared) { this.isShared = isShared; }
 
+    public String getCourseDescription() { return courseDescription; }
+    public void setCourseDescription(String courseDescription) { this.courseDescription = courseDescription; }
+
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
+
+    public String getMemberNickname() { return memberNickname; }
+    public void setMemberNickname(String memberNickname) { this.memberNickname = memberNickname; }
+
+    public String getMemberName() { return memberName; }
+    public void setMemberName(String memberName) { this.memberName = memberName; }
+
+    public String getMemberProfileImage() { return memberProfileImage; }
+    public void setMemberProfileImage(String memberProfileImage) { this.memberProfileImage = memberProfileImage; }
 
     @Override
     public String toString() {

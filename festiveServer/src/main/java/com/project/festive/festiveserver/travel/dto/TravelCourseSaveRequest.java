@@ -13,6 +13,7 @@ public class TravelCourseSaveRequest {
     private String areaCode;         // TourAPI 지역코드
     private Integer totalDays;       // 총 여행일수
     private String requestType;      // 요청타입
+    private String courseDescription; // AI가 생성한 day별 코스 설명
     private List<LocationInfo> locations; // 장소 정보 리스트
 
     // 장소 정보 내부 클래스
@@ -91,6 +92,9 @@ public class TravelCourseSaveRequest {
 
     public String getRequestType() { return requestType; }
     public void setRequestType(String requestType) { this.requestType = requestType; }
+
+    public String getCourseDescription() { return courseDescription; }
+    public void setCourseDescription(String courseDescription) { this.courseDescription = courseDescription; }
 
     public List<LocationInfo> getLocations() { return locations; }
     public void setLocations(List<LocationInfo> locations) { this.locations = locations; }

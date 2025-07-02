@@ -19,6 +19,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import java.nio.charset.StandardCharsets;
+import jakarta.annotation.PostConstruct;
 import org.springframework.web.util.UriComponentsBuilder;
 import com.project.festive.festiveserver.ai.dto.ChatRequest;
 import com.project.festive.festiveserver.ai.dto.ChatResponse;
@@ -26,15 +29,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor  
 @Slf4j
 public class AITravelServiceImpl implements AITravelService {
     
-    @Value("${openai.api.key:}")
-    private String openAiApiKey;
+    private final TourAPIService tourAPIService;
+    private final OpenAIService openAIService;
+    private final TravelAnalysisService travelAnalysisService;
     
+    // 임시 필드들 (기존 코드와의 호환성을 위해)
     @Value("${tour.api.service-key:}")
     private String tourApiServiceKey;
+    
+    @Value("${openai.api.key:}")
+    private String openAiApiKey;
     
     // 지역코드 및 시군구 코드 매핑
     private final Map<String, String> AREA_CODE_MAP = new HashMap<String, String>() {{
@@ -184,42 +192,49 @@ public class AITravelServiceImpl implements AITravelService {
         put("울진군", "37_22"); put("울진", "37_22");
         put("울릉군", "37_23"); put("울릉", "37_23");
         
-        // 경상남도 (38) - 시/군명과 줄임형 모두 지원
-        put("창원시", "38_1"); put("창원", "38_1");
-        put("진주시", "38_2"); put("진주", "38_2");
-        put("통영시", "38_3"); put("통영", "38_3");  // 🎯 통영 추가
-        put("사천시", "38_4"); put("사천", "38_4");
-        put("김해시", "38_5"); put("김해", "38_5");
-        put("밀양시", "38_6"); put("밀양", "38_6");
-        put("거제시", "38_7"); put("거제", "38_7");
-        put("양산시", "38_8"); put("양산", "38_8");
-        put("의령군", "38_9"); put("의령", "38_9");
-        put("함안군", "38_10"); put("함안", "38_10");
-        put("창녕군", "38_11"); put("창녕", "38_11");
-        put("고성군", "38_12"); put("고성", "38_12");
-        put("남해군", "38_13"); put("남해", "38_13");
-        put("하동군", "38_14"); put("하동", "38_14");
-        put("산청군", "38_15"); put("산청", "38_15");
-        put("함양군", "38_16"); put("함양", "38_16");
-        put("거창군", "38_17"); put("거창", "38_17");
-        put("합천군", "38_18"); put("합천", "38_18");
+        // 경상남도 (36) - 시/군명과 줄임형 모두 지원 (TourAPI 기준)
+        put("거제시", "36_1"); put("거제", "36_1");
+        put("거창군", "36_2"); put("거창", "36_2");
+        put("고성군", "36_3"); put("고성", "36_3");
+        put("김해시", "36_4"); put("김해", "36_4");
+        put("남해군", "36_5"); put("남해", "36_5");
+        put("마산시", "36_6"); put("마산", "36_6");
+        put("밀양시", "36_7"); put("밀양", "36_7");
+        put("사천시", "36_8"); put("사천", "36_8");
+        put("산청군", "36_9"); put("산청", "36_9");
+        put("양산시", "36_10"); put("양산", "36_10");
+        put("의령군", "36_12"); put("의령", "36_12");
+        put("진주시", "36_13"); put("진주", "36_13");
+        put("진해시", "36_14"); put("진해", "36_14");
+        put("창녕군", "36_15"); put("창녕", "36_15");
+        put("창원시", "36_16"); put("창원", "36_16");
+        put("통영시", "36_17"); put("통영", "36_17");  // 🎯 통영 올바른 코드
+        put("하동군", "36_18"); put("하동", "36_18");
+        put("함안군", "36_19"); put("함안", "36_19");
+        put("함양군", "36_20"); put("함양", "36_20");
+        put("합천군", "36_21"); put("합천", "36_21");
         
         // 제주특별자치도 (39) - 줄임형 추가
         put("제주시", "39_1"); put("제주", "39_1");
         put("서귀포시", "39_2"); put("서귀포", "39_2");
     }};
 
-    private final RestTemplate restTemplate;
+    // RestTemplate은 아래에서 초기화
     
-    // 생성자에서 UTF-8 인코딩 설정된 RestTemplate 초기화
-    public AITravelServiceImpl() {
-        this.restTemplate = new RestTemplate();
-        // UTF-8 인코딩 명시적 설정
-        this.restTemplate.getMessageConverters().forEach(converter -> {
-            if (converter instanceof org.springframework.http.converter.StringHttpMessageConverter) {
-                ((org.springframework.http.converter.StringHttpMessageConverter) converter).setDefaultCharset(java.nio.charset.StandardCharsets.UTF_8);
-            }
-        });
+    // UTF-8 인코딩이 설정된 RestTemplate
+    private RestTemplate restTemplate;
+    
+    @PostConstruct
+    private void initRestTemplate() {
+        restTemplate = new RestTemplate();
+        // UTF-8 인코딩을 위한 StringHttpMessageConverter 설정
+        StringHttpMessageConverter stringConverter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
+        stringConverter.setWriteAcceptCharset(false); // Accept-Charset 헤더 생성 방지
+        
+        // 기존 메시지 컨버터 중 StringHttpMessageConverter를 UTF-8로 교체
+        restTemplate.getMessageConverters().removeIf(converter -> 
+            converter instanceof StringHttpMessageConverter);
+        restTemplate.getMessageConverters().add(0, stringConverter);
     }
 
     @Override
@@ -301,6 +316,12 @@ public class AITravelServiceImpl implements AITravelService {
             List<TourAPIResponse.Item> tourAPIData = collectTourismDataSecurely(analysis);
             log.info("✅ TourAPI 데이터 수집 완료: {}개", tourAPIData.size());
             
+            // 🚨 TourAPI 데이터가 없는 경우 처리
+            if (tourAPIData.isEmpty()) {
+                log.warn("⚠️ TourAPI 데이터가 없음 - 데이터 없음 응답 생성");
+                return createNoDataResponse(analysis);
+            }
+            
             // TourAPI 데이터를 Map 형태로 변환
             List<Map<String, Object>> tourApiDataMaps = tourAPIData.stream()
                 .map(this::convertToMap)
@@ -319,6 +340,13 @@ public class AITravelServiceImpl implements AITravelService {
             response.setContent(structuredContent);
             response.setRequestType(analysis.getRequestType());
             response.setStreaming(false);
+            
+            // 🎯 지역 정보 설정 (저장할 때 사용)
+            response.setRegionName(analysis.getRegion());
+            response.setAreaCode(analysis.getAreaCode());
+            
+            // 📝 AI가 생성한 day별 코스 설명 저장 (프론트엔드 표시용)
+            response.setCourseDescription(structuredContent);
             
             // 🎯 요청 기간에 맞게 위치 정보 생성 (선호하는 contentType 고려)
             List<ChatResponse.LocationInfo> locations = createLocationsFromTourAPIDataWithPreference(
@@ -341,6 +369,46 @@ public class AITravelServiceImpl implements AITravelService {
             log.error("데이터 기반 응답 생성 실패", e);
             throw new RuntimeException("여행 정보 처리 중 오류가 발생했습니다.", e);
         }
+    }
+    
+    /**
+     * 🚨 TourAPI 데이터가 없는 경우 응답 생성
+     */
+    private ChatResponse createNoDataResponse(TravelAnalysis analysis) {
+        ChatResponse response = new ChatResponse();
+        
+        String region = analysis.getRegion() != null ? analysis.getRegion() : "해당 지역";
+        String keyword = analysis.getKeyword() != null ? analysis.getKeyword() : "";
+        String requestType = analysis.getRequestType();
+        
+        // 🎯 요청 타입에 따른 응답 메시지 생성
+        StringBuilder content = new StringBuilder();
+        
+        if ("festival_only".equals(requestType) || "festival_with_travel".equals(requestType)) {
+            // 축제 요청인 경우
+            content.append("네! ").append(region);
+            if (!keyword.isEmpty()) {
+                content.append(" ").append(keyword).append("축제");
+            } else {
+                content.append(" 축제");
+            }
+            content.append(" 알려드리겠습니다.\n\n");
+            content.append("찾아봤지만, 현재는 없는것같아요 ㅠ 다시 검색을 해주세요");
+        } else {
+            // 여행 요청인 경우  
+            content.append("네! ").append(region).append(" 여행 정보를 찾아드리겠습니다.\n\n");
+            content.append("찾아봤지만, 현재는 없는것같아요 ㅠ 다시 검색을 해주세요");
+        }
+        
+        response.setContent(content.toString());
+        response.setRequestType("no_data"); // 🎯 특별한 타입 설정으로 교통안내 숨김 처리
+        response.setStreaming(false);
+        response.setLocations(new ArrayList<>());
+        response.setFestivals(new ArrayList<>());
+        response.setTravelCourse(null);
+        
+        log.info("🚨 데이터 없음 응답 생성 완료 - 지역: {}, 키워드: {}", region, keyword);
+        return response;
     }
     
     /**
@@ -484,14 +552,14 @@ public class AITravelServiceImpl implements AITravelService {
     private List<TourAPIResponse.Item> collectTourismDataSecurely(TravelAnalysis analysis) {
         List<TourAPIResponse.Item> allItems = new ArrayList<>();
         
-        String areaCode = analysis.getAreaCode() != null ? analysis.getAreaCode() : "1";
+        String areaCode = analysis.getAreaCode(); // null이면 전국 검색
         String sigunguCode = analysis.getSigunguCode();
         String keyword = analysis.getKeyword();
         String requestType = analysis.getRequestType();
         String preferredContentType = analysis.getPreferredContentType();
         
         log.info("🌐 백엔드 TourAPI 호출 시작 - 지역코드: {}, 시군구코드: {}, 키워드: {}, 요청타입: {}", 
-                areaCode, sigunguCode != null ? sigunguCode : "없음", keyword, requestType);
+                areaCode != null ? areaCode : "전국", sigunguCode != null ? sigunguCode : "없음", keyword, requestType);
         
         try {
             // 🎪 축제 요청인 경우 - 축제 데이터만 수집
@@ -678,7 +746,168 @@ public class AITravelServiceImpl implements AITravelService {
         map.put("contentid", item.getContentId());
         map.put("eventstartdate", item.getEventStartDate());
         map.put("eventenddate", item.getEventEndDate());
+        map.put("overview", item.getOverview());
+        
+        // contentTypeId에 따른 처리 및 detailCommon2 API 호출
+        String contentTypeId = item.getContentTypeId();
+        
+        try {
+            // 모든 타입에 대해 detailCommon2 API를 호출하여 상세 정보 가져오기
+            TourAPIResponse.Item detailInfo = fetchDetailCommon2(item.getContentId());
+            if (detailInfo != null) {
+                // overview 정보 업데이트
+                if (detailInfo.getOverview() != null && !detailInfo.getOverview().trim().isEmpty()) {
+                    map.put("overview", detailInfo.getOverview());
+                }
+                
+                if ("25".equals(contentTypeId)) {
+                    // 여행코스는 "여행코스"로 표시
+                    map.put("category", "여행코스");
+                } else {
+                    // 그 외 타입들은 실제 주소 정보로 표시
+                    if (detailInfo.getAddr1() != null && !detailInfo.getAddr1().trim().isEmpty()) {
+                        map.put("addr1", detailInfo.getAddr1());
+                        map.put("category", detailInfo.getAddr1());
+                    } else {
+                        map.put("category", getContentTypeNameByCode(contentTypeId));
+                    }
+                }
+            } else {
+                // detailCommon2 호출 실패 시 기본 처리
+                if ("25".equals(contentTypeId)) {
+                    map.put("category", "여행코스");
+                } else {
+                    map.put("category", getContentTypeNameByCode(contentTypeId));
+                }
+            }
+        } catch (Exception e) {
+            log.warn("detailCommon2 API 호출 실패 - contentId: {}", item.getContentId(), e);
+            if ("25".equals(contentTypeId)) {
+                map.put("category", "여행코스");
+            } else {
+                map.put("category", getContentTypeNameByCode(contentTypeId));
+            }
+        }
+        
         return map;
+    }
+    
+    /**
+     * TourAPI detailCommon2 호출하여 상세 정보 가져오기
+     */
+    private TourAPIResponse.Item fetchDetailCommon2(String contentId) {
+        try {
+            log.info("🔍 detailCommon2 API 호출 - contentId: {}", contentId);
+            
+            String url = UriComponentsBuilder.fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/detailCommon2")
+                    .queryParam("MobileOS", "ETC")
+                    .queryParam("MobileApp", "festive")
+                    .queryParam("contentId", contentId)
+                    .build(false)
+                    .toUriString() + "&serviceKey=" + tourApiServiceKey;
+            
+            log.debug("detailCommon2 URL: {}", url);
+            
+            ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(url), String.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String responseBody = response.getBody();
+                log.debug("detailCommon2 응답 데이터 길이: {}", responseBody.length());
+                
+                // XML 응답 파싱
+                List<TourAPIResponse.Item> items = parseDetailCommon2Response(responseBody);
+                
+                if (!items.isEmpty()) {
+                    TourAPIResponse.Item item = items.get(0);
+                    log.info("✅ detailCommon2 정보 조회 성공 - contentId: {}, addr1: {}, overview 길이: {}", 
+                            contentId, item.getAddr1(), 
+                            item.getOverview() != null ? item.getOverview().length() : 0);
+                    return item;
+                } else {
+                    log.warn("⚠️ detailCommon2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
+                }
+            } else {
+                log.warn("⚠️ detailCommon2 API 호출 실패 - contentId: {}, 상태코드: {}", 
+                        contentId, response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            log.error("detailCommon2 API 호출 중 오류 발생 - contentId: {}", contentId, e);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * detailCommon2 응답 파싱
+     */
+    private List<TourAPIResponse.Item> parseDetailCommon2Response(String response) {
+        List<TourAPIResponse.Item> items = new ArrayList<>();
+        
+        try {
+            // XML 파싱
+            String itemsSection = response;
+            
+            // <item> 태그들 추출
+            String[] itemBlocks = itemsSection.split("<item>");
+            
+            for (int i = 1; i < itemBlocks.length; i++) {
+                String itemBlock = itemBlocks[i];
+                if (itemBlock.contains("</item>")) {
+                    itemBlock = itemBlock.substring(0, itemBlock.indexOf("</item>"));
+                    TourAPIResponse.Item item = parseDetailCommon2Item(itemBlock);
+                    if (item != null) {
+                        items.add(item);
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("detailCommon2 응답 파싱 실패", e);
+        }
+        
+        return items;
+    }
+    
+    /**
+     * detailCommon2 개별 아이템 파싱
+     */
+    private TourAPIResponse.Item parseDetailCommon2Item(String xmlItem) {
+        try {
+            TourAPIResponse.Item item = new TourAPIResponse.Item();
+            
+            // addr1 추출
+            String addr1 = extractXMLValue(xmlItem, "addr1");
+            item.setAddr1(addr1);
+            
+            // overview 추출
+            String overview = extractXMLValue(xmlItem, "overview");
+            // HTML 태그 제거 및 특수문자 디코딩
+            if (overview != null && !overview.trim().isEmpty()) {
+                overview = overview.replaceAll("<[^>]*>", "") // HTML 태그 제거
+                        .replace("&lt;", "<")
+                        .replace("&gt;", ">")
+                        .replace("&amp;", "&")
+                        .replace("&quot;", "\"")
+                        .replace("&#39;", "'")
+                        .replace("&nbsp;", " ")
+                        .trim();
+            }
+            item.setOverview(overview);
+            
+            // contentId 추출
+            String contentId = extractXMLValue(xmlItem, "contentid");
+            item.setContentId(contentId);
+            
+            log.debug("✅ detailCommon2 아이템 파싱 완료 - contentId: {}, addr1: {}, overview 길이: {}", 
+                    contentId, addr1, overview != null ? overview.length() : 0);
+            
+            return item;
+            
+        } catch (Exception e) {
+            log.error("detailCommon2 아이템 파싱 실패", e);
+            return null;
+        }
     }
     
     /**
@@ -740,21 +969,21 @@ public class AITravelServiceImpl implements AITravelService {
             }
             log.error("빠른 분석 실패, 기본값 사용", e);
             
-            // 기본값으로 서울 2박3일 여행 설정
+            // 기본값으로 전국 2박3일 여행 설정
             TravelAnalysis analysis = new TravelAnalysis(
-                "travel_only", "서울", "관광", "2박3일", "여행/축제 전용 기본 분석"
+                "travel_only", "전국", "관광", "2박3일", "여행/축제 전용 기본 분석"
             );
-            analysis.setAreaCode("1"); // 서울
+            analysis.setAreaCode(null); // 전국
             analysis.setSigunguCode(null);
             return analysis;
         } catch (Exception e) {
             log.error("빠른 분석 실패, 기본값 사용", e);
             
-            // 기본값으로 서울 2박3일 여행 설정
+            // 기본값으로 전국 2박3일 여행 설정
             TravelAnalysis analysis = new TravelAnalysis(
-                "travel_only", "서울", "관광", "2박3일", "여행/축제 전용 기본 분석"
+                "travel_only", "전국", "관광", "2박3일", "여행/축제 전용 기본 분석"
             );
-            analysis.setAreaCode("1"); // 서울
+            analysis.setAreaCode(null); // 전국
             analysis.setSigunguCode(null);
             return analysis;
         }
@@ -1092,16 +1321,29 @@ public class AITravelServiceImpl implements AITravelService {
      * 시군구명에서 지역코드와 시군구코드 추출
      */
     private RegionInfo extractRegionInfo(String userMessage) {
-        if (userMessage == null) return new RegionInfo("1", null, "서울");
+        if (userMessage == null) return new RegionInfo(null, null, "전국");
         
         log.info("🔍 지역 정보 추출 시작: '{}'", userMessage);
         
         // 🎯 간단한 지역 매핑 - 주요 도시/지역명 직접 매핑
         String lowerMessage = userMessage.toLowerCase();
         
-        // 경상남도 주요 도시
+        // 🌍 전국 키워드 체크
+        if (lowerMessage.contains("전국") || lowerMessage.contains("전체") || lowerMessage.contains("모든")) {
+            log.info("🌍 전국 키워드 감지 -> 전국 검색");
+            return new RegionInfo(null, null, "전국");
+        }
+        
+        // 경상남도 주요 도시 (통영 포함)
         if (lowerMessage.contains("통영") || lowerMessage.contains("거제") || lowerMessage.contains("김해") || 
             lowerMessage.contains("진주") || lowerMessage.contains("창원") || lowerMessage.contains("밀양")) {
+            
+            // 통영의 경우 시군구 코드도 함께 설정
+            if (lowerMessage.contains("통영")) {
+                log.info("🏘️ 통영시 감지 -> 지역코드: 36, 시군구코드: 36_17");
+                return new RegionInfo("36", "36_17", "통영시");
+            }
+            
             log.info("🏘️ 경상남도 도시 감지 -> 지역코드: 36");
             return new RegionInfo("36", null, "경상남도");
         }
@@ -1142,8 +1384,8 @@ public class AITravelServiceImpl implements AITravelService {
             }
         }
         
-        log.info("⚠️ 지역 매칭 실패, 기본값(서울) 사용");
-        return new RegionInfo("1", null, "서울"); // 기본값
+        log.info("⚠️ 지역 매칭 실패, 기본값(전국) 사용");
+        return new RegionInfo(null, null, "전국"); // 기본값을 전국으로 변경
     }
     
     /**
@@ -1314,13 +1556,24 @@ public class AITravelServiceImpl implements AITravelService {
                 .queryParam("MobileApp", "festive") // 정상 버전
                 .queryParam("_type", "json") // JSON 응답 요청
                 .queryParam("arrange", "o")
-                .queryParam("contentTypeId", contentTypeId)
-                .queryParam("areaCode", areaCode);
+                .queryParam("contentTypeId", contentTypeId);
             
-            // 시군구 코드가 있으면 추가
+            // areaCode가 있을 때만 추가 (null이면 전국 검색)
+            if (areaCode != null && !areaCode.isEmpty()) {
+                builder.queryParam("areaCode", areaCode);
+                log.info("🗺️ 지역 코드 적용: {}", areaCode);
+            } else {
+                log.info("🌍 전국 검색 모드");
+            }
+            
+            // 시군구 코드가 있으면 추가 (36_17 형태에서 17만 추출)
             if (sigunguCode != null && !sigunguCode.isEmpty()) {
-                builder.queryParam("sigunguCode", sigunguCode);
-                log.info("🏘️ 시군구 코드 적용: {}", sigunguCode);
+                String actualSigunguCode = sigunguCode;
+                if (sigunguCode.contains("_")) {
+                    actualSigunguCode = sigunguCode.split("_")[1];
+                }
+                builder.queryParam("sigunguCode", actualSigunguCode);
+                log.info("🏘️ 시군구 코드 적용: {} -> {}", sigunguCode, actualSigunguCode);
             }
             
             // 서비스키를 직접 추가 (이중 인코딩 방지)
@@ -1375,11 +1628,22 @@ public class AITravelServiceImpl implements AITravelService {
                 .queryParam("numOfRows", "50")
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "festive")
-                .queryParam("arrange", "O")  // 이미지가 있는 데이터 우선 정렬
-                .queryParam("areaCode", areaCode);
+                .queryParam("arrange", "O");  // 이미지가 있는 데이터 우선 정렬
+            
+            // areaCode가 있을 때만 추가 (null이면 전국 검색)
+            if (areaCode != null && !areaCode.isEmpty()) {
+                builder.queryParam("areaCode", areaCode);
+                log.info("🗺️ 키워드 검색 지역 코드 적용: {}", areaCode);
+            } else {
+                log.info("🌍 키워드 검색 전국 모드");
+            }
             
             if (sigunguCode != null && !sigunguCode.isEmpty()) {
-                builder.queryParam("sigunguCode", sigunguCode);
+                String actualSigunguCode = sigunguCode;
+                if (sigunguCode.contains("_")) {
+                    actualSigunguCode = sigunguCode.split("_")[1];
+                }
+                builder.queryParam("sigunguCode", actualSigunguCode);
             }
             
             // 인코딩된 키워드를 수동으로 추가
@@ -1441,11 +1705,22 @@ public class AITravelServiceImpl implements AITravelService {
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "festive")
                 .queryParam("arrange", "O")  // 이미지가 있는 데이터 우선 정렬
-                .queryParam("eventStartDate", today)
-                .queryParam("areaCode", areaCode);
+                .queryParam("eventStartDate", today);
+            
+            // areaCode가 있을 때만 추가 (null이면 전국 검색)
+            if (areaCode != null && !areaCode.isEmpty()) {
+                builder.queryParam("areaCode", areaCode);
+                log.info("🗺️ 축제 검색 지역 코드 적용: {}", areaCode);
+            } else {
+                log.info("🌍 축제 검색 전국 모드");
+            }
             
             if (sigunguCode != null && !sigunguCode.isEmpty()) {
-                builder.queryParam("sigunguCode", sigunguCode);
+                String actualSigunguCode = sigunguCode;
+                if (sigunguCode.contains("_")) {
+                    actualSigunguCode = sigunguCode.split("_")[1];
+                }
+                builder.queryParam("sigunguCode", actualSigunguCode);
             }
             
             String urlWithoutServiceKey = builder.toUriString();
@@ -1712,6 +1987,7 @@ public class AITravelServiceImpl implements AITravelService {
             private String contentId;
             private String eventStartDate; // 축제 시작일
             private String eventEndDate;   // 축제 종료일
+            private String overview;       // 개요/소개글
             
             // Getters and Setters
             public String getTitle() { return title; }
@@ -1743,6 +2019,9 @@ public class AITravelServiceImpl implements AITravelService {
             
             public String getEventEndDate() { return eventEndDate; }
             public void setEventEndDate(String eventEndDate) { this.eventEndDate = eventEndDate; }
+            
+            public String getOverview() { return overview; }
+            public void setOverview(String overview) { this.overview = overview; }
         }
     }
     
@@ -2215,7 +2494,22 @@ public class AITravelServiceImpl implements AITravelService {
                     }
                 }
                 
-                location.setDescription(cityDistrict);
+                // 📍 주소 정보를 description에 설정
+                String finalDescription;
+                
+                if ("25".equals(contentTypeId)) {
+                    // 여행코스는 지역 정보 표시
+                    finalDescription = cityDistrict;
+                } else {
+                    // 그 외 타입들은 실제 주소 표시
+                    if (addr1 != null && !"null".equals(addr1) && !addr1.trim().isEmpty()) {
+                        finalDescription = addr1.trim();
+                    } else {
+                        finalDescription = cityDistrict;
+                    }
+                }
+                
+                location.setDescription(finalDescription);
                 
                 // 🖼️ 이미지 설정
                 String firstImage = String.valueOf(data.get("firstimage"));
@@ -2229,6 +2523,13 @@ public class AITravelServiceImpl implements AITravelService {
                 
                 // 콘텐츠 타입별 카테고리 설정
                 location.setCategory(getContentTypeNameByCode(contentTypeId));
+                
+                // 🎯 TourAPI 정보 설정 (DB 저장용)
+                String contentId = String.valueOf(data.get("contentid"));
+                if (contentId != null && !"null".equals(contentId) && !contentId.trim().isEmpty()) {
+                    location.setContentId(contentId.trim());
+                }
+                location.setContentTypeId(contentTypeId);
                 
                 return location;
             }
@@ -2755,6 +3056,7 @@ public class AITravelServiceImpl implements AITravelService {
         
         // 🎯 실제 위치 개수와 Day 정보를 기반으로 총 일수 계산
         int maxDay = locations.stream()
+            .filter(location -> location.getDay() != null)  // null 체크 추가
             .mapToInt(ChatResponse.LocationInfo::getDay)
             .max()
             .orElse(1);
@@ -2931,5 +3233,44 @@ public class AITravelServiceImpl implements AITravelService {
             log.debug("주소에서 시/군/구 추출 실패: {}", fullAddress, e);
             return "정보 없음";
         }
+    }
+
+    // getPlaceImages 메서드는 TourAPIService로 이동됨
+    
+    /**
+     * detailImage2 XML 응답을 파싱하여 이미지 정보 추출
+     */
+    private List<Map<String, Object>> parseDetailImageResponse(String xmlResponse) {
+        List<Map<String, Object>> images = new ArrayList<>();
+        
+        try {
+            // XML에서 <item> 태그들을 찾아서 처리
+            String[] items = xmlResponse.split("<item>");
+            
+            for (int i = 1; i < items.length; i++) { // 첫 번째는 헤더이므로 제외
+                String item = items[i];
+                
+                // 각 이미지 정보 추출
+                String originImgUrl = extractXMLValue(item, "originimgurl");
+                String smallImageUrl = extractXMLValue(item, "smallimageurl");
+                String imgName = extractXMLValue(item, "imgname");
+                
+                if (originImgUrl != null && !originImgUrl.trim().isEmpty()) {
+                    Map<String, Object> imageInfo = new HashMap<>();
+                    imageInfo.put("originImgUrl", originImgUrl.trim());
+                    imageInfo.put("smallImageUrl", smallImageUrl != null ? smallImageUrl.trim() : "");
+                    imageInfo.put("imgName", imgName != null ? imgName.trim() : "");
+                    
+                    images.add(imageInfo);
+                }
+            }
+            
+            log.info("🖼️ 파싱된 이미지 개수: {}", images.size());
+            
+        } catch (Exception e) {
+            log.error("❌ detailImage2 XML 파싱 실패: {}", e.getMessage(), e);
+        }
+        
+        return images;
     }
 } 

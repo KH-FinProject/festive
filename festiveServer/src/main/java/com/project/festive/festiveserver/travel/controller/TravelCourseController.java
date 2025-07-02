@@ -204,4 +204,51 @@ public class TravelCourseController {
             return ResponseEntity.status(500).body(response);
         }
     }
+    
+    /**
+     * 여행코스 공유 상태 변경 (본인만 가능)
+     */
+    @PatchMapping("/{courseNo}/share-status")
+    public ResponseEntity<Map<String, Object>> updateShareStatus(
+            @PathVariable Long courseNo,
+            @RequestParam String isShared,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            if (userDetails == null) {
+                response.put("success", false);
+                response.put("message", "로그인이 필요합니다.");
+                return ResponseEntity.status(401).body(response);
+            }
+            
+            // 공유 상태 값 검증
+            if (!"Y".equals(isShared) && !"N".equals(isShared)) {
+                response.put("success", false);
+                response.put("message", "올바르지 않은 공유 상태 값입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Long memberNo = userDetails.getMemberNo();
+            boolean updated = travelCourseService.updateShareStatus(courseNo, memberNo, isShared);
+            
+            if (updated) {
+                response.put("success", true);
+                response.put("message", "Y".equals(isShared) ? "여행코스가 공유되었습니다." : "여행코스 공유가 취소되었습니다.");
+                response.put("isShared", isShared);
+            } else {
+                response.put("success", false);
+                response.put("message", "수정 권한이 없거나 존재하지 않는 여행코스입니다.");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("❌ 여행코스 공유 상태 변경 실패", e);
+            response.put("success", false);
+            response.put("message", "공유 상태 변경에 실패했습니다.");
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 } 
