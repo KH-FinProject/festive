@@ -51,10 +51,10 @@ public class AuthServiceImpl implements AuthService {
 		Map<String, Object> result = new HashMap<>();
 		
 		// 1. 사용자 존재 여부 확인
-		Optional<Member> memberOpt = memberRepository.findByUserId(request.getId());
+		Optional<Member> memberOpt = memberRepository.findByUserIdAndNotDeleted(request.getId());
 		if (!memberOpt.isPresent()) {
 			result.put("success", false);
-			result.put("message", "존재하지 않는 계정입니다.");
+			result.put("message", "존재하지 않거나 탈퇴한 계정입니다.");
 			return result;
 		}
 		

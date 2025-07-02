@@ -79,4 +79,7 @@ public class Member {
 	@Column(name = "ROLE", nullable = false)
 	private String role;
 
+	@Column(name = "MEMBER_DEL_FL", nullable = false)
+	private String memberDelFl;
+
 }
