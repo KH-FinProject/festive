@@ -11,6 +11,7 @@ import useAuthStore from "../../store/useAuthStore"; // Zustand 스토어 예시
 
 // 날짜를 하루 더하기 위한 헬퍼 함수
 const addOneDay = (dateStr) => {
+  if (!dateStr) return "";
   const date = new Date(dateStr);
   date.setDate(date.getDate() + 1);
   return date.toISOString().split("T")[0]; // yyyy-MM-dd 형식으로 반환
@@ -98,6 +99,9 @@ const MyPageCalendar = () => {
     extendedProps: {
       contentId: festival.contentId,
     },
+    backgroundColor: "#4285f4",
+    borderColor: "#4285f4",
+    textColor: "#ffffff",
   }));
 
   // 페이지네이션 로직
@@ -132,6 +136,9 @@ const MyPageCalendar = () => {
                 center: "title",
                 right: "dayGridMonth,dayGridWeek",
               }}
+              eventDisplay="block"
+              dayMaxEvents={3}
+              moreLinkClick="popover"
             />
           </div>
 
@@ -144,14 +151,20 @@ const MyPageCalendar = () => {
               {currentFestivals.length > 0 ? (
                 currentFestivals.map((festival) => (
                   <div key={festival.contentId} className="festival-item">
-                    <span
-                      className="festival-name"
-                      onClick={() =>
-                        navigate(`/festival/${festival.contentId}`)
-                      }
-                    >
-                      {festival.title}
-                    </span>
+                    <div className="festival-info">
+                      <span
+                        className="festival-name"
+                        onClick={() =>
+                          navigate(`/festival/${festival.contentId}`)
+                        }
+                        style={{ cursor: "pointer", color: "#4285f4" }}
+                      >
+                        {festival.title}
+                      </span>
+                      <span className="festival-date">
+                        {festival.startDate} ~ {festival.endDate}
+                      </span>
+                    </div>
                     <button
                       className="festival-btn"
                       onClick={() => handleUnfavorite(festival.contentId)}
@@ -166,7 +179,7 @@ const MyPageCalendar = () => {
             </div>
 
             {/* 페이지네이션 */}
-            {festivals.length > 0 && (
+            {festivals.length > 0 && totalPages > 1 && (
               <div className="pagination">
                 <button
                   onClick={() => setCurrentPage(1)}
