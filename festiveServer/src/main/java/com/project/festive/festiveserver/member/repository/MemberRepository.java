@@ -31,4 +31,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> { // 사�
 	int updatePasswordByMemberNo(@Param("memberNo") Long memberNo, // 파라미터 바인딩
     							@Param("newPassword") String newPassword);
 	//파라미터 바인딩 : @Query 안에서 사용된 :로 시작하는 파라미터 이름(:memberNo, :newPassword)에 실제 값을 연결해주는 역할
+
+	Optional<Member> findByNameAndEmail(String name, String email);
+	Optional<Member> findByNameAndTel(String name, String tel);
+
+	Optional<Member> findByIdAndEmail(String id, String email);
 }
