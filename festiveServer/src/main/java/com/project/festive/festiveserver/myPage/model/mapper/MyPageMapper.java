@@ -44,5 +44,11 @@ public interface MyPageMapper {
     int updateProfile(@Param("memberNo") Long memberNo,
             @Param("nickname") String nickname,
             @Param("profileImagePath") String profileImagePath);
+    
+    // 특정 회원이 찜한 모든 축제의 contentId를 조회
+    List<String> selectContentIdsByMemberNo(@Param("memberNo") Long memberNo);
+
+     // 찜 목록에서 특정 축제 삭제
+    int deleteFavorite(@Param("memberNo") long memberNo, @Param("contentId") String contentId);
  
 }

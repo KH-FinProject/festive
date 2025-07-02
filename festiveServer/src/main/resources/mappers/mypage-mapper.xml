@@ -23,6 +23,7 @@
 	<update id="withdrawal">
 		UPDATE "MEMBER" SET
 		MEMBER_DEL_FL = 'Y'
+		WITHDRAW_DATE = SYSDATE
 		WHERE MEMBER_NO
 		= #{memberNo}
 	</update>
@@ -132,5 +133,21 @@
 		</set>
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
+	
+	<select id="selectContentIdsByMemberNo">
+        SELECT
+            CONTENT_ID
+        FROM
+            FAVORITES
+        WHERE
+            MEMBER_NO = #{memberNo}
+    </select>
+
+    <delete id="deleteFavorite">
+        DELETE FROM
+            FAVORITES
+        WHERE
+            MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
+    </delete>
 
 </mapper>

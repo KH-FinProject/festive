@@ -2,9 +2,14 @@ package com.project.festive.festiveserver.myPage.model.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.myPage.dto.MyCalendarDto;
@@ -23,8 +30,6 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -35,9 +40,9 @@ public class MyPageServiceImpl implements MyPageService {
 	private final MyPageMapper mapper;
     private final PasswordEncoder passwordEncoder;
     
-    @Autowired
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+    @Autowired    
+    private final RestTemplate restTemplate; // 외부 API 호출을 위한 RestTemplate
+    private final ObjectMapper objectMapper; // JSON 파싱을 위한 ObjectMapper
 
     @Value("${tour.api.key}")
     private String serviceKey;
@@ -100,16 +105,7 @@ public class MyPageServiceImpl implements MyPageService {
     // 회원 정보 수정
     @Override
     public boolean updateMyInfo(Long memberNo, MemberDto updatedInfo) {
-        // 현재 비밀번호 조회 (DB에 저장된 암호화된 비밀번호)
-//        String currentEncodedPw = mapper.selectPw(memberNo);
-//
-//        // 프론트에서 넘어온 비밀번호(updatedInfo.getPassword()가 아니라 updatedInfo.getCurrentPassword())와 DB 비밀번호 비교
-//        if (!passwordEncoder.matches(updatedInfo.getCurrentPassword(), currentEncodedPw)) {
-//            // 비밀번호 불일치
-//            return false;
-//        }
 
-        // 비밀번호 일치 시 정보 수정
         updatedInfo.setMemberNo(memberNo); // memberNo는 JWT에서 추출한 것으로 설정
         mapper.updateMyInfo(updatedInfo); // MemberDto 객체 전체를 전달
         return true;
@@ -158,6 +154,74 @@ public class MyPageServiceImpl implements MyPageService {
         // 2. DB 업데이트 (닉네임만 변경되거나, 이미지 파일만 변경되거나, 둘 다 변경될 수 있음)
         int result = mapper.updateProfile(memberNo, nickname, profileImagePath);
         return result > 0;
+    }
+    
+    @Override
+    public List<MyCalendarDto> getFavoriteFestivals(long memberNo) {
+        List<String> myFavoriteContentIds = mapper.selectContentIdsByMemberNo(memberNo);
+        if (myFavoriteContentIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        try {
+            Map<String, JsonNode> allFestivalsMap = getAllFestivalsAsMap();
+
+            List<MyCalendarDto> resultList = new ArrayList<>();
+            for (String contentId : myFavoriteContentIds) {
+                if (allFestivalsMap.containsKey(contentId)) {
+                    JsonNode festivalData = allFestivalsMap.get(contentId);
+                    MyCalendarDto dto = new MyCalendarDto();
+                    dto.setContentId(contentId);
+                    dto.setTitle(festivalData.path("title").asText());
+                    dto.setStartDate(festivalData.path("eventstartdate").asText());
+                    dto.setEndDate(festivalData.path("eventenddate").asText());
+                    
+                    // 여기를 수정! 'addr1' 값을 place 필드에 설정합니다.
+                    dto.setPlace(festivalData.path("addr1").asText()); 
+                    
+                    resultList.add(dto);
+                }
+            }
+            return resultList;
+
+        } catch (Exception e) {
+            log.error("축제 정보 조회 중 오류 발생", e);
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * searchFestival2 API를 호출하여 모든 축제 정보를 Map<contentId, festivalData> 형태로 반환합니다.
+     */
+    private Map<String, JsonNode> getAllFestivalsAsMap() throws Exception {
+        String apiUrl = "https://apis.data.go.kr/B551011/KorService2/searchFestival2";
+        URI uri = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("MobileOS", "ETC")
+                .queryParam("MobileApp", "Festive")
+                .queryParam("_type", "json")
+                .queryParam("arrange", "A")
+                .queryParam("eventStartDate", "19900101") // 과거부터 모든 축제 조회
+                .queryParam("numOfRows", "10000") // 가능한 많은 데이터 조회
+                .build(true)
+                .toUri();
+
+        String response = restTemplate.getForObject(uri, String.class);
+        JsonNode items = objectMapper.readTree(response).path("response").path("body").path("items").path("item");
+
+        // List<JsonNode>를 Map<String, JsonNode>으로 변환 (Key: contentId)
+        // StreamSupport.stream를 사용하여 JsonNode(Iterable)를 스트림으로 변환
+        return StreamSupport.stream(items.spliterator(), false)
+                .collect(Collectors.toMap(
+                        item -> item.path("contentid").asText(), // Map의 Key
+                        Function.identity() // Map의 Value (item JsonNode 그 자체)
+                ));
+    }
+
+
+    @Override
+    public void removeFavorite(long memberNo, String contentId) {
+        mapper.deleteFavorite(memberNo, contentId);
     }
     
 

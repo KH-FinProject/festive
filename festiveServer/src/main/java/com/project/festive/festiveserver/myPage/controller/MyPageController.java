@@ -281,5 +281,51 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "프로필 수정 중 오류가 발생했습니다."));
         }
     }
+    
+     // 내가 찜한 축제 목록을 캘린더 및 리스트용으로 조회
+    @GetMapping("/mycalendar")
+    public ResponseEntity<List<MyCalendarDto>> getMyFavoriteFestivals(
+            @AuthenticationPrincipal CustomUserDetails userDetails, HttpServletRequest request) { // Spring Security의 UserDetails 객체 사용 예시
+    	
+    	String accessToken = getAccessTokenFromCookie(request);
+    	
+        if (accessToken == null) {
+            // 비로그인 사용자의 경우 401 Unauthorized 응답
+            return ResponseEntity.status(401).build();
+        }
+
+        Long memberNo = jwtUtil.getMemberNo(accessToken);
+        log.info("컨트롤러에서 memberNo : " + memberNo);
+        List<MyCalendarDto> favoriteFestivals = service.getFavoriteFestivals(memberNo);
+        log.info("컨트롤러에서 favoriteFestivals : ", favoriteFestivals);
+        
+        
+        if (accessToken == null || accessToken.isEmpty()) {
+            // 토큰이 없으면 비인가 상태로 응답
+            return ResponseEntity.status(401).build();
+        }
+        
+        return ResponseEntity.ok(favoriteFestivals);
+    }
+
+     // 찜 해제
+    @DeleteMapping("/favorites/{contentId}")
+    public ResponseEntity<Void> removeFavorite(
+            @PathVariable("contentId") String contentId,
+            HttpServletRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+    	String accessToken = getAccessTokenFromCookie(request);
+    	
+        if (accessToken == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Long memberNo = jwtUtil.getMemberNo(accessToken);
+        service.removeFavorite(memberNo, contentId);
+        
+        // 성공적으로 처리되었음을 200 OK로 응답
+        return ResponseEntity.ok().build();
+    }
 
 }

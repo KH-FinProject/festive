@@ -52,8 +52,23 @@ const MyPageWithdrawal = () => {
 
       if (response.ok) {
         alert("회원 탈퇴가 완료되었습니다.");
-        localStorage.clear(); // 사용자 정보 제거
-        window.location.href = "/"; // 메인 페이지로 이동
+
+        // 1. storage/세션/쿠키 초기화
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // 2. 상태관리(Zustand 등) 초기화 (logout 함수가 있다면 실행)
+        if (typeof useAuthStore.getState === "function") {
+          useAuthStore.getState().logout?.();
+        }
+
+        // 3. (선택) 서버에도 로그아웃 API 요청
+        // await fetch("http://localhost:8080/logout", { method: "POST", credentials: "include" });
+
+        // 4. 메인페이지로 이동 (히스토리 남기지 않음)
+        window.location.replace("/");
+
+        return;
       } else {
         alert(text);
       }
