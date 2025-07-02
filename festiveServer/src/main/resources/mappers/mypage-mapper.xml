@@ -133,4 +133,20 @@
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
 
+	<select id="selectContentIdsByMemberNo">
+        SELECT
+            CONTENT_ID
+        FROM
+            FAVORITES
+        WHERE
+            MEMBER_NO = #{memberNo}
+    </select>
+
+    <delete id="deleteFavorite">
+        DELETE FROM
+            FAVORITES
+        WHERE
+            MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
+    </delete>
+
 </mapper>
