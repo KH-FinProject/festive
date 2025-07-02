@@ -104,9 +104,7 @@ public class AuthController {
             ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
                     .httpOnly(true)
                     .maxAge(30 * 60)
-                    .path("/")
-                    .sameSite("Lax")
-                    .secure(false)
+                    .path("/auth/refresh")
                     .build();
 
             return ResponseEntity.ok()
