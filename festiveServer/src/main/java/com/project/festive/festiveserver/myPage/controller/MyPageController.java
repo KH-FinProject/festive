@@ -281,23 +281,5 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "프로필 수정 중 오류가 발생했습니다."));
         }
     }
-    
- // 찜한 축제 목록 조회
-    @GetMapping("/mycalendar")
-    public ResponseEntity<List<MyCalendarDto>> getFavoriteFestivals(HttpServletRequest request) {
-    	String accessToken = getAccessTokenFromCookie(request);
-    	Long memberNo = jwtUtil.getMemberNo(accessToken);
-        List<MyCalendarDto> list = service.getFavoriteFestivals(memberNo);
-        return ResponseEntity.ok(list);
-    }
-
-    // 찜 해제
-    @DeleteMapping("/favorites/{contentId}")
-    public ResponseEntity<Void> unfavoriteFestival(@PathVariable String contentId, HttpServletRequest request) {
-    	String accessToken = getAccessTokenFromCookie(request);
-    	Long memberNo = jwtUtil.getMemberNo(accessToken);
-        service.deleteFavoriteFestival(memberNo, contentId);
-        return ResponseEntity.noContent().build();
-    }
 
 }

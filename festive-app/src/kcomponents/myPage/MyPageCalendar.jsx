@@ -1,206 +1,155 @@
+// src/components/MyPage/MyPageCalendar.jsx
 import React, { useState, useEffect } from 'react';
-import './MyPageWithdrawal.css';
-import './MyPageCalendar.css';
+import './MyPageWithdrawal.css'; // 필요한 스타일은 유지
+import './MyPageCalendar.css';   // 캘린더 관련 스타일
 import MyPageSideBar from './MyPageSideBar';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useLocation, useNavigate } from 'react-router-dom';
-import useAuthStore from "../../store/useAuthStore";
+import useAuthStore from "../../store/useAuthStore"; // Zustand 스토어 예시
 
+// 날짜를 하루 더하기 위한 헬퍼 함수
 const addOneDay = (dateStr) => {
-    if (!dateStr) return "";
     const date = new Date(dateStr);
     date.setDate(date.getDate() + 1);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split('T')[0]; // yyyy-MM-dd 형식으로 반환
 };
 
-const MyPageCalendar = () => {
-    const [festivals, setFestivals] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const postsPerPage = 5;
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const { member } = useAuthStore();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { name, profileImageUrl } = location.state || {};
 
-    // 축제 목록 조회
+const MyPageCalendar = () => {
+    const [festivals, setFestivals] = useState([]); // 서버에서 받아온 축제 목록 전체
+    const [currentPage, setCurrentPage] = useState(1);
+    const [postsPerPage] = useState(5); // 한 페이지에 보여줄 축제 수
+    const { member } = useAuthStore(); // Zustand 등에서 사용자 정보 가져오기
+    const navigate = useNavigate();
+
+    const location = useLocation();
+    const { name, profileImageUrl } = location.state || {}; // 사이드바용 props
+
+    // 데이터 페칭
     useEffect(() => {
         if (!member) {
             alert("로그인이 필요한 서비스입니다.");
             navigate("/signin");
             return;
         }
-        setLoading(true);
-        setError(null);
 
         fetch(`http://localhost:8080/mypage/mycalendar`, {
-            credentials: "include",
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
+            credentials: "include", // 인증 정보(쿠키) 포함
         })
-            .then(async res => {
+            .then(res => {
                 if (!res.ok) {
-                    const errorText = await res.text();
-                    throw new Error(`HTTP ${res.status}: ${errorText}`);
+                    // 응답이 실패했을 때 응답 객체 자체를 에러로 던져서 catch에서 확인
+                    throw res;
                 }
                 return res.json();
             })
             .then(data => {
+                console.log("서버로부터 받은 찜 목록 데이터:", data); // 성공 시 받은 데이터 확인용 로그
                 setFestivals(data);
             })
             .catch(err => {
+                // 오류 객체 전체를 로그로 출력하여 상태 코드 등 상세 정보 확인
+                console.error("찜한 축제 목록 조회 에러:", err);
+                // err.text()를 통해 서버가 보낸 에러 메시지를 볼 수 있음
                 err.text().then(errorMessage => {
-                    alert('데이터를 불러오는 데 실패했습니다. 콘솔을 확인해주세요.');
                     console.error("서버 에러 메시지:", errorMessage);
+                    alert('데이터를 불러오는 데 실패했습니다. 콘솔을 확인해주세요.');
                 });
             });
     }, [member, navigate]);
 
-    // 찜 해제
-    const handleUnfavorite = async (contentId) => {
+    // 찜 해제 핸들러
+    const handleUnfavorite = (contentId) => {
         if (!window.confirm("정말로 찜 해제 하시겠습니까?")) {
             return;
         }
 
         fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
             method: 'DELETE',
-            credentials: 'include', // 반드시 유지!
+            credentials: 'include',
         })
             .then(res => {
                 if (res.ok) {
                     alert("찜 해제되었습니다.");
+                    // 상태 업데이트: 찜 해제된 축제를 목록에서 제거
                     setFestivals(prevFestivals =>
                         prevFestivals.filter(festival => festival.contentId !== contentId)
                     );
                 } else {
+                    // 여기서도 에러 객체를 던져서 상세히 확인
                     throw res;
                 }
             })
             .catch(err => {
+                console.error("찜 해제 에러:", err);
                 err.text().then(errorMessage => {
-                    alert('찜 해제에 실패했습니다. 콘솔을 확인해주세요.');
                     console.error("서버 에러 메시지:", errorMessage);
+                    alert('찜 해제에 실패했습니다. 콘솔을 확인해주세요.');
                 });
             });
-
-            if (response.ok) {
-                alert("찜 해제되었습니다.");
-                setFestivals(prev =>
-                    prev.filter(festival => festival.contentId !== contentId)
-                );
-            } else {
-                const errorText = await response.text();
-                alert('찜 해제에 실패했습니다. ' + errorText);
-            }
-        } catch (err) {
-            alert('찜 해제 중 오류가 발생했습니다.');
-        }
     };
 
-    // FullCalendar 이벤트 데이터로 변환
+    // FullCalendar용 이벤트 데이터 가공
     const calendarEvents = festivals.map(festival => ({
         title: festival.title,
         start: festival.startDate,
-        end: addOneDay(festival.endDate),
+        end: addOneDay(festival.endDate), // 종료일을 FullCalendar에 맞게 하루 추가
         extendedProps: {
             contentId: festival.contentId
-        },
-        backgroundColor: '#4285f4',
-        borderColor: '#4285f4',
-        textColor: '#ffffff'
+        }
     }));
 
-    // 페이징 처리
+    // 페이지네이션 로직
     const indexOfLastPost = currentPage * postsPerPage;
     const indexOfFirstPost = indexOfLastPost - postsPerPage;
     const currentFestivals = festivals.slice(indexOfFirstPost, indexOfLastPost);
     const totalPages = Math.ceil(festivals.length / postsPerPage);
 
-    if (loading) {
-        return (
-            <div className="page-container">
-                <main className="main-content">
-                    <MyPageSideBar name={name} profileImageUrl={profileImageUrl} />
-                    <section className="withdrawal-section">
-                        <div className="profile-header">
-                            <h1>내가 찜한 축제</h1>
-                            <p>데이터를 불러오는 중...</p>
-                        </div>
-                    </section>
-                </main>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="page-container">
-                <main className="main-content">
-                    <MyPageSideBar name={name} profileImageUrl={profileImageUrl} />
-                    <section className="withdrawal-section">
-                        <div className="profile-header">
-                            <h1>내가 찜한 축제</h1>
-                            <p style={{ color: 'red' }}>오류: {error}</p>
-                        </div>
-                    </section>
-                </main>
-            </div>
-        );
-    }
-
     return (
         <div className="page-container">
             <main className="main-content">
-                <MyPageSideBar name={name} profileImageUrl={profileImageUrl} />
+                <MyPageSideBar
+                    name={name}
+                    profileImageUrl={profileImageUrl}
+                />
                 <section className="withdrawal-section">
                     <div className="profile-header">
                         <h1>내가 찜한 축제</h1>
                         <p>내가 찜한 축제 목록입니다.</p>
                     </div>
+
                     <div className="mycalendar-wrapper">
                         <FullCalendar
                             plugins={[dayGridPlugin, interactionPlugin]}
                             initialView="dayGridMonth"
                             events={calendarEvents}
                             eventClick={(info) => {
+                                // 축제 클릭 시 상세 페이지로 이동 (경로는 예시)
                                 navigate(`/festival/${info.event.extendedProps.contentId}`);
                             }}
                             height="650px"
-                            locale="ko"
+                            locale="ko" // 한글 설정
                             headerToolbar={{
                                 left: 'prev,next today',
                                 center: 'title',
                                 right: 'dayGridMonth,dayGridWeek'
                             }}
-                            eventDisplay="block"
-                            dayMaxEvents={3}
-                            moreLinkClick="popover"
                         />
                     </div>
+
                     <br /><br />
+
                     <div className="festival-list-section">
                         <h2>내가 찜한 축제 목록 ({festivals.length}개)</h2>
                         <div className="festival-list">
                             {currentFestivals.length > 0 ? (
                                 currentFestivals.map((festival) => (
                                     <div key={festival.contentId} className="festival-item">
-                                        <div className="festival-info">
-                                            <span
-                                                className="festival-name"
-                                                onClick={() => navigate(`/festival/${festival.contentId}`)}
-                                                style={{ cursor: 'pointer', color: '#4285f4' }}
-                                            >
-                                                {festival.title}
-                                            </span>
-                                            <span className="festival-date">
-                                                {festival.startDate} ~ {festival.endDate}
-                                            </span>
-                                        </div>
+                                        <span className="festival-name" onClick={() => navigate(`/festival/${festival.contentId}`)}>
+                                            {festival.title}
+                                        </span>
                                         <button
                                             className="festival-btn"
                                             onClick={() => handleUnfavorite(festival.contentId)}
@@ -213,8 +162,9 @@ const MyPageCalendar = () => {
                                 <p>찜한 축제가 없습니다.</p>
                             )}
                         </div>
-                        {/* 페이징 */}
-                        {festivals.length > 0 && totalPages > 1 && (
+
+                        {/* 페이지네이션 */}
+                        {festivals.length > 0 && (
                             <div className="pagination">
                                 <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>{'<<'}</button>
                                 <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>{'<'}</button>
