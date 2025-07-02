@@ -96,4 +96,14 @@ public class MemberServiceImpl implements MemberService {
     public Member findMemberByIdAndEmail(String id, String email) {
         return memberRepository.findByIdAndEmail(id, email).orElse(null);
     }
+
+    @Override
+    public Member findMemberById(String id) {
+        return memberRepository.findByUserId(id).orElse(null);
+    }
+
+    @Override
+    public void updateMember(Member member) {
+        memberRepository.save(member);
+    }
 } 

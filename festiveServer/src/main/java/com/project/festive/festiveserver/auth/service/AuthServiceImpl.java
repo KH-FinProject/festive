@@ -249,8 +249,8 @@ public class AuthServiceImpl implements AuthService {
 			</head>
 			<body>
 				<div style="text-align: center; padding: 20px;">
-					<h2>Festive 회원가입 인증번호</h2>
-					<p>안녕하세요! Festive 회원가입을 위한 인증번호입니다.</p>
+					<h2>Festive 인증번호</h2>
+					<p>안녕하세요! Festive 인증번호입니다.</p>
 					<div style="background-color: #f0f0f0; padding: 15px; margin: 20px 0; border-radius: 5px;">
 						<h3 style="color: #333; margin: 0;">인증번호: <span style="color: #007bff; font-weight: bold;">%s</span></h3>
 					</div>

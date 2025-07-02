@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -37,6 +38,7 @@ public class AuthController {
     private final AuthService authService;
     private final MemberService memberService;
     private final JwtUtil jwtUtil;
+    private final BCryptPasswordEncoder bcrypt;
 
     @GetMapping("userInfo")
     public ResponseEntity<?> userInfo(HttpServletRequest request) {
@@ -367,6 +369,74 @@ public class AuthController {
         responseBody.put("userId", member.getId());
         return ResponseEntity.ok(responseBody);
     }
+
+    @PostMapping("findPw")
+    public ResponseEntity<Map<String, Object>> findPw(@RequestBody Map<String, String> payload) {
+        Map<String, Object> responseBody = new HashMap<>();
+
+        String id = payload.get("id");
+        String email = payload.get("email");
+
+        if (id == null || email == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "아이디와 이메일을 모두 입력해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        Member member = memberService.findMemberByIdAndEmail(id, email);
+        if (member == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "일치하는 회원이 없습니다.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        try {
+            String message = authService.sendEmail("findPw", email);
+            responseBody.put("success", true);
+            responseBody.put("message", message);
+            return ResponseEntity.ok(responseBody);
+        } catch (Exception e) {
+            log.error("비밀번호 찾기 인증번호 발송 오류: {}", e.getMessage(), e);
+            responseBody.put("success", false);
+            responseBody.put("message", "인증번호 발송 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+        }
+    }
+
+    @PostMapping("findPw/reset")
+    public ResponseEntity<Map<String, Object>> findPwReset(@RequestBody Map<String, String> payload) {
+        Map<String, Object> responseBody = new HashMap<>();
+        
+        String userId = payload.get("userId");
+        String oldPassword = payload.get("oldPassword");
+        String newPassword = payload.get("newPassword");
+
+        if (userId == null || oldPassword == null || newPassword == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "아이디, 기존 비밀번호, 새 비밀번호를 모두 입력해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+        
+        Member member = memberService.findMemberById(userId);
+        if (member == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "일치하는 회원이 없습니다.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+        
+        if (!bcrypt.matches(oldPassword, member.getPassword())) {
+            responseBody.put("success", false);
+            responseBody.put("message", "기존 비밀번호가 일치하지 않습니다.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+        
+        member.setPassword(bcrypt.encode(newPassword));
+        memberService.updateMember(member);
+        
+        responseBody.put("success", true);
+        responseBody.put("message", "비밀번호가 성공적으로 변경되었습니다.");
+        return ResponseEntity.ok(responseBody);
+    }
     
     @PostMapping("email")
     public ResponseEntity<Map<String, Object>> authEmail(@RequestBody AuthKeyRequest authKeyRequest) {
@@ -449,39 +519,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "인증번호가 만료되었거나 올바르지 않습니다."));
         } else { // checkResult == 2
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "인증번호가 일치하지 않습니다."));
-        }
-    }
-
-    @PostMapping("findPw")
-    public ResponseEntity<Map<String, Object>> findPw(@RequestBody Map<String, String> payload) {
-        Map<String, Object> responseBody = new HashMap<>();
-
-        String id = payload.get("id");
-        String email = payload.get("email");
-
-        if (id == null || email == null) {
-            responseBody.put("success", false);
-            responseBody.put("message", "아이디와 이메일을 모두 입력해주세요.");
-            return ResponseEntity.badRequest().body(responseBody);
-        }
-
-        Member member = memberService.findMemberByIdAndEmail(id, email);
-        if (member == null) {
-            responseBody.put("success", false);
-            responseBody.put("message", "일치하는 회원이 없습니다.");
-            return ResponseEntity.badRequest().body(responseBody);
-        }
-
-        try {
-            String message = authService.sendEmail("findPw", email);
-            responseBody.put("success", true);
-            responseBody.put("message", message);
-            return ResponseEntity.ok(responseBody);
-        } catch (Exception e) {
-            log.error("비밀번호 찾기 인증번호 발송 오류: {}", e.getMessage(), e);
-            responseBody.put("success", false);
-            responseBody.put("message", "인증번호 발송 오류가 발생했습니다.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
         }
     }
 }

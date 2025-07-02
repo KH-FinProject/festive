@@ -49,4 +49,17 @@ public interface MemberService {
 	 * 아이디와 이메일로 회원 조회
 	 */
 	Member findMemberByIdAndEmail(String id, String email);
+
+    /**
+     * 아이디로 회원 조회
+     * @param id 회원 아이디
+     * @return 회원 정보
+     */
+    Member findMemberById(String id);
+
+    /**
+     * 회원 정보 업데이트
+     * @param member 업데이트할 회원 정보
+     */
+    void updateMember(Member member);
 }  
