@@ -132,19 +132,5 @@
 		</set>
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
-	
-	<!-- 찜한 축제 contentId 목록 조회 -->
-    <select id="selectFavoriteContentIds">
-        SELECT CONTENT_ID
-        FROM FAVORITES
-        WHERE MEMBER_NO = #{memberNo}
-    </select>
-
-    <!-- 찜 해제 -->
-    <delete id="deleteFavoriteFestival">
-        DELETE FROM FAVORITES
-        WHERE MEMBER_NO = #{memberNo}
-        AND CONTENT_ID = #{contentId}
-    </delete>
 
 </mapper>
