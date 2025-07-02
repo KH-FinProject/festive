@@ -188,6 +188,26 @@ public class CustomerController {
     }
     
     /**
+     * 고객센터 답변 수정 (관리자용)
+     */
+    @PutMapping("/boards/{boardNo}/comments/{commentNo}")
+    public ResponseEntity<String> updateCustomerComment(@PathVariable("boardNo") Long boardNo, @PathVariable("commentNo") Long commentNo, @RequestBody CommentDto commentDto) {
+        try {
+            // 인증/권한 체크 생략(필요시 추가)
+            commentDto.setCommentNo(commentNo);
+            int result = customerService.updateAnswer(boardNo, commentDto);
+            if (result > 0) {
+                return ResponseEntity.ok("답변이 수정되었습니다.");
+            } else {
+                return ResponseEntity.badRequest().body("답변 수정에 실패했습니다.");
+            }
+        } catch (Exception e) {
+            log.error("고객센터 답변 수정 실패: boardNo = {}, commentNo = {}", boardNo, commentNo, e);
+            return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
+        }
+    }
+    
+    /**
      * 고객센터 통계 조회 (관리자용)
      */
     @GetMapping("/statistics")

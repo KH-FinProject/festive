@@ -37,6 +37,7 @@ public class CustomerInquiryDto {
     private String answerContent;     // 답변 내용 (간단 요약)
     private Long answerMemberNo;      // 답변자 번호
     private String answerMemberName;  // 답변자 이름
+    private Long answerCommentNo;
     
     // 우선순위 (긴급, 일반, 낮음)
     private String priority;
@@ -47,4 +48,7 @@ public class CustomerInquiryDto {
     // 고객 연락처 (선택사항)
     private String customerEmail;
     private String customerPhone;
+
+    public Long getAnswerCommentNo() { return answerCommentNo; }
+    public void setAnswerCommentNo(Long answerCommentNo) { this.answerCommentNo = answerCommentNo; }
 } 

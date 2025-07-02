@@ -53,4 +53,9 @@ public interface CustomerService {
      * 미답변 문의 목록 조회 (관리자용)
      */
     List<CustomerInquiryDto> getUnansweredInquiries();
+    
+    /**
+     * 답변(댓글) 수정
+     */
+    int updateAnswer(Long boardNo, CommentDto commentDto);
 } 
