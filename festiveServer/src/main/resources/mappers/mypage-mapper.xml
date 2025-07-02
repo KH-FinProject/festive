@@ -133,18 +133,20 @@
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
 
-	<!-- 찜 목록 가져오기 -->
-	<select id="findFavoriteContentIdsByMemberNo"
-		parameterType="long" resultType="string">
-		SELECT CONTENT_ID
-		FROM FAVORITES
-		WHERE MEMBER_NO = #{memberNo}
-	</select>
+	<select id="selectContentIdsByMemberNo">
+        SELECT
+            CONTENT_ID
+        FROM
+            FAVORITES
+        WHERE
+            MEMBER_NO = #{memberNo}
+    </select>
 
-	<!-- 찜 해제하기 -->
-	<delete id="deleteFavorite" parameterType="map">
-		DELETE FROM FAVORITES
-		WHERE MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
-	</delete>
+    <delete id="deleteFavorite">
+        DELETE FROM
+            FAVORITES
+        WHERE
+            MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
+    </delete>
 
 </mapper>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.festive.festiveserver.detail.model.mapper.DetailMapper">
+
+	<!-- 찜 목록 조회 -->
+	<select id="selectFavorite">
+		SELECT COUNT(*) FROM FAVORITES
+		WHERE MEMBER_NO = #{memberNo}
+		AND CONTENT_ID = #{contentId}
+	</select>
+
+	<!-- 찜 목록에 추가 -->
+	<insert id="insertFavorite">
+		INSERT INTO FAVORITES
+		VALUES (#{contentId}, #{memberNo})
+	</insert>
+    
+    <!-- 찜 목록에서 삭제 -->
+    <delete id="deleteFavorite">
+		DELETE FROM FAVORITES
+		WHERE MEMBER_NO = #{memberNo}
+		AND CONTENT_ID = #{contentId}
+	</delete>
+    
+    <!-- 좋아요 갯수 가져오기 -->
+	<select id="selectLikes">
+		SELECT COUNT(*) FROM FESTIVAL_LIKE
+		WHERE CONTENT_ID = #{contentId}
+	</select>
+	
+	<!-- 좋아요 추가 -->
+	<insert id="insertLike">
+		INSERT INTO FESTIVAL_LIKE
+		VALUES (SEQ_FESTIVAL_LIKE_NUM_ID.NEXTVAL, #{contentId})
+	</insert>
+
+	<!-- 좋아요 삭제 -->
+	<delete id="deleteLike">
+	DELETE FROM FESTIVAL_LIKE
+	WHERE ROWID IN (
+	  SELECT ROWID FROM FESTIVAL_LIKE
+	  WHERE CONTENT_ID = #{contentId}
+	  AND ROWNUM = 1
+	)
+	</delete>
+
+</mapper> 

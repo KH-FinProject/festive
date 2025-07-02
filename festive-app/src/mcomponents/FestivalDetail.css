@@ -36,7 +36,7 @@
 }
 
 .festival-description p,
-h2 {
+.festival-description h2 {
   display: flex;
   font-size: 16px;
   color: #666;

@@ -70,6 +70,7 @@ public class CustomerServiceImpl implements CustomerService {
                 inquiryDto.setAnswerDate(answer.getCommentCreateDate());
                 inquiryDto.setAnswerContent(answer.getCommentContent());
                 inquiryDto.setAnswerMemberNo(answer.getMemberNo());
+                inquiryDto.setAnswerCommentNo(answer.getCommentNo());
                 inquiryDto.setInquiryStatus("답변완료");
             } else {
                 inquiryDto.setHasAnswer(false);
@@ -88,6 +89,7 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             BoardDto boardDto = convertToBoardDto(inquiryDto);
             boardDto.setBoardTypeNo(CUSTOMER_BOARD_TYPE);
+
             return wagleService.createBoard(boardDto);
         } catch (Exception e) {
             log.error("고객센터 문의글 작성 실패", e);
@@ -180,6 +182,12 @@ public class CustomerServiceImpl implements CustomerService {
         }
     }
     
+    @Override
+    public int updateAnswer(Long boardNo, CommentDto answerDto) {
+        answerDto.setBoardNo(boardNo);
+        return wagleService.updateComment(answerDto);
+    }
+    
     // Helper 메서드들
     private CustomerInquiryDto convertToInquiryDto(BoardDto boardDto) {
         CustomerInquiryDto dto = new CustomerInquiryDto();
@@ -207,6 +215,7 @@ public class CustomerServiceImpl implements CustomerService {
             dto.setAnswerDate(answer.getCommentCreateDate());
             dto.setAnswerContent(answer.getCommentContent());
             dto.setAnswerMemberNo(answer.getMemberNo());
+            dto.setAnswerCommentNo(answer.getCommentNo());
         } else {
             dto.setHasAnswer(false);
             dto.setInquiryStatus("대기중");

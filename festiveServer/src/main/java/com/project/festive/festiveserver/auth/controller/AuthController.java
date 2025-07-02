@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -20,6 +21,7 @@ import com.project.festive.festiveserver.auth.dto.LoginRequest;
 import com.project.festive.festiveserver.auth.service.AuthService;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.member.entity.Member;
+import com.project.festive.festiveserver.member.service.MemberService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +36,9 @@ public class AuthController {
 
     // 의존성 주입(DI)
     private final AuthService authService;
+    private final MemberService memberService;
     private final JwtUtil jwtUtil;
+    private final BCryptPasswordEncoder bcrypt;
 
     @GetMapping("userInfo")
     public ResponseEntity<?> userInfo(HttpServletRequest request) {
@@ -104,7 +108,7 @@ public class AuthController {
             ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
                     .httpOnly(true)
                     .maxAge(30 * 60)
-                    .path("/")
+                    .path("/auth/refresh")
                     .build();
 
             return ResponseEntity.ok()
@@ -150,12 +154,14 @@ public class AuthController {
                     .httpOnly(true)
                     .maxAge(30 * 60)
                     .path("/")
+                    .sameSite("Lax")
+                    .secure(false)
                     .build();
 
             ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", (String)result.get("refreshToken"))
                     .httpOnly(true)
                     .maxAge(7 * 24 * 60 * 60)
-                    .path("/")
+                    .path("/auth/refresh")
                     .build();
 
             ResponseEntity<Object> response = ResponseEntity.ok()
@@ -186,9 +192,11 @@ public class AuthController {
         }
 
         ResponseCookie expiredAccessToken = ResponseCookie.from("accessToken", "")
-            .httpOnly(true).path("/").maxAge(0).build();
+            .httpOnly(true).path("/").maxAge(0)
+            .sameSite("Lax").secure(false).build();
         ResponseCookie expiredRefreshToken = ResponseCookie.from("refreshToken", "")
-            .httpOnly(true).path("/").maxAge(0).build();
+            .httpOnly(true).path("/").maxAge(0)
+            .sameSite("Lax").secure(false).build();
 
         log.info("로그아웃 처리 완료 - memberNo: {}", memberNo);
 
@@ -256,22 +264,195 @@ public class AuthController {
         .httpOnly(true)
         .maxAge(30 * 60)
         .path("/")
+        .sameSite("Lax")
+        .secure(false)
         .build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
                 .body(responseBody);
     }
+
+    @PostMapping("findId")
+    public ResponseEntity<Map<String, Object>> findId(@RequestBody Map<String, String> payload) {
+        Map<String, Object> responseBody = new HashMap<>();
+        
+        // 전화번호, 이메일 중 하나를 선택하여 인증번호 발송
+        String authMethod = payload.get("authMethod");
+
+        if(authMethod == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "전화번호 또는 이메일을 선택해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        String name = payload.get("name");
+        String value = payload.get(authMethod);
+
+        if(name == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "이름을 입력해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        if(value == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "이메일 또는 전화번호를 입력해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+        
+        Member member = null;
+        
+        try {
+            switch(authMethod) {
+                case "email":
+                    member = memberService.findMemberByNameAndEmail(name, value);
+
+                    if(member != null) {
+                        String message = authService.sendEmail("findId", value);
+    
+                        responseBody.put("success", true);
+                        responseBody.put("message", message);
+                        return ResponseEntity.ok(responseBody);
+    
+                    } else {
+                        responseBody.put("success", false);
+                        responseBody.put("message", "일치하는 회원이 없습니다.");
+                        return ResponseEntity.badRequest().body(responseBody);
+                    }
+
+                case "tel":
+                    member = memberService.findMemberByNameAndTel(name, value);
+
+                    if(member != null) {
+                        String message = authService.sendEmail("findId", value);
+
+                        responseBody.put("success", true);
+                        responseBody.put("message", message);
+                        return ResponseEntity.ok(responseBody);
+
+                    } else {
+                        responseBody.put("success", false);
+                        responseBody.put("message", "일치하는 회원이 없습니다.");
+                        return ResponseEntity.badRequest().body(responseBody);
+                    }
+            }
+
+        } catch (Exception e) {
+            log.error("인증번호 발송 오류: {}", e.getMessage(), e);
+            responseBody.put("success", false);
+            responseBody.put("message", "인증번호 발송 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+        }
+
+        responseBody.put("success", false);
+        responseBody.put("message", "인증번호 발송 실패");
+        return ResponseEntity.badRequest().body(responseBody);
+    }
+
+    @PostMapping("findId/result")
+    public ResponseEntity<Map<String, Object>> findIdResult(@RequestBody Map<String, String> payload) {
+        Map<String, Object> responseBody = new HashMap<>();
+
+        String name = payload.get("name");
+        String email = payload.get("email");
+
+        if (name == null || email == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "이름과 이메일을 모두 입력해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        Member member = memberService.findMemberByNameAndEmail(name, email);
+        
+        if (member == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "일치하는 회원이 없습니다.");
+            return ResponseEntity.ok(responseBody);
+        }
+        
+        responseBody.put("success", true);
+        responseBody.put("userId", member.getId());
+        return ResponseEntity.ok(responseBody);
+    }
+
+    @PostMapping("findPw")
+    public ResponseEntity<Map<String, Object>> findPw(@RequestBody Map<String, String> payload) {
+        Map<String, Object> responseBody = new HashMap<>();
+
+        String id = payload.get("id");
+        String email = payload.get("email");
+
+        if (id == null || email == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "아이디와 이메일을 모두 입력해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        Member member = memberService.findMemberByIdAndEmail(id, email);
+        if (member == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "일치하는 회원이 없습니다.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        try {
+            String message = authService.sendEmail("findPw", email);
+            responseBody.put("success", true);
+            responseBody.put("message", message);
+            return ResponseEntity.ok(responseBody);
+        } catch (Exception e) {
+            log.error("비밀번호 찾기 인증번호 발송 오류: {}", e.getMessage(), e);
+            responseBody.put("success", false);
+            responseBody.put("message", "인증번호 발송 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+        }
+    }
+
+    @PostMapping("findPw/reset")
+    public ResponseEntity<Map<String, Object>> findPwReset(@RequestBody Map<String, String> payload) {
+        Map<String, Object> responseBody = new HashMap<>();
+        
+        String userId = payload.get("userId");
+        String oldPassword = payload.get("oldPassword");
+        String newPassword = payload.get("newPassword");
+
+        if (userId == null || oldPassword == null || newPassword == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "아이디, 기존 비밀번호, 새 비밀번호를 모두 입력해주세요.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+        
+        Member member = memberService.findMemberById(userId);
+        if (member == null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "일치하는 회원이 없습니다.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+        
+        if (!bcrypt.matches(oldPassword, member.getPassword())) {
+            responseBody.put("success", false);
+            responseBody.put("message", "기존 비밀번호가 일치하지 않습니다.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+        
+        member.setPassword(bcrypt.encode(newPassword));
+        memberService.updateMember(member);
+        
+        responseBody.put("success", true);
+        responseBody.put("message", "비밀번호가 성공적으로 변경되었습니다.");
+        return ResponseEntity.ok(responseBody);
+    }
     
     @PostMapping("email")
     public ResponseEntity<Map<String, Object>> authEmail(@RequestBody AuthKeyRequest authKeyRequest) {
         Map<String, Object> responseBody = new HashMap<>();
         
-        String authKey = authService.sendEmail("signup", authKeyRequest.getEmail());
+        String message = authService.sendEmail("signup", authKeyRequest.getEmail());
         
-        if(authKey != null) { // 인증번호 발급 성공 & 이메일 보내기 성공
+        if(message != null) { // 인증번호 발급 성공 & 이메일 보내기 성공
             responseBody.put("success", true);
-            responseBody.put("message", "인증번호가 이메일로 전송되었습니다.");
+            responseBody.put("message", message);
             return ResponseEntity.ok(responseBody);
         }
         
@@ -302,7 +483,6 @@ public class AuthController {
         }
     }
     
-    
     // 이메일 변경 인증번호 요청 및 이메일 중복 검사를 위해 지현이가 추가한 코드
     // 이메일 인증 번호 발송 요청 (수정: 중복 확인 로직 추가)
     @PostMapping("email/send")
@@ -318,8 +498,8 @@ public class AuthController {
         }
 
         try {
-            authService.sendEmail("signup", email);
-            return ResponseEntity.ok(Map.of("message", "인증번호가 이메일로 전송되었습니다."));
+            String message = authService.sendEmail("signup", email);
+            return ResponseEntity.ok(Map.of("message", message));
         } catch (RuntimeException e) {
             log.error("이메일 발송 오류: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", e.getMessage()));

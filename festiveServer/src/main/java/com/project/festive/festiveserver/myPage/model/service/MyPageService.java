@@ -11,20 +11,20 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 public interface MyPageService {
 
-	
-	//회원 탈퇴
-	boolean withdraw(Long memberNo, String password);
-	
-	// 비밀번호 변경
-	boolean changePw(Long memberNo, String currentPw, String newPw);
-	
-	// 내가 작성한 게시글 조회
-	List<BoardDto> getMyPosts(Long memberNo);
-	
-	// 내가 작성한 댓글 조회
-	List<CommentDto> getMyComments(Long memberNo);
-	
-	// 정보 조회
+   
+   //회원 탈퇴
+   boolean withdraw(Long memberNo, String password);
+   
+   // 비밀번호 변경
+   boolean changePw(Long memberNo, String currentPw, String newPw);
+   
+   // 내가 작성한 게시글 조회
+   List<BoardDto> getMyPosts(Long memberNo);
+   
+   // 내가 작성한 댓글 조회
+   List<CommentDto> getMyComments(Long memberNo);
+   
+   // 정보 조회
     MemberDto getMyInfo(Long memberNo);
     
     // 정보 수정
@@ -42,12 +42,9 @@ public interface MyPageService {
     // 현재 비밀번호 확인(비밀번호 변경 창)
     boolean checkPassword(Long memberNo, String rawPassword);
     
-    // 찜 목록 가져오기
+    // 회원이 찜한 축제 목록의 상세 정보를 조회
     List<MyCalendarDto> getFavoriteFestivals(long memberNo);
-    
-    // 찜 해제
+
+     // 축제 찜 해제
     void removeFavorite(long memberNo, String contentId);
-
-
-
 }

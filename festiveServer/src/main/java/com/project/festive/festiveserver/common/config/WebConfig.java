@@ -10,6 +10,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import java.nio.charset.StandardCharsets;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
   
@@ -47,6 +50,13 @@ public class WebConfig implements WebMvcConfigurer {
       restTemplate.getMessageConverters().add(0, stringConverter);
       
       return restTemplate;
+  }
+
+  @Bean
+  public ObjectMapper objectMapper() {
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.registerModule(new JavaTimeModule());
+      return mapper;
   }
   
 }

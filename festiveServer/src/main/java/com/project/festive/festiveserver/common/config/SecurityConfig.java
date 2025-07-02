@@ -77,6 +77,9 @@ public class SecurityConfig {
             // 인증/회원/로그인 관련
             .requestMatchers("/auth/**", "/oauth2/**", "/member/**").permitAll()
 
+            // 축제 페이지
+            .requestMatchers("/festival/**").permitAll()
+            
             // 와글 게시판 - 읽기는 공개, 쓰기/수정/삭제는 인증 필요
             .requestMatchers(HttpMethod.GET, "/api/wagle/boards").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/wagle/boards/*").permitAll()

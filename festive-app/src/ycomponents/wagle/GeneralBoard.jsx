@@ -1,23 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faThumbsUp,
-  faEye,
-  faSearch,
-  faAngleLeft,
-  faAngleRight,
-  faAnglesLeft,
-  faAnglesRight,
-  faPen,
-} from "@fortawesome/free-solid-svg-icons";
+import { faThumbsUp, faEye, faSearch } from "@fortawesome/free-solid-svg-icons";
 import "./GeneralBoard.css";
 import { useNavigate } from "react-router-dom";
-import Pagination, { usePagination } from "./Pagination";
+import Pagination from "./Pagination";
 import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 
 const PAGE_SIZE = 7;
 
-function GeneralBoard({ hideTitle, hideWriteBtn }) {
+function GeneralBoard({ hideWriteBtn }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,24 +56,43 @@ function GeneralBoard({ hideTitle, hideWriteBtn }) {
       const data = await response.json();
 
       // 데이터 형식을 기존 포맷에 맞게 변환
-      const formattedPosts = data.boardList.map((post) => ({
-        id: post.boardNo,
-        title: post.boardTitle,
-        author: post.memberNickname,
-        date: new Date(post.boardCreateDate)
-          .toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-          .replace(/\. /g, ".")
-          .replace(".", ".")
-          .slice(0, -1),
-        likes: post.boardLikeCount,
-        views: post.boardViewCount,
-      }));
+      const formattedPosts = data.boardList.map((post) => {
+        // 날짜 포맷팅 함수
+        const formatDate = (dateString) => {
+          if (!dateString) return "날짜 없음";
+
+          try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+              console.warn("Invalid date:", dateString);
+              return "날짜 오류";
+            }
+
+            return date
+              .toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+              .replace(/\. /g, ".")
+              .replace(".", ".");
+          } catch (error) {
+            console.error("날짜 포맷팅 오류:", error, dateString);
+            return "날짜 오류";
+          }
+        };
+
+        return {
+          id: post.boardNo,
+          title: post.boardTitle,
+          author: post.memberNickname,
+          date: formatDate(post.boardCreateDate),
+          likes: post.boardLikeCount,
+          views: post.boardViewCount,
+        };
+      });
 
       setPosts(formattedPosts);
       setTotalPages(data.totalPages);
@@ -234,10 +244,7 @@ function GeneralBoard({ hideTitle, hideWriteBtn }) {
             </button>
           </div>
           {!hideWriteBtn && (
-            <button
-              className="wagle-write-btn"
-              onClick={handleWriteClick}
-            >
+            <button className="wagle-write-btn" onClick={handleWriteClick}>
               글쓰기
             </button>
           )}

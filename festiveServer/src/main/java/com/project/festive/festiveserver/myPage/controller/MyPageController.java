@@ -6,9 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +30,7 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,75 +41,75 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @SessionAttributes({"loginMember"})
 public class MyPageController {
-	
-	private final MyPageService service;
-	private final JwtUtil jwtUtil;
+   
+   private final MyPageService service;
+   private final JwtUtil jwtUtil;
 
-	// 쿠키에서 accessToken 추출하는 헬퍼 메서드
-	private String getAccessTokenFromCookie(HttpServletRequest request) {
-		Cookie cookie = WebUtils.getCookie(request, "accessToken");
-		return cookie != null ? cookie.getValue() : null;
-	}
+   // 쿠키에서 accessToken 추출하는 헬퍼 메서드
+   private String getAccessTokenFromCookie(HttpServletRequest request) {
+      Cookie cookie = WebUtils.getCookie(request, "accessToken");
+      return cookie != null ? cookie.getValue() : null;
+   }
 
-	// 회원탈퇴
-	@PostMapping("/withdrawal")
-	public ResponseEntity<String> withdraw(HttpServletRequest request,
-	                                       @RequestBody Map<String, String> requestBody) {
-	    try {
-	        String accessToken = getAccessTokenFromCookie(request);
-	        if (accessToken == null) {
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-	        }
+   // 회원탈퇴
+   @PostMapping("/withdrawal")
+   public ResponseEntity<String> withdraw(HttpServletRequest request,
+                                          @RequestBody Map<String, String> requestBody) {
+       try {
+           String accessToken = getAccessTokenFromCookie(request);
+           if (accessToken == null) {
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+           }
 
-	        Long memberNo = jwtUtil.getMemberNo(accessToken);
-	        String password = requestBody.get("password");
+           Long memberNo = jwtUtil.getMemberNo(accessToken);
+           String password = requestBody.get("password");
 
-	        boolean success = service.withdraw(memberNo, password);
+           boolean success = service.withdraw(memberNo, password);
 
-	        if (success) {
-	            return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
-	        } else {
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류 발생");
-	    }
-	}
-	
-	// 비밀번호 변경
-	@PostMapping("/change-password")
-	public ResponseEntity<?> updatePassword(HttpServletRequest request,
-	                                        @RequestBody Map<String, String> requestBody) {
-	    try {
-	        String accessToken = getAccessTokenFromCookie(request);
-	        if (accessToken == null) {
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
-	        }
+           if (success) {
+               return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+           } else {
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
+           }
+       } catch (Exception e) {
+           e.printStackTrace();
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류 발생");
+       }
+   }
+   
+   // 비밀번호 변경
+   @PostMapping("/change-password")
+   public ResponseEntity<?> updatePassword(HttpServletRequest request,
+                                           @RequestBody Map<String, String> requestBody) {
+       try {
+           String accessToken = getAccessTokenFromCookie(request);
+           if (accessToken == null) {
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+           }
 
-	        Long memberNo = jwtUtil.getMemberNo(accessToken);
-	        String currentPassword = requestBody.get("currentPassword");
-	        String newPassword = requestBody.get("newPassword");
+           Long memberNo = jwtUtil.getMemberNo(accessToken);
+           String currentPassword = requestBody.get("currentPassword");
+           String newPassword = requestBody.get("newPassword");
 
-	        boolean result = service.changePw(memberNo, currentPassword, newPassword);
+           boolean result = service.changePw(memberNo, currentPassword, newPassword);
 
-	        if (result) {
-	            return ResponseEntity.ok(Map.of("message", "비밀번호 변경 성공"));
-	        } else {
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "현재 비밀번호가 일치하지 않습니다."));
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "서버 오류 발생"));
-	    }
-	}
-	
-	// 비밀번호 일치 확인 (POST /mypage/check-current-password)
+           if (result) {
+               return ResponseEntity.ok(Map.of("message", "비밀번호 변경 성공"));
+           } else {
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "현재 비밀번호가 일치하지 않습니다."));
+           }
+       } catch (Exception e) {
+           e.printStackTrace();
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "서버 오류 발생"));
+       }
+   }
+   
+   // 비밀번호 일치 확인 (POST /mypage/check-current-password)
     @PostMapping("/check-current-password")
     public ResponseEntity<Map<String, Object>> checkCurrentPassword(
-    		HttpServletRequest request, @RequestBody Map<String, String> requestBody,
+          HttpServletRequest request, @RequestBody Map<String, String> requestBody,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-    	String accessToken = getAccessTokenFromCookie(request);
+       String accessToken = getAccessTokenFromCookie(request);
 
         Long memberNo = jwtUtil.getMemberNo(accessToken);
         String password = requestBody.get("password");
@@ -120,44 +119,44 @@ public class MyPageController {
         result.put("match", match);
         return ResponseEntity.ok(result);
     }
-	
-	// 내가 작성한 게시글 목록 조회
-	@GetMapping("/post")
-	public ResponseEntity<List<BoardDto>> getMyPosts(HttpServletRequest request) {
-	    try {
-	        String accessToken = getAccessTokenFromCookie(request);
-	        if (accessToken == null) {
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-	        }
+   
+   // 내가 작성한 게시글 목록 조회
+   @GetMapping("/post")
+   public ResponseEntity<List<BoardDto>> getMyPosts(HttpServletRequest request) {
+       try {
+           String accessToken = getAccessTokenFromCookie(request);
+           if (accessToken == null) {
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+           }
 
-	        Long memberNo = jwtUtil.getMemberNo(accessToken);
-	        List<BoardDto> postList = service.getMyPosts(memberNo);
-	        return ResponseEntity.ok(postList);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-	    }
-	}
-	
-	// 내가 쓴 작성한 댓글 목록 조회
-	@GetMapping("/comment")
-	public ResponseEntity<List<CommentDto>> getMyComments(HttpServletRequest request) {
-		try {
-			String accessToken = getAccessTokenFromCookie(request);
-			if (accessToken == null) {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-			}
+           Long memberNo = jwtUtil.getMemberNo(accessToken);
+           List<BoardDto> postList = service.getMyPosts(memberNo);
+           return ResponseEntity.ok(postList);
+       } catch (Exception e) {
+           e.printStackTrace();
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+       }
+   }
+   
+   // 내가 쓴 작성한 댓글 목록 조회
+   @GetMapping("/comment")
+   public ResponseEntity<List<CommentDto>> getMyComments(HttpServletRequest request) {
+      try {
+         String accessToken = getAccessTokenFromCookie(request);
+         if (accessToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+         }
 
-			Long memberNo = jwtUtil.getMemberNo(accessToken);
-			List<CommentDto> postList = service.getMyComments(memberNo);
-			return ResponseEntity.ok(postList);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-	}
-	
-	// 현재 회원 정보 조회
+         Long memberNo = jwtUtil.getMemberNo(accessToken);
+         List<CommentDto> postList = service.getMyComments(memberNo);
+         return ResponseEntity.ok(postList);
+      } catch (Exception e) {
+         e.printStackTrace();
+         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      }
+   }
+   
+   // 현재 회원 정보 조회
     @GetMapping("/info")
     public ResponseEntity<MemberDto> getMyInfo(HttpServletRequest request) {
         try {
@@ -283,36 +282,49 @@ public class MyPageController {
         }
     }
     
+     // 내가 찜한 축제 목록을 캘린더 및 리스트용으로 조회
     @GetMapping("/mycalendar")
     public ResponseEntity<List<MyCalendarDto>> getMyFavoriteFestivals(
-            @AuthenticationPrincipal CustomUserDetails userDetails) { // Spring Security를 통해 로그인한 사용자 정보 가져오기
-    	// 안전한 인증 정보 추출
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
-        Object principal = authentication.getPrincipal();
-    	userDetails = (CustomUserDetails) principal;
-    	
-        // 로그인하지 않은 사용자 처리 (Security 설정에서 처리하는 것이 더 좋음)
-        if (userDetails == null) {
+            @AuthenticationPrincipal CustomUserDetails userDetails, HttpServletRequest request) { // Spring Security의 UserDetails 객체 사용 예시
+       
+       String accessToken = getAccessTokenFromCookie(request);
+       
+        if (accessToken == null) {
+            // 비로그인 사용자의 경우 401 Unauthorized 응답
             return ResponseEntity.status(401).build();
         }
 
-        long memberNo = userDetails.getMemberNo(); // UserDetails에서 회원번호 가져오기
-        List<MyCalendarDto> festivals = service.getFavoriteFestivals(memberNo);
-        return ResponseEntity.ok(festivals);
-    }
-    
-    @DeleteMapping("/favorites/{contentId}")
-    public ResponseEntity<Void> unfavoriteFestival(
-            @PathVariable("contentId") String contentId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-            
-        if (userDetails == null) {
+        Long memberNo = jwtUtil.getMemberNo(accessToken);
+        log.info("컨트롤러에서 memberNo : " + memberNo);
+        List<MyCalendarDto> favoriteFestivals = service.getFavoriteFestivals(memberNo);
+        log.info("컨트롤러에서 favoriteFestivals : ", favoriteFestivals);
+        
+        
+        if (accessToken == null || accessToken.isEmpty()) {
+            // 토큰이 없으면 비인가 상태로 응답
             return ResponseEntity.status(401).build();
         }
         
-        long memberNo = userDetails.getMemberNo();
+        return ResponseEntity.ok(favoriteFestivals);
+    }
+
+     // 찜 해제
+    @DeleteMapping("/favorites/{contentId}")
+    public ResponseEntity<Void> removeFavorite(
+            @PathVariable("contentId") String contentId,
+            HttpServletRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+       String accessToken = getAccessTokenFromCookie(request);
+       
+        if (accessToken == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Long memberNo = jwtUtil.getMemberNo(accessToken);
         service.removeFavorite(memberNo, contentId);
+        
+        // 성공적으로 처리되었음을 200 OK로 응답
         return ResponseEntity.ok().build();
     }
 

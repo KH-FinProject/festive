@@ -25,6 +25,12 @@
   position: relative;
   overflow: hidden;
   outline: none; /* Slick에서 생기는 outline 제거 */
+  cursor: pointer; /* 클릭 가능함을 표시 */
+  transition: transform 0.3s ease; /* 호버 효과를 위한 트랜지션 */
+}
+
+.festival-slide-panel:hover {
+  transform: scale(1.02); /* 호버 시 살짝 확대 */
 }
 
 .festival-slide-panel .festival-overlay {

@@ -1,17 +1,32 @@
 import { NavLink, useLocation } from "react-router-dom";
-import './MyPageSideBar.css';
+import "./MyPageSideBar.css";
+import useAuthStore from "../../store/useAuthStore";
 
-const MyPageSideBar = ({ name, profileImageUrl }) => {
+const MyPageSideBar = () => {
+  const { member } = useAuthStore();
+  const name = member?.name;
+  let profileImageUrl = member?.profileImage;
+  if (profileImageUrl && profileImageUrl.startsWith("/profile-images/")) {
+    profileImageUrl = profileImageUrl + "?t=" + Date.now();
+  }
   const location = useLocation();
 
   console.log("name : ", name);
 
   return (
     <aside className="mypage-sidebar">
-      <br /><br />
+      <br />
+      <br />
       <div className="profile">
-        <img src={profileImageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"} alt="프로필" />
-        <p>{name}</p><br />
+        <img
+          src={
+            profileImageUrl ||
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
+          }
+          alt="프로필"
+        />
+        <p>{name}</p>
+        <br />
       </div>
       <div className="mypage-sidebar-section">
         <NavLink
@@ -54,7 +69,7 @@ const MyPageSideBar = ({ name, profileImageUrl }) => {
           state={{ name, profileImageUrl }}
           className={() =>
             location.pathname === "/mypage/mypost" ||
-              location.pathname === "/mypage/mycomment"
+            location.pathname === "/mypage/mycomment"
               ? "mypage-sidebar-item active"
               : "mypage-sidebar-item inactive"
           }

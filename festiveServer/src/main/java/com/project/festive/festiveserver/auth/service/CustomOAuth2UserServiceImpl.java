@@ -76,8 +76,8 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
             } else {
                 existingMember.setName(oAuth2Response.getName());
                 existingMember.setEmail(oAuth2Response.getEmail());
-                existingMember.setNickname(oAuth2Response.getNickname());
-                existingMember.setProfileImage(oAuth2Response.getProfileImage());
+                // existingMember.setNickname(oAuth2Response.getNickname()); // 소셜 로그인 시 닉네임 변경을 위한 주석처리
+                // existingMember.setProfileImage(oAuth2Response.getProfileImage()); // 소셜 로그인 시 수정된 프로필 이미지 적용을 위한 주석처리
 
                 memberRepository.save(existingMember);
 

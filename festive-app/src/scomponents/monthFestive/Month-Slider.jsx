@@ -5,7 +5,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./Month-Slider.css";
 
-const ExpandingCards = ({ festivals = [] }) => {
+const ExpandingCards = ({ festivals = [], onFestivalClick }) => {
   const settings = {
     dots: true,
     infinite: true,
@@ -40,15 +40,22 @@ const ExpandingCards = ({ festivals = [] }) => {
     ],
   };
 
+  const handleSlideClick = (festivalId) => {
+    if (onFestivalClick) {
+      onFestivalClick(festivalId);
+    }
+  };
+
   return (
     <div className="festival-slider-container">
       <div className="festival-slick-wrapper">
         <Slider {...settings}>
-          {festivals.map((festival, index) => (
+          {festivals.map((festival) => (
             <div key={festival.id}>
               <div
                 className="festival-slide-panel"
                 style={{ backgroundImage: `url('${festival.image}')` }}
+                onClick={() => handleSlideClick(festival.id)}
               >
                 <div className="festival-overlay">
                   <h3 className="festival-title">{festival.title}</h3>

@@ -60,9 +60,6 @@ const Signup = () => {
             
             {currentStep === 1 && (
                 <div className="nav-buttons">
-                  <button className="prev-btn" onClick={handlePrev}>
-                    이전
-                  </button>
                   <button className="next-btn" onClick={handleNext}>
                     다음
                   </button>
@@ -353,7 +350,9 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // [duplicateStatus] : id, nickname, email, authKey의 중복확인/인증 상태(checked, available, message)
   // [validationErrors] : 각 입력값의 validation 에러 메시지
   const [formData, setFormData] = useState({
-    name: '', nickname: '', email: '', tel: '', authKey: '', id: '', password: '', passwordConfirm: '', address: '', detailAddress: '', authMethod: 'email'
+    name: '', nickname: '', email: '', tel: '', authKey: '', id: '', password: '', passwordConfirm: '', 
+    address: { zipcode: '', detail: '', extra: '' }, 
+    authMethod: 'email'
   });
 
   const [duplicateStatus, setDuplicateStatus] = useState({
@@ -508,7 +507,19 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // - 비밀번호 입력 시 비밀번호 확인도 재검증
   // - 인증번호 입력 시 인증 상태 초기화
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // 중첩된 필드 처리 (예: address.zipcode)
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
 
     if (['id', 'nickname', 'email', 'authKey'].includes(field)) {
       setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
@@ -527,6 +538,8 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     }
   };
 
+
+
   // 9. 기타 핸들러
   // [handleSmsVerification] : SMS 인증 요청(추후 구현)
   // [handleAuthKeyVerification] : 인증번호 확인(추후 구현)
@@ -535,7 +548,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     const { email, tel } = formData;
 
     if (formData.authMethod === 'email') {
-      if (!email) {
+      if (!email || email.trim() === '') {
         alert('이메일을 입력해주세요.');
         return;
       }
@@ -553,7 +566,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       // 이메일 인증
       try {
         setIsEmailLoading(true);
-        const response = await axiosAPI.post(`/auth/email`, { email });
+        const response = await axiosAPI.post(`/auth/email`, { email: email.trim() });
         if(response.data.success) {
           alert('이메일로 인증번호가 전송되었습니다.');
           setFormData(prev => ({ ...prev, authMethod: 'email', authKey: '' }));
@@ -570,7 +583,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       }
 
     } else {
-      if (!tel) {
+      if (!tel || tel.trim() === '') {
         alert('전화번호를 입력해주세요.');
         return;
       }
@@ -607,7 +620,15 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           }
 
           // 우편번호와 주소 정보를 해당 필드에 넣는다.
-          setFormData(prev => ({ ...prev, address: data.zonecode, detailAddress: addr }));
+          // 상세 주소 정보도 함께 설정
+          setFormData(prev => ({ 
+            ...prev, 
+            address: { 
+              zipcode: data.zonecode, 
+              detail: addr, 
+              extra: data.buildingName || '' // 건물명이 있으면 상세 주소에 자동 입력
+            } 
+          }));
         }
       }).open();
     };
@@ -620,7 +641,9 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     // 필수 유효성 검사
     const requiredFields = ['name', 'nickname', 'email', 'id', 'password', 'passwordConfirm', 'authKey'];
     for (const field of requiredFields) {
-      if (validationErrors[field] || !formData[field]) return false;
+      const value = formData[field];
+      // 공백만 있는 경우도 체크
+      if (validationErrors[field] || !value || (typeof value === 'string' && value.trim() === '')) return false;
     }
     // 중복/인증 체크
     if (!duplicateStatus.id.available) return false;
@@ -639,9 +662,25 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     }
     try {
       // 회원가입 API 호출
-      const { name, nickname, email, tel, id, password, address, detailAddress } = formData;
+      const { name, nickname, email, tel, id, password, address } = formData;
+      
+      // 주소 형식 조합 (MyPageEditInfo.jsx와 동일한 형식)
+      let formattedAddress = '';
+      if (address.zipcode && address.detail) {
+        formattedAddress = `${address.zipcode} ${address.detail}`;
+        if (address.extra) {
+          formattedAddress += ` (${address.extra})`;
+        }
+      }
+      
       const response = await axiosAPI.post('/member/signup', {
-        name, nickname, email, tel, id, password, address, detailAddress
+        name: name.trim(),
+        nickname: nickname.trim(),
+        email: email.trim(),
+        tel: tel.trim(),
+        id: id.trim(),
+        password: password.trim(),
+        address: formattedAddress
       });
 
       if(response.data === 1) {
@@ -688,13 +727,13 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
         <div className="user-form-row">
           <div className="user-form-group">
             <label className="form-label">이름 <span className="required">*</span></label>
-            <input type="text" className={getInputClass('name')} placeholder="이름을 입력해주세요" value={formData.name} onChange={e => handleInputChange('name', e.target.value)} />
+            <input type="text" className={getInputClass('name')} placeholder="이름을 입력해주세요" value={formData.name} onChange={e => handleInputChange('name', e.target.value.trim())} />
             {getValidationError('name')}
           </div>
           <div className="user-form-group">
             <label className="form-label">닉네임 <span className="required">*</span></label>
             <div className="form-input-group">
-              <input type="text" className={getInputClass('nickname')} placeholder="닉네임을 입력해주세요" value={formData.nickname} onChange={e => handleInputChange('nickname', e.target.value)} />
+              <input type="text" className={getInputClass('nickname')} placeholder="닉네임을 입력해주세요" value={formData.nickname} onChange={e => handleInputChange('nickname', e.target.value.trim())} />
             </div>
             {getStatusMessage('nickname')}
             {getValidationError('nickname')}
@@ -703,13 +742,13 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
         <div className="user-form-row">
           <div className="user-form-group">
             <label className="form-label">이메일 <span className="required">*</span></label>
-            <input type="email" className={getInputClass('email')} placeholder="이메일을 입력해주세요" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} />
+            <input type="email" className={getInputClass('email')} placeholder="이메일을 입력해주세요" value={formData.email} onChange={e => handleInputChange('email', e.target.value.trim())} />
             {getStatusMessage('email')}
             {getValidationError('email')}
           </div>
           <div className="user-form-group">
             <label className="form-label">전화번호 <span className="required">*</span></label>
-            <input type="tel" className="form-input" placeholder="전화번호를 입력해주세요" value={formData.tel} onChange={e => handleInputChange('tel', e.target.value)} />
+            <input type="tel" className="form-input" placeholder="전화번호를 입력해주세요" value={formData.tel} onChange={e => handleInputChange('tel', e.target.value.trim())} />
           </div>
         </div>
         <div className="user-form-group">
@@ -745,7 +784,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
               className={getInputClass('authKey')}
               placeholder="인증번호를 입력해주세요"
               value={formData.authKey}
-              onChange={e => handleInputChange('authKey', e.target.value)}
+              onChange={e => handleInputChange('authKey', e.target.value.trim())}
               ref={authKeyInputRef}
               maxLength={6}
             />
@@ -758,29 +797,30 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
         <div className="user-form-group">
           <label className="form-label">아이디 <span className="required">*</span></label>
           <div className="form-input-group">
-            <input type="text" className={getInputClass('id')} placeholder="아이디를 입력해주세요 (4~20자, 영문자/숫자)" value={formData.id} onChange={e => handleInputChange('id', e.target.value)} />
+            <input type="text" className={getInputClass('id')} placeholder="아이디를 입력해주세요 (4~20자, 영문자/숫자)" value={formData.id} onChange={e => handleInputChange('id', e.target.value.trim())} />
           </div>
           {getStatusMessage('id')}
           {getValidationError('id')}
         </div>
         <div className="user-form-group">
           <label className="form-label">비밀번호 <span className="required">*</span></label>
-          <input type="password" className={getInputClass('password')} placeholder="비밀번호를 입력해주세요 (6~20자, 영문자+숫자)" value={formData.password} onChange={e => handleInputChange('password', e.target.value)} />
+          <input type="password" className={getInputClass('password')} placeholder="비밀번호를 입력해주세요 (6~20자, 영문자+숫자)" value={formData.password} onChange={e => handleInputChange('password', e.target.value.trim())} />
           {getValidationError('password')}
         </div>
         <div className="user-form-group">
           <label className="form-label">비밀번호 확인 <span className="required">*</span></label>
-          <input type="password" className={getInputClass('passwordConfirm')} placeholder="비밀번호를 다시 입력해주세요" value={formData.passwordConfirm} onChange={e => handleInputChange('passwordConfirm', e.target.value)} />
+          <input type="password" className={getInputClass('passwordConfirm')} placeholder="비밀번호를 다시 입력해주세요" value={formData.passwordConfirm} onChange={e => handleInputChange('passwordConfirm', e.target.value.trim())} />
           {getValidationError('passwordConfirm')}
         </div>
         <div className="user-form-group">
           <label className="form-label">주소</label>
           <div className="address-group">
             <div className="form-input-group">
-              <input type="text" disabled className="form-input" placeholder="우편번호" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} readOnly />
+              <input type="text" disabled className="form-input" placeholder="우편번호" value={formData.address.zipcode} onChange={e => handleInputChange('address.zipcode', e.target.value)} readOnly />
               <button type="button" className="action-btn" onClick={handleAddressSearch}>우편번호 찾기</button>
             </div>
-            <input type="text" disabled className="form-input full-width" placeholder="상세 주소" value={formData.detailAddress} onChange={e => handleInputChange('detailAddress', e.target.value)} />
+            <input type="text" disabled className="form-input full-width" placeholder="기본 주소" value={formData.address.detail} onChange={e => handleInputChange('address.detail', e.target.value)} />
+            <input type="text" className="form-input full-width" placeholder="상세 주소 (예: 101동 101호)" value={formData.address.extra} onChange={e => handleInputChange('address.extra', e.target.value.trim())} />
           </div>
         </div>
         {currentStep === 2 && (
