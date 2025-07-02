@@ -189,6 +189,68 @@
   font-size: 0.9rem;
 }
 
+/* 공유 코스 작성자 정보 스타일 */
+.ai-travel__course-author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-travel__author-profile {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e5e5e5;
+}
+
+.ai-travel__author-nickname {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* 빈 상태 메시지 스타일 */
+.ai-travel__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.ai-travel__empty-content h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.ai-travel__empty-content p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.ai-travel__empty-btn {
+  background: #60a5fa;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 500;
+}
+
+.ai-travel__empty-btn:hover {
+  background: #3b82f6;
+}
+
 .load-more-container {
   display: flex;
   justify-content: flex-end;
@@ -312,5 +374,114 @@
 
   .scroll-top-container {
     padding: 0 10px;
+  }
+}
+
+/* 공유중 태그 스타일 */
+.ai-travel__shared-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #10b981;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 카드 위치 조정 */
+.ai-travel__course-card {
+  position: relative;
+}
+
+.ai-travel__course-image {
+  position: relative;
+  cursor: pointer;
+}
+
+/* 액션 버튼들 컨테이너 */
+.ai-travel__course-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.ai-travel__action-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 공유하기 버튼 */
+.ai-travel__action-btn.share {
+  background: #60a5fa;
+  color: white;
+  box-shadow: 0 2px 4px rgba(96, 165, 250, 0.3);
+}
+
+.ai-travel__action-btn.share:hover {
+  background: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* 공유취소 버튼 */
+.ai-travel__action-btn.share-cancel {
+  background: #6c757d;
+  color: white;
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+.ai-travel__action-btn.share-cancel:hover {
+  background: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+/* 삭제 버튼 (새로고침 버튼 스타일과 동일) */
+.ai-travel__action-btn.delete {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(222, 226, 230, 0.5);
+}
+
+.ai-travel__action-btn.delete:hover {
+  background-color: #e9ecef;
+  color: #495057;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(222, 226, 230, 0.6);
+  border-color: #adb5bd;
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+  .ai-travel__course-actions {
+    padding: 10px;
+    gap: 6px;
+  }
+
+  .ai-travel__action-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .ai-travel__shared-tag {
+    top: 6px;
+    right: 6px;
+    font-size: 0.7rem;
+    padding: 3px 6px;
   }
 }

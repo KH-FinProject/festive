@@ -43,6 +43,13 @@ replay_pid*
 # Spring Boot properties
 *-local.properties
 
+# Spring Boot DevTools
+.reloadtrigger
+**/bin/main/.reloadtrigger
+**/build/
+**/bin/
+**/.gradle/
+
 # Environment variables and secrets
 .env
 
@@ -395,3 +402,8 @@ gradle-app.setting
 /.metadata/
 
 bin/
+
+# Custom SQL files and directories (for local development only)
+**/sql/
+*.sql
+!src/main/resources/mappers/*.xml
