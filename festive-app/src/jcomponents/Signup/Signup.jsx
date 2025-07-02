@@ -350,7 +350,9 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // [duplicateStatus] : id, nickname, email, authKey의 중복확인/인증 상태(checked, available, message)
   // [validationErrors] : 각 입력값의 validation 에러 메시지
   const [formData, setFormData] = useState({
-    name: '', nickname: '', email: '', tel: '', authKey: '', id: '', password: '', passwordConfirm: '', address: '', detailAddress: '', authMethod: 'email'
+    name: '', nickname: '', email: '', tel: '', authKey: '', id: '', password: '', passwordConfirm: '', 
+    address: { zipcode: '', detail: '', extra: '' }, 
+    authMethod: 'email'
   });
 
   const [duplicateStatus, setDuplicateStatus] = useState({
@@ -505,7 +507,19 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // - 비밀번호 입력 시 비밀번호 확인도 재검증
   // - 인증번호 입력 시 인증 상태 초기화
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // 중첩된 필드 처리 (예: address.zipcode)
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
 
     if (['id', 'nickname', 'email', 'authKey'].includes(field)) {
       setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
@@ -604,7 +618,15 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           }
 
           // 우편번호와 주소 정보를 해당 필드에 넣는다.
-          setFormData(prev => ({ ...prev, address: data.zonecode, detailAddress: addr }));
+          // 상세 주소 정보도 함께 설정
+          setFormData(prev => ({ 
+            ...prev, 
+            address: { 
+              zipcode: data.zonecode, 
+              detail: addr, 
+              extra: data.buildingName || '' // 건물명이 있으면 상세 주소에 자동 입력
+            } 
+          }));
         }
       }).open();
     };
@@ -636,9 +658,19 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     }
     try {
       // 회원가입 API 호출
-      const { name, nickname, email, tel, id, password, address, detailAddress } = formData;
+      const { name, nickname, email, tel, id, password, address } = formData;
+      
+      // 주소 형식 조합 (MyPageEditInfo.jsx와 동일한 형식)
+      let formattedAddress = '';
+      if (address.zipcode && address.detail) {
+        formattedAddress = `${address.zipcode} ${address.detail}`;
+        if (address.extra) {
+          formattedAddress += ` (${address.extra})`;
+        }
+      }
+      
       const response = await axiosAPI.post('/member/signup', {
-        name, nickname, email, tel, id, password, address, detailAddress
+        name, nickname, email, tel, id, password, address: formattedAddress
       });
 
       if(response.data === 1) {
@@ -774,10 +806,11 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           <label className="form-label">주소</label>
           <div className="address-group">
             <div className="form-input-group">
-              <input type="text" disabled className="form-input" placeholder="우편번호" value={formData.address} onChange={e => handleInputChange('address', e.target.value)} readOnly />
+              <input type="text" disabled className="form-input" placeholder="우편번호" value={formData.address.zipcode} onChange={e => handleInputChange('address.zipcode', e.target.value)} readOnly />
               <button type="button" className="action-btn" onClick={handleAddressSearch}>우편번호 찾기</button>
             </div>
-            <input type="text" disabled className="form-input full-width" placeholder="상세 주소" value={formData.detailAddress} onChange={e => handleInputChange('detailAddress', e.target.value)} />
+            <input type="text" disabled className="form-input full-width" placeholder="기본 주소" value={formData.address.detail} onChange={e => handleInputChange('address.detail', e.target.value)} />
+            <input type="text" className="form-input full-width" placeholder="상세 주소 (예: 101동 101호)" value={formData.address.extra} onChange={e => handleInputChange('address.extra', e.target.value)} />
           </div>
         </div>
         {currentStep === 2 && (

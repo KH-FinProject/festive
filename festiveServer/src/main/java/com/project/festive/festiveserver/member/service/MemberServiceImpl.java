@@ -65,37 +65,6 @@ public class MemberServiceImpl implements MemberService {
 
         // 회원가입 시 기본 권한 설정
         member.setRole("USER");
-        
-        // 주소가 입력되지 않으면
-        // inputMember.getMemberAddress() -> ",,"
-        // memberAddress -> [,,]
-        
-//        // 주소가 입력된 경우
-//        if(!member.getAddress().equals(",,")) {
-//
-//            // String.join("구분자", 배열)
-//            // -> 배열의 모든 요소 사이에 "구분자"를 추가하여
-//            // 하나의 문자열로 만들어 반환하는 메서드
-//            String address = String.join("^^^", member.getAddress());
-//            // [12345, 서우시 중구 남대문로, 3층, E강의장]
-//            // -> "12345^^^서울시 중구 남대문로^^^3층, E강의장"
-//
-//            // 구분자로 "^^^" 쓴 이유 :
-//            // -> 주소, 상세주소에 안 쓰일 것같은 특수문자 작성
-//            // -> 나중에 마이페이지에서 주소 부분 수정시
-//            // -> DB에 저장된 기존 주소를 화면상에 출력해줘야함
-//            // -> 다시 3분할 해야 할 때 구분자로 ^^^ 이용할 예정
-//            // -> 왜? 구분자가 기본 형태인 , 작성되어있으면
-//            // -> 주소, 상세주소에 , 가 들어오는 경우
-//            // -> 3분할이 아니라 N분할이 될 수 있기 때문에
-//
-//            // inputMember의 memberAddress로 합쳐진 주소를 세팅
-//            inputMember.setMemberAddress(address);
-//
-//        } else {
-//            // 주소가 입력되지 않은 경우
-//            inputMember.setMemberAddress(null); // null로 저장
-//        }
 
         // 회원가입 시 비밀번호 암호화
         member.setPassword(bcrypt.encode(member.getPassword()));
