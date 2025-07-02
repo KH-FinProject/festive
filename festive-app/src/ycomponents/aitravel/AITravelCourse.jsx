@@ -11,6 +11,7 @@ import image10 from "../../assets/temp/image 10.png";
 import image11 from "../../assets/temp/image 11.png";
 import image12 from "../../assets/temp/image 12.png";
 import image13 from "../../assets/temp/image 13.png";
+import logo from "../../assets/festiveLogo.png";
 
 const AITravelCourse = () => {
   const [activeMenu, setActiveMenu] = useState("share");
@@ -22,59 +23,81 @@ const AITravelCourse = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTourData = async () => {
+    const fetchTravelCourses = async () => {
       try {
-        const today = new Date();
-        const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
-        const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+        const baseUrl =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-        // 공유 코스와 개인 코스를 위한 두 개의 API 호출
-        const sharedUrl = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=28&pageNo=1`;
-        const myUrl = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=B&numOfRows=28&pageNo=1`;
+        // 공유된 여행코스와 내 여행코스를 위한 API 호출
+        const sharedUrl = `${baseUrl}/api/travel-course/shared-courses`;
+        const myUrl = `${baseUrl}/api/travel-course/my-courses`;
 
-        const [sharedResponse, myResponse] = await Promise.all([
-          fetch(sharedUrl),
-          fetch(myUrl),
-        ]);
+        // 공유 코스는 인증 없이 가져오기
+        const sharedResponse = await fetch(sharedUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
+        // 내 여행코스는 쿠키 인증 포함하여 가져오기
+        const myResponse = await fetch(myUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // 쿠키 포함 (JWT 토큰)
+        });
+
+        // 공유 코스 응답 처리
         const sharedData = await sharedResponse.json();
-        const myData = await myResponse.json();
+        const sharedItems = sharedData.success ? sharedData.courses : [];
 
-        const sharedItems = sharedData?.response?.body?.items?.item || [];
-        const myItems = myData?.response?.body?.items?.item || [];
+        // 내 여행코스 응답 처리
+        let myItems = [];
+        if (myResponse && myResponse.ok) {
+          const myData = await myResponse.json();
+          myItems = myData.success ? myData.courses : [];
+        }
 
         // 공유 코스 데이터 매핑
-        const mappedSharedCourses = sharedItems.map((item, index) => ({
-          id: item.contentid,
-          title: item.title,
-          date: `${item.eventstartdate?.replace(
-            /(\d{4})(\d{2})(\d{2})/,
-            "$1.$2.$3"
-          )} - ${item.eventenddate?.replace(
-            /(\d{4})(\d{2})(\d{2})/,
-            "$1.$2.$3"
-          )}`,
-          location: item.addr1 || "장소 미정",
+        const mappedSharedCourses = sharedItems.map((course, index) => ({
+          id: course.courseNo,
+          title: course.courseTitle,
+          date: course.createdDate
+            ? new Date(course.createdDate)
+                .toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+                .replace(/\./g, ".")
+            : "날짜 미정",
+          location: course.regionName || "지역 미정",
           image:
-            item.firstimage ||
+            course.thumbnailImage ||
             [image9, image10, image11, image12, image13][index % 5],
+          totalDays: course.totalDays,
+          requestType: course.requestType,
         }));
 
-        // 개인 코스 데이터 매핑
-        const mappedMyTravelCourses = myItems.map((item, index) => ({
-          id: item.contentid,
-          title: item.title,
-          date: `${item.eventstartdate?.replace(
-            /(\d{4})(\d{2})(\d{2})/,
-            "$1.$2.$3"
-          )} - ${item.eventenddate?.replace(
-            /(\d{4})(\d{2})(\d{2})/,
-            "$1.$2.$3"
-          )}`,
-          location: item.addr1 || "장소 미정",
-          image:
-            item.firstimage ||
-            [image9, image10, image11, image12, image13][index % 5],
+        // 내 여행코스 데이터 매핑
+        const mappedMyTravelCourses = myItems.map((course, index) => ({
+          id: course.courseNo,
+          title: course.courseTitle,
+          date: course.createdDate
+            ? new Date(course.createdDate)
+                .toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+                .replace(/\./g, ".")
+            : "날짜 미정",
+          location: course.regionName || "지역 미정",
+          image: course.thumbnailImage || logo,
+          totalDays: course.totalDays,
+          requestType: course.requestType,
         }));
 
         setSharedCourses(mappedSharedCourses);
@@ -86,7 +109,7 @@ const AITravelCourse = () => {
       }
     };
 
-    fetchTourData();
+    fetchTravelCourses();
   }, []);
 
   // 스크롤 이벤트 핸들러

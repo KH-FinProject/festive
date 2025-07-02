@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./AIChatbot.css";
 import AItitle from "./AItitle";
+import TravelCourseSaveModal from "./TravelCourseSaveModal";
+import useAuthStore from "../../store/useAuthStore";
 
 // 백엔드 API 기본 URL
 const API_BASE_URL = "http://localhost:8080/api";
@@ -89,6 +91,14 @@ const AIChatbot = () => {
     courses: [],
     transportation: { nearestStation: "", recommendedMode: "" },
   });
+
+  // 🔄 여행코스 저장 관련 state
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [canSaveCourse, setCanSaveCourse] = useState(false);
+
+  // 🔐 로그인 상태 관리
+  const { isLoggedIn, member } = useAuthStore();
 
   const mapRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -564,7 +574,18 @@ const AIChatbot = () => {
           recommendedMode: "AI 최적 경로 분석 완료",
         },
         isRejected: isRejectedRequest, // 거부 상태 추가
+        // 저장용 추가 정보
+        regionName: data.regionName,
+        areaCode: data.areaCode,
+        totalDays: data.totalDays,
+        originalMessage: userMessage,
       });
+
+      // 🎯 여행코스 저장 가능 여부 확인 (축제가 아닌 여행 추천만)
+      const hasLocations = data.locations && data.locations.length > 0;
+      const isTravelRecommendation =
+        data.requestType && !data.requestType.includes("festival");
+      setCanSaveCourse(hasLocations && isTravelRecommendation);
 
       console.log("✅ 백엔드 중심 보안 시스템 완료 - 타입:", data.requestType);
       if (isRejectedRequest) {
@@ -593,6 +614,62 @@ const AIChatbot = () => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  // 🔐 로그인 체크 후 저장 모달 열기
+  const handleSaveButtonClick = () => {
+    if (!isLoggedIn) {
+      alert("🔒 로그인이 필요한 서비스입니다.\n먼저 로그인해주세요!");
+      return;
+    }
+    setIsSaveModalOpen(true);
+  };
+
+  // 🔄 여행코스 저장 기능
+  const handleSaveTravelCourse = async (saveData) => {
+    setIsSaving(true);
+
+    try {
+      console.log("🚀 여행코스 저장 시작:", saveData);
+
+      const response = await fetch(`${API_BASE_URL}/travel-course/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // 쿠키 포함 (인증용)
+        body: JSON.stringify(saveData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "저장에 실패했습니다.");
+      }
+
+      if (result.success) {
+        alert(
+          `✅ ${
+            saveData.isShared === "Y" ? "공유" : "개인"
+          } 여행코스가 성공적으로 저장되었습니다!`
+        );
+        setIsSaveModalOpen(false);
+        console.log("✅ 여행코스 저장 완료 - 코스번호:", result.courseNo);
+      } else {
+        throw new Error(result.message || "저장에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("❌ 여행코스 저장 실패:", error);
+
+      // 로그인 관련 오류인 경우 특별 처리
+      if (error.message.includes("로그인") || error.message.includes("인증")) {
+        alert("🔒 로그인이 필요한 서비스입니다.\n다시 로그인해주세요!");
+      } else {
+        alert(`❌ 저장 실패: ${error.message}`);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1290,34 +1367,98 @@ const AIChatbot = () => {
                 )}
               </div>
 
-              {/* 저장/공유 버튼 - 추천 여행코스일 때만 표시 */}
-              {(travelInfo.requestType === "festival_with_travel" ||
-                travelInfo.requestType === "travel_only") &&
-                !travelInfo.isRejected && (
-                  <div className="ai-chatbot-button-group">
-                    <button
-                      className="ai-chatbot-action-btn"
-                      onClick={() => {
-                        alert("여행 계획이 저장되었습니다!");
-                      }}
-                    >
-                      저장하기
-                    </button>
-                    <button
-                      className="ai-chatbot-action-btn"
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          messages[messages.length - 1]?.content || ""
-                        );
-                        alert("여행 계획이 클립보드에 복사되었습니다!");
-                      }}
-                    >
-                      공유하기
-                    </button>
-                  </div>
-                )}
+              {/* 🔄 여행코스 저장 버튼 - 추천 여행코스일 때만 표시 */}
+              {canSaveCourse && !travelInfo.isRejected && (
+                <div className="ai-chatbot-button-group">
+                  <button
+                    className="ai-chatbot-action-btn save-btn"
+                    onClick={handleSaveButtonClick}
+                    disabled={isSaving}
+                    style={{
+                      background: isLoggedIn
+                        ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                        : "linear-gradient(135deg, #6c757d 0%, #495057 100%)",
+                      color: "white",
+                      border: "none",
+                      padding: "12px 24px",
+                      borderRadius: "10px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      boxShadow: isLoggedIn
+                        ? "0 4px 12px rgba(102, 126, 234, 0.3)"
+                        : "0 4px 12px rgba(108, 117, 125, 0.3)",
+                      transition: "all 0.2s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isSaving) {
+                        e.target.style.transform = "translateY(-2px)";
+                        e.target.style.boxShadow = isLoggedIn
+                          ? "0 6px 16px rgba(102, 126, 234, 0.4)"
+                          : "0 6px 16px rgba(108, 117, 125, 0.4)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = "translateY(0)";
+                      e.target.style.boxShadow = isLoggedIn
+                        ? "0 4px 12px rgba(102, 126, 234, 0.3)"
+                        : "0 4px 12px rgba(108, 117, 125, 0.3)";
+                    }}
+                  >
+                    {isLoggedIn
+                      ? "💾 이 여행코스 저장하기"
+                      : "🔒 로그인 후 저장하기"}
+                  </button>
+                  <button
+                    className="ai-chatbot-action-btn share-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        messages[messages.length - 1]?.content || ""
+                      );
+                      alert("여행 계획이 클립보드에 복사되었습니다!");
+                    }}
+                    style={{
+                      background: "#f8f9fa",
+                      color: "#6c757d",
+                      border: "2px solid #e9ecef",
+                      padding: "12px 24px",
+                      borderRadius: "10px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    📋 텍스트 복사
+                  </button>
+                </div>
+              )}
             </div>
           )}
+
+        {/* 🔄 여행코스 저장 모달 */}
+        {isSaveModalOpen && (
+          <TravelCourseSaveModal
+            isOpen={isSaveModalOpen}
+            onClose={() => setIsSaveModalOpen(false)}
+            onSave={handleSaveTravelCourse}
+            travelData={{
+              locations: locations,
+              regionName: travelInfo.regionName,
+              areaCode: travelInfo.areaCode,
+              totalDays: travelInfo.totalDays || 1,
+              requestType: travelInfo.requestType || "travel_only",
+              thumbnailImage: locations.length > 0 ? locations[0].image : null,
+            }}
+            loading={isSaving}
+          />
+        )}
       </div>
     </>
   );
