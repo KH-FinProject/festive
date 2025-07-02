@@ -251,7 +251,6 @@ const MyPageEditProfile = () => {
                       value={profileData.nickname}
                       onChange={handleInputChange}
                       placeholder="닉네임을 입력하세요"
-                      required
                       minLength={2}
                       maxLength={15}
                       autoComplete="off"
@@ -271,7 +270,7 @@ const MyPageEditProfile = () => {
                     )}
                   {isValidNickname(profileData.nickname?.trim() || "") &&
                     profileData.nickname?.trim() !==
-                      originalNicknameRef.current &&
+                    originalNicknameRef.current &&
                     (nicknameCheckLoading ? (
                       <p className="nickname-message info">중복 확인 중...</p>
                     ) : isNicknameAvailable === false ? (

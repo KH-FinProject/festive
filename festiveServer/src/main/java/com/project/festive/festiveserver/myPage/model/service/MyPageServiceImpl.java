@@ -61,6 +61,10 @@ public class MyPageServiceImpl implements MyPageService {
         if (encodedPw != null && passwordEncoder.matches(password, encodedPw)) {
             return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
         }
+        
+        if(password == null) {
+        	return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
+        }
 
         return false;
     }

@@ -63,14 +63,14 @@ const MyPageEditInfo = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:8080/mypage/info`, {
+            const response = await fetch("http://localhost:8080/mypage/info", {
                 credentials: "include",
             });
             if (!response.ok) {
                 throw new Error("Failed to fetch member info");
             }
             const data = await response.json();
-            console.log("Fetched Member Info:", data);
+            // console.log("Fetched Member Info:", data);
 
             let parsedTel = { carrier: "", middle: "", last: "" };
             if (data.tel && data.tel.length === 11) {
@@ -95,13 +95,12 @@ const MyPageEditInfo = () => {
                 const fullAddress = data.address;
                 const match = fullAddress.match(/^(\d{5})\s(.*?)(\s\(.*\))?$/); // "우편번호 전체주소 (상세주소)" 패턴
                 if (match) {
-                    parsedAddress.zipcode = match[1]; // 우편번호
-                    parsedAddress.detail = match[2].trim(); // 기본 주소
+                    parsedAddress.zipcode = match[1];
+                    parsedAddress.detail = match[2].trim();
                     parsedAddress.extra = match[3]
                         ? match[3].replace(/^\s*\(|\)\s*$/g, "")
-                        : ""; // 괄호 안 상세주소
+                        : "";
                 } else {
-                    // 괄호 없는 주소는 detail에 모두 넣고, extra는 비워둠
                     const firstSpaceIndex = fullAddress.indexOf(" ");
                     if (firstSpaceIndex !== -1) {
                         parsedAddress.zipcode = fullAddress.substring(0, firstSpaceIndex);
@@ -122,7 +121,6 @@ const MyPageEditInfo = () => {
                 password: "",
             });
 
-            // 모달 내 새로운 이메일 입력 필드에도 현재 이메일 정보로 초기화
             setNewEmailLocal(parsedEmail.local);
             setNewEmailDomain(parsedEmail.domain);
         } catch (error) {
@@ -136,7 +134,6 @@ const MyPageEditInfo = () => {
     }, [fetchMyInfo]);
 
     // --- 이메일 변경 모달 관련 핸들러 ---
-
     const handleNewEmailDomainChange = (e) => {
         const value = e.target.value;
         setNewEmailDomain(value);
@@ -155,7 +152,6 @@ const MyPageEditInfo = () => {
             return;
         }
 
-        // --- 이메일 중복 확인 로직 추가 ---
         try {
             const response = await fetch("http://localhost:8080/auth/email/send", {
                 method: "POST",
@@ -170,19 +166,15 @@ const MyPageEditInfo = () => {
 
             if (!response.ok) {
                 if (response.status === 409) {
-                    // HTTP CONFLICT (409)는 중복을 의미
-                    alert(duplicateData.message); // "현재 다른 회원이 사용 중인 이메일입니다."
-                    return; // 중복이면 더 이상 진행하지 않음
+                    alert(duplicateData.message);
+                    return;
                 } else {
-                    // 다른 종류의 에러
                     throw new Error(duplicateData.message || "인증번호 발송 실패");
                 }
             }
-            // --- 이메일 중복 확인 로직 끝 ---
 
-            // 중복이 아니면 인증번호 발송 진행
-            alert(duplicateData.message); // "인증번호가 이메일로 전송되었습니다."
-            setTimeLeft(300); // 5분
+            alert(duplicateData.message);
+            setTimeLeft(300);
             setIsEmailVerified(false);
             setInputCode("");
 
@@ -259,8 +251,8 @@ const MyPageEditInfo = () => {
     const handlePostCode = useCallback(() => {
         new window.daum.Postcode({
             oncomplete: function (data) {
-                let fullAddress = data.address; // 기본 주소 (도로명 또는 지번 주소)
-                let extraAddress = ""; // 건물명, 동명 등 추가 정보
+                let fullAddress = data.address;
+                let extraAddress = "";
 
                 if (data.bname !== "" && /[동|로|가]$/g.test(data.bname)) {
                     extraAddress += data.bname;
@@ -273,10 +265,9 @@ const MyPageEditInfo = () => {
                 setMemberInfo((prev) => ({
                     ...prev,
                     address: {
-                        zipcode: data.zonecode, // 우편번호
-                        detail: fullAddress, // 도로명 or 지번 주소 (예: "서울 강남구 테헤란로 123")
-                        extra: extraAddress, // 다음 주소에서 제공하는 상세 주소 부분을 extra에 넣어줍니다.
-                        // 사용자가 추가로 입력하는 필드는 별도로 두거나, 이 extra를 수정하도록 안내합니다.
+                        zipcode: data.zonecode,
+                        detail: fullAddress,
+                        extra: extraAddress,
                     },
                 }));
             },
@@ -300,12 +291,19 @@ const MyPageEditInfo = () => {
             fullAddressForDB += ` (${memberInfo.address.extra})`;
         }
 
-        const updatedData = {
-            tel: fullPhoneNumber,
-            email: fullEmail,
-            address: fullAddressForDB,
-            currentPassword: memberInfo.password,
-        };
+        // 소셜 로그인 사용자는 currentPassword 없이 업데이트
+        const updatedData = member?.socialId
+            ? {
+                tel: fullPhoneNumber,
+                email: fullEmail,
+                address: fullAddressForDB,
+            }
+            : {
+                tel: fullPhoneNumber,
+                email: fullEmail,
+                address: fullAddressForDB,
+                currentPassword: memberInfo.password,
+            };
 
         try {
             const response = await fetch("http://localhost:8080/mypage/edit-info", {
@@ -360,8 +358,9 @@ const MyPageEditInfo = () => {
                     <div className="profile-header">
                         <h1>개인정보 수정</h1>
                         <p>
-                            현재 비밀번호가 일치하는 경우, 원하시는 개인정보를 수정할 수
-                            있습니다.
+                            {member?.socialId
+                                ? "전화번호, 이메일, 주소만 수정할 수 있습니다."
+                                : "현재 비밀번호가 일치하는 경우, 원하시는 개인정보를 수정할 수 있습니다."}
                             <br />
                             <br />
                         </p>
@@ -445,20 +444,23 @@ const MyPageEditInfo = () => {
                                             readOnly
                                         />
                                     </div>
-                                    <button
-                                        type="button"
-                                        className="form-button secondary"
-                                        onClick={() => {
-                                            setShowEmailModal(true);
-                                            setNewEmailLocal(memberInfo.email.local);
-                                            setNewEmailDomain(memberInfo.email.domain);
-                                            setIsEmailVerified(false);
-                                            setTimeLeft(0);
-                                            if (timerRef.current) clearInterval(timerRef.current);
-                                        }}
-                                    >
-                                        이메일 수정
-                                    </button>
+                                    {/* socialId 없을 때만 이메일 수정 버튼 노출 */}
+                                    {!member?.socialId && (
+                                        <button
+                                            type="button"
+                                            className="form-button secondary"
+                                            onClick={() => {
+                                                setShowEmailModal(true);
+                                                setNewEmailLocal(memberInfo.email.local);
+                                                setNewEmailDomain(memberInfo.email.domain);
+                                                setIsEmailVerified(false);
+                                                setTimeLeft(0);
+                                                if (timerRef.current) clearInterval(timerRef.current);
+                                            }}
+                                        >
+                                            이메일 수정
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             <br />
@@ -508,27 +510,29 @@ const MyPageEditInfo = () => {
                             </div>
                             <br />
 
-                            {/* 본인 확인 비밀번호 */}
-                            <div className="password-form-row">
-                                <label className="form-label">본인 확인</label>
-                                <p className="form-note">
-                                    *비밀번호 확인 후 정보 수정이 가능합니다.
-                                </p>
-                                <input
-                                    type="password"
-                                    className="form-input full-width"
-                                    placeholder="비밀번호"
-                                    value={memberInfo.password}
-                                    onChange={(e) =>
-                                        setMemberInfo((prev) => ({
-                                            ...prev,
-                                            password: e.target.value,
-                                        }))
-                                    }
-                                    required
-                                />
-                            </div>
-                            <br />
+                            {/* 본인 확인 비밀번호: socialId 없을 때만 표시 */}
+                            {!member?.socialId && (
+                                <div className="password-form-row">
+                                    <label className="form-label">본인 확인</label>
+                                    <p className="form-note">
+                                        *비밀번호 확인 후 정보 수정이 가능합니다.
+                                    </p>
+                                    <input
+                                        type="password"
+                                        className="form-input full-width"
+                                        placeholder="비밀번호"
+                                        value={memberInfo.password}
+                                        onChange={(e) =>
+                                            setMemberInfo((prev) => ({
+                                                ...prev,
+                                                password: e.target.value,
+                                            }))
+                                        }
+                                        required
+                                    />
+                                </div>
+                            )}
+                            {!member?.socialId && <br />}
 
                             {/* 폼 버튼 */}
                             <div className="password-form-buttons">
@@ -557,8 +561,6 @@ const MyPageEditInfo = () => {
                                 style={{ width: "600px" }}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                {" "}
-                                {/* 가로 길이 500px로 설정 */}
                                 <div className="modal-header">
                                     <h3>이메일 변경안내</h3>
                                     <button
@@ -606,7 +608,7 @@ const MyPageEditInfo = () => {
                                                         placeholder="도메인 입력"
                                                         value={
                                                             newEmailDomain === "custom" ? "" : newEmailDomain
-                                                        } // 'custom'일 땐 비워두고, 실제 입력값을 받도록
+                                                        }
                                                         onChange={(e) => setNewEmailDomain(e.target.value)}
                                                         disabled={isEmailVerified}
                                                     />
@@ -616,7 +618,6 @@ const MyPageEditInfo = () => {
                                                 type="button"
                                                 className="verify-btn"
                                                 onClick={handleGenerateVerificationCode}
-                                                // 이메일 입력이 유효하고, 인증되지 않았으며, 타이머가 작동 중이 아닐 때 활성화
                                                 disabled={
                                                     isEmailVerified ||
                                                     (timeLeft > 0 && timeLeft < 300) ||
