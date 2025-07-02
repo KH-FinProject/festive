@@ -106,6 +106,27 @@ function WritePage() {
             placeholder="내용을 입력하세요"
             previewStyle="vertical"
             disabled={isSubmitting}
+            hooks={{
+              addImageBlobHook: async (blob, callback) => {
+                const formData = new FormData();
+                formData.append("image", blob);
+                try {
+                  const res = await fetch(
+                    "http://localhost:8080/api/board/upload-image",
+                    {
+                      method: "POST",
+                      body: formData,
+                      credentials: "include",
+                    }
+                  );
+                  const imageUrl = await res.text();
+                  callback(imageUrl, "image");
+                } catch {
+                  alert("이미지 업로드 실패");
+                }
+                return false;
+              },
+            }}
           />
           <div className="wagle-write-btns">
             <button
