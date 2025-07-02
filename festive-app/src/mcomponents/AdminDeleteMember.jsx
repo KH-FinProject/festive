@@ -1,144 +1,117 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Star } from "lucide-react";
 import "./AdminDeleteMember.css";
 import "./AdminCommon.css";
 import AdminSidebar from "./AdminSideBar";
+import axiosApi from "../api/axiosAPI";
 
 const AdminDeleteMember = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
+  const [withdrawnMembers, setWithdrawnMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 탈퇴 회원 더미 데이터 (많은 데이터로 스크롤 테스트)
-  const withdrawnMembers = [
-    {
-      id: 1,
-      userId: "sung1sung",
-      name: "성민승",
-      nickname: "월승스",
-      withdrawalDate: "2025-06-08 17:28:38",
-    },
-    {
-      id: 2,
-      userId: "sung2sung",
-      name: "김민수",
-      nickname: "민수킹",
-      withdrawalDate: "2025-06-07 15:22:15",
-    },
-    {
-      id: 3,
-      userId: "sung3sung",
-      name: "이영희",
-      nickname: "영희짱",
-      withdrawalDate: "2025-06-06 14:15:30",
-    },
-    {
-      id: 4,
-      userId: "sung4sung",
-      name: "박철수",
-      nickname: "철수맨",
-      withdrawalDate: "2025-06-05 13:45:22",
-    },
-    {
-      id: 5,
-      userId: "sung5sung",
-      name: "최지영",
-      nickname: "지영이",
-      withdrawalDate: "2025-06-04 12:30:18",
-    },
-    {
-      id: 6,
-      userId: "sung6sung",
-      name: "정우진",
-      nickname: "우진킹",
-      withdrawalDate: "2025-06-03 11:25:45",
-    },
-    {
-      id: 7,
-      userId: "sung7sung",
-      name: "한소희",
-      nickname: "소희야",
-      withdrawalDate: "2025-06-02 10:15:33",
-    },
-    {
-      id: 8,
-      userId: "sung8sung",
-      name: "윤도현",
-      nickname: "도현아",
-      withdrawalDate: "2025-06-01 09:30:27",
-    },
-    {
-      id: 9,
-      userId: "sung9sung",
-      name: "임수정",
-      nickname: "수정이",
-      withdrawalDate: "2025-05-31 08:45:12",
-    },
-    {
-      id: 10,
-      userId: "sung10sung",
-      name: "강혜원",
-      nickname: "혜원님",
-      withdrawalDate: "2025-05-30 07:20:55",
-    },
-    {
-      id: 11,
-      userId: "sung11sung",
-      name: "송지효",
-      nickname: "지효언니",
-      withdrawalDate: "2025-05-29 18:35:41",
-    },
-    {
-      id: 12,
-      userId: "sung12sung",
-      name: "김종국",
-      nickname: "종국형",
-      withdrawalDate: "2025-05-28 16:22:18",
-    },
-    {
-      id: 13,
-      userId: "sung13sung",
-      name: "하하하",
-      nickname: "하하킹",
-      withdrawalDate: "2025-05-27 15:10:33",
-    },
-    {
-      id: 14,
-      userId: "sung14sung",
-      name: "유재석",
-      nickname: "재석이",
-      withdrawalDate: "2025-05-26 14:55:29",
-    },
-    {
-      id: 15,
-      userId: "sung15sung",
-      name: "전소민",
-      nickname: "소민이",
-      withdrawalDate: "2025-05-25 13:40:15",
-    },
-  ];
+  // 탈퇴 회원 데이터
+  const fetchWithdrawMember = async () => {
+    try {
+      const resp = await axiosApi.get("/admin/withdraw");
+      const data = resp.data;
 
-  const handleCheckboxChange = (memberId) => {
-    setSelectedMembers((prev) =>
-      prev.includes(memberId)
-        ? prev.filter((id) => id !== memberId)
-        : [...prev, memberId]
-    );
+      if (resp.status == 200) {
+        console.log(data);
+        setWithdrawnMembers(data);
+      }
+    } catch (err) {
+      console.error("탈퇴 회원 불러오기 에러 : ", err);
+    }
   };
 
+  // 체크박스 선택/해제 상태 반영
+  const handleCheckboxChange = (memberNo) => {
+    setSelectedMembers((prev) =>
+      prev.includes(memberNo)
+        ? prev.filter((number) => number !== memberNo)
+        : [...prev, memberNo]
+    );
+
+    console.log("selectedMembers : ", selectedMembers);
+  };
+
+  // 체크박스 전체선택
   const handleSelectAll = () => {
     if (selectedMembers.length === withdrawnMembers.length) {
       setSelectedMembers([]);
     } else {
-      setSelectedMembers(withdrawnMembers.map((member) => member.id));
+      setSelectedMembers(withdrawnMembers.map((member) => member.memberNo));
+    }
+    console.log("selectedMembers : ", selectedMembers);
+  };
+
+  // filteredMembers : id, 닉네임, 이름으로 검색된 회원들
+  const filteredMembers = (withdrawnMembers || []).filter((member) => {
+    if (!member) return false;
+    return (
+      member.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.name?.includes(searchTerm) ||
+      member.nickname?.includes(searchTerm)
+    );
+  });
+
+  // 삭제 버튼 클릭 시 회원 삭제
+  const handleClickDelete = async (memberNoList) => {
+    const isConfirmed = window.confirm(
+      "회원을 영구 삭제 하시겠습니까? (복구 불가능)"
+    );
+
+    if (!isConfirmed) return;
+    try {
+      const resp = await axiosApi.post("/admin/withdrawDelete", memberNoList);
+      const data = resp.data;
+
+      if (resp.status == 200) {
+        console.log(data);
+        alert(data, "명 삭제되었습니다.");
+
+        setSelectedMembers([]);
+        fetchWithdrawMember();
+        return;
+      }
+
+      alert("삭제 실패했습니다.");
+    } catch (err) {
+      console.error("회원 삭제하기 에러 : ", err);
     }
   };
 
-  const filteredMembers = withdrawnMembers.filter(
-    (member) =>
-      member.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.name.includes(searchTerm) ||
-      member.nickname.includes(searchTerm)
-  );
+  // 복구 버튼 클릭 시 회원 복구
+  const handleClickRestore = async (memberNoList) => {
+    const isConfirmed = window.confirm("해당 회원을 복구하시겠습니까?");
+
+    if (!isConfirmed) return;
+
+    try {
+      const resp = await axiosApi.post("/admin/withdrawRestore", memberNoList);
+      const data = resp.data;
+
+      if (resp.status == 200) {
+        console.log(data);
+        alert("복구되었습니다.");
+
+        setSelectedMembers([]);
+        fetchWithdrawMember();
+
+        return;
+      }
+
+      alert("복구 실패");
+    } catch (err) {
+      console.error("회원 복구하기 에러 : ", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchWithdrawMember();
+  }, []);
 
   return (
     <div className="admin-management-container">
@@ -172,6 +145,23 @@ const AdminDeleteMember = () => {
             <div className="member-list-section">
               <div className="admin-section-header">
                 <h2 className="admin-section-title">탈퇴 회원 정보</h2>
+                {/* 체크박스로 선택한 회원 삭제/복구 */}
+                <div className="button-group">
+                  <button
+                    className="action-button delete-button"
+                    disabled={selectedMembers.length === 0}
+                    onClick={() => handleClickDelete(selectedMembers)}
+                  >
+                    선택 회원 삭제
+                  </button>
+                  <button
+                    className="action-button restore-button"
+                    disabled={selectedMembers.length === 0}
+                    onClick={() => handleClickRestore(selectedMembers)}
+                  >
+                    선택 회원 복구
+                  </button>
+                </div>
               </div>
 
               <div className="member-list-container">
@@ -181,7 +171,8 @@ const AdminDeleteMember = () => {
                       <input
                         type="checkbox"
                         checked={
-                          selectedMembers.length === withdrawnMembers.length
+                          selectedMembers.length === withdrawnMembers.length &&
+                          withdrawnMembers.length > 0
                         }
                         onChange={handleSelectAll}
                         className="member-checkbox"
@@ -197,32 +188,48 @@ const AdminDeleteMember = () => {
                 </div>
 
                 <div className="member-list-body">
-                  {filteredMembers.map((member) => (
-                    <div key={member.id} className="member-row">
-                      <div className="member-cell checkbox-cell">
-                        <input
-                          type="checkbox"
-                          checked={selectedMembers.includes(member.id)}
-                          onChange={() => handleCheckboxChange(member.id)}
-                          className="member-checkbox"
-                        />
+                  {filteredMembers?.length > 0 ? (
+                    filteredMembers.map((member) => (
+                      <div key={member.id} className="member-row">
+                        <div className="member-cell checkbox-cell">
+                          <input
+                            type="checkbox"
+                            checked={selectedMembers.includes(member.memberNo)}
+                            onChange={() =>
+                              handleCheckboxChange(member.memberNo)
+                            }
+                            className="member-checkbox"
+                          />
+                        </div>
+                        <div className="member-cell">{member.id}</div>
+                        <div className="member-cell">{member.name}</div>
+                        <div className="member-cell">{member.nickname}</div>
+                        <div className="member-cell">{member.withdrawDate}</div>
+                        <div className="member-cell action-cell">
+                          <button
+                            className="action-button delete-button"
+                            onClick={() => handleClickDelete([member.memberNo])}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                        <div className="member-cell action-cell">
+                          <button
+                            className="action-button restore-button"
+                            onClick={() =>
+                              handleClickRestore([member.memberNo])
+                            }
+                          >
+                            복구
+                          </button>
+                        </div>
                       </div>
-                      <div className="member-cell">{member.userId}</div>
-                      <div className="member-cell">{member.name}</div>
-                      <div className="member-cell">{member.nickname}</div>
-                      <div className="member-cell">{member.withdrawalDate}</div>
-                      <div className="member-cell action-cell">
-                        <button className="action-button delete-button">
-                          삭제
-                        </button>
-                      </div>
-                      <div className="member-cell action-cell">
-                        <button className="action-button restore-button">
-                          복구
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <h2 style={{ textAlign: "center", marginTop: "100px" }}>
+                      탈퇴한 회원이 없습니다.
+                    </h2>
+                  )}
                 </div>
               </div>
             </div>

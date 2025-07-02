@@ -39,7 +39,7 @@ const StayModal = ({ isOpen, selectedStay, onClose }) => {
 
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
-      <div className="modal-container">
+      <div className="stay-modal-container">
         {/* Modal Header */}
         <div className="modal-header">
           <h2 className="modal-title">{selectedStay.title}</h2>
@@ -63,7 +63,7 @@ const StayModal = ({ isOpen, selectedStay, onClose }) => {
         </div>
 
         {/* Modal Content */}
-        <div className="modal-content">
+        <div className="stay-modal-content">
           <div className="modal-image-container">
             <img
               src={selectedStay.image}
