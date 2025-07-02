@@ -67,25 +67,10 @@ const MyPageCalendar = () => {
             return;
         }
 
-        fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
-            method: 'DELETE',
-            credentials: 'include', // 반드시 유지!
-        })
-            .then(res => {
-                if (res.ok) {
-                    alert("찜 해제되었습니다.");
-                    setFestivals(prevFestivals =>
-                        prevFestivals.filter(festival => festival.contentId !== contentId)
-                    );
-                } else {
-                    throw res;
-                }
-            })
-            .catch(err => {
-                err.text().then(errorMessage => {
-                    alert('찜 해제에 실패했습니다. 콘솔을 확인해주세요.');
-                    console.error("서버 에러 메시지:", errorMessage);
-                });
+        try {
+            const response = await fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
+                method: 'DELETE',
+                credentials: 'include', // 반드시 유지!
             });
 
             if (response.ok) {
