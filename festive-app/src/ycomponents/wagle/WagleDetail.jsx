@@ -13,6 +13,7 @@ import GeneralBoard from "./GeneralBoard";
 import NoticeBoard from "./NoticeBoard";
 import useAuthStore from "../../store/useAuthStore";
 import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
+import { Viewer } from "@toast-ui/react-editor";
 
 function CommentItem({
   comment,
@@ -520,7 +521,7 @@ function WagleDetail() {
       navigate("/signin");
       return;
     }
-    
+
     // 닉네임 체크
     const canProceed = await checkNicknameForSocialUser(navigate);
     if (!canProceed) return;
@@ -765,11 +766,7 @@ function WagleDetail() {
             )}
           </div>
           <div className="wagle-detail-content">
-            {post.content && (
-              <div style={{ whiteSpace: "pre-wrap", lineHeight: "1.6" }}>
-                {post.content}
-              </div>
-            )}
+            <Viewer initialValue={post?.content || ""} />
           </div>
           <div className="wagle-detail-images">
             {post.images &&
