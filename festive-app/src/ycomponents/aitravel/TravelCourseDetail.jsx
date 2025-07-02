@@ -724,28 +724,31 @@ const TravelCourseDetail = () => {
             <div className="travel-detail-place-info-section">
               <div className="travel-detail-place-slider">
                 {loadingImages ? (
-                  <div className="slider-loading">
+                  <div className="travel-detail-slider-loading">
                     <img src={logo} alt="로딩중" />
                     <div className="loading-text">이미지를 불러오는 중...</div>
                   </div>
                 ) : (
                   <>
-                    <div className="slider-container">
+                    <div className="travel-detail-slider-container">
                       <div
-                        className="slider-track"
+                        className="travel-detail-slider-track"
                         style={{
                           transform: `translateX(-${currentImageIndex * 100}%)`,
                         }}
                       >
                         {getAllImages().map((image, index) => (
-                          <div key={index} className="slider-slide">
+                          <div
+                            key={index}
+                            className="travel-detail-slider-slide"
+                          >
                             <img
                               src={image.url}
                               alt={image.alt}
                               onError={(e) => {
                                 e.target.src = logo;
                               }}
-                              className="slider-image"
+                              className="travel-detail-slider-image"
                             />
                           </div>
                         ))}
@@ -755,14 +758,14 @@ const TravelCourseDetail = () => {
                       {getAllImages().length > 1 && (
                         <>
                           <button
-                            className="slider-nav slider-nav-prev"
+                            className="travel-detail-slider-nav travel-detail-slider-nav-prev"
                             onClick={prevImage}
                             aria-label="이전 이미지"
                           >
                             ❮
                           </button>
                           <button
-                            className="slider-nav slider-nav-next"
+                            className="travel-detail-slider-nav travel-detail-slider-nav-next"
                             onClick={nextImage}
                             aria-label="다음 이미지"
                           >
@@ -774,11 +777,11 @@ const TravelCourseDetail = () => {
 
                     {/* 슬라이더 인디케이터 */}
                     {getAllImages().length > 1 && (
-                      <div className="slider-indicators">
+                      <div className="travel-detail-slider-indicators">
                         {getAllImages().map((_, index) => (
                           <button
                             key={index}
-                            className={`slider-indicator ${
+                            className={`travel-detail-slider-indicator ${
                               currentImageIndex === index ? "active" : ""
                             }`}
                             onClick={() => goToImage(index)}
@@ -790,7 +793,7 @@ const TravelCourseDetail = () => {
 
                     {/* 이미지 카운터 */}
                     {getAllImages().length > 1 && (
-                      <div className="slider-counter">
+                      <div className="travel-detail-slider-counter">
                         {currentImageIndex + 1} / {getAllImages().length}
                       </div>
                     )}
