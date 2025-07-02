@@ -38,8 +38,7 @@ function CommentItem({
         minute: "2-digit",
       })
       .replace(/\. /g, ".")
-      .replace(".", ".")
-      .slice(0, -1);
+      .replace(".", ".");
   };
 
   // 댓글 작성자 여부 확인
