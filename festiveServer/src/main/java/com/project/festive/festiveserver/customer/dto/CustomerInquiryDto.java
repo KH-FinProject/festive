@@ -48,6 +48,7 @@ public class CustomerInquiryDto {
     // 고객 연락처 (선택사항)
     private String customerEmail;
     private String customerPhone;
+    private String memberProfileImage;
 
     public Long getAnswerCommentNo() { return answerCommentNo; }
     public void setAnswerCommentNo(Long answerCommentNo) { this.answerCommentNo = answerCommentNo; }

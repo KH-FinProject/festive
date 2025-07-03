@@ -5,9 +5,129 @@ import Title from "./Title";
 import "./AISideMenu.css";
 import "../monthFestive/Title.css";
 
+// 축제 검색 모달 컴포넌트
+function FestivalSearchModal({ open, onClose, onSelect }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  // 임시 축제 리스트 (API 연동 시 교체)
+  const festivals = [
+    "서울불꽃축제",
+    "부산불꽃축제",
+    "대구치맥페스티벌",
+    "진주남강유등축제",
+    "화천산천어축제",
+    "보령머드축제",
+    "춘천마임축제",
+    "안동국제탈춤페스티벌",
+    "담양대나무축제",
+    "제주들불축제",
+  ];
+
+  const handleSearch = () => {
+    const filtered = festivals.filter((f) => f.includes(query));
+    setResults(filtered);
+  };
+
+  if (!open) return null;
+  // 오버레이 클릭 시 닫기
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+  return (
+    <div
+      className="modal-backdrop"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0,0,0,0.3)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="modal"
+        style={{
+          background: "#fff",
+          padding: 24,
+          borderRadius: 8,
+          minWidth: 320,
+          position: "relative",
+        }}
+      >
+        {/* 오른쪽 위 엑스버튼 */}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            border: "none",
+            background: "none",
+            fontSize: 20,
+            cursor: "pointer",
+          }}
+          aria-label="닫기"
+        >
+          ×
+        </button>
+        <h3 style={{ marginBottom: 12 }}>축제 검색</h3>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="축제명을 입력하세요"
+          style={{ width: "70%", marginRight: 8, padding: 4 }}
+        />
+        <button onClick={handleSearch} style={{ padding: "4px 12px" }}>
+          검색
+        </button>
+        <ul
+          style={{
+            marginTop: 16,
+            maxHeight: 180,
+            overflowY: "auto",
+            padding: 0,
+          }}
+        >
+          {results.map((festival) => (
+            <li
+              key={festival}
+              onClick={() => {
+                onSelect(festival);
+                onClose();
+              }}
+              style={{
+                cursor: "pointer",
+                padding: "6px 0",
+                borderBottom: "1px solid #eee",
+              }}
+            >
+              {festival}
+            </li>
+          ))}
+          {results.length === 0 && (
+            <li style={{ color: "#aaa", padding: "6px 0" }}>
+              검색 결과가 없습니다.
+            </li>
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 // 플리마켓 신청 폼
 const FleaMarketForm = () => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [festivalName, setFestivalName] = useState("");
+  const [showFestivalModal, setShowFestivalModal] = useState(false);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -19,6 +139,29 @@ const FleaMarketForm = () => {
       <h2 className="booth-form-title">플리마켓 신청</h2>
 
       <div className="booth-form-fields">
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            축제명 <span className="booth-required">*</span>
+          </label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="text"
+              className="booth-form-input"
+              placeholder="축제를 선택하세요"
+              value={festivalName}
+              readOnly
+              style={{ flex: 1 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowFestivalModal(true)}
+              style={{ padding: "0 12px" }}
+            >
+              축제 검색
+            </button>
+          </div>
+        </div>
+
         <div className="booth-form-field">
           <label className="booth-form-label">
             신청자 성함 <span className="booth-required">*</span>
@@ -134,6 +277,11 @@ const FleaMarketForm = () => {
         </div>
       </div>
 
+      <FestivalSearchModal
+        open={showFestivalModal}
+        onClose={() => setShowFestivalModal(false)}
+        onSelect={setFestivalName}
+      />
       <div className="booth-submit-section">
         <button className="booth-submit-button">신청하기</button>
       </div>
@@ -144,6 +292,8 @@ const FleaMarketForm = () => {
 // 푸드트럭 신청 폼
 const FoodTruckForm = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [festivalName, setFestivalName] = useState("");
+  const [showFestivalModal, setShowFestivalModal] = useState(false);
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
@@ -155,6 +305,29 @@ const FoodTruckForm = () => {
       <h2 className="booth-form-title">푸드트럭 신청</h2>
 
       <div className="booth-form-fields">
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            축제명 <span className="booth-required">*</span>
+          </label>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="text"
+              className="booth-form-input"
+              placeholder="축제를 선택하세요"
+              value={festivalName}
+              readOnly
+              style={{ flex: 1 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowFestivalModal(true)}
+              style={{ padding: "0 12px" }}
+            >
+              축제 검색
+            </button>
+          </div>
+        </div>
+
         <div className="booth-form-field">
           <label className="booth-form-label">
             신청자 성함 <span className="booth-required">*</span>
@@ -291,6 +464,11 @@ const FoodTruckForm = () => {
         </div>
       </div>
 
+      <FestivalSearchModal
+        open={showFestivalModal}
+        onClose={() => setShowFestivalModal(false)}
+        onSelect={setFestivalName}
+      />
       <div className="booth-submit-section">
         <button className="booth-submit-button">신청하기</button>
       </div>
