@@ -65,15 +65,44 @@ const AITravelCourse = () => {
         // 공유 코스 데이터 매핑
         const mappedSharedCourses = sharedItems.map((course, index) => ({
           id: course.courseNo,
-          title: course.courseTitle,
+          title: removeEmojis(course.courseTitle),
           date: course.createdDate
-            ? new Date(course.createdDate)
-                .toLocaleDateString("ko-KR", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })
-                .replace(/\./g, ".")
+            ? (() => {
+                try {
+                  let dateObj;
+                  // 배열 형태의 날짜 처리 [year, month, day, hour, minute, second]
+                  if (Array.isArray(course.createdDate)) {
+                    const [year, month, day, hour, minute, second] =
+                      course.createdDate;
+                    // JavaScript Date는 month가 0부터 시작하므로 -1
+                    dateObj = new Date(
+                      year,
+                      month - 1,
+                      day,
+                      hour || 0,
+                      minute || 0,
+                      second || 0
+                    );
+                  } else {
+                    // 문자열 형태의 날짜 처리
+                    dateObj = new Date(course.createdDate);
+                  }
+
+                  if (isNaN(dateObj.getTime())) {
+                    return "날짜 미정";
+                  }
+                  return dateObj
+                    .toLocaleDateString("ko-KR", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })
+                    .replace(/\./g, ".");
+                } catch (error) {
+                  console.error("날짜 변환 오류:", error);
+                  return "날짜 미정";
+                }
+              })()
             : "날짜 미정",
           // 공유 코스는 올린 사람 정보 표시 (nickname 우선, 없으면 name 사용)
           memberNickname:
@@ -90,15 +119,44 @@ const AITravelCourse = () => {
         // 내 여행코스 데이터 매핑 (백엔드에서 제공하는 작성자 정보 우선 사용)
         const mappedMyTravelCourses = myItems.map((course, index) => ({
           id: course.courseNo,
-          title: course.courseTitle,
+          title: removeEmojis(course.courseTitle),
           date: course.createdDate
-            ? new Date(course.createdDate)
-                .toLocaleDateString("ko-KR", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })
-                .replace(/\./g, ".")
+            ? (() => {
+                try {
+                  let dateObj;
+                  // 배열 형태의 날짜 처리 [year, month, day, hour, minute, second]
+                  if (Array.isArray(course.createdDate)) {
+                    const [year, month, day, hour, minute, second] =
+                      course.createdDate;
+                    // JavaScript Date는 month가 0부터 시작하므로 -1
+                    dateObj = new Date(
+                      year,
+                      month - 1,
+                      day,
+                      hour || 0,
+                      minute || 0,
+                      second || 0
+                    );
+                  } else {
+                    // 문자열 형태의 날짜 처리
+                    dateObj = new Date(course.createdDate);
+                  }
+
+                  if (isNaN(dateObj.getTime())) {
+                    return "날짜 미정";
+                  }
+                  return dateObj
+                    .toLocaleDateString("ko-KR", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })
+                    .replace(/\./g, ".");
+                } catch (error) {
+                  console.error("날짜 변환 오류:", error);
+                  return "날짜 미정";
+                }
+              })()
             : "날짜 미정",
           // 백엔드에서 제공하는 작성자 정보를 우선 사용 (nickname → name → 현재 사용자 정보 순)
           memberNickname:
@@ -152,6 +210,17 @@ const AITravelCourse = () => {
     sharedCourses,
     myTravelCourses,
   ]);
+
+  // 텍스트에서 이모지 제거하는 함수
+  const removeEmojis = (text) => {
+    if (!text) return text;
+    return text
+      .replace(
+        /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu,
+        ""
+      )
+      .trim();
+  };
 
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);

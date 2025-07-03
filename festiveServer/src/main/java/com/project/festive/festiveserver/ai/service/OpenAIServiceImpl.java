@@ -163,10 +163,10 @@ public class OpenAIServiceImpl implements OpenAIService {
         StringBuilder message = new StringBuilder();
         
         // 기본 여행 정보
-        message.append(String.format("🗺️ **%s 여행 정보**\n\n", analysis.getRegion()));
+        message.append(String.format("**%s 여행 정보**\n\n", analysis.getRegion()));
         
         if (analysis.getDuration() != null) {
-            message.append(String.format("📅 **여행 기간**: %s\n", analysis.getDuration()));
+            message.append(String.format("**여행 기간**: %s\n", analysis.getDuration()));
         }
         
         // 여행코스 정보 (contentTypeId=25)
@@ -175,7 +175,7 @@ public class OpenAIServiceImpl implements OpenAIService {
             .collect(Collectors.toList());
             
         if (!travelCourses.isEmpty()) {
-            message.append("\n🚗 **추천 여행코스**\n");
+            message.append("\n**추천 여행코스**\n");
             for (int i = 0; i < Math.min(3, travelCourses.size()); i++) {
                 AITravelServiceImpl.TourAPIResponse.Item course = travelCourses.get(i);
                 message.append(String.format("• %s\n", course.getTitle()));
@@ -188,7 +188,7 @@ public class OpenAIServiceImpl implements OpenAIService {
             .collect(Collectors.toList());
             
         if (!attractions.isEmpty()) {
-            message.append("\n🏛️ **주요 관광지**\n");
+            message.append("\n **주요 관광지**\n");
             for (int i = 0; i < Math.min(5, attractions.size()); i++) {
                 AITravelServiceImpl.TourAPIResponse.Item attraction = attractions.get(i);
                 message.append(String.format("• %s", attraction.getTitle()));
@@ -216,12 +216,12 @@ public class OpenAIServiceImpl implements OpenAIService {
         if (keyword != null && !keyword.trim().isEmpty()) {
             recommendation.append(String.format("🎯 **%s** 관련 여행 정보를 찾아드렸어요!\n\n", keyword));
         } else {
-            recommendation.append("🗺️ **맞춤 여행 추천**을 준비했어요!\n\n");
+            recommendation.append("**맞춤 여행 추천**을 준비했어요!\n\n");
         }
         
         // 여행코스 우선 표시
         if (!travelCourses.isEmpty()) {
-            recommendation.append("🚗 **추천 여행코스**\n");
+            recommendation.append("**추천 여행코스**\n");
             for (int i = 0; i < Math.min(3, travelCourses.size()); i++) {
                 Map<String, Object> course = travelCourses.get(i);
                 String title = (String) course.get("title");
@@ -232,7 +232,7 @@ public class OpenAIServiceImpl implements OpenAIService {
         
         // 기타 관광지
         if (!otherSpots.isEmpty()) {
-            recommendation.append("📍 **주요 여행지**\n");
+            recommendation.append("**주요 여행지**\n");
             for (int i = 0; i < Math.min(5, otherSpots.size()); i++) {
                 Map<String, Object> spot = otherSpots.get(i);
                 String title = (String) spot.get("title");
@@ -248,8 +248,8 @@ public class OpenAIServiceImpl implements OpenAIService {
         }
         
         // 마무리 멘트
-        recommendation.append("\n✨ 각 장소를 클릭하면 더 자세한 정보를 확인할 수 있어요!");
-        recommendation.append("\n📱 지도에서 위치도 함께 확인해보세요!");
+        recommendation.append("\n 각 장소를 클릭하면 더 자세한 정보를 확인할 수 있어요!");
+        recommendation.append("\n 지도에서 위치도 함께 확인해보세요!");
         
         return recommendation.toString();
     }
@@ -289,6 +289,6 @@ public class OpenAIServiceImpl implements OpenAIService {
     public String createRejectionMessage() {
         return "죄송합니다. 현재 실제 여행 데이터를 기반으로 한 추천만 제공하고 있습니다. " +
                "좀 더 구체적인 지역명이나 여행 키워드를 입력해주시면, " +
-               "해당 지역의 실제 관광지와 여행코스를 추천해드릴게요! 🗺️✨";
+               "해당 지역의 실제 관광지와 여행코스를 추천해드릴게요! ";
     }
 } 
