@@ -22,9 +22,9 @@
 	<!-- 회원 탈퇴 -->
 	<update id="withdrawal">
 		UPDATE "MEMBER" SET
-		MEMBER_DEL_FL = 'Y'
-		WHERE MEMBER_NO
-		= #{memberNo}
+		MEMBER_DEL_FL = 'Y',
+		WITHDRAW_DATE = SYSDATE
+		WHERE MEMBER_NO = #{memberNo}
 	</update>
 
 
@@ -134,19 +134,19 @@
 	</update>
 
 	<select id="selectContentIdsByMemberNo">
-        SELECT
-            CONTENT_ID
-        FROM
-            FAVORITES
-        WHERE
-            MEMBER_NO = #{memberNo}
-    </select>
+		SELECT
+		CONTENT_ID
+		FROM
+		FAVORITES
+		WHERE
+		MEMBER_NO = #{memberNo}
+	</select>
 
-    <delete id="deleteFavorite">
-        DELETE FROM
-            FAVORITES
-        WHERE
-            MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
-    </delete>
+	<delete id="deleteFavorite">
+		DELETE FROM
+		FAVORITES
+		WHERE
+		MEMBER_NO = #{memberNo} AND CONTENT_ID = #{contentId}
+	</delete>
 
 </mapper>

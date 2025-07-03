@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +61,10 @@ public class MyPageServiceImpl implements MyPageService {
         // bcrypt 비교
         if (encodedPw != null && passwordEncoder.matches(password, encodedPw)) {
             return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
+        }
+        
+        if(password == null) {
+        	return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
         }
 
         return false;
@@ -155,93 +163,69 @@ public class MyPageServiceImpl implements MyPageService {
     
     @Override
     public List<MyCalendarDto> getFavoriteFestivals(long memberNo) {
-        // 1. DB에서 해당 회원이 찜한 모든 contentId 목록을 가져온다.
-        List<String> contentIds = mapper.selectContentIdsByMemberNo(memberNo);
-        
-        log.info("서비스임플에서 contentIds : "+ contentIds);
-
-        if (contentIds.isEmpty()) {
-            return new ArrayList<>(); // 찜한 축제가 없으면 빈 리스트 반환
+        List<String> myFavoriteContentIds = mapper.selectContentIdsByMemberNo(memberNo);
+        if (myFavoriteContentIds.isEmpty()) {
+            return new ArrayList<>();
         }
-        
-        List<MyCalendarDto> festivalDetails = new ArrayList<>();
-        
-        // 2. 각 contentId에 대해 TourAPI를 호출하여 상세 정보를 가져온다.
-        for (String contentId : contentIds) {
-            try {
-                String apiUrl = "https://apis.data.go.kr/B551011/KorService2/searchFestival2";
-                URI uri = UriComponentsBuilder.fromHttpUrl(apiUrl)
-                        .queryParam("serviceKey", serviceKey)
-                        .queryParam("MobileOS", "ETC")
-                        .queryParam("MobileApp", "Festive")
-                        .queryParam("_type", "json")
-                        .queryParam("contentId", contentId)
-                        .queryParam("defaultYN", "Y") // 기본정보 조회
-                        .queryParam("firstImageYN", "Y") // 대표이미지 조회
-                        .queryParam("areacodeYN", "Y") // 지역코드 조회
-                        .queryParam("catcodeYN", "Y") // 서비스분류코드 조회
-                        .queryParam("addrinfoYN", "Y") // 주소 조회
-                        .queryParam("mapinfoYN", "Y") // 좌표 조회
-                        .queryParam("overviewYN", "Y") // 개요 조회
-                        .build(true)
-                        .toUri();
 
-                String response = restTemplate.getForObject(uri, String.class);
+        try {
+            Map<String, JsonNode> allFestivalsMap = getAllFestivalsAsMap();
 
-                // 3. API 응답(JSON)을 파싱하여 필요한 정보만 추출한다.
-                JsonNode root = objectMapper.readTree(response);
-                JsonNode item = root.path("response").path("body").path("items").path("item").get(0);
-                
-                if (item != null && !item.isMissingNode()) {
-                    // TourAPI의 eventstartdate, eventenddate는 축제(15) 타입에만 존재
-                    // detailIntro API를 함께 사용하거나, searchFestival에서 날짜 정보를 가져와야 함.
-                    // 여기서는 searchFestival2 API를 기준으로 startDate, endDate 필드를 가져온다고 가정
-                    // 하지만 detailCommon2에는 날짜 정보가 없으므로, searchFestival2를 다시 호출해야 합니다.
-                    // 더 나은 방법: 찜할 때 날짜 정보도 함께 저장하거나, 별도의 API 호출 로직 구성.
-                    // 여기서는 임시로 searchFestival2를 다시 호출하는 로직을 추가합니다. (비효율적일 수 있음)
+            List<MyCalendarDto> resultList = new ArrayList<>();
+            for (String contentId : myFavoriteContentIds) {
+                if (allFestivalsMap.containsKey(contentId)) {
+                    JsonNode festivalData = allFestivalsMap.get(contentId);
+                    MyCalendarDto dto = new MyCalendarDto();
+                    dto.setContentId(contentId);
+                    dto.setTitle(festivalData.path("title").asText());
+                    dto.setStartDate(festivalData.path("eventstartdate").asText());
+                    dto.setEndDate(festivalData.path("eventenddate").asText());
                     
-                   MyCalendarDto detail = getFestivalDates(contentId); // 날짜 정보 가져오는 별도 메서드 호출
-                    detail.setContentId(contentId);
-                    detail.setTitle(item.path("title").asText());
-                    // detail.setStartDate(...) 와 detail.setEndDate(...) 는 getFestivalDates에서 채워짐
+                    // 여기를 수정! 'addr1' 값을 place 필드에 설정합니다.
+                    dto.setPlace(festivalData.path("addr1").asText()); 
                     
-                    festivalDetails.add(detail);
+                    resultList.add(dto);
                 }
-
-            } catch (Exception e) {
-                // 특정 contentId 조회 실패 시 로그를 남기고 계속 진행
-                System.err.println("Error fetching details for contentId " + contentId + ": " + e.getMessage());
             }
+            return resultList;
+
+        } catch (Exception e) {
+            log.error("축제 정보 조회 중 오류 발생", e);
+            return new ArrayList<>();
         }
-        
-        return festivalDetails;
     }
 
-    // detailCommon2에는 날짜 정보가 없으므로, searchFestival2 API를 사용하여 날짜를 가져오는 헬퍼 메서드
-    private MyCalendarDto getFestivalDates(String contentId) throws Exception {
-         // 실제로는 contentId로 특정 축제 하나만 검색하는 기능이 TourAPI에 마땅치 않습니다.
-         // 가장 좋은 방법은 사용자가 축제를 '찜'할 때, 해당 축제의 시작일과 종료일을 FAVORITES 테이블 또는
-         // 별도의 테이블에 함께 저장하는 것입니다.
-         // 아래는 contentId가 제목에 포함된 축제를 검색하는 임시방편의 코드입니다.
-         
-         // **권장사항**: 찜 할 때 축제명, 시작일, 종료일을 DB에 같이 저장하세요!
-         // ALTER TABLE FAVORITES ADD (TITLE VARCHAR2(255), START_DATE VARCHAR2(8), END_DATE VARCHAR2(8));
-         // 이렇게 하면 아래의 불필요한 API 호출을 모두 제거하고 DB 조회만으로 해결 가능합니다.
-         
-         // 아래는 임시 코드입니다.
-       MyCalendarDto dto = new MyCalendarDto();
-         // ... TourAPI (searchFestival2) 호출하여 contentId에 해당하는 축제 날짜 정보 조회 로직 ...
-         // 예시로 임의의 값을 넣겠습니다.
-         dto.setStartDate("20250701"); // YYYYMMDD
-         dto.setEndDate("20250710"); // YYYYMMDD
-         return dto;
-    }
+    /**
+     * searchFestival2 API를 호출하여 모든 축제 정보를 Map<contentId, festivalData> 형태로 반환합니다.
+     */
+    private Map<String, JsonNode> getAllFestivalsAsMap() throws Exception {
+        String apiUrl = "https://apis.data.go.kr/B551011/KorService2/searchFestival2";
+        URI uri = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("serviceKey", serviceKey)
+                .queryParam("MobileOS", "ETC")
+                .queryParam("MobileApp", "Festive")
+                .queryParam("_type", "json")
+                .queryParam("arrange", "A")
+                .queryParam("eventStartDate", "19900101") // 과거부터 모든 축제 조회
+                .queryParam("numOfRows", "10000") // 가능한 많은 데이터 조회
+                .build(true)
+                .toUri();
 
+        String response = restTemplate.getForObject(uri, String.class);
+        JsonNode items = objectMapper.readTree(response).path("response").path("body").path("items").path("item");
+
+        // List<JsonNode>를 Map<String, JsonNode>으로 변환 (Key: contentId)
+        // StreamSupport.stream를 사용하여 JsonNode(Iterable)를 스트림으로 변환
+        return StreamSupport.stream(items.spliterator(), false)
+                .collect(Collectors.toMap(
+                        item -> item.path("contentid").asText(), // Map의 Key
+                        Function.identity() // Map의 Value (item JsonNode 그 자체)
+                ));
+    }
 
     @Override
     public void removeFavorite(long memberNo, String contentId) {
         mapper.deleteFavorite(memberNo, contentId);
     }
     
-
 }

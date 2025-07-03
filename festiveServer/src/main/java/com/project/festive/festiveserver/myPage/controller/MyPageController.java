@@ -286,9 +286,8 @@ public class MyPageController {
     @GetMapping("/mycalendar")
     public ResponseEntity<List<MyCalendarDto>> getMyFavoriteFestivals(
             @AuthenticationPrincipal CustomUserDetails userDetails, HttpServletRequest request) { // Spring Security의 UserDetails 객체 사용 예시
-       
-       String accessToken = getAccessTokenFromCookie(request);
-       
+
+    	String accessToken = getAccessTokenFromCookie(request);
         if (accessToken == null) {
             // 비로그인 사용자의 경우 401 Unauthorized 응답
             return ResponseEntity.status(401).build();
@@ -315,8 +314,7 @@ public class MyPageController {
             HttpServletRequest request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-       String accessToken = getAccessTokenFromCookie(request);
-       
+    	String accessToken = getAccessTokenFromCookie(request);
         if (accessToken == null) {
             return ResponseEntity.status(401).build();
         }
