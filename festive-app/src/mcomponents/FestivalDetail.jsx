@@ -16,6 +16,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import PublicCarPark from "./MapApi";
 import StayModal from "./StayModal";
 import DetailWeather from "./DetailWeatherAPI";
+import LikeButton from "./LikeButton";
 
 // 축제 상태 진행
 const getFestivalStatus = (start, end) => {
@@ -70,7 +71,7 @@ const FestivalDetail = () => {
         pagination={{ clickable: true }}
         modules={[Navigation, Pagination]}
         className="mySwiper"
-      /*       breakpoints={{
+        /*       breakpoints={{
       320: { slidesPerView: 1 },
       640: { slidesPerView: 2 },
       1024: { slidesPerView: 3 },
@@ -326,6 +327,7 @@ const FestivalDetail = () => {
                   {festivalDetail.eventstartdate} ~{" "}
                   {festivalDetail.eventenddate}
                 </span>
+                <LikeButton contentId={contentId} />
               </div>
             </div>
 
@@ -534,8 +536,9 @@ const FestivalDetail = () => {
                       className="festival-image"
                     />
                     <div
-                      className={`festival-status ${festival.status === "진행중" ? "active" : "upcoming"
-                        }`}
+                      className={`festival-status ${
+                        festival.status === "진행중" ? "active" : "upcoming"
+                      }`}
                     >
                       {festival.status}
                     </div>
