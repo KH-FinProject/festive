@@ -1,6 +1,7 @@
 package com.project.festive.festiveserver.ai.service;
 
 import com.project.festive.festiveserver.ai.dto.TravelAnalysis;
+import com.project.festive.festiveserver.area.service.AreaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,53 +16,11 @@ import java.util.regex.Pattern;
 @Slf4j
 public class TravelAnalysisServiceImpl implements TravelAnalysisService {
 
-    // 지역코드 매핑
-    private final Map<String, String> AREA_CODE_MAP = new HashMap<String, String>() {{
-        // 광역시/도 - 정식명칭과 줄임형 모두 지원
-        put("서울", "1"); put("서울특별시", "1");
-        put("인천", "2"); put("인천광역시", "2");
-        put("대전", "3"); put("대전광역시", "3");
-        put("대구", "4"); put("대구광역시", "4");
-        put("광주", "5"); put("광주광역시", "5");
-        put("부산", "6"); put("부산광역시", "6");
-        put("울산", "7"); put("울산광역시", "7");
-        put("세종", "8"); put("세종특별자치시", "8");
-        put("경기", "31"); put("경기도", "31");
-        put("강원", "32"); put("강원도", "32"); put("강원특별자치도", "32");
-        put("충북", "33"); put("충청북도", "33");
-        put("충남", "34"); put("충청남도", "34");
-        put("경북", "35"); put("경상북도", "35");
-        put("경남", "36"); put("경상남도", "36");
-        put("전북", "37"); put("전라북도", "37"); put("전북특별자치도", "37");
-        put("전남", "38"); put("전라남도", "38");
-        put("제주", "39"); put("제주도", "39"); put("제주특별자치도", "39");
-    }};
+    private final AreaService areaService;
     
-    // 시군구 코드 매핑
-    private final Map<String, String> SIGUNGU_CODE_MAP = new HashMap<String, String>() {{
-        // 경상남도 (36) - 주요 도시들
-        put("거제시", "36_1"); put("거제", "36_1");
-        put("거창군", "36_2"); put("거창", "36_2");
-        put("고성군", "36_3"); put("고성", "36_3");
-        put("김해시", "36_4"); put("김해", "36_4");
-        put("남해군", "36_5"); put("남해", "36_5");
-        put("마산시", "36_6"); put("마산", "36_6");
-        put("밀양시", "36_7"); put("밀양", "36_7");
-        put("사천시", "36_8"); put("사천", "36_8");
-        put("산청군", "36_9"); put("산청", "36_9");
-        put("양산시", "36_10"); put("양산", "36_10");
-        put("의령군", "36_12"); put("의령", "36_12");
-        put("진주시", "36_13"); put("진주", "36_13");
-        put("진해시", "36_14"); put("진해", "36_14");
-        put("창녕군", "36_15"); put("창녕", "36_15");
-        put("창원시", "36_16"); put("창원", "36_16");
-        put("통영시", "36_17"); put("통영", "36_17");
-        put("하동군", "36_18"); put("하동", "36_18");
-        put("함안군", "36_19"); put("함안", "36_19");
-        put("함양군", "36_20"); put("함양", "36_20");
-        put("합천군", "36_21"); put("합천", "36_21");
-        // 다른 지역들도 추가 가능
-    }};
+    // DB 기반 매핑 사용 (하드코딩 대신)
+    // private final Map<String, String> AREA_CODE_MAP = new HashMap<String, String>() {{ ... }};
+    // private final Map<String, String> SIGUNGU_CODE_MAP = new HashMap<String, String>() {{ ... }};
 
     @Override
     public TravelAnalysis createFastAnalysis(String userMessage) {
@@ -74,7 +33,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             String keyword = extractKeywordFromRequest(userMessage);
             String intent = "여행 추천";
             
-            // 지역 정보 추출
+            // 지역 정보 추출 (DB 기반 매핑 사용)
             RegionInfo regionInfo = extractRegionInfo(userMessage);
             String region = regionInfo.getRegionName();
             String areaCode = regionInfo.getAreaCode();
@@ -160,7 +119,8 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         }
         
         // 지역명이 포함되어 있으면 여행 관련으로 간주
-        for (String region : AREA_CODE_MAP.keySet()) {
+        Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
+        for (String region : areaCodeMapping.keySet()) {
             if (lowerMessage.contains(region.toLowerCase())) {
                 return true;
             }
@@ -225,7 +185,9 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return null;
         }
         
-        return AREA_CODE_MAP.get(region.trim());
+        // DB 기반 매핑 사용
+        Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
+        return areaCodeMapping.get(region.trim());
     }
 
     @Override
@@ -236,8 +198,11 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         String message = userMessage.toLowerCase();
         
+        // DB 기반 시군구 매핑 사용
+        Map<String, String> sigunguCodeMapping = areaService.getSigunguCodeMapping();
+        
         // 시군구 코드 먼저 확인 (더 구체적이므로)
-        for (Map.Entry<String, String> entry : SIGUNGU_CODE_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
             String cityName = entry.getKey();
             if (message.contains(cityName.toLowerCase())) {
                 String sigunguCode = entry.getValue();
@@ -250,8 +215,9 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             }
         }
         
-        // 광역시/도 코드 확인
-        for (Map.Entry<String, String> entry : AREA_CODE_MAP.entrySet()) {
+        // DB 기반 지역 매핑 사용
+        Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
+        for (Map.Entry<String, String> entry : areaCodeMapping.entrySet()) {
             String regionName = entry.getKey();
             if (message.contains(regionName.toLowerCase())) {
                 String areaCode = entry.getValue();
@@ -265,11 +231,16 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
 
     @Override
     public String findRegionNameByAreaCode(String areaCode) {
-        for (Map.Entry<String, String> entry : AREA_CODE_MAP.entrySet()) {
+        if (areaCode == null) return null;
+        
+        // 역매핑을 위한 검색
+        Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
+        for (Map.Entry<String, String> entry : areaCodeMapping.entrySet()) {
             if (entry.getValue().equals(areaCode)) {
                 return entry.getKey();
             }
         }
+        
         return "알 수 없음";
     }
 
