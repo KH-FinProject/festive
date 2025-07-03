@@ -1,43 +1,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./AIChatbot.css";
 import AItitle from "./AItitle";
+import TravelCourseSaveModal from "./TravelCourseSaveModal";
+import useAuthStore from "../../store/useAuthStore";
 
 // 백엔드 API 기본 URL
 const API_BASE_URL = "http://localhost:8080/api";
 
-// 백엔드 API 호출 함수
-const aiAPI = {
-  async generateResponse(
-    message,
-    region = null,
-    history = [],
-    festivalData = null,
-    nearbySpots = []
-  ) {
-    const response = await fetch(`${API_BASE_URL}/ai/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message,
-        region,
-        history,
-        festivalData,
-        nearbySpots,
-      }),
-    });
-    if (!response.ok) throw new Error("AI 서비스 오류가 발생했습니다.");
-    return response.json();
-  },
-};
-
 const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴트입니다.
 
 여행하고 싶은 지역과 기간을 말씀해주시면 맞춤형 여행코스를 추천해드릴게요!
-또한 검색하고 싶은 축제나 행사가 있으시면 축제 검색도 가능합니다.`;
 
-// 두 지점 간의 거리 계산 함수 (Haversine 공식)
+✈️ 이용 방법:
+• "서울 2박3일 여행계획 짜줘" - 다양한 타입 랜덤 추천
+• "부산 1박2일 관광지 위주로 추천해줘" - 관광지 중심
+• "제주도 당일치기 음식점 위주로 짜줘" - 맛집 탐방
+• "경주 2박3일 여행코스 위주로 계획해줘" - 여행코스 중심
+• "대구 1박2일 문화시설 위주로 추천" - 문화/박물관 중심
+• "인천 당일치기 레포츠 위주로 짜줘" - 레포츠/체험 중심
+• "광주 1박2일 쇼핑 위주로 계획해줘" - 쇼핑몰/시장 중심
+
+🎪 축제 검색도 가능합니다!`;
+
+// 두 지점 간 거리 계산 함수 (Haversine 공식)
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
-  const R = 6371; // 지구의 반지름 (km)
+  const R = 6371; // 지구 반지름 (km)
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
   const a =
@@ -47,136 +34,7 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
       Math.sin(dLng / 2) *
       Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-  return distance;
-};
-
-// nearbySpots에서 가장 가까운 관광지 찾기 함수
-const findNearestSpot = (lat, lng, spots) => {
-  if (!spots || spots.length === 0) return null;
-
-  let minDistance = Infinity;
-  let nearestSpot = null;
-
-  spots.forEach((spot) => {
-    if (spot.mapx && spot.mapy) {
-      const distance = calculateDistance(
-        lat,
-        lng,
-        parseFloat(spot.mapy),
-        parseFloat(spot.mapx)
-      );
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestSpot = spot;
-      }
-    }
-  });
-
-  console.log(
-    `🎯 가장 가까운 관광지: ${nearestSpot?.title} (거리: ${minDistance.toFixed(
-      2
-    )}km)`
-  );
-  return nearestSpot;
-};
-
-// 응답 처리 함수 (nearbySpots 활용)
-const processResponse = (response, availableSpots = []) => {
-  console.log("원본 응답:", response);
-  console.log("활용 가능한 관광지:", availableSpots.length + "개");
-
-  const newLocations = [];
-  let cleanResponse = response;
-
-  try {
-    // 위치 정보와 day 정보 추출
-    const regex = /@location:\s*\[(\d+\.\d+)\s*,\s*(\d+\.\d+)\]\s*@day:(\d+)/g;
-    let match;
-    let spotIndex = 0; // nearbySpots 인덱스
-
-    while ((match = regex.exec(response)) !== null) {
-      const lat = parseFloat(match[1]);
-      const lng = parseFloat(match[2]);
-      const day = parseInt(match[3]);
-
-      if (!isNaN(lat) && !isNaN(lng) && !isNaN(day) && day > 0 && day <= 10) {
-        let placeName = "";
-        let timeInfo = "";
-
-        // 방법 1: 좌표와 가장 가까운 실제 관광지 찾기
-        const nearestSpot = findNearestSpot(lat, lng, availableSpots);
-        if (nearestSpot) {
-          placeName = nearestSpot.title;
-          console.log(`✅ 관광지 매칭: ${placeName}`);
-        }
-        // 방법 2: 순서대로 nearbySpots 사용 (fallback)
-        else if (spotIndex < availableSpots.length) {
-          placeName = availableSpots[spotIndex].title;
-          console.log(`✅ 순서 매칭: ${placeName}`);
-          spotIndex++;
-        }
-        // 방법 3: 기본값 (최후의 수단)
-        else {
-          placeName = `Day ${day} 코스 ${
-            newLocations.filter((loc) => loc.day === day).length + 1
-          }`;
-          console.log(`⚠️ 기본값 사용: ${placeName}`);
-        }
-
-        // AI 응답에서 시간 정보 추출 시도
-        const beforeLocation = response.substring(0, match.index);
-        const lines = beforeLocation.split("\n");
-
-        for (
-          let i = lines.length - 1;
-          i >= Math.max(0, lines.length - 3);
-          i--
-        ) {
-          const line = lines[i]?.trim() || "";
-          const timeMatch = line.match(/\*\*([^*]*(?:오전|오후)[^*]*)\*\*/);
-          if (timeMatch) {
-            timeInfo = timeMatch[1].trim();
-            console.log(`✅ 시간 추출: ${timeInfo}`);
-            break;
-          }
-        }
-
-        // 기본 시간 설정
-        if (!timeInfo) {
-          const courseIndex =
-            newLocations.filter((loc) => loc.day === day).length + 1;
-          if (courseIndex === 1) timeInfo = "오전 09:00";
-          else if (courseIndex === 2) timeInfo = "오후 12:00";
-          else if (courseIndex === 3) timeInfo = "오후 15:00";
-          else timeInfo = `코스 ${courseIndex}`;
-        }
-
-        newLocations.push({
-          lat,
-          lng,
-          name: placeName,
-          day: day,
-          time: timeInfo,
-        });
-
-        console.log(
-          `📍 최종 위치 추가: ${placeName} (Day ${day}, ${timeInfo})`
-        );
-      }
-    }
-
-    // 위치 정보 텍스트 제거
-    cleanResponse = response
-      .replace(/@location:\s*\[\d+\.\d+\s*,\s*\d+\.\d+\]\s*@day:\d+/g, "")
-      .replace(/위치정보:\s*/g, "")
-      .trim();
-  } catch (error) {
-    console.error("위치 정보 처리 중 오류:", error);
-  }
-
-  console.log("🎯 최종 추출된 위치들:", newLocations);
-  return { locations: newLocations, cleanResponse };
+  return R * c; // 거리 (km)
 };
 
 // Day별 색상 정의
@@ -196,6 +54,35 @@ const DAY_COLORS = {
 // Day별 색상 가져오기 함수
 const getDayColor = (day) => {
   return DAY_COLORS[day] || "#FF6B6B";
+};
+
+// 사용자 메시지에서 총 일수 계산
+const calculateTotalDaysFromMessage = (message) => {
+  if (!message) return 1;
+
+  const lowerMessage = message.toLowerCase().replace(/\s+/g, "");
+
+  // 명확한 박수일 패턴 매칭
+  if (lowerMessage.includes("1박2일")) return 2;
+  if (lowerMessage.includes("2박3일")) return 3;
+  if (lowerMessage.includes("3박4일")) return 4;
+  if (lowerMessage.includes("4박5일")) return 5;
+  if (lowerMessage.includes("5박6일")) return 6;
+  if (lowerMessage.includes("6박7일")) return 7;
+
+  // 일수만 있는 경우
+  const dayMatch = message.match(/(\d+)일/);
+  if (dayMatch) {
+    const days = parseInt(dayMatch[1]);
+    return days;
+  }
+
+  // 당일치기 패턴
+  if (lowerMessage.includes("당일") || lowerMessage.includes("하루")) {
+    return 1;
+  }
+
+  return 1; // 기본값
 };
 
 // 마커 HTML 생성 함수
@@ -235,7 +122,6 @@ const AIChatbot = () => {
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
   const [currentStreamMessage, setCurrentStreamMessage] = useState("");
-  const [nearbySpots, setNearbySpots] = useState([]);
   const [travelInfo, setTravelInfo] = useState({
     festival: {
       name: "",
@@ -249,6 +135,14 @@ const AIChatbot = () => {
     courses: [],
     transportation: { nearestStation: "", recommendedMode: "" },
   });
+
+  // 🔄 여행코스 저장 관련 state
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [canSaveCourse, setCanSaveCourse] = useState(false);
+
+  // 🔐 로그인 상태 관리
+  const { isLoggedIn, member } = useAuthStore();
 
   const mapRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -316,17 +210,32 @@ const AIChatbot = () => {
     // 🎪 축제 검색인지 여행코스 검색인지 구분
     const isFestivalOnly = travelInfo.requestType === "festival_only";
 
-    if (isFestivalOnly) {
-      // 🎪 축제 검색: 단순한 마커만 표시 (Day 그룹화 없음, 연결선 없음, 거리 표시 없음)
-      console.log(`🎪 축제 검색 모드: ${locations.length}개 마커 단순 표시`);
+    console.log(
+      `🗺️ 마커 표시 모드: ${isFestivalOnly ? "축제" : "여행"}, ${
+        locations.length
+      }개 마커`
+    );
 
+    if (isFestivalOnly) {
+      // 🎪 축제 검색: 단순한 마커만 표시 (연결선 없음, 거리 표시 없음)
       locations.forEach((location, index) => {
-        const markerPosition = new window.kakao.maps.LatLng(
-          location.latitude || location.lat,
-          location.longitude || location.lng
+        const lat = location.latitude || location.lat;
+        const lng = location.longitude || location.lng;
+
+        if (!lat || !lng) {
+          console.warn(`⚠️ 축제 좌표 없음: ${location.name}`, location);
+          return;
+        }
+
+        console.log(
+          `🎪 축제 마커 ${index + 1}: ${
+            location.name
+          } - 위도: ${lat}, 경도: ${lng}`
         );
 
-        // 축제 전용 마커 (번호 없이 축제 아이콘)
+        const markerPosition = new window.kakao.maps.LatLng(lat, lng);
+
+        // 축제 전용 마커 (빨간색 축제 아이콘)
         const festivalMarker = new window.kakao.maps.CustomOverlay({
           position: markerPosition,
           content: `<div style="
@@ -338,46 +247,17 @@ const AIChatbot = () => {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 2px solid white;
-          ">F</div>`,
+            cursor: pointer;
+          ">🎪</div>`,
           yAnchor: 1,
         });
 
         festivalMarker.setMap(map);
         map._markers.push(festivalMarker);
-
-        // 축제명 라벨
-        const labelPosition = new window.kakao.maps.LatLng(
-          (location.latitude || location.lat) + 0.001,
-          location.longitude || location.lng
-        );
-
-        const labelOverlay = new window.kakao.maps.CustomOverlay({
-          position: labelPosition,
-          content: `<div style="
-            background: rgba(255,255,255,0.95);
-            border: 1px solid #FF6B6B;
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #333;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            text-align: center;
-            white-space: nowrap;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          ">${location.name}</div>`,
-          yAnchor: 1,
-        });
-
-        labelOverlay.setMap(map);
-        map._markers.push(labelOverlay);
-        bounds.extend(markerPosition);
 
         // 축제 인포윈도우
         const imageContent = location.image
@@ -387,13 +267,15 @@ const AIChatbot = () => {
         const infowindow = new window.kakao.maps.InfoWindow({
           content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
             ${imageContent}
-            <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 축제</div>
+            <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 ${
+              location.category || "축제"
+            }</div>
             <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
               location.name
             }</div>
-            <span style="background:#FF6B6B;color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${
-              location.category || "축제"
-            }</span>
+            <div style="color:#666;font-size:11px;">${
+              location.description || ""
+            }</div>
           </div>`,
         });
 
@@ -405,9 +287,11 @@ const AIChatbot = () => {
           infowindow.open(map, festivalMarker);
           map._currentInfoWindow = infowindow;
         });
+
+        bounds.extend(markerPosition);
       });
     } else {
-      // 🗺️ 여행코스 검색: 기존 Day별 그룹화, 연결선, 거리 표시
+      // 🗺️ 여행코스 검색: Day별 그룹화, 연결선, 거리 표시
       console.log(`🗺️ 여행코스 검색 모드: Day별 그룹화 및 연결선 표시`);
 
       // Day별로 그룹화
@@ -419,58 +303,45 @@ const AIChatbot = () => {
         dayGroups[location.day].push(location);
       });
 
-      // 각 Day별로 마커 생성 및 연결선 그리기 (Day별 최대 3개까지만)
+      // 각 Day별로 마커 생성 및 연결선 그리기
       Object.keys(dayGroups).forEach((day) => {
-        // 🎯 Day별로 최대 3개만 표시 (AI 임의 데이터 제한)
-        const dayLocations = dayGroups[day].slice(0, 3);
+        const dayLocations = dayGroups[day];
         const dayColor = DAY_COLORS[parseInt(day)] || "#FF6B6B";
         const polylinePath = [];
 
-        console.log(
-          `📍 Day ${day} 마커 표시: ${dayLocations.length}개 (원본: ${dayGroups[day].length}개)`
-        );
+        console.log(`📍 Day ${day} 마커 표시: ${dayLocations.length}개`);
 
         dayLocations.forEach((location, index) => {
-          // 좌표 데이터 디버깅
-          console.log(`🔍 마커 ${index + 1} 좌표 확인:`, {
-            name: location.name,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            lat: location.lat,
-            lng: location.lng,
-            mapX: location.mapX,
-            mapY: location.mapY,
-            image: location.image,
-            category: location.category,
-            final_lat: location.latitude || location.lat,
-            final_lng: location.longitude || location.lng,
-          });
+          const lat = location.latitude || location.lat;
+          const lng = location.longitude || location.lng;
 
-          const markerPosition = new window.kakao.maps.LatLng(
-            location.latitude || location.lat,
-            location.longitude || location.lng
-          );
+          if (!lat || !lng) {
+            console.warn(`⚠️ 여행지 좌표 없음: ${location.name}`, location);
+            return;
+          }
 
           console.log(
-            `📍 마커 ${index + 1} 최종 위치:`,
-            markerPosition.getLat(),
-            markerPosition.getLng()
+            `📍 여행 마커 ${index + 1}: ${
+              location.name
+            } - 위도: ${lat}, 경도: ${lng}`
           );
 
-          // 커스텀 오버레이로 마커 생성
-          const customOverlay = new window.kakao.maps.CustomOverlay({
+          const markerPosition = new window.kakao.maps.LatLng(lat, lng);
+
+          // 여행지 마커 (Day별 색상과 번호)
+          const travelMarker = new window.kakao.maps.CustomOverlay({
             position: markerPosition,
             content: createMarkerContent(location.day, index + 1),
             yAnchor: 1,
           });
 
-          customOverlay.setMap(map);
-          map._markers.push(customOverlay);
+          travelMarker.setMap(map);
+          map._markers.push(travelMarker);
 
           // 장소명 라벨 추가 (마커 위에)
           const labelPosition = new window.kakao.maps.LatLng(
-            (location.latitude || location.lat) + 0.001, // 마커보다 약간 위에 위치
-            location.longitude || location.lng
+            lat + 0.001, // 마커보다 약간 위에 위치
+            lng
           );
 
           const labelOverlay = new window.kakao.maps.CustomOverlay({
@@ -495,38 +366,39 @@ const AIChatbot = () => {
 
           labelOverlay.setMap(map);
           map._markers.push(labelOverlay);
-          bounds.extend(markerPosition);
 
-          // 폴리라인 경로에 추가
-          polylinePath.push(markerPosition);
-
-          // 인포윈도우 - 이미지 포함
+          // 여행지 인포윈도우
           const imageContent = location.image
             ? `<img src="${location.image}" alt="${location.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
-            : "";
-
-          const categoryBadge = location.category
-            ? `<span style="background:${dayColor};color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${location.category}</span>`
             : "";
 
           const infowindow = new window.kakao.maps.InfoWindow({
             content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
               ${imageContent}
-              <div style="color:${dayColor};font-weight:bold;margin-bottom:4px;">Day ${location.day}</div>
-              <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${location.name}</div>
-              ${categoryBadge}
+              <div style="color:${dayColor};font-weight:bold;margin-bottom:4px;">Day ${
+              location.day
+            }</div>
+              <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
+                location.name
+              }</div>
+              <span style="background:${dayColor};color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${
+              location.category || "관광지"
+            }</span>
             </div>`,
           });
 
-          // 클릭 이벤트 - 카카오맵 API 방식으로 수정
-          window.kakao.maps.event.addListener(customOverlay, "click", () => {
-            // 기존 인포윈도우 모두 닫기
+          // 클릭 이벤트
+          window.kakao.maps.event.addListener(travelMarker, "click", () => {
             if (map._currentInfoWindow) {
               map._currentInfoWindow.close();
             }
-            infowindow.open(map, customOverlay);
+            infowindow.open(map, travelMarker);
             map._currentInfoWindow = infowindow;
           });
+
+          // 폴리라인 경로에 추가
+          polylinePath.push(markerPosition);
+          bounds.extend(markerPosition);
         });
 
         // 같은 Day끼리 연결선 그리기
@@ -588,6 +460,8 @@ const AIChatbot = () => {
     if (locations.length > 0) {
       map.setBounds(bounds);
     }
+
+    console.log(`✅ 마커 표시 완료: ${locations.length}개`);
   }, [locations, travelInfo.requestType]);
 
   // 스크롤 자동 조정
@@ -628,9 +502,10 @@ const AIChatbot = () => {
         .replace(/오전 (\d+):(\d+)/g, "🌅 오전 $1:$2")
         .replace(/오후 (\d+):(\d+)/g, "🌆 오후 $1:$2")
 
-        // 연속된 공백과 줄바꿈 정리
-        .replace(/\n\s*\n/g, "\n")
-        .replace(/\s+/g, " ")
+        // 연속된 줄바꿈 정리 (3개 이상을 2개로)
+        .replace(/\n{3,}/g, "\n\n")
+        // 줄바꿈은 보존하고 공백과 탭만 정리
+        .replace(/[ \t]+/g, " ")
         .trim()
     );
   };
@@ -723,6 +598,9 @@ const AIChatbot = () => {
       const finalFestivals = data.festivals || [];
       console.log("✅ 백엔드 축제 데이터:", finalFestivals.length, "개");
 
+      // 🚫 거부된 요청인지 확인
+      const isRejectedRequest = data.requestType === "rejected";
+
       setTravelInfo({
         requestType: data.requestType,
         festivals: finalFestivals,
@@ -739,10 +617,29 @@ const AIChatbot = () => {
           nearestStation: "대중교통 이용 가능",
           recommendedMode: "AI 최적 경로 분석 완료",
         },
+        isRejected: isRejectedRequest, // 거부 상태 추가
+        // 저장용 추가 정보
+        regionName: data.regionName,
+        areaCode: data.areaCode,
+        totalDays:
+          data.travelCourse?.totalDays ||
+          calculateTotalDaysFromMessage(userMessage),
+        originalMessage: userMessage,
+        courseDescription: data.courseDescription, // AI가 생성한 day별 코스 설명
       });
 
+      // 🎯 여행코스 저장 가능 여부 확인 (축제가 아닌 여행 추천만)
+      const hasLocations = data.locations && data.locations.length > 0;
+      const isTravelRecommendation =
+        data.requestType && !data.requestType.includes("festival");
+      setCanSaveCourse(hasLocations && isTravelRecommendation);
+
       console.log("✅ 백엔드 중심 보안 시스템 완료 - 타입:", data.requestType);
-      console.log("🔐 TourAPI 서비스키 완전 보호, 모든 처리 백엔드 완료");
+      if (isRejectedRequest) {
+        console.log("🚫 일반 대화 요청 거부됨 - 여행/축제 안내 메시지 표시");
+      } else {
+        console.log("🔐 TourAPI 서비스키 완전 보호, 모든 처리 백엔드 완료");
+      }
     } catch (error) {
       console.error("❌ 메시지 전송 오류:", error);
 
@@ -764,6 +661,62 @@ const AIChatbot = () => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  // 🔐 로그인 체크 후 저장 모달 열기
+  const handleSaveButtonClick = () => {
+    if (!isLoggedIn) {
+      alert("🔒 로그인이 필요한 서비스입니다.\n먼저 로그인해주세요!");
+      return;
+    }
+    setIsSaveModalOpen(true);
+  };
+
+  // 🔄 여행코스 저장 기능
+  const handleSaveTravelCourse = async (saveData) => {
+    setIsSaving(true);
+
+    try {
+      console.log("🚀 여행코스 저장 시작:", saveData);
+
+      const response = await fetch(`${API_BASE_URL}/travel-course/save`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include", // 쿠키 포함 (인증용)
+        body: JSON.stringify(saveData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "저장에 실패했습니다.");
+      }
+
+      if (result.success) {
+        alert(
+          `✅ ${
+            saveData.isShared === "Y" ? "공유" : "개인"
+          } 여행코스가 성공적으로 저장되었습니다!`
+        );
+        setIsSaveModalOpen(false);
+        console.log("✅ 여행코스 저장 완료 - 코스번호:", result.courseNo);
+      } else {
+        throw new Error(result.message || "저장에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("❌ 여행코스 저장 실패:", error);
+
+      // 로그인 관련 오류인 경우 특별 처리
+      if (error.message.includes("로그인") || error.message.includes("인증")) {
+        alert("🔒 로그인이 필요한 서비스입니다.\n다시 로그인해주세요!");
+      } else {
+        alert(`❌ 저장 실패: ${error.message}`);
+      }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -806,8 +759,8 @@ const AIChatbot = () => {
         // 괄호 안의 특수문자들 제거
         .replace(/\[[^\]]*\]/g, "") // [내용] 형태 제거
 
-        // 여러 공백을 하나로 정리
-        .replace(/\s+/g, " ")
+        // 여러 공백을 하나로 정리 (줄바꿈은 보존)
+        .replace(/[ \t]+/g, " ") // 공백과 탭만 정리, 줄바꿈은 보존
         .trim()
     );
   };
@@ -825,20 +778,10 @@ const AIChatbot = () => {
         return <br key={index} />;
       }
 
-      // 모든 텍스트를 동일한 스타일로 표시
-      return (
-        <p
-          key={index}
-          style={{
-            margin: "6px 0",
-            lineHeight: "1.6",
-            color: "#333",
-            fontSize: "14px",
-          }}
-        >
-          {line}
-        </p>
-      );
+      const trimmedLine = line.trim();
+
+      // 모든 텍스트를 기본 스타일로 표시 (줄바꿈만 처리)
+      return <p key={index}>{trimmedLine}</p>;
     });
   };
 
@@ -972,7 +915,8 @@ const AIChatbot = () => {
         {!loading &&
           !currentStreamMessage &&
           travelInfo.requestType &&
-          travelInfo.requestType !== "general_chat" && (
+          travelInfo.requestType !== "general_chat" &&
+          !travelInfo.isRejected && (
             <div className="ai-chatbot-travel-summary">
               <div className="ai-chatbot-travel-info-grid">
                 {/* 축제 정보 섹션 - festival_only 또는 festival_with_travel일 때만 표시 */}
@@ -1142,12 +1086,12 @@ const AIChatbot = () => {
                             dayGroups[location.day].push(location);
                           });
 
-                          // Day별로 최대 3개씩만 가져와서 한 줄로 배치
+                          // Day별로 최대 4개씩만 가져와서 한 줄로 배치
                           const allDisplayLocations = [];
                           Object.keys(dayGroups)
                             .sort((a, b) => parseInt(a) - parseInt(b))
                             .forEach((day) => {
-                              const dayLocations = dayGroups[day].slice(0, 3);
+                              const dayLocations = dayGroups[day].slice(0, 4);
                               dayLocations.forEach((location, index) => {
                                 allDisplayLocations.push({
                                   ...location,
@@ -1391,9 +1335,9 @@ const AIChatbot = () => {
                                     paddingLeft: "16px",
                                   }}
                                 >
-                                  {/* 🎯 카카오맵과 동일하게 Day별로 최대 3개까지만 표시 */}
+                                  {/* 🎯 카카오맵과 동일하게 Day별로 최대 4개까지만 표시 */}
                                   {dayGroups[day]
-                                    .slice(0, 3)
+                                    .slice(0, 4)
                                     .map((location, index) => (
                                       <li
                                         key={index}
@@ -1450,53 +1394,69 @@ const AIChatbot = () => {
                     </div>
                   )}
 
-                {/* 교통 안내 - 여행코스가 있을 때만 표시 */}
-                {travelInfo.travelCourse && travelInfo.transportation && (
-                  <div className="ai-chatbot-transportation-info">
-                    <h3>교통 안내</h3>
-                    {travelInfo.transportation.nearestStation && (
-                      <p>
-                        <strong>가장 가까운 역:</strong>{" "}
-                        {travelInfo.transportation.nearestStation}
-                      </p>
-                    )}
-                    {travelInfo.transportation.recommendedMode && (
-                      <p>
-                        <strong>추천 이동수단:</strong>{" "}
-                        {travelInfo.transportation.recommendedMode}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* 교통 안내 - 여행코스가 있고 데이터가 있을 때만 표시 */}
+                {travelInfo.travelCourse &&
+                  travelInfo.transportation &&
+                  travelInfo.requestType !== "no_data" && (
+                    <div className="ai-chatbot-transportation-info">
+                      <h3>교통 안내</h3>
+                      {travelInfo.transportation.nearestStation && (
+                        <p>
+                          <strong>가장 가까운 역:</strong>{" "}
+                          {travelInfo.transportation.nearestStation}
+                        </p>
+                      )}
+                      {travelInfo.transportation.recommendedMode && (
+                        <p>
+                          <strong>추천 이동수단:</strong>{" "}
+                          {travelInfo.transportation.recommendedMode}
+                        </p>
+                      )}
+                    </div>
+                  )}
               </div>
 
-              {/* 저장/공유 버튼 - 추천 여행코스일 때만 표시 */}
-              {(travelInfo.requestType === "festival_with_travel" ||
-                travelInfo.requestType === "travel_only") && (
+              {/* 🔄 여행코스 저장 및 취소 버튼 - 추천 여행코스일 때만 표시 */}
+              {canSaveCourse && !travelInfo.isRejected && (
                 <div className="ai-chatbot-button-group">
+                  {isLoggedIn && (
+                    <button
+                      className="ai-chatbot-action-btn save-btn"
+                      onClick={handleSaveButtonClick}
+                      disabled={isSaving}
+                    >
+                      저장
+                    </button>
+                  )}
                   <button
-                    className="ai-chatbot-action-btn"
-                    onClick={() => {
-                      alert("여행 계획이 저장되었습니다!");
-                    }}
+                    className="ai-chatbot-action-btn cancel-btn"
+                    onClick={() => window.location.reload()}
                   >
-                    저장하기
-                  </button>
-                  <button
-                    className="ai-chatbot-action-btn"
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        messages[messages.length - 1]?.content || ""
-                      );
-                      alert("여행 계획이 클립보드에 복사되었습니다!");
-                    }}
-                  >
-                    공유하기
+                    새로고침
                   </button>
                 </div>
               )}
             </div>
           )}
+
+        {/* 🔄 여행코스 저장 모달 */}
+        {isSaveModalOpen && (
+          <TravelCourseSaveModal
+            isOpen={isSaveModalOpen}
+            onClose={() => setIsSaveModalOpen(false)}
+            onSave={handleSaveTravelCourse}
+            travelData={{
+              locations: locations,
+              regionName: travelInfo.regionName,
+              areaCode: travelInfo.areaCode,
+              totalDays: travelInfo.totalDays || 1,
+              requestType: travelInfo.requestType || "travel_only",
+              thumbnailImage: locations.length > 0 ? locations[0].image : null,
+              courseDescription: travelInfo.courseDescription, // AI가 생성한 day별 코스 설명
+            }}
+            loading={isSaving}
+          />
+        )}
       </div>
     </>
   );

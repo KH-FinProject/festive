@@ -32,8 +32,8 @@ public interface AuthService {
 	 * @return 토큰이 존재하고 만료되지 않았으면 true, 그렇지 않으면 false
 	 */
 	boolean isRefreshTokenValid(Long memberNo);
-	
-	String sendEmail(String signup, String email);
+
+	String sendEmail(String htmlName, String email);
 
 	int checkAuthKey(AuthKeyRequest authKeyRequest);
 

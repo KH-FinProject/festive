@@ -3,12 +3,17 @@ package com.project.festive.festiveserver.ai.controller;
 import com.project.festive.festiveserver.ai.dto.ChatRequest;
 import com.project.festive.festiveserver.ai.dto.ChatResponse;
 import com.project.festive.festiveserver.ai.service.AITravelService;
+import com.project.festive.festiveserver.ai.service.TourAPIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 // import reactor.core.publisher.Flux;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -18,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class AITravelController {
     
     private final AITravelService aiTravelService;
+    private final TourAPIService tourAPIService;
     
     /**
      * AI 여행 추천 채팅 (일반 응답)
@@ -59,4 +65,73 @@ public class AITravelController {
     }
     
     // TourApiRequest DTO 제거 - 더 이상 필요하지 않음
+    
+    /**
+     * 장소의 상세 이미지들을 가져오는 API
+     */
+    @GetMapping("/place-images/{contentId}")
+    public ResponseEntity<Map<String, Object>> getPlaceImages(@PathVariable String contentId) {
+        try {
+            log.info("장소 이미지 요청 - contentId: {}", contentId);
+            
+            List<Map<String, Object>> images = tourAPIService.getPlaceImages(contentId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("images", images);
+            response.put("count", images.size());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("장소 이미지 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage());
+            
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "이미지를 불러올 수 없습니다.");
+            errorResponse.put("images", new ArrayList<>());
+            
+            return ResponseEntity.ok(errorResponse);
+        }
+    }
+    
+    /**
+     * 장소의 상세 정보(overview)를 가져오는 API
+     */
+    @GetMapping("/place-overview/{contentId}")
+    public ResponseEntity<Map<String, Object>> getPlaceOverview(@PathVariable String contentId) {
+        try {
+            log.info("장소 상세 정보 요청 - contentId: {}", contentId);
+            
+            // detailCommon2 API 호출
+            var detailInfo = tourAPIService.fetchDetailCommon2(contentId);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (detailInfo != null && detailInfo.getOverview() != null && 
+                !detailInfo.getOverview().trim().isEmpty()) {
+                response.put("success", true);
+                response.put("overview", detailInfo.getOverview().trim());
+                response.put("placeName", detailInfo.getTitle());
+                log.info("✅ 상세 정보 조회 성공 - contentId: {}, overview 길이: {}", 
+                        contentId, detailInfo.getOverview().trim().length());
+            } else {
+                response.put("success", false);
+                response.put("message", "상세 정보가 없어 AI 설명을 사용합니다.");
+                response.put("overview", "");
+                log.info("⚠️ 상세 정보 없음 - contentId: {}, fallback 사용", contentId);
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("장소 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage());
+            
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "상세 정보를 불러올 수 없습니다.");
+            errorResponse.put("overview", "");
+            
+            return ResponseEntity.ok(errorResponse);
+        }
+    }
 } 

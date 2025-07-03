@@ -224,7 +224,9 @@ const AdminCustomerService = () => {
                               className="admin-action-btn admin-reply-btn"
                               onClick={() => handleReply(inquiry)}
                             >
-                              답변하기
+                              {inquiry.inquiryStatus === "답변완료"
+                                ? "답변 수정하기"
+                                : "답변하기"}
                             </button>
                           </div>
                         </div>

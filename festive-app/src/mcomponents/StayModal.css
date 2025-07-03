@@ -15,7 +15,7 @@
 }
 
 /* 모달 컨테이너 */
-.modal-container {
+.stay-modal-container {
   background-color: white;
   border-radius: 8px;
   max-width: 500px;
@@ -61,7 +61,7 @@
 }
 
 /* 모달 콘텐츠 */
-.modal-content {
+.stay-modal-content {
   padding: 1.5rem;
 }
 

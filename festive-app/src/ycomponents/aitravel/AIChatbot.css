@@ -322,14 +322,23 @@
 }
 
 .ai-chatbot-action-btn {
-  padding: 10px 40px;
+  padding: 0 24px;
   background-color: #60a5fa;
   color: white;
   border: none;
   border-radius: 8px;
+}
+
+.ai-chatbot-action-btn.save-btn {
+  padding: 0 24px;
+  background-color: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
+  height: 45px; /* 전송 버튼과 동일한 높이 */
 }
 
 .ai-chatbot-action-btn:hover {
@@ -711,10 +720,6 @@
   transform: translateY(-2px);
 }
 
-.ai-chatbot-save-btn {
-  animation-delay: 1.3s;
-}
-
 .ai-chatbot-share-btn {
   animation-delay: 1.4s;
 }
@@ -736,4 +741,21 @@
 
 .ai-chatbot-course-time {
   color: #60a5fa;
+}
+
+/* 취소/새로고침 버튼 스타일 */
+.ai-chatbot-action-btn.cancel-btn {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 45px;
+}
+
+.ai-chatbot-action-btn.cancel-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
 }

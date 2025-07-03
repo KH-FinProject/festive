@@ -12,11 +12,11 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 @Mapper
 public interface MyPageMapper {
-	
-	 // 비밀번호 조회
-	String selectPw(Long memberNo);
+   
+    // 비밀번호 조회
+   String selectPw(Long memberNo);
 
-	// 탈퇴 처리
+   // 탈퇴 처리
     int withdrawal(Long memberNo);
     
     // 비밀번호 변경

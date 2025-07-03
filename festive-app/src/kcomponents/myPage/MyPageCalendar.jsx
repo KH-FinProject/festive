@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import './MyPageWithdrawal.css';
-import './MyPageCalendar.css';
-import MyPageSideBar from './MyPageSideBar';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import "./MyPageWithdrawal.css";
+import "./MyPageCalendar.css";
+import MyPageSideBar from "./MyPageSideBar";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 
-// 날짜 형식 변환 헬퍼 함수
+// YYYYMMDD -> YYYY-MM-DD 형식으로 변환하는 헬퍼 함수
 const formatApiDate = (dateStr) => {
-    if (!dateStr || dateStr.length !== 8) return null;
-    const year = dateStr.substring(0, 4);
-    const month = dateStr.substring(4, 6);
-    const day = dateStr.substring(6, 8);
-    return `${year}-${month}-${day}`;
+  if (!dateStr || dateStr.length !== 8) return null; // 유효하지 않은 형식은 null 반환
+  const year = dateStr.substring(0, 4);
+  const month = dateStr.substring(4, 6);
+  const day = dateStr.substring(6, 8);
+  return `${year}-${month}-${day}`;
 };
 
 // FullCalendar용 날짜 +1일 헬퍼 함수
