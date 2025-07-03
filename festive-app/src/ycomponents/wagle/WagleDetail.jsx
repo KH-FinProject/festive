@@ -65,6 +65,9 @@ function CommentItem({
     }
   };
 
+  const navigate = useNavigate();
+
+
   return (
     <li className="wagle-detail-comment-item">
       <div className="comment-main-row">
@@ -102,6 +105,13 @@ function CommentItem({
               <button className="comment-btn" onClick={handleDelete}>
                 삭제
               </button>
+              <button
+                className="comment-btn"
+                onClick={() => navigate("/mypage/mycomment")}
+              >
+                내 댓글 목록
+              </button>
+
             </>
           )}
           <button
@@ -217,6 +227,12 @@ function CommentItem({
                         }}
                       >
                         삭제
+                      </button>
+                      <button
+                        className="comment-btn"
+                        onClick={() => navigate("/mypage/mycomment")}
+                      >
+                        내 댓글 목록
                       </button>
                     </>
                   )}
@@ -756,6 +772,9 @@ function WagleDetail() {
                   </button>
                   <button className="delete" onClick={handleDeletePost}>
                     삭제
+                  </button>
+                  <button className="delete" onClick={() => navigate("/mypage/mypost")}>
+                    내 게시글 목록
                   </button>
                 </>
               )}

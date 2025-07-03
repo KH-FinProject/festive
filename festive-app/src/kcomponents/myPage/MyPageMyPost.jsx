@@ -17,7 +17,7 @@ const MyPageMyPost = () => {
   const location = useLocation();
   const { name, profileImageUrl } = location.state || {};
 
-  // 커스텀 페이지네이션 훅
+  // 페이지네이션 커스텀 훅 사용
   const {
     currentPage,
     totalPages,
@@ -100,12 +100,11 @@ const MyPageMyPost = () => {
             )}
           </div>
 
-          {/* 페이지네이션 */}
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={goToPage}
-            className="wagle-pagination"
+            className="general-board-pagination"
           />
         </section>
       </main>

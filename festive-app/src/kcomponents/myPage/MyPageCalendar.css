@@ -93,12 +93,17 @@
     gap: 16px;
 }
 
+.myfestival-fixedBox {
+    min-height: 320px;
+}
+
 /* Festival Item Card - 완전히 새로운 디자인 */
 .festival-item-card {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid #e2e8f0;
     border-radius: 16px;
-    padding: 20px;
+    padding: 15px 20px;
+    padding-bottom: 5px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -115,13 +120,21 @@
 .myfestival-info {
     flex: 1;
     display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 16px;
 }
 
+.myfestival-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
 .myfestival-name {
     color: #1a202c;
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
@@ -136,7 +149,7 @@
 }
 
 .myfestival-details {
-    font-size: 14px;
+    font-size: 10px;
     color: #25272B;
     margin: 0;
     line-height: 1.5;
@@ -171,10 +184,10 @@
 
 /* Empty State */
 .festival-list p {
-    text-align: center;
+    /* text-align: center; */
     color: rgb(78, 77, 77);
-    font-size: 16px;
-    padding: 20px 10px;
+    font-size: 13px;
+    padding: 10px;
     position: relative;
 }
 
@@ -243,3 +256,15 @@
 }
 
 /* 풀캘린더 꾸미기 */
+.mycalendar-wrapper .fc-event {
+    /* color: white !important;     → JSX에서 textColor로 지정 */
+    /* background-color: #60a5fa !important;   → 제거 */
+    font-weight: 500;
+    padding: 2px 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    /* border, background, color 모두 JS에서 지정됨 */
+}
+
+.mycalendar-wrapper .fc-event:hover {
+    cursor: pointer;
+}
