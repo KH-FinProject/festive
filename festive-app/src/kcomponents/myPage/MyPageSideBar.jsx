@@ -46,15 +46,18 @@ const MyPageSideBar = () => {
         >
           <span>개인정보 수정</span>
         </NavLink>
-        <NavLink
-          to="/mypage/pw"
-          state={{ name, profileImageUrl }}
-          className={({ isActive }) =>
-            `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
-          }
-        >
-          <span>비밀번호 수정</span>
-        </NavLink>
+        {/* socialId가 없을 때만 비밀번호 수정 메뉴 노출 */}
+        {!member?.socialId && (
+          <NavLink
+            to="/mypage/pw"
+            state={{ name, profileImageUrl }}
+            className={({ isActive }) =>
+              `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
+            }
+          >
+            <span>비밀번호 수정</span>
+          </NavLink>
+        )}
         <NavLink
           to="/mypage/mycalendar"
           state={{ name, profileImageUrl }}
@@ -69,7 +72,7 @@ const MyPageSideBar = () => {
           state={{ name, profileImageUrl }}
           className={() =>
             location.pathname === "/mypage/mypost" ||
-            location.pathname === "/mypage/mycomment"
+              location.pathname === "/mypage/mycomment"
               ? "mypage-sidebar-item active"
               : "mypage-sidebar-item inactive"
           }

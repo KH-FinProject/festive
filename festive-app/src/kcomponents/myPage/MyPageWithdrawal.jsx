@@ -3,10 +3,12 @@ import "./MyPageWithdrawal.css";
 import MyPageSideBar from "./MyPageSideBar";
 import useAuthStore from "../../store/useAuthStore";
 import { useLocation, useNavigate } from "react-router-dom";
+import axiosApi from "../../api/axiosAPI";
 
 const MyPageWithdrawal = () => {
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const { member } = useAuthStore();
   const navigate = useNavigate();
 
@@ -16,14 +18,23 @@ const MyPageWithdrawal = () => {
   const handleWithdrawal = async (e) => {
     e.preventDefault();
 
-    if (!password) {
-      alert("비밀번호를 입력해주세요.");
-      return;
-    }
-
     if (!agreed) {
       alert("탈퇴 약관에 동의해주세요.");
       return;
+    }
+
+    // 소셜로그인 회원이 아니면(=비밀번호로 확인)
+    if (!member?.socialId) {
+      if (!password) {
+        alert("비밀번호를 입력해주세요.");
+        return;
+      }
+    } else {
+      // 소셜로그인 회원은 confirmText 체크
+      if (confirmText !== "탈퇴하겠습니다.") {
+        alert('"탈퇴하겠습니다."를 정확히 입력해주세요.');
+        return;
+      }
     }
 
     const confirmed = window.confirm("탈퇴하시겠습니까?");
@@ -39,21 +50,26 @@ const MyPageWithdrawal = () => {
         return;
       }
 
+      // API 호출 (소셜/일반 공통 - 서버에서 분기 처리)
       const response = await fetch("http://localhost:8080/mypage/withdrawal", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ password }),
+        body: JSON.stringify(
+          !member.socialId
+            ? { password }
+            : { socialId: member.socialId }
+        ),
       });
 
       const text = await response.text();
 
       if (response.ok) {
+        handleLogout();
         alert("회원 탈퇴가 완료되었습니다.");
-        localStorage.clear(); // 사용자 정보 제거
-        window.location.href = "/"; // 메인 페이지로 이동
+        return;
       } else {
         alert(text);
       }
@@ -63,19 +79,24 @@ const MyPageWithdrawal = () => {
     }
   };
 
+  const handleLogout = async () => {
+    // 로그아웃 시 토큰 삭제
+    await axiosApi.post("/auth/logout");
+    // authStore state 초기화
+    useAuthStore.getState().logout();
+    navigate("/");
+  };
+
   return (
     <div className="page-container">
       <main className="main-content">
-        <MyPageSideBar
-          name={name}
-          profileImageUrl={profileImageUrl}
-        />
+        <MyPageSideBar name={name} profileImageUrl={profileImageUrl} />
 
         <section className="withdrawal-section">
           <div className="profile-header">
             <h1>회원 탈퇴</h1>
             <p>
-              동의하신 후, 비밀번호를 입력하시면 회원이 탈퇴됩니다.
+              동의하신 후, {member?.socialId ? `"탈퇴하겠습니다."` : "비밀번호"}를 입력하시면 회원이 탈퇴됩니다.
               <br />
               <br />
             </p>
@@ -132,14 +153,27 @@ const MyPageWithdrawal = () => {
 
           <div className="confirm-box">
             <h4>본인확인</h4>
-            <h5>*비밀번호를 확인 후 회원 탈퇴가 가능합니다.</h5>
+            <h5>
+              {member?.socialId
+                ? '* "탈퇴하겠습니다."를 입력해야 회원 탈퇴가 가능합니다.'
+                : "*비밀번호를 확인 후 회원 탈퇴가 가능합니다."}
+            </h5>
             <div className="mypage-input-group">
-              <input
-                type="password"
-                placeholder="비밀번호"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              {!member?.socialId ? (
+                <input
+                  type="password"
+                  placeholder="비밀번호"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              ) : (
+                <input
+                  type="text"
+                  placeholder="탈퇴하겠습니다."
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                />
+              )}
               <button onClick={handleWithdrawal}>탈퇴하기</button>
             </div>
           </div>
