@@ -65,7 +65,8 @@
   display: block;
 }
 
-.input-label {
+/* 로그인 input 라벨 */
+.login-input-label {
   display: block; /* block */
   font-size: 0.875rem; /* text-sm */
   line-height: 1.25rem;
