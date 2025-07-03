@@ -77,6 +77,9 @@ public class SecurityConfig {
             // 인증/회원/로그인 관련
             .requestMatchers("/auth/**", "/oauth2/**", "/member/**").permitAll()
 
+            // 지역 코드/시군구 조회 - 공개
+            .requestMatchers("/area/**").permitAll()
+
             // 축제 페이지
             .requestMatchers("/festival/**").permitAll()
             

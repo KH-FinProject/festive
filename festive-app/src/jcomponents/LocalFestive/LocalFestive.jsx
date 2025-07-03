@@ -2,6 +2,7 @@ import "./LocalFestive.css";
 import React, { useEffect, useState } from "react";
 import ScrollToTop from "../../scomponents/monthFestive/ScrollToTop.jsx";
 import { useNavigate } from "react-router-dom";
+import axiosApi from "../../api/axiosAPI";
 
 const LocalFestive = () => {
   // 축제 목록 상태
@@ -12,28 +13,8 @@ const LocalFestive = () => {
   const [searchEndDate, setSearchEndDate] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const [userLocation, setUserLocation] = useState(null); // 사용자 위치
+  const [areaOptions, setAreaOptions] = useState([]);
   const navigate = useNavigate();
-
-  // TourAPI 지역 코드 및 지역명 매핑
-  const AREA_CODES = {
-    "1": "서울특별시",
-    "2": "인천광역시", 
-    "3": "대전광역시",
-    "4": "대구광역시",
-    "5": "광주광역시",
-    "6": "부산광역시",
-    "7": "울산광역시",
-    "8": "세종특별자치시",
-    "31": "경기도",
-    "32": "강원특별자치도",
-    "33": "충청북도",
-    "34": "충청남도",
-    "35": "경상북도",
-    "36": "경상남도",
-    "37": "전라북도",
-    "38": "전라남도",
-    "39": "제주특별자치도"
-  };
 
   // 사용자 위치 가져오기
   const getUserLocation = () => {
@@ -79,7 +60,6 @@ const LocalFestive = () => {
   const sortByDistance = async () => {
     try {
       // 투어API 거리순 정렬이 제대로 지원되지 않으므로 클라이언트 사이드 거리 계산 사용
-      console.log("클라이언트 사이드 거리 계산을 사용합니다.");
       return await sortByDistanceClientSide();
       
     } catch (error) {
@@ -100,11 +80,6 @@ const LocalFestive = () => {
         }
       }
 
-      console.log(
-        "클라이언트 사이드 거리 계산 시작 - 사용자 위치:",
-        currentLocation
-      );
-
       // 두 지점 간의 거리 계산 (Haversine 공식)
       const calculateDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371; // 지구의 반지름 (km)
@@ -113,9 +88,9 @@ const LocalFestive = () => {
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.cos((lat1 * Math.PI) / 180) *
-            Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c; // km 단위
         return distance;
@@ -146,18 +121,27 @@ const LocalFestive = () => {
         return a.distance - b.distance;
       });
 
-      console.log(
-        "거리순 정렬 완료:",
-        sorted
-          .slice(0, 5)
-          .map((f) => ({ title: f.title, distance: f.distance }))
-      );
       return sorted;
     } catch (error) {
       console.error("클라이언트 사이드 거리 계산 실패:", error);
       throw error;
     }
   };
+
+  // DB 조회해서 처음 마운트시 지역 옵션 생성
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const response = await axiosApi.get(`${import.meta.env.VITE_API_URL}/area/areas`);
+        setAreaOptions(response.data);
+
+      } catch (error) {
+        console.error("지역 옵션 생성 중 오류 발생:", error.response?.data || error.message);
+      }
+    };
+
+    fetchAreas();
+  }, []);
   
   useEffect(() => {
     const fetchFestivals = async () => {
@@ -209,52 +193,76 @@ const LocalFestive = () => {
     fetchFestivals();
   }, []);
 
-  const getFestivalStatus = (start, end) => {
-    const now = new Date();
-    const startDate = new Date(
-      `${start.slice(0, 4)}-${start.slice(4, 6)}-${start.slice(6, 8)}`
-    );
-    const endDate = new Date(
-      `${end.slice(0, 4)}-${end.slice(4, 6)}-${end.slice(6, 8)}`
-    );
+  const searchFestivals = async () => {
+    try {
+      const formatDate = (dateStr) => dateStr ? dateStr.replaceAll("-", "") : "";
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+      const params = new URLSearchParams({
+        MobileOS: "WEB",
+        MobileApp: "Festive",
+        _type: "json",
+        eventStartDate: formatDate(searchStartDate),
+        eventEndDate: formatDate(searchEndDate),
+        arrange: "A",
+        numOfRows: "100",
+        pageNo: "1",
+      });
+      if (searchLocation) {
+        params.append("areaCode", searchLocation);
+      }
+      const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&${params.toString()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const items = data?.response?.body?.items?.item;
 
-    if (now < startDate) return "예정";
-    else if (now > endDate) return "종료";
-    else return "진행중";
-  };
+      if (!items || !Array.isArray(items)) return;
 
-  // 지역 옵션 생성 함수
-  const generateLocationOptions = () => {
-    const options = [];
-    
-    // 전체 지역 옵션 추가
-    options.push(
-      <option key="all" value="">
-        전체 지역
-      </option>
-    );
-    
-    // 광역시/도 옵션 생성
-    Object.entries(AREA_CODES).forEach(([areaCode, areaName]) => {
-      options.push(
-        <option key={areaCode} value={areaCode}>
-          {areaName}
-        </option>
-      );
-    });
-    
-    return options;
+      // 종료된 축제 제외
+      const filtered = items.filter((item) => {
+        const start = item.eventstartdate;
+        const end = item.eventenddate;
+        if(getFestivalStatus(start, end) === "종료") {
+          return false;
+        }
+        return true;
+      });
+
+      const mapped = filtered.map((item) => {
+        const start = item.eventstartdate;
+        const end = item.eventenddate;
+        return {
+          id: item.contentid,
+          title: item.title,
+          location: item.addr1 || "장소 미정",
+          date: `${start?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
+          image: item.firstimage || "/logo.png",
+          startDate: start,
+          status: getFestivalStatus(start, end),
+          mapx: item.mapx,
+          mapy: item.mapy,
+        };
+      });
+
+      // 날짜순 정렬
+      const sorted = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
+      setFestivals(sorted);
+
+      /*
+
+      */
+
+    } catch (error) {
+      console.error("축제 검색 실패:", error);
+    }
   };
 
   // 검색 핸들러
   const handleSearch = () => {
-    console.log(`검색: 날짜=${searchStartDate} ~ ${searchEndDate}, 지역=${searchLocation}`);
-    // 실제로는 여기서 검색 API 호출
+    searchFestivals();
   };
 
   // 축제 클릭 핸들러
   const handleFestivalClick = (festivalId) => {
-    console.log(`축제 ${festivalId} 상세페이지로 이동`);
     navigate(`/festival/detail/${festivalId}`);
   };
 
@@ -286,8 +294,21 @@ const LocalFestive = () => {
       );
       setFestivals(sorted);
     }
+  };
 
-    console.log(`정렬 변경: ${newSortType}`);
+  // 축제 상태 반환 함수 복구
+  const getFestivalStatus = (start, end) => {
+    const now = new Date();
+    const startDate = new Date(
+      `${start.slice(0, 4)}-${start.slice(4, 6)}-${start.slice(6, 8)}`
+    );
+    const endDate = new Date(
+      `${end.slice(0, 4)}-${end.slice(4, 6)}-${end.slice(6, 8)}`
+    );
+
+    if (now < startDate) return "예정";
+    else if (now > endDate) return "종료";
+    else return "진행중";
   };
 
   return (
@@ -336,7 +357,12 @@ const LocalFestive = () => {
                 value={searchLocation}
                 onChange={e => setSearchLocation(e.target.value)}
               >
-                {generateLocationOptions()}
+                <option value="">전체 지역</option>
+                {areaOptions.map(area => (
+                  <option key={area.areaCode} value={area.areaCode}>
+                    {area.areaName}
+                  </option>
+                ))}
               </select>
             </div>
             <button className="search-button" onClick={handleSearch}>

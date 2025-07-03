@@ -9,10 +9,12 @@ import java.util.List;
 @Table(name = "AREA")
 public class Area {
     @Id
+    @Column(name = "AREA_CODE", nullable = false)
     private String areaCode;
+    @Column(name = "AREA_NAME", nullable = false)
     private String areaName;
     
     // 시군구 리스트
-    @OneToMany(mappedBy = "area", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "area", fetch = FetchType.LAZY)
     private List<Sigungu> sigungus;
 }

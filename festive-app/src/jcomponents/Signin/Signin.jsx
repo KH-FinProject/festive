@@ -47,7 +47,6 @@ const LoginForm = () => {
         const { login } = useAuthStore.getState();
         login(data);
 
-        alert("로그인 성공!")
         navigate("/");
       }
 
@@ -83,7 +82,7 @@ const LoginForm = () => {
           <div className="login-form">
             {/* ID 입력 필드 */}
             <div className="info-input-group">
-              <label htmlFor="id" className="input-label">
+              <label htmlFor="id" className="login-input-label">
                 ID
               </label>
               <input
@@ -101,7 +100,7 @@ const LoginForm = () => {
 
             {/* 패스워드 입력 필드 */}
             <div className="info-input-group">
-              <label htmlFor="password" className="input-label">
+              <label htmlFor="password" className="login-input-label">
                 Password
               </label>
               <input
