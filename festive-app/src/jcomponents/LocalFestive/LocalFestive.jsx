@@ -16,6 +16,39 @@ const LocalFestive = () => {
   const [areaOptions, setAreaOptions] = useState([]);
   const navigate = useNavigate();
 
+  // 키워드 검색 메서드
+  const searchKeyword = async (keyword) => {
+    try {
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+      const params = new URLSearchParams({
+        MobileOS: "WEB",
+        MobileApp: "Festive",
+        _type: "json",
+        arrange: "A",
+        contentTypeId: "15",
+        keyword: encodeURIComponent(keyword),
+      });
+      const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&${params.toString()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const items = data?.response?.body?.items?.item;
+
+      if (!items || !Array.isArray(items)) return;
+
+      const mapped = items.map((item) => {
+        return {
+          id: item.contentid,
+          title: item.title
+        };
+      });
+      return mapped;
+      
+    } catch (error) {
+      console.error("키워드 검색 실패:", error);
+      throw error;
+    }
+  }
+
   // 사용자 위치 가져오기
   const getUserLocation = () => {
     return new Promise((resolve, reject) => {
@@ -246,10 +279,6 @@ const LocalFestive = () => {
       // 날짜순 정렬
       const sorted = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
       setFestivals(sorted);
-
-      /*
-
-      */
 
     } catch (error) {
       console.error("축제 검색 실패:", error);
