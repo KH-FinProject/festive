@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "./AIChatbot.css";
 import AItitle from "./AItitle";
 import TravelCourseSaveModal from "./TravelCourseSaveModal";
+import ScrollToTop from "./ScrollToTop";
 import useAuthStore from "../../store/useAuthStore";
 
 // 백엔드 API 기본 URL
@@ -35,6 +36,146 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
       Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c; // 거리 (km)
+};
+
+// 스마트 거리 필터링: 최소 보장 + 점진적 확장
+const filterLocationsByDistance = (locations, initialMaxDistance = 30) => {
+  if (!locations || locations.length === 0) return [];
+
+  const totalDays = Math.max(...locations.map((loc) => loc.day || 1), 1);
+  const minPlacesPerDay = 2; // 하루에 최소 2개 장소 보장
+  const targetTotalPlaces = Math.max(totalDays * 3, 6); // 최소 총 6개 장소 보장
+
+  console.log(
+    `🔍 스마트 거리 필터링 시작: 총 ${locations.length}개 장소, 초기 최대거리: ${initialMaxDistance}km`
+  );
+  console.log(
+    `🎯 목표: 총 ${targetTotalPlaces}개 이상 (Day당 최소 ${minPlacesPerDay}개)`
+  );
+
+  let currentMaxDistance = initialMaxDistance;
+  let filteredLocations = [];
+  let attempt = 1;
+
+  // 점진적으로 거리 제한을 늘려가며 충분한 장소 확보
+  while (filteredLocations.length < targetTotalPlaces && attempt <= 4) {
+    console.log(
+      `\n🔄 시도 ${attempt}: 최대거리 ${currentMaxDistance}km로 필터링`
+    );
+
+    filteredLocations = performDistanceFiltering(locations, currentMaxDistance);
+
+    console.log(
+      `📊 결과: ${filteredLocations.length}개 장소 (목표: ${targetTotalPlaces}개 이상)`
+    );
+
+    // Day별 분포 확인
+    const dayDistribution = {};
+    filteredLocations.forEach((loc) => {
+      const day = loc.day || 1;
+      dayDistribution[day] = (dayDistribution[day] || 0) + 1;
+    });
+
+    console.log(`📈 Day별 분포:`, dayDistribution);
+
+    // 충분한 장소와 균형 잡힌 분포가 확보되었는지 확인
+    const hasMinPlaces = filteredLocations.length >= targetTotalPlaces;
+    const hasBalancedDistribution = Object.values(dayDistribution).every(
+      (count) =>
+        count >=
+        Math.min(
+          minPlacesPerDay,
+          Math.floor(filteredLocations.length / totalDays)
+        )
+    );
+
+    if (hasMinPlaces && hasBalancedDistribution) {
+      console.log(`✅ 목표 달성! 최종 거리 제한: ${currentMaxDistance}km`);
+      break;
+    }
+
+    // 다음 시도를 위해 거리 제한 확장
+    if (attempt === 1) currentMaxDistance = 50; // 30km → 50km
+    else if (attempt === 2) currentMaxDistance = 80; // 50km → 80km
+    else if (attempt === 3) currentMaxDistance = 120; // 80km → 120km
+
+    attempt++;
+  }
+
+  // 최종 결과가 여전히 부족하면 원본 데이터 사용
+  if (
+    filteredLocations.length <
+    Math.min(targetTotalPlaces, locations.length * 0.5)
+  ) {
+    console.log(
+      `⚠️ 필터링 결과가 너무 적음. 원본 데이터 사용: ${locations.length}개`
+    );
+    return locations;
+  }
+
+  console.log(
+    `🎯 스마트 필터링 완료: ${filteredLocations.length}개 장소 (${locations.length}개 중)`
+  );
+  return filteredLocations;
+};
+
+// 실제 거리 필터링 수행 함수
+const performDistanceFiltering = (locations, maxDistance) => {
+  // Day별로 그룹화
+  const dayGroups = {};
+  locations.forEach((location) => {
+    const day = location.day || 1;
+    if (!dayGroups[day]) {
+      dayGroups[day] = [];
+    }
+    dayGroups[day].push(location);
+  });
+
+  const filteredLocations = [];
+
+  // 각 Day별로 거리 제한 적용
+  Object.keys(dayGroups).forEach((day) => {
+    const dayLocations = dayGroups[day];
+
+    if (dayLocations.length === 0) return;
+    if (dayLocations.length === 1) {
+      filteredLocations.push(...dayLocations);
+      return;
+    }
+
+    // 좌표가 있는 장소들만 필터링
+    const validLocations = dayLocations.filter(
+      (loc) => loc.latitude && loc.longitude
+    );
+
+    if (validLocations.length <= 1) {
+      filteredLocations.push(...validLocations);
+      return;
+    }
+
+    // 첫 번째 장소를 기준점으로 설정
+    const baseLocation = validLocations[0];
+    const validGroup = [baseLocation];
+
+    // 나머지 장소들 중 거리 조건을 만족하는 것들 추가
+    for (let i = 1; i < validLocations.length; i++) {
+      const currentLocation = validLocations[i];
+      const distance = calculateDistance(
+        baseLocation.latitude,
+        baseLocation.longitude,
+        currentLocation.latitude,
+        currentLocation.longitude
+      );
+
+      if (distance <= maxDistance) {
+        validGroup.push(currentLocation);
+      }
+    }
+
+    filteredLocations.push(...validGroup);
+  });
+
+  return filteredLocations;
 };
 
 // Day별 색상 정의
@@ -252,7 +393,7 @@ const AIChatbot = () => {
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 2px solid white;
             cursor: pointer;
-          ">🎪</div>`,
+          ">F</div>`,
           yAnchor: 1,
         });
 
@@ -585,9 +726,16 @@ const AIChatbot = () => {
           });
         });
 
-        // 🎯 백엔드에서 이미 day별로 분배된 데이터를 직접 사용
+        // 🎯 30km 거리 제한 적용 - Day별 그룹 내 장소들이 30km 이내가 되도록 필터링
+        const filteredLocations = filterLocationsByDistance(data.locations, 30);
+
+        console.log(
+          `🔍 거리 필터링 결과: ${filteredLocations.length}개 장소 (${data.locations.length}개 중)`
+        );
+
+        // 🎯 백엔드에서 이미 day별로 분배된 데이터를 거리 필터링 후 사용
         setTimeout(() => {
-          setLocations(data.locations);
+          setLocations(filteredLocations);
         }, 500);
       } else {
         console.log("❌ locations 데이터가 비어있음");
@@ -601,6 +749,12 @@ const AIChatbot = () => {
       // 🚫 거부된 요청인지 확인
       const isRejectedRequest = data.requestType === "rejected";
 
+      // 🎯 필터링된 locations를 사용하여 travelInfo 설정
+      const finalLocations =
+        data.locations && data.locations.length > 0
+          ? filterLocationsByDistance(data.locations, 30)
+          : [];
+
       setTravelInfo({
         requestType: data.requestType,
         festivals: finalFestivals,
@@ -612,7 +766,7 @@ const AIChatbot = () => {
               overview: "백엔드에서 안전하게 처리된 실제 관광 정보입니다.",
             }
           : null,
-        courses: data.locations || [],
+        courses: finalLocations,
         transportation: {
           nearestStation: "대중교통 이용 가능",
           recommendedMode: "AI 최적 경로 분석 완료",
@@ -628,11 +782,11 @@ const AIChatbot = () => {
         courseDescription: data.courseDescription, // AI가 생성한 day별 코스 설명
       });
 
-      // 🎯 여행코스 저장 가능 여부 확인 (축제가 아닌 여행 추천만)
-      const hasLocations = data.locations && data.locations.length > 0;
+      // 🎯 여행코스 저장 가능 여부 확인 (축제가 아닌 여행 추천만, 필터링된 데이터 기준)
+      const hasFilteredLocations = finalLocations && finalLocations.length > 0;
       const isTravelRecommendation =
         data.requestType && !data.requestType.includes("festival");
-      setCanSaveCourse(hasLocations && isTravelRecommendation);
+      setCanSaveCourse(hasFilteredLocations && isTravelRecommendation);
 
       console.log("✅ 백엔드 중심 보안 시스템 완료 - 타입:", data.requestType);
       if (isRejectedRequest) {
@@ -680,11 +834,43 @@ const AIChatbot = () => {
     try {
       console.log("🚀 여행코스 저장 시작:", saveData);
 
+      // JWT 토큰 가져오기 (쿠키 또는 로컬스토리지)
+      const getAuthToken = () => {
+        // 1. 쿠키에서 토큰 찾기
+        const cookies = document.cookie.split(";");
+        for (let cookie of cookies) {
+          const [name, value] = cookie.trim().split("=");
+          if (name === "access_token" || name === "jwt" || name === "token") {
+            return value;
+          }
+        }
+
+        // 2. 로컬스토리지에서 토큰 찾기
+        return (
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("jwt") ||
+          localStorage.getItem("token") ||
+          sessionStorage.getItem("access_token") ||
+          sessionStorage.getItem("jwt") ||
+          sessionStorage.getItem("token")
+        );
+      };
+
+      const token = getAuthToken();
+      console.log("🔑 인증 토큰 확인:", token ? "토큰 존재" : "토큰 없음");
+
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      // 토큰이 있으면 Authorization 헤더에 추가
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/travel-course/save`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: headers,
         credentials: "include", // 쿠키 포함 (인증용)
         body: JSON.stringify(saveData),
       });
@@ -1457,6 +1643,9 @@ const AIChatbot = () => {
             loading={isSaving}
           />
         )}
+
+        {/* ScrollToTop 버튼 */}
+        <ScrollToTop />
       </div>
     </>
   );

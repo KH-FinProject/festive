@@ -27,7 +27,7 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public List<AITravelServiceImpl.TourAPIResponse.Item> fetchTourismDataSecurely(String areaCode, String sigunguCode, String contentTypeId) {
-        log.info("🎯 TourAPI 데이터 조회 시작 - areaCode: {}, sigunguCode: {}, contentTypeId: {}", areaCode, sigunguCode, contentTypeId);
+        log.info(" TourAPI 데이터 조회 시작 - areaCode: {}, sigunguCode: {}, contentTypeId: {}", areaCode, sigunguCode, contentTypeId);
         
         List<AITravelServiceImpl.TourAPIResponse.Item> results = new ArrayList<>();
         
@@ -68,18 +68,18 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
-                log.info("📝 TourAPI 응답 길이: {}", responseBody.length());
+                log.info("TourAPI 응답 길이: {}", responseBody.length());
                 
                 // 응답 파싱 (JSON/XML 자동 감지)
                 results = parseTourAPIResponse(responseBody);
                 
-                log.info("✅ TourAPI 데이터 조회 완료 - 총 {}개 아이템", results.size());
+                log.info("TourAPI 데이터 조회 완료 - 총 {}개 아이템", results.size());
             } else {
-                log.warn("⚠️ TourAPI 응답 실패 - status: {}", response.getStatusCode());
+                log.warn("TourAPI 응답 실패 - status: {}", response.getStatusCode());
             }
             
         } catch (Exception e) {
-            log.error("❌ TourAPI 데이터 조회 실패 - areaCode: {}, error: {}", areaCode, e.getMessage(), e);
+            log.error(" TourAPI 데이터 조회 실패 - areaCode: {}, error: {}", areaCode, e.getMessage(), e);
         }
         
         return results;
@@ -113,7 +113,7 @@ public class TourAPIServiceImpl implements TourAPIService {
             String url = builder.build().toUriString();
             url += "&serviceKey=" + tourApiServiceKey;
             
-            log.info("🔗 키워드 검색 URL: {}", url);
+            log.info("키워드 검색 URL: {}", url);
             
             ResponseEntity<String> response = restTemplate.getForEntity(
                 java.net.URI.create(url), 
@@ -122,7 +122,7 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 results = parseTourAPIResponse(response.getBody());
-                log.info("✅ 키워드 검색 완료 - {}개 결과", results.size());
+                log.info(" 키워드 검색 완료 - {}개 결과", results.size());
             }
             
         } catch (Exception e) {
@@ -134,7 +134,7 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public List<AITravelServiceImpl.TourAPIResponse.Item> searchFestivals(String areaCode, String sigunguCode) {
-        log.info("🎪 축제 검색 시작 - areaCode: {}, sigunguCode: {}", areaCode, sigunguCode);
+        log.info("🎪축제 검색 시작 - areaCode: {}, sigunguCode: {}", areaCode, sigunguCode);
         
         List<AITravelServiceImpl.TourAPIResponse.Item> results = new ArrayList<>();
         
@@ -304,12 +304,8 @@ public class TourAPIServiceImpl implements TourAPIService {
             return new ArrayList<>();
         }
         
-        // JSON/XML 자동 감지 및 파싱
-        if (response.trim().startsWith("{")) {
-            return parseJSONResponse(response);
-        } else {
-            return parseXMLResponse(response);
-        }
+        // JSON 전용 파싱
+        return parseJSONResponse(response);
     }
     
     // Private helper methods
@@ -318,45 +314,22 @@ public class TourAPIServiceImpl implements TourAPIService {
         List<Map<String, Object>> images = new ArrayList<>();
         
         try {
-            // JSON/XML 자동 감지
-            if (response.trim().startsWith("{")) {
-                // JSON 응답 파싱
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode rootNode = objectMapper.readTree(response);
-                JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
-                
-                if (itemsNode.isArray()) {
-                    for (JsonNode itemNode : itemsNode) {
-                        Map<String, Object> imageInfo = parseImageJsonNode(itemNode);
-                        if (imageInfo != null) {
-                            images.add(imageInfo);
-                        }
-                    }
-                } else if (!itemsNode.isMissingNode()) {
-                    Map<String, Object> imageInfo = parseImageJsonNode(itemsNode);
+            // JSON 응답 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(response);
+            JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
+            
+            if (itemsNode.isArray()) {
+                for (JsonNode itemNode : itemsNode) {
+                    Map<String, Object> imageInfo = parseImageJsonNode(itemNode);
                     if (imageInfo != null) {
                         images.add(imageInfo);
                     }
                 }
-            } else {
-                // XML 응답 파싱 (폴백)
-                String[] items = response.split("<item>");
-                
-                for (int i = 1; i < items.length; i++) {
-                    String item = items[i];
-                    
-                    String originImgUrl = extractXMLValue(item, "originimgurl");
-                    String smallImageUrl = extractXMLValue(item, "smallimageurl");
-                    String imgName = extractXMLValue(item, "imgname");
-                    
-                    if (originImgUrl != null && !originImgUrl.trim().isEmpty()) {
-                        Map<String, Object> imageInfo = new HashMap<>();
-                        imageInfo.put("originImgUrl", originImgUrl.trim());
-                        imageInfo.put("smallImageUrl", smallImageUrl != null ? smallImageUrl.trim() : "");
-                        imageInfo.put("imgName", imgName != null ? imgName.trim() : "");
-                        
-                        images.add(imageInfo);
-                    }
+            } else if (!itemsNode.isMissingNode()) {
+                Map<String, Object> imageInfo = parseImageJsonNode(itemsNode);
+                if (imageInfo != null) {
+                    images.add(imageInfo);
                 }
             }
             
@@ -452,71 +425,9 @@ public class TourAPIServiceImpl implements TourAPIService {
         return null;
     }
     
-    private List<AITravelServiceImpl.TourAPIResponse.Item> parseXMLResponse(String xmlResponse) {
-        List<AITravelServiceImpl.TourAPIResponse.Item> items = new ArrayList<>();
-        
-        try {
-            String[] itemStrings = xmlResponse.split("<item>");
-            
-            for (int i = 1; i < itemStrings.length; i++) {
-                AITravelServiceImpl.TourAPIResponse.Item item = parseXMLItem(itemStrings[i]);
-                if (item != null) {
-                    items.add(item);
-                }
-            }
-            
-        } catch (Exception e) {
-            log.error("❌ XML 응답 파싱 실패: {}", e.getMessage(), e);
-        }
-        
-        return items;
-    }
+
     
-    private AITravelServiceImpl.TourAPIResponse.Item parseXMLItem(String xmlItem) {
-        try {
-            AITravelServiceImpl.TourAPIResponse.Item item = new AITravelServiceImpl.TourAPIResponse.Item();
-            
-            item.setTitle(extractXMLValue(xmlItem, "title"));
-            item.setAddr1(extractXMLValue(xmlItem, "addr1"));
-            item.setMapX(extractXMLValue(xmlItem, "mapx"));
-            item.setMapY(extractXMLValue(xmlItem, "mapy"));
-            item.setContentTypeId(extractXMLValue(xmlItem, "contenttypeid"));
-            item.setFirstImage(extractXMLValue(xmlItem, "firstimage"));
-            item.setTel(extractXMLValue(xmlItem, "tel"));
-            item.setContentId(extractXMLValue(xmlItem, "contentid"));
-            item.setEventStartDate(extractXMLValue(xmlItem, "eventstartdate"));
-            item.setEventEndDate(extractXMLValue(xmlItem, "eventenddate"));
-            item.setOverview(extractXMLValue(xmlItem, "overview"));
-            
-            return item;
-        } catch (Exception e) {
-            log.debug("XML 아이템 파싱 실패: {}", e.getMessage());
-            return null;
-        }
-    }
+
     
-    private String extractXMLValue(String xml, String tagName) {
-        try {
-            String startTag = "<" + tagName + ">";
-            String endTag = "</" + tagName + ">";
-            
-            int startIndex = xml.indexOf(startTag);
-            if (startIndex == -1) return null;
-            
-            startIndex += startTag.length();
-            int endIndex = xml.indexOf(endTag, startIndex);
-            if (endIndex == -1) return null;
-            
-            String value = xml.substring(startIndex, endIndex).trim();
-            
-            // CDATA 처리
-            if (value.startsWith("<![CDATA[") && value.endsWith("]]>")) {
-                value = value.substring(9, value.length() - 3);
-            }
-            
-            return value.isEmpty() ? null : value;
-        } catch (Exception e) {
-            return null;
-        }
-    }
+
 } 

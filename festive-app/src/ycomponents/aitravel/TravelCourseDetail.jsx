@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Map, MapMarker, Polyline, useKakaoLoader } from "react-kakao-maps-sdk";
 import "./TravelCourseDetail.css";
@@ -22,8 +28,10 @@ const TravelCourseDetail = () => {
   const [placeOverview, setPlaceOverview] = useState("");
   const [loadingOverview, setLoadingOverview] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedDescriptionDay, setSelectedDescriptionDay] = useState(1);
 
   const key = import.meta.env.VITE_KAKAO_MAP_API_KEY;
+  const mapRef = useRef(null);
   const [loadingMap, error] = useKakaoLoader({
     appkey: key,
     libraries: ["services"],
@@ -52,6 +60,8 @@ const TravelCourseDetail = () => {
 
         const data = await response.json();
         if (data.success) {
+          console.log("📅 받은 여행코스 데이터:", data.course);
+          console.log("📅 createdDate 값:", data.course?.createdDate);
           setCourseData(data.course);
           setCourseDetails(data.details);
 
@@ -159,7 +169,7 @@ const TravelCourseDetail = () => {
   );
 
   // 거리 계산 함수 (하버사인 공식)
-  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const calculateDistance = useCallback((lat1, lon1, lat2, lon2) => {
     const R = 6371; // 지구 반지름 (km)
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -171,7 +181,182 @@ const TravelCourseDetail = () => {
         Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // km 단위
-  };
+  }, []);
+
+  // 선택된 날짜의 장소들 메모이제이션
+  const dayPlaces = useMemo(() => {
+    const places = getPlacesByDay(selectedDay);
+    console.log("🏠 dayPlaces 계산:", {
+      selectedDay,
+      placesCount: places.length,
+      places: places.map((p) => ({
+        placeName: p.placeName,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        visitOrder: p.visitOrder,
+      })),
+    });
+    return places;
+  }, [getPlacesByDay, selectedDay]);
+
+  // 폴리라인 경로 메모이제이션
+  const polylinePath = useMemo(() => {
+    const filtered = dayPlaces.filter(
+      (place) => place.latitude && place.longitude
+    );
+    console.log("🗺️ 좌표 필터링:", {
+      totalPlaces: dayPlaces.length,
+      filteredPlaces: filtered.length,
+      filtered: filtered.map((p) => ({
+        placeName: p.placeName,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        visitOrder: p.visitOrder,
+      })),
+    });
+
+    const sorted = filtered.sort((a, b) => a.visitOrder - b.visitOrder);
+    console.log("📋 순서 정렬:", {
+      sorted: sorted.map((p) => ({
+        placeName: p.placeName,
+        visitOrder: p.visitOrder,
+      })),
+    });
+
+    const path = sorted.map((place) => ({
+      lat: parseFloat(place.latitude),
+      lng: parseFloat(place.longitude),
+    }));
+
+    console.log("📍 최종 polylinePath:", {
+      pathLength: path.length,
+      path,
+    });
+
+    return path;
+  }, [dayPlaces]);
+
+  // 카카오맵에 거리 표시를 추가하는 useEffect
+  useEffect(() => {
+    console.log("🗺️ 거리 표시 useEffect 실행:", {
+      loading,
+      courseDetailsLength: courseDetails.length,
+      selectedDay,
+      mapRef: !!mapRef.current,
+      kakao: !!window.kakao,
+      polylinePathLength: polylinePath.length,
+      polylinePath,
+    });
+
+    // 데이터가 로딩 중이면 기다림
+    if (loading) {
+      console.log("⏳ 데이터 로딩 중...");
+      return;
+    }
+
+    // 코스 상세 정보가 없으면 기다림
+    if (courseDetails.length === 0) {
+      console.log("📋 코스 상세 정보 없음");
+      return;
+    }
+
+    if (!mapRef.current) {
+      console.log("❌ mapRef.current가 없음");
+      return;
+    }
+    if (!window.kakao) {
+      console.log("❌ window.kakao가 없음");
+      return;
+    }
+    if (polylinePath.length <= 1) {
+      console.log("❌ polylinePath 길이가 1 이하:", polylinePath.length);
+      return;
+    }
+
+    // 지도가 완전히 로드된 후 실행하도록 지연 추가
+    const timer = setTimeout(() => {
+      console.log("⏰ 지연 후 거리 표시 시작");
+      const map = mapRef.current;
+
+      if (!map) {
+        console.log("❌ 지연 후에도 map이 없음");
+        return;
+      }
+
+      // 기존 거리 표시 제거
+      if (map._distanceOverlays) {
+        map._distanceOverlays.forEach((overlay) => overlay.setMap(null));
+      }
+      map._distanceOverlays = [];
+
+      // 각 선분마다 거리 표시 추가
+      console.log("📍 거리 표시 시작:", polylinePath.length - 1, "개 선분");
+
+      for (let i = 0; i < polylinePath.length - 1; i++) {
+        const startPos = polylinePath[i];
+        const endPos = polylinePath[i + 1];
+
+        console.log(`📏 선분 ${i + 1}:`, {
+          start: startPos,
+          end: endPos,
+        });
+
+        // 거리 계산 (km)
+        const distance = calculateDistance(
+          startPos.lat,
+          startPos.lng,
+          endPos.lat,
+          endPos.lng
+        );
+
+        console.log(`📐 계산된 거리: ${distance.toFixed(1)}km`);
+
+        // 선분 중간 지점 계산
+        const midLat = (startPos.lat + endPos.lat) / 2;
+        const midLng = (startPos.lng + endPos.lng) / 2;
+        const midPosition = new window.kakao.maps.LatLng(midLat, midLng);
+
+        console.log(`📌 중간 지점:`, { lat: midLat, lng: midLng });
+
+        // 거리 라벨 표시
+        const distanceOverlay = new window.kakao.maps.CustomOverlay({
+          position: midPosition,
+          content: `<div style="
+          background: #FF6B6B;
+          color: white;
+          border-radius: 12px;
+          padding: 3px 8px;
+          font-size: 10px;
+          font-weight: bold;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          text-align: center;
+          white-space: nowrap;
+        ">${distance.toFixed(1)}km</div>`,
+          yAnchor: 0.5,
+        });
+
+        console.log(`🎯 CustomOverlay 생성:`, distanceOverlay);
+
+        distanceOverlay.setMap(map);
+        map._distanceOverlays.push(distanceOverlay);
+
+        console.log(`✅ 거리 라벨 ${i + 1} 지도에 추가 완료`);
+      }
+
+      console.log(`✅ 거리 표시 완료: ${polylinePath.length - 1}개`);
+    }, 500); // 500ms 지연
+
+    // 컴포넌트 언마운트 시 거리 표시 정리
+    return () => {
+      clearTimeout(timer);
+      if (mapRef.current && mapRef.current._distanceOverlays) {
+        mapRef.current._distanceOverlays.forEach((overlay) =>
+          overlay.setMap(null)
+        );
+        mapRef.current._distanceOverlays = [];
+      }
+    };
+  }, [loading, courseDetails, polylinePath, calculateDistance]);
 
   // areaCode 기준 지역명 반환
   const getRegionByAreaCode = (areaCode) => {
@@ -421,15 +606,86 @@ const TravelCourseDetail = () => {
     setCurrentImageIndex(index);
   };
 
-  // 선택된 날짜의 마커들과 경로
-  const dayPlaces = getPlacesByDay(selectedDay);
-  const polylinePath = dayPlaces
-    .sort((a, b) => a.visitOrder - b.visitOrder)
-    .filter((place) => place.latitude && place.longitude)
-    .map((place) => ({
-      lat: parseFloat(place.latitude),
-      lng: parseFloat(place.longitude),
-    }));
+  // AI 설명을 Day별로 파싱하는 함수
+  const parseDescriptionByDay = (description) => {
+    if (!description) return {};
+
+    const lines = description.split("\n");
+    const dayDescriptions = {};
+    let currentDay = null;
+    let currentContent = [];
+
+    lines.forEach((line) => {
+      const trimmedLine = line.trim();
+
+      // Day 제목 찾기
+      const dayMatch = trimmedLine.match(/^Day\s*(\d+)/);
+      if (dayMatch) {
+        // 이전 Day 내용 저장
+        if (currentDay && currentContent.length > 0) {
+          dayDescriptions[currentDay] = currentContent.join("\n");
+        }
+
+        // 새로운 Day 시작
+        currentDay = parseInt(dayMatch[1]);
+        currentContent = [];
+      } else if (currentDay && trimmedLine) {
+        // 현재 Day의 내용 추가
+        currentContent.push(trimmedLine);
+      }
+    });
+
+    // 마지막 Day 내용 저장
+    if (currentDay && currentContent.length > 0) {
+      dayDescriptions[currentDay] = currentContent.join("\n");
+    }
+
+    return dayDescriptions;
+  };
+
+  // 텍스트에서 이모지 제거하는 함수
+  const removeEmojis = (text) => {
+    return text
+      .replace(
+        /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu,
+        ""
+      )
+      .trim();
+  };
+
+  // 선택된 Day의 설명 내용 렌더링
+  const renderDayDescription = (content) => {
+    if (!content) return null;
+
+    return content.split("\n").map((line, index) => {
+      if (!line.trim()) return <br key={index} />;
+
+      const trimmedLine = removeEmojis(line.trim());
+
+      // 장소 리스트 처리
+      if (trimmedLine.startsWith("- ")) {
+        return (
+          <div key={index} className="travel-detail-place-item">
+            • {trimmedLine.substring(2)}
+          </div>
+        );
+      }
+
+      // 포인트 처리 (이모지 제거)
+      if (trimmedLine.startsWith("포인트:")) {
+        return (
+          <div key={index} className="travel-detail-point">
+            <strong>{trimmedLine.substring(3).trim()}</strong>
+          </div>
+        );
+      }
+
+      // 일반 텍스트
+      return <p key={index}>{trimmedLine}</p>;
+    });
+  };
+
+  // 선택된 날짜의 마커들과 경로는 상단에서 useMemo로 정의됨
 
   if (loading || loadingMap) {
     return (
@@ -461,7 +717,7 @@ const TravelCourseDetail = () => {
             className="travel-detail-back-btn"
             onClick={() => navigate("/ai-travel")}
           >
-            ← 목록으로 돌아가기
+            ← 뒤로가기
           </button>
 
           <div className="travel-detail-course-info">
@@ -473,11 +729,48 @@ const TravelCourseDetail = () => {
                   : courseData?.regionName || "전국"}
               </span>
               <span className="travel-detail-days">{totalDays}일 코스</span>
-            </div>
-            <div className="travel-detail-date">
-              {courseData?.createdDate
-                ? new Date(courseData.createdDate).toLocaleDateString("ko-KR")
-                : "날짜 미정"}
+              <span className="travel-detail-date">
+                {courseData?.createdDate
+                  ? (() => {
+                      try {
+                        let dateObj;
+
+                        // 배열 형태의 날짜인지 확인 [년, 월, 일, 시, 분, 초]
+                        if (Array.isArray(courseData.createdDate)) {
+                          const [year, month, day, hour, minute, second] =
+                            courseData.createdDate;
+                          // JavaScript Date의 월은 0부터 시작하므로 1을 빼줘야 함
+                          dateObj = new Date(
+                            year,
+                            month - 1,
+                            day,
+                            hour,
+                            minute,
+                            second
+                          );
+                        } else {
+                          // 문자열 형태의 날짜인 경우
+                          dateObj = new Date(courseData.createdDate);
+                        }
+
+                        if (isNaN(dateObj.getTime())) {
+                          return "날짜 미정";
+                        }
+
+                        return dateObj
+                          .toLocaleDateString("ko-KR", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                          })
+                          .replace(/\./g, ".");
+                      } catch (error) {
+                        console.error("날짜 변환 오류:", error);
+                        return "날짜 미정";
+                      }
+                    })()
+                  : "날짜 미정"}
+              </span>
             </div>
 
             {/* 작성자 정보 */}
@@ -496,7 +789,7 @@ const TravelCourseDetail = () => {
                     courseData?.memberName ||
                     "알 수 없음"}
                 </h4>
-                <p>여행코스 작성자</p>
+                <p>작성자</p>
               </div>
             </div>
 
@@ -505,50 +798,45 @@ const TravelCourseDetail = () => {
               <h4>코스 소개</h4>
               {courseData?.courseDescription &&
               courseData.courseDescription.trim().length > 0 ? (
-                // AI가 생성한 day별 코스 설명을 표시
                 <div className="travel-detail-ai-description">
-                  {courseData.courseDescription
-                    .split("\n")
-                    .map((line, index) => {
-                      // 빈 줄 처리
-                      if (!line.trim()) {
-                        return <br key={index} />;
-                      }
+                  {(() => {
+                    const dayDescriptions = parseDescriptionByDay(
+                      courseData.courseDescription
+                    );
+                    const availableDays = Object.keys(dayDescriptions)
+                      .map(Number)
+                      .sort((a, b) => a - b);
 
-                      const trimmedLine = line.trim();
+                    if (availableDays.length === 0) {
+                      return <p>코스 설명을 불러올 수 없습니다.</p>;
+                    }
 
-                      // Day 제목 처리
-                      if (trimmedLine.match(/^Day\s*\d+/)) {
-                        return (
-                          <h5 key={index} className="travel-detail-day-title">
-                            {trimmedLine}
-                          </h5>
-                        );
-                      }
+                    return (
+                      <>
+                        {/* Day 탭 */}
+                        <div className="travel-detail-description-tabs">
+                          {availableDays.map((day) => (
+                            <button
+                              key={day}
+                              className={`travel-detail-description-tab ${
+                                selectedDescriptionDay === day ? "active" : ""
+                              }`}
+                              onClick={() => setSelectedDescriptionDay(day)}
+                            >
+                              Day {day}
+                            </button>
+                          ))}
+                        </div>
 
-                      // 장소 리스트 (- 로 시작하는 줄) 처리
-                      if (trimmedLine.startsWith("- ")) {
-                        return (
-                          <div key={index} className="travel-detail-place-item">
-                            {trimmedLine.substring(2)}
-                          </div>
-                        );
-                      }
-
-                      // 포인트 처리
-                      if (trimmedLine.startsWith("포인트:")) {
-                        return (
-                          <div key={index} className="travel-detail-point">
-                            <strong>
-                              💡 {trimmedLine.substring(3).trim()}
-                            </strong>
-                          </div>
-                        );
-                      }
-
-                      // 일반 텍스트
-                      return <p key={index}>{trimmedLine}</p>;
-                    })}
+                        {/* 선택된 Day의 내용 */}
+                        <div className="travel-detail-description-content">
+                          {renderDayDescription(
+                            dayDescriptions[selectedDescriptionDay]
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               ) : (
                 // 기본 설명
@@ -564,18 +852,6 @@ const TravelCourseDetail = () => {
                     : "특별히 선별된 여행코스입니다. AI가 추천하는 맞춤형 여행 경험을 통해 새로운 발견과 즐거움을 찾아보세요."}
                 </p>
               )}
-            </div>
-
-            {/* 여행 정보 */}
-            <div className="travel-detail-info">
-              <div className="travel-detail-info-item">
-                <span className="label">총 장소</span>
-                <span className="value">{courseDetails.length}곳</span>
-              </div>
-              <div className="travel-detail-info-item">
-                <span className="label">여행 테마</span>
-                <span className="value">{getTravelTheme()}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -625,7 +901,7 @@ const TravelCourseDetail = () => {
                     </p>
                     {place.placeTel && (
                       <p className="travel-detail-place-tel">
-                        📞 {place.placeTel}
+                        Tel: {place.placeTel}
                       </p>
                     )}
                     {place.placeCategory && (
@@ -658,6 +934,10 @@ const TravelCourseDetail = () => {
             height: "100%",
           }}
           level={8}
+          ref={mapRef}
+          onCreate={(map) => {
+            mapRef.current = map;
+          }}
         >
           {/* 선택된 날짜의 마커들 */}
           {dayPlaces.map((place, index) => {
@@ -805,7 +1085,7 @@ const TravelCourseDetail = () => {
                 <h4>{selectedPlace.placeName}</h4>
                 <p className="place-address">{selectedPlace.placeAddress}</p>
                 {selectedPlace.placeTel && (
-                  <p className="place-tel">📞 {selectedPlace.placeTel}</p>
+                  <p className="place-tel">Tel: {selectedPlace.placeTel}</p>
                 )}
                 {selectedPlace.placeCategory && (
                   <span className="place-category">

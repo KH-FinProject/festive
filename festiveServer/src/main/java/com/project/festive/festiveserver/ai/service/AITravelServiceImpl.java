@@ -37,7 +37,7 @@ public class AITravelServiceImpl implements AITravelService {
     private final OpenAIService openAIService;
     private final TravelAnalysisService travelAnalysisService;
     
-    // 임시 필드들 (기존 코드와의 호환성을 위해)
+    // API 키 설정
     @Value("${tour.api.service-key:}")
     private String tourApiServiceKey;
     
@@ -585,9 +585,9 @@ public class AITravelServiceImpl implements AITravelService {
                     log.info("🎪 일반 축제 검색 결과: {}개", festivalResults.size());
                 }
                 
-                // 최대 20개로 제한
-                if (allItems.size() > 20) {
-                    allItems = allItems.subList(0, 20);
+                // 최대 40개로 증량 (축제)
+                if (allItems.size() > 40) {
+                    allItems = allItems.subList(0, 40);
                 }
                 
                 log.info("✅ 축제 전용 데이터 수집 완료: {}개", allItems.size());
@@ -679,9 +679,9 @@ public class AITravelServiceImpl implements AITravelService {
                     }
                 }
                 
-                // 최대 20개로 제한
-                if (allItems.size() > 20) {
-                    allItems = allItems.subList(0, 20);
+                // 최대 40개로 증량 (여행)
+                if (allItems.size() > 40) {
+                    allItems = allItems.subList(0, 40);
                 }
                 
                 log.info("✅ 여행 전용 데이터 수집 완료: {}개 (축제 완전 제외)", allItems.size());
@@ -802,6 +802,7 @@ public class AITravelServiceImpl implements AITravelService {
             String url = UriComponentsBuilder.fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/detailCommon2")
                     .queryParam("MobileOS", "ETC")
                     .queryParam("MobileApp", "festive")
+                    .queryParam("_type", "json") // JSON 응답 요청
                     .queryParam("contentId", contentId)
                     .build(false)
                     .toUriString() + "&serviceKey=" + tourApiServiceKey;
@@ -814,7 +815,7 @@ public class AITravelServiceImpl implements AITravelService {
                 String responseBody = response.getBody();
                 log.debug("detailCommon2 응답 데이터 길이: {}", responseBody.length());
                 
-                // XML 응답 파싱
+                // JSON 응답 파싱
                 List<TourAPIResponse.Item> items = parseDetailCommon2Response(responseBody);
                 
                 if (!items.isEmpty()) {
@@ -839,49 +840,53 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * detailCommon2 응답 파싱
+     * detailCommon2 JSON 응답 파싱
      */
     private List<TourAPIResponse.Item> parseDetailCommon2Response(String response) {
         List<TourAPIResponse.Item> items = new ArrayList<>();
         
         try {
-            // XML 파싱
-            String itemsSection = response;
+            // JSON 파싱
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode root = objectMapper.readTree(response);
             
-            // <item> 태그들 추출
-            String[] itemBlocks = itemsSection.split("<item>");
+            JsonNode itemsNode = root.path("response").path("body").path("items").path("item");
             
-            for (int i = 1; i < itemBlocks.length; i++) {
-                String itemBlock = itemBlocks[i];
-                if (itemBlock.contains("</item>")) {
-                    itemBlock = itemBlock.substring(0, itemBlock.indexOf("</item>"));
-                    TourAPIResponse.Item item = parseDetailCommon2Item(itemBlock);
+            if (itemsNode.isArray()) {
+                for (JsonNode itemNode : itemsNode) {
+                    TourAPIResponse.Item item = parseDetailCommon2Item(itemNode);
                     if (item != null) {
                         items.add(item);
                     }
                 }
+            } else if (!itemsNode.isMissingNode()) {
+                // 단일 아이템인 경우
+                TourAPIResponse.Item item = parseDetailCommon2Item(itemsNode);
+                if (item != null) {
+                    items.add(item);
+                }
             }
             
         } catch (Exception e) {
-            log.error("detailCommon2 응답 파싱 실패", e);
+            log.error("detailCommon2 JSON 응답 파싱 실패", e);
         }
         
         return items;
     }
     
     /**
-     * detailCommon2 개별 아이템 파싱
+     * detailCommon2 개별 JSON 아이템 파싱
      */
-    private TourAPIResponse.Item parseDetailCommon2Item(String xmlItem) {
+    private TourAPIResponse.Item parseDetailCommon2Item(JsonNode itemNode) {
         try {
             TourAPIResponse.Item item = new TourAPIResponse.Item();
             
             // addr1 추출
-            String addr1 = extractXMLValue(xmlItem, "addr1");
+            String addr1 = getJsonNodeValue(itemNode, "addr1");
             item.setAddr1(addr1);
             
             // overview 추출
-            String overview = extractXMLValue(xmlItem, "overview");
+            String overview = getJsonNodeValue(itemNode, "overview");
             // HTML 태그 제거 및 특수문자 디코딩
             if (overview != null && !overview.trim().isEmpty()) {
                 overview = overview.replaceAll("<[^>]*>", "") // HTML 태그 제거
@@ -896,16 +901,16 @@ public class AITravelServiceImpl implements AITravelService {
             item.setOverview(overview);
             
             // contentId 추출
-            String contentId = extractXMLValue(xmlItem, "contentid");
+            String contentId = getJsonNodeValue(itemNode, "contentid");
             item.setContentId(contentId);
             
-            log.debug("✅ detailCommon2 아이템 파싱 완료 - contentId: {}, addr1: {}, overview 길이: {}", 
+            log.debug("✅ detailCommon2 JSON 아이템 파싱 완료 - contentId: {}, addr1: {}, overview 길이: {}", 
                     contentId, addr1, overview != null ? overview.length() : 0);
             
             return item;
             
         } catch (Exception e) {
-            log.error("detailCommon2 아이템 파싱 실패", e);
+            log.error("detailCommon2 JSON 아이템 파싱 실패", e);
             return null;
         }
     }
@@ -1551,7 +1556,7 @@ public class AITravelServiceImpl implements AITravelService {
             
             // UriComponentsBuilder로 기본 파라미터 구성 (서비스키 제외)
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .queryParam("numOfRows", "30")
+                .queryParam("numOfRows", "80") // 30 → 80으로 증량
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "festive") // 정상 버전
                 .queryParam("_type", "json") // JSON 응답 요청
@@ -1625,9 +1630,10 @@ public class AITravelServiceImpl implements AITravelService {
             }
             
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .queryParam("numOfRows", "50")
+                .queryParam("numOfRows", "100") // 50 → 100으로 증량 (키워드 검색)
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "festive")
+                .queryParam("_type", "json") // JSON 응답 요청
                 .queryParam("arrange", "O");  // 이미지가 있는 데이터 우선 정렬
             
             // areaCode가 있을 때만 추가 (null이면 전국 검색)
@@ -1701,9 +1707,10 @@ public class AITravelServiceImpl implements AITravelService {
             String today = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
             
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .queryParam("numOfRows", "50")
+                .queryParam("numOfRows", "80") // 50 → 80으로 증량 (축제 검색)
                 .queryParam("MobileOS", "ETC")
                 .queryParam("MobileApp", "festive")
+                .queryParam("_type", "json") // JSON 응답 요청
                 .queryParam("arrange", "O")  // 이미지가 있는 데이터 우선 정렬
                 .queryParam("eventStartDate", today);
             
@@ -1767,25 +1774,18 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * TourAPI JSON/XML 응답 파싱
+     * TourAPI JSON 응답 파싱 (JSON 전용)
      */
     private List<TourAPIResponse.Item> parseTourAPIResponse(String response) {
         List<TourAPIResponse.Item> items = new ArrayList<>();
         
         try {
-            // 응답이 XML인지 JSON인지 확인
-            if (response.trim().startsWith("<")) {
-                log.info("🔍 XML 응답 감지, XML 파싱 시작");
-                items = parseXMLResponse(response);
-                log.info("📋 XML 파싱 완료: {}개 아이템", items.size());
-            } else {
-                log.info("🔍 JSON 응답 감지, JSON 파싱 시작");
-                items = parseJSONResponse(response);
-                log.info("📋 JSON 파싱 완료: {}개 아이템", items.size());
-            }
+            log.info("🔍 JSON 응답 파싱 시작");
+            items = parseJSONResponse(response);
+            log.info("📋 JSON 파싱 완료: {}개 아이템", items.size());
             
         } catch (Exception e) {
-            log.error("❌ 응답 파싱 실패", e);
+            log.error("❌ JSON 응답 파싱 실패", e);
         }
         
         return items;
@@ -1875,100 +1875,11 @@ public class AITravelServiceImpl implements AITravelService {
         return null;
     }
     
-    /**
-     * XML 응답 파싱
-     */
-    private List<TourAPIResponse.Item> parseXMLResponse(String xmlResponse) {
-        List<TourAPIResponse.Item> items = new ArrayList<>();
-        
-        try {
-            // XML에서 <item> 태그들을 찾아서 파싱
-            String[] itemBlocks = xmlResponse.split("<item>");
-            
-            for (int i = 1; i < itemBlocks.length; i++) { // 첫 번째는 헤더 부분이므로 건너뜀
-                String itemBlock = itemBlocks[i];
-                if (itemBlock.contains("</item>")) {
-                    itemBlock = itemBlock.substring(0, itemBlock.indexOf("</item>"));
-                    TourAPIResponse.Item item = parseXMLItem(itemBlock);
-                    if (item != null) {
-                        items.add(item);
-                    }
-                }
-            }
-            
-        } catch (Exception e) {
-            log.error("❌ XML 파싱 실패", e);
-        }
-        
-        return items;
-    }
+
     
-    /**
-     * 개별 XML 아이템 파싱
-     */
-    private TourAPIResponse.Item parseXMLItem(String xmlItem) {
-        try {
-            TourAPIResponse.Item item = new TourAPIResponse.Item();
-            
-            item.setTitle(extractXMLValue(xmlItem, "title"));
-            item.setAddr1(extractXMLValue(xmlItem, "addr1"));
-            item.setMapX(extractXMLValue(xmlItem, "mapx"));
-            item.setMapY(extractXMLValue(xmlItem, "mapy"));
-            item.setContentTypeId(extractXMLValue(xmlItem, "contenttypeid"));
-            item.setFirstImage(extractXMLValue(xmlItem, "firstimage"));
-            item.setTel(extractXMLValue(xmlItem, "tel"));
-            item.setContentId(extractXMLValue(xmlItem, "contentid"));
-            
-            // 🎪 축제 데이터에 필요한 추가 필드들 파싱
-            String contentTypeId = item.getContentTypeId();
-            if ("15".equals(contentTypeId)) {
-                item.setEventStartDate(extractXMLValue(xmlItem, "eventstartdate"));
-                item.setEventEndDate(extractXMLValue(xmlItem, "eventenddate"));
-                log.debug("🎭 축제 XML 파싱: {} (시작:{}, 종료:{})", 
-                    item.getTitle(), item.getEventStartDate(), item.getEventEndDate());
-            }
-            
-            // 필수 정보가 있는지 확인 - 축제는 좌표 없어도 허용
-            if (item.getTitle() != null) {
-                // 축제(contentTypeId=15)는 좌표가 없어도 허용
-                if ("15".equals(contentTypeId)) {
-                    return item;
-                }
-                // 다른 타입은 좌표 필수
-                if (item.getMapX() != null && item.getMapY() != null) {
-                    return item;
-                }
-            }
-            
-        } catch (Exception e) {
-            log.debug("XML 아이템 파싱 실패", e);
-        }
-        return null;
-    }
+
     
-    /**
-     * XML에서 특정 태그 값 추출
-     */
-    private String extractXMLValue(String xml, String tagName) {
-        try {
-            String startTag = "<" + tagName + ">";
-            String endTag = "</" + tagName + ">";
-            
-            int startIndex = xml.indexOf(startTag);
-            if (startIndex == -1) return null;
-            
-            startIndex += startTag.length();
-            int endIndex = xml.indexOf(endTag, startIndex);
-            if (endIndex == -1) return null;
-            
-            String value = xml.substring(startIndex, endIndex).trim();
-            return value.isEmpty() ? null : value;
-            
-        } catch (Exception e) {
-            log.debug("XML 값 추출 실패: {}", tagName, e);
-            return null;
-        }
-    }
+
     
 
     
@@ -2296,35 +2207,83 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 🍽️ 맛집 위주 일정 생성
+     * 🍽️ 맛집 위주 일정 생성 (음식점 부족 시 관광지로 보완)
      */
     private List<ChatResponse.LocationInfo> createFoodPreferredSchedule(
             Map<String, List<Map<String, Object>>> placesByType, int requiredPlaces, int totalDays, Set<String> usedPlaces) {
         
         List<ChatResponse.LocationInfo> locations = new ArrayList<>();
         
-        log.info("🍽️ 맛집 위주 일정 생성 - 음식점: {}개 사용 가능", placesByType.get("39").size());
+        List<Map<String, Object>> restaurants = placesByType.get("39");
+        List<Map<String, Object>> attractions = placesByType.get("12");
+        
+        int restaurantCount = restaurants != null ? restaurants.size() : 0;
+        int attractionCount = attractions != null ? attractions.size() : 0;
+        
+        log.info("🍽️ 맛집 위주 일정 생성 - 음식점: {}개, 관광지: {}개 사용 가능", restaurantCount, attractionCount);
+        
+        // 🎯 음식점 부족 여부 체크 및 비율 계산
+        boolean restaurantShortage = restaurantCount < (requiredPlaces * 0.6); // 필요한 60% 미만이면 부족
+        
+        if (restaurantShortage && attractionCount > 0) {
+            log.info("⚠️ 음식점 데이터 부족 감지! 관광지로 보완합니다. (음식점: {}개 vs 필요: {}개)", 
+                    restaurantCount, (int)(requiredPlaces * 0.6));
+        }
         
         int currentDay = 1;
         int placesPerDay = Math.max(3, requiredPlaces / totalDays);
         
         for (int i = 0; i < requiredPlaces && currentDay <= totalDays; i++) {
-            // 장소 선택: 음식점 위주로, 중간에 관광지나 쇼핑몰 배치
-            Map<String, Object> selectedPlace = selectNextPlace(Arrays.asList(
-                placesByType.get("39"), // 음식점 우선
-                placesByType.get("12"), // 관광지
-                placesByType.get("38"), // 쇼핑
-                placesByType.get("25")  // 여행코스
-            ), usedPlaces);
+            Map<String, Object> selectedPlace = null;
+            
+            if (restaurantShortage && attractionCount > 0) {
+                // 🏛️ 부족할 때: 음식점과 관광지를 적절히 섞어서 선택
+                // 2:1 비율로 음식점:관광지 선택 (음식점이 부족하더라도 우선순위 유지)
+                if (i % 3 == 0 || i % 3 == 1) {
+                    // 음식점 우선 시도
+                    selectedPlace = selectNextPlace(Arrays.asList(
+                        placesByType.get("39"), // 음식점 우선
+                        placesByType.get("12"), // 음식점 부족 시 관광지로 보완
+                        placesByType.get("38"), // 쇼핑
+                        placesByType.get("25")  // 여행코스
+                    ), usedPlaces);
+                } else {
+                    // 관광지 우선 시도 (다양성 확보)
+                    selectedPlace = selectNextPlace(Arrays.asList(
+                        placesByType.get("12"), // 관광지 우선
+                        placesByType.get("39"), // 음식점
+                        placesByType.get("14"), // 문화시설
+                        placesByType.get("25")  // 여행코스
+                    ), usedPlaces);
+                }
+            } else {
+                // 🍽️ 충분할 때: 기존 방식으로 음식점 위주 선택
+                selectedPlace = selectNextPlace(Arrays.asList(
+                    placesByType.get("39"), // 음식점 우선
+                    placesByType.get("12"), // 관광지
+                    placesByType.get("38"), // 쇼핑
+                    placesByType.get("25")  // 여행코스
+                ), usedPlaces);
+            }
             
             if (selectedPlace != null) {
                 ChatResponse.LocationInfo location = createLocationInfo(selectedPlace, currentDay, null);
                 locations.add(location);
                 usedPlaces.add(String.valueOf(selectedPlace.get("title")));
                 
-                log.info("✅ Day {} 추가: {} ({})", 
-                    currentDay, selectedPlace.get("title"), 
-                    getContentTypeNameByCode(String.valueOf(selectedPlace.get("contenttypeid"))));
+                String contentType = getContentTypeNameByCode(String.valueOf(selectedPlace.get("contenttypeid")));
+                log.info("✅ Day {} 추가: {} ({})", currentDay, selectedPlace.get("title"), contentType);
+                
+                // 🍽️ 음식점과 관광지 비율 로깅
+                if (restaurantShortage && (contentType.equals("음식점") || contentType.equals("관광지"))) {
+                    long currentRestaurants = locations.stream()
+                        .filter(loc -> loc.getCategory() != null && loc.getCategory().equals("음식점"))
+                        .count();
+                    long currentAttractions = locations.stream()
+                        .filter(loc -> loc.getCategory() != null && loc.getCategory().equals("관광지"))
+                        .count();
+                    log.info("   📊 현재 비율 - 음식점: {}개, 관광지: {}개", currentRestaurants, currentAttractions);
+                }
             }
             
             if ((i + 1) % placesPerDay == 0) {
@@ -2617,7 +2576,7 @@ public class AITravelServiceImpl implements AITravelService {
         
         prompt.append("2. **각 Day별 구성 원칙**: 여행코스(25) 1개 + 다양한 종류의 장소들 (관광지, 문화시설, 레포츠, 쇼핑, 음식점 등)\n");
         prompt.append("3. **시간대별 최적화**: 점심/저녁시간-음식점, 오후-쇼핑/문화시설, 오전-관광지/레포츠, 저녁-축제공연\n");
-        prompt.append("4. 같은 Day 내 장소들은 서로 20km 이내에 위치하도록 배치\n");
+        prompt.append("4. 같은 Day 내 장소들은 서로 30km 이내에 위치하도록 배치\n");
         prompt.append("5. 위의 TourAPI 실제 데이터를 **최대한 우선적으로** 사용해주세요\n");
         prompt.append("6. 데이터가 부족하면 해당 시간대에 적합한 장소로 보완하되, 반드시 Day별 개수를 맞춰주세요\n");
         prompt.append("7. 각 장소마다 '@location:[위도,경도] @day:숫자' 형식 필수 포함\n");
@@ -3237,40 +3196,5 @@ public class AITravelServiceImpl implements AITravelService {
 
     // getPlaceImages 메서드는 TourAPIService로 이동됨
     
-    /**
-     * detailImage2 XML 응답을 파싱하여 이미지 정보 추출
-     */
-    private List<Map<String, Object>> parseDetailImageResponse(String xmlResponse) {
-        List<Map<String, Object>> images = new ArrayList<>();
-        
-        try {
-            // XML에서 <item> 태그들을 찾아서 처리
-            String[] items = xmlResponse.split("<item>");
-            
-            for (int i = 1; i < items.length; i++) { // 첫 번째는 헤더이므로 제외
-                String item = items[i];
-                
-                // 각 이미지 정보 추출
-                String originImgUrl = extractXMLValue(item, "originimgurl");
-                String smallImageUrl = extractXMLValue(item, "smallimageurl");
-                String imgName = extractXMLValue(item, "imgname");
-                
-                if (originImgUrl != null && !originImgUrl.trim().isEmpty()) {
-                    Map<String, Object> imageInfo = new HashMap<>();
-                    imageInfo.put("originImgUrl", originImgUrl.trim());
-                    imageInfo.put("smallImageUrl", smallImageUrl != null ? smallImageUrl.trim() : "");
-                    imageInfo.put("imgName", imgName != null ? imgName.trim() : "");
-                    
-                    images.add(imageInfo);
-                }
-            }
-            
-            log.info("🖼️ 파싱된 이미지 개수: {}", images.size());
-            
-        } catch (Exception e) {
-            log.error("❌ detailImage2 XML 파싱 실패: {}", e.getMessage(), e);
-        }
-        
-        return images;
-    }
+
 } 

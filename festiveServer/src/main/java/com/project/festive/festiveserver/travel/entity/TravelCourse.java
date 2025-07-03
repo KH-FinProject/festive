@@ -1,6 +1,7 @@
 package com.project.festive.festiveserver.travel.entity;
 
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
  * AI 여행코스 메인 엔티티
@@ -16,6 +17,8 @@ public class TravelCourse {
     private String requestType;      // 요청타입
     private String isShared;         // 공유여부 (Y/N)
     private String courseDescription; // AI가 생성한 day별 코스 설명
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdDate; // 생성일시
     
     // 조인으로 가져올 회원 정보
