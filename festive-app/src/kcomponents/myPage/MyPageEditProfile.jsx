@@ -37,7 +37,6 @@ const MyPageEditProfile = () => {
     try {
       const response = await axiosApi.get(`/mypage/profile`);
       const data = response.data;
-      console.log(data);
       setProfileData({
         name: data.name,
         nickname: data.nickname,
@@ -57,7 +56,7 @@ const MyPageEditProfile = () => {
   // 컴포넌트 마운트 시에만 프로필 정보 로드
   useEffect(() => {
     fetchProfileInfo();
-  }, []); // 빈 의존성 배열로 변경
+  }, []);
 
   // --- 닉네임 중복체크 (입력 시 debounce로 자동) ---
   useEffect(() => {
@@ -85,7 +84,6 @@ const MyPageEditProfile = () => {
           `/mypage/profile/checkNickname?nickname=${nickname}`
         );
         const data = response.data;
-        console.log(data);
         setIsNicknameAvailable(!data.isDuplicate);
       } catch {
         setIsNicknameAvailable(null);
@@ -100,13 +98,40 @@ const MyPageEditProfile = () => {
     };
   }, [profileData.nickname]);
 
-  // --- 입력 값 변경 핸들러 ---
+  // --- 입력 값 변경 핸들러 (닉네임 입력 시 공백 자동 제거) ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    if (name === "nickname") {
+      // 모든 공백(스페이스, 탭 등) 자동 제거
+      setProfileData((prev) => ({
+        ...prev,
+        [name]: value.replace(/\s/g, ""),
+      }));
+    } else {
+      setProfileData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  // --- 기본 이미지로 변경 핸들러 ---
+  const handleResetProfileImage = async () => {
+    if (!window.confirm("정말 기본 이미지로 변경하시겠습니까?")) return;
+
+    try {
+      const res = await axiosApi.post('/mypage/profile/reset-image');
+      if (res.data && res.data.success) {
+        alert('기본 이미지로 변경되었습니다.');
+        fetchProfileInfo(); // 최신 정보 갱신
+        setNewProfileImageFile(null);
+        setPreviewImageUrl(null);
+      } else {
+        alert('기본 이미지 변경에 실패했습니다.');
+      }
+    } catch (err) {
+      alert('기본 이미지 변경 중 오류가 발생했습니다.');
+    }
   };
 
   // --- 프로필 이미지 파일 선택 핸들러 (모달 내부) ---
@@ -240,6 +265,14 @@ const MyPageEditProfile = () => {
               >
                 사진 변경
               </button>
+              <button
+                type="button"
+                className="edit-btn"
+                style={{ marginLeft: "8px", background: "#f0f0f0", color: "#666" }}
+                onClick={handleResetProfileImage}
+              >
+                기본 이미지로 변경
+              </button>
 
               <div className="form-section">
                 <div className="mypage-form-row">
@@ -254,6 +287,8 @@ const MyPageEditProfile = () => {
                       minLength={2}
                       maxLength={15}
                       autoComplete="off"
+                      pattern="^[^\s]+$"
+                      inputMode="text"
                     />
                   </div>
                   {/* 닉네임 안내/검사 메시지 */}

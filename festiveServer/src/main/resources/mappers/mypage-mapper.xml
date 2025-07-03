@@ -26,6 +26,13 @@
 		WITHDRAW_DATE = SYSDATE
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
+	
+	<!-- 기본 이미지로 변경 -->
+	<update id="resetProfileImage">
+        UPDATE MEMBER
+        SET PROFILE_IMAGE = ''
+        WHERE MEMBER_NO = #{memberNo}
+    </update>
 
 
 	<!-- 내가 작성한 게시글 조회 -->
