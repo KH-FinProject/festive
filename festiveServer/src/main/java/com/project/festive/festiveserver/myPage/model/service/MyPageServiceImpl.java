@@ -223,11 +223,9 @@ public class MyPageServiceImpl implements MyPageService {
                 ));
     }
 
-
     @Override
     public void removeFavorite(long memberNo, String contentId) {
         mapper.deleteFavorite(memberNo, contentId);
     }
     
-
 }
