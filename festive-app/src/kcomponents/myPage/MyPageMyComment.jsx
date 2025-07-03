@@ -54,7 +54,6 @@ const MyPageMyComment = () => {
             <h1>내가 쓴 게시글 및 댓글</h1>
             <p>내가 쓴 댓글 목록입니다.</p>
           </div>
-          <br />
           <div className="mypage-tabs">
             <button
               className="mypage-tab"
@@ -81,11 +80,6 @@ const MyPageMyComment = () => {
                   onClick={() => navigate(`/wagle/${comment.boardNo}`)}
                 >
                   <div className="mypage-comment-content">
-                    <div className="mypage-comment-avatar">
-                      {comment.memberNickname
-                        ? comment.memberNickname.charAt(0)
-                        : "이"}
-                    </div>
                     <div className="mypage-comment-details">
                       <div className="mypage-comment-meta">
                         <span className="mypage-comment-nickname">

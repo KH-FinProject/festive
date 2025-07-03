@@ -93,6 +93,10 @@
     gap: 16px;
 }
 
+.myfestival-fixedBox {
+    min-height: 320px;
+}
+
 /* Festival Item Card - 완전히 새로운 디자인 */
 .festival-item-card {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);

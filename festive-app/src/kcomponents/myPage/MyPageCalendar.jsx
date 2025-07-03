@@ -216,68 +216,72 @@ const MyPageCalendar = () => {
                         />
                     </div>
                     <br /><br />
-                    {/* ===== 찜한 축제 목록 검색창 추가 ===== */}
-                    <div className="myfestival-search-bar" style={{
-                        display: "flex", alignItems: "center", marginBottom: 16
-                    }}>
-                        <input
-                            type="text"
-                            placeholder="축제명을 검색하세요"
-                            value={searchKeyword}
-                            onChange={e => setSearchKeyword(e.target.value)}
-                            style={{
-                                width: "100%",
-                                maxWidth: 320,
-                                padding: "10px 14px",
-                                border: "1px solid #e2e8f0",
-                                borderRadius: 8,
-                                fontSize: 16,
-                                outline: "none",
-                                background: "#fafafa"
-                            }}
-                        />
-                    </div>
-                    {/* ===== 찜한 축제 목록 ===== */}
-                    <div className="myfestival-list-section">
-                        <div className="festival-list paginated-list">
-                            {currentItems(filteredFestivals).length > 0 ? (
-                                currentItems(filteredFestivals).map((festival) => (
-                                    <div key={festival.contentId} className="festival-item-card">
-                                        <div className="myfestival-info">
-                                            <div className="myfestival-left">
-                                                <span
-                                                    className="myfestival-name"
-                                                    onClick={() => handleFestivalClick(festival.contentId)}
-                                                    style={{ cursor: 'pointer' }}
+                    {/* 전체 축제 목록 검색창까지 */}
+                    <div className="myfestival-fixedBox">
+
+                        {/* ===== 찜한 축제 목록 검색창 ===== */}
+                        <div className="myfestival-search-bar" style={{
+                            display: "flex", alignItems: "center", marginBottom: 16
+                        }}>
+                            <input
+                                type="text"
+                                placeholder="축제명을 검색하세요"
+                                value={searchKeyword}
+                                onChange={e => setSearchKeyword(e.target.value)}
+                                style={{
+                                    // width: "100%",
+                                    width: "750px",
+                                    padding: "10px 14px",
+                                    border: "1px solid #e2e8f0",
+                                    borderRadius: 8,
+                                    fontSize: 16,
+                                    outline: "none",
+                                    background: "#fafafa"
+                                }}
+                            />
+                        </div>
+                        {/* ===== 찜한 축제 목록 ===== */}
+                        <div className="myfestival-list-section">
+                            <div className="festival-list paginated-list">
+                                {currentItems(filteredFestivals).length > 0 ? (
+                                    currentItems(filteredFestivals).map((festival) => (
+                                        <div key={festival.contentId} className="festival-item-card">
+                                            <div className="myfestival-info">
+                                                <div className="myfestival-left">
+                                                    <span
+                                                        className="myfestival-name"
+                                                        onClick={() => handleFestivalClick(festival.contentId)}
+                                                        style={{ cursor: 'pointer' }}
+                                                    >
+                                                        {festival.title}
+                                                    </span>
+                                                    <p className="myfestival-details">
+                                                        {festival.formattedStartDate} ~ {festival.formattedEndDate}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    className="festival-btn"
+                                                    onClick={() => handleUnfavorite(festival.contentId)}
                                                 >
-                                                    {festival.title}
-                                                </span>
-                                                <p className="myfestival-details">
-                                                    {festival.formattedStartDate} ~ {festival.formattedEndDate}
-                                                </p>
+                                                    찜 해제
+                                                </button>
                                             </div>
-                                            <button
-                                                className="festival-btn"
-                                                onClick={() => handleUnfavorite(festival.contentId)}
-                                            >
-                                                찜 해제
-                                            </button>
                                         </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p>찜한 축제가 없습니다.</p>
+                                    ))
+                                ) : (
+                                    <p>찜한 축제가 없습니다.</p>
+                                )}
+                            </div>
+                            {/* 페이지네이션 */}
+                            {filteredFestivals.length > 0 && totalPages > 1 && (
+                                <Pagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={goToPage}
+                                    className="festival-pagination"
+                                />
                             )}
                         </div>
-                        {/* 페이지네이션 */}
-                        {filteredFestivals.length > 0 && totalPages > 1 && (
-                            <Pagination
-                                currentPage={currentPage}
-                                totalPages={totalPages}
-                                onPageChange={goToPage}
-                                className="festival-pagination"
-                            />
-                        )}
                     </div>
                 </section>
             </main>
