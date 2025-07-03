@@ -230,40 +230,4 @@ public class MyPageServiceImpl implements MyPageService {
     }
     
 
-            } catch (Exception e) {
-                // 특정 contentId 조회 실패 시 로그를 남기고 계속 진행
-                System.err.println("Error fetching details for contentId " + contentId + ": " + e.getMessage());
-            }
-        }
-        
-        return festivalDetails;
-    }
-
-    // detailCommon2에는 날짜 정보가 없으므로, searchFestival2 API를 사용하여 날짜를 가져오는 헬퍼 메서드
-    private MyCalendarDto getFestivalDates(String contentId) throws Exception {
-         // 실제로는 contentId로 특정 축제 하나만 검색하는 기능이 TourAPI에 마땅치 않습니다.
-         // 가장 좋은 방법은 사용자가 축제를 '찜'할 때, 해당 축제의 시작일과 종료일을 FAVORITES 테이블 또는
-         // 별도의 테이블에 함께 저장하는 것입니다.
-         // 아래는 contentId가 제목에 포함된 축제를 검색하는 임시방편의 코드입니다.
-         
-         // **권장사항**: 찜 할 때 축제명, 시작일, 종료일을 DB에 같이 저장하세요!
-         // ALTER TABLE FAVORITES ADD (TITLE VARCHAR2(255), START_DATE VARCHAR2(8), END_DATE VARCHAR2(8));
-         // 이렇게 하면 아래의 불필요한 API 호출을 모두 제거하고 DB 조회만으로 해결 가능합니다.
-         
-         // 아래는 임시 코드입니다.
-       MyCalendarDto dto = new MyCalendarDto();
-         // ... TourAPI (searchFestival2) 호출하여 contentId에 해당하는 축제 날짜 정보 조회 로직 ...
-         // 예시로 임의의 값을 넣겠습니다.
-         dto.setStartDate("20250701"); // YYYYMMDD
-         dto.setEndDate("20250710"); // YYYYMMDD
-         return dto;
-    }
-
-
-    @Override
-    public void removeFavorite(long memberNo, String contentId) {
-        mapper.deleteFavorite(memberNo, contentId);
-    }
-    
-
 }
