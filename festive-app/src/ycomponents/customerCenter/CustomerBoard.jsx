@@ -47,6 +47,7 @@ const CustomerBoard = ({
           id: post.boardNo,
           title: post.boardTitle,
           author: post.memberNickname || "익명",
+          memberProfileImage: post.memberProfileImage,
           date: post.boardCreateDate
             ? new Date(post.boardCreateDate)
                 .toLocaleDateString("ko-KR", {
@@ -154,9 +155,22 @@ const CustomerBoard = ({
           </div>
           <div className="customer-board-meta">
             <img
-              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
+              src={
+                post.memberProfileImage
+                  ? `http://localhost:8080${post.memberProfileImage}`
+                  : "/logo.png"
+              }
               alt="프로필"
               className="customer-profile-img"
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                marginRight: "6px",
+              }}
+              onError={(e) => {
+                e.target.src = "/logo.png";
+              }}
             />
             <span className="customer-board-author">{post.author}</span>
             <span className="customer-board-date">{post.date}</span>

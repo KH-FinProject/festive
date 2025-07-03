@@ -70,8 +70,21 @@ function CommentItem({
       <div className="comment-main-row">
         <img
           className="comment-avatar"
-          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
+          src={
+            comment.memberProfileImage
+              ? `http://localhost:8080${comment.memberProfileImage}`
+              : "/logo.png"
+          }
           alt="프로필"
+          style={{
+            width: "22px",
+            height: "22px",
+            borderRadius: "50%",
+            marginRight: "6px",
+          }}
+          onError={(e) => {
+            e.target.src = "/logo.png";
+          }}
         />
         <span className="comment-author">{comment.memberNickname}</span>
         <span className="comment-date">
@@ -156,8 +169,21 @@ function CommentItem({
               <div className="comment-main-row">
                 <img
                   className="comment-avatar"
-                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23f0f0f0'/%3E%3Ccircle cx='40' cy='35' r='12' fill='%23999'/%3E%3Cpath d='M20 65 Q40 55 60 65' fill='%23999'/%3E%3C/svg%3E"
+                  src={
+                    reply.memberProfileImage
+                      ? `http://localhost:8080${reply.memberProfileImage}`
+                      : "/logo.png"
+                  }
                   alt="프로필"
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "50%",
+                    marginRight: "6px",
+                  }}
+                  onError={(e) => {
+                    e.target.src = "/logo.png";
+                  }}
                 />
                 <span className="comment-author">{reply.memberNickname}</span>
                 <span className="comment-date">
@@ -384,6 +410,7 @@ function WagleDetail() {
         commentCount: data.boardCommentCount,
         images: data.boardImages || [],
         memberNo: data.memberNo,
+        memberProfileImage: data.memberProfileImage,
       };
 
       setPost(formattedPost);
@@ -735,7 +762,24 @@ function WagleDetail() {
             </div>
           </div>
           <div className="wagle-detail-meta">
-            <span className="profile-img"></span>
+            <img
+              className="wagle-profile-img"
+              src={
+                post.memberProfileImage
+                  ? `http://localhost:8080${post.memberProfileImage}`
+                  : "/logo.png"
+              }
+              alt="프로필"
+              style={{
+                width: "28px",
+                height: "28px",
+                borderRadius: "50%",
+                marginRight: "6px",
+              }}
+              onError={(e) => {
+                e.target.src = "/logo.png";
+              }}
+            />
             <span className="author">{post.author}</span>
             <span className="date">{post.date}</span>
             <span className="views">{post.views}</span>

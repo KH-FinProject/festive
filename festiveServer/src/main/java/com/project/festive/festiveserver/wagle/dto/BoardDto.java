@@ -32,13 +32,14 @@ public class BoardDto {
     private LocalDateTime boardUpdateDate;
     private String boardDeleteYn;
     private List<String> boardImages;
+    private String memberProfileImage;
     
     
     
     // 목록 조회용 생성자
     public BoardDto(Long boardNo, String boardTitle, String memberNickname, 
                    LocalDateTime boardCreateDate, Integer boardViewCount, 
-                   Integer boardLikeCount, Integer boardCommentCount) {
+                   Integer boardLikeCount, Integer boardCommentCount, String memberProfileImage) {
         this.boardNo = boardNo;
         this.boardTitle = boardTitle;
         this.memberNickname = memberNickname;
@@ -46,5 +47,6 @@ public class BoardDto {
         this.boardViewCount = boardViewCount;
         this.boardLikeCount = boardLikeCount;
         this.boardCommentCount = boardCommentCount;
+        this.memberProfileImage = memberProfileImage;
     }
 } 

@@ -107,6 +107,9 @@ public class SecurityConfig {
             // 관리자 페이지
             .requestMatchers("/admin/**").hasRole("ADMIN")
 
+            // 프로필 이미지
+            .requestMatchers("/profile-images/**").permitAll()
+
             // 정적 리소스/시스템 경로 - Spring Security 권장 방식
             .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
             .requestMatchers("/*.ico", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg").permitAll()

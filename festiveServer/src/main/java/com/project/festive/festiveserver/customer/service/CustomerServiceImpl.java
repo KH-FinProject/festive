@@ -204,6 +204,7 @@ public class CustomerServiceImpl implements CustomerService {
         dto.setBoardCreateDate(boardDto.getBoardCreateDate());
         dto.setBoardUpdateDate(boardDto.getBoardUpdateDate());
         dto.setBoardDeleteYn(boardDto.getBoardDeleteYn());
+        dto.setMemberProfileImage(boardDto.getMemberProfileImage());
         
         // 답변 상태 확인
         List<CommentDto> comments = wagleService.getCommentList(boardDto.getBoardNo());

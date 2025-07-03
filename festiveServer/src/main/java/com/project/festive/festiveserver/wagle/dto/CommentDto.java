@@ -33,6 +33,8 @@ public class CommentDto {
     private Long likes; // XML의 LIKE_COUNT와 매핑되는 필드 추가
     
     // 목록 조회용 생성자
+    private String memberProfileImage;
+    
     public CommentDto(Long commentNo, Long boardNo, Long memberNo, String memberNickname,
                      String commentContent, Long commentParentNo, LocalDateTime commentCreateDate) {
         this.commentNo = commentNo;
