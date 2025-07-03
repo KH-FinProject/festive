@@ -29,10 +29,7 @@ const MyPageMyPost = () => {
   return (
     <div className="page-container">
       <main className="main-content">
-        <MyPageSideBar
-          name={name}
-          profileImageUrl={profileImageUrl}
-        />
+        <MyPageSideBar name={name} profileImageUrl={profileImageUrl} />
         <section className="withdrawal-section">
           <div className="profile-header">
             <h1>내가 쓴 게시글 및 댓글</h1>

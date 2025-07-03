@@ -4,6 +4,8 @@ import com.project.festive.festiveserver.ai.dto.ChatRequest;
 import com.project.festive.festiveserver.ai.dto.ChatResponse;
 // TourApiRequest import 제거 - 프론트엔드에서 직접 처리
 // import reactor.core.publisher.Flux;
+import java.util.List;
+import java.util.Map;
 
 public interface AITravelService {
     

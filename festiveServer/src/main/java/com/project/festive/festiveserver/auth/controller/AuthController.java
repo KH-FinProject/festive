@@ -108,7 +108,7 @@ public class AuthController {
             ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
                     .httpOnly(true)
                     .maxAge(30 * 60)
-                    .path("/")
+                    .path("/auth/refresh")
                     .build();
 
             return ResponseEntity.ok()
@@ -154,6 +154,8 @@ public class AuthController {
                     .httpOnly(true)
                     .maxAge(30 * 60)
                     .path("/")
+                    .sameSite("Lax")
+                    .secure(false)
                     .build();
 
             ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", (String)result.get("refreshToken"))
@@ -190,9 +192,11 @@ public class AuthController {
         }
 
         ResponseCookie expiredAccessToken = ResponseCookie.from("accessToken", "")
-            .httpOnly(true).path("/").maxAge(0).build();
+            .httpOnly(true).path("/").maxAge(0)
+            .sameSite("Lax").secure(false).build();
         ResponseCookie expiredRefreshToken = ResponseCookie.from("refreshToken", "")
-            .httpOnly(true).path("/").maxAge(0).build();
+            .httpOnly(true).path("/").maxAge(0)
+            .sameSite("Lax").secure(false).build();
 
         log.info("로그아웃 처리 완료 - memberNo: {}", memberNo);
 
@@ -260,6 +264,8 @@ public class AuthController {
         .httpOnly(true)
         .maxAge(30 * 60)
         .path("/")
+        .sameSite("Lax")
+        .secure(false)
         .build();
 
         return ResponseEntity.ok()

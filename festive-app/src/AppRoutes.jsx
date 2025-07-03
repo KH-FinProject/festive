@@ -19,6 +19,7 @@ import MyPageMyComment from "./kcomponents/myPage/MyPageMyComment.jsx";
 import MyPageWithdrawal from "./kcomponents/myPage/MyPageWithdrawal.jsx";
 import AITravelCourse from "./ycomponents/aitravel/AITravelCourse.jsx";
 import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
+import TravelCourseDetail from "./ycomponents/aitravel/TravelCourseDetail.jsx";
 import AdminRoutes from "./mcomponents/Admin.jsx";
 import Booth from "./scomponents/booth/Booth.jsx";
 import LocalFestive from "./jcomponents/LocalFestive/LocalFestive.jsx";
@@ -44,6 +45,7 @@ const AppRoutes = () => {
         <Route path="/this-month" element={<FestivalMainPage />} />
         <Route path="/ai-travel" element={<AITravelCourse />} />
         <Route path="/ai-travel/chat" element={<AIChatbot />} />
+        <Route path="/course/:courseId" element={<TravelCourseDetail />} />
         <Route path="/calendar" element={<FestiveCalendar />} />
         <Route path="/mypage/profile" element={<MyPageEditProfile />} />
         <Route path="/mypage/info" element={<MyPageEditInfo />} />

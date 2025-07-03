@@ -17,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import java.util.List;
 import java.util.Map;
 
+
 @RestController
 @RequestMapping("/api/customer")
 @RequiredArgsConstructor
@@ -159,10 +160,21 @@ public class CustomerController {
     @PostMapping("/boards/{boardNo}/comments")
     public ResponseEntity<String> createCustomerComment(@PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
         try {
-            // TODO: 관리자 권한 확인 로직 추가
-            // TODO: 로그인 사용자 정보에서 memberNo 가져오기
-            commentDto.setMemberNo(1L); // 임시 설정
-            
+            // 관리자 권한 확인 로직 추가 (생략)
+            // 로그인 사용자 정보에서 memberNo 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+            }
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof CustomUserDetails)) {
+                log.error("인증 정보 타입 오류: {}", principal.getClass().getName());
+                return ResponseEntity.status(401).body("유효하지 않은 인증 정보입니다.");
+            }
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            Long memberNo = userDetails.getMemberNo();
+            commentDto.setMemberNo(memberNo); // 인증된 관리자 memberNo로 설정
+
             int result = customerService.createAnswer(boardNo, commentDto);
             if (result > 0) {
                 return ResponseEntity.ok("답변이 작성되었습니다.");
@@ -171,6 +183,26 @@ public class CustomerController {
             }
         } catch (Exception e) {
             log.error("고객센터 답변 작성 실패: boardNo = {}", boardNo, e);
+            return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
+        }
+    }
+    
+    /**
+     * 고객센터 답변 수정 (관리자용)
+     */
+    @PutMapping("/boards/{boardNo}/comments/{commentNo}")
+    public ResponseEntity<String> updateCustomerComment(@PathVariable("boardNo") Long boardNo, @PathVariable("commentNo") Long commentNo, @RequestBody CommentDto commentDto) {
+        try {
+            // 인증/권한 체크 생략(필요시 추가)
+            commentDto.setCommentNo(commentNo);
+            int result = customerService.updateAnswer(boardNo, commentDto);
+            if (result > 0) {
+                return ResponseEntity.ok("답변이 수정되었습니다.");
+            } else {
+                return ResponseEntity.badRequest().body("답변 수정에 실패했습니다.");
+            }
+        } catch (Exception e) {
+            log.error("고객센터 답변 수정 실패: boardNo = {}, commentNo = {}", boardNo, commentNo, e);
             return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
         }
     }

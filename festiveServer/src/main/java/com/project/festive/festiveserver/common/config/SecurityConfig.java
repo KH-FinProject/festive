@@ -95,6 +95,11 @@ public class SecurityConfig {
 
             // AI 서비스 - 공개
             .requestMatchers("/api/ai/chat", "/api/ai/health").permitAll()
+            .requestMatchers("/api/ai/place-overview/**", "/api/ai/place-images/**").permitAll()
+
+            // 여행코스 - 공유 코스 조회는 공개, 나머지는 인증 필요
+            .requestMatchers(HttpMethod.GET, "/api/travel-course/shared-courses").permitAll()
+            .requestMatchers("/api/travel-course/**").authenticated()
 
             // 신고 - 등록/상세만 공개, 나머지는 관리자
             .requestMatchers(HttpMethod.POST, "/api/reports").permitAll()

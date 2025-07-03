@@ -1,5 +1,7 @@
 package com.project.festive.festiveserver.admin.model.service;
 
+import java.util.List;
+
 import com.project.festive.festiveserver.member.dto.MemberDto;
 
 public interface AdminService {
@@ -9,5 +11,25 @@ public interface AdminService {
 
 	// 관리자 계정 발급
 	String createAdminAccount(MemberDto member);
+
+	/** 탈퇴 회원 조회
+	 * @return
+	 * @author 미애
+	 */
+	List<MemberDto> selectWithdrawMembers();
+
+	/** 회원 영구삭제
+	 * @param memberNoList
+	 * @return
+	 * @author 미애
+	 */
+	int deleteWithdrawMember(List<Integer> memberNoList);
+
+	/** 탈퇴 회원 복구
+	 * @param memberNoList
+	 * @return
+	 * @author 미애
+	 */
+	int updateWithdrawMember(List<Integer> memberNoList);
 
 }

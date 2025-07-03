@@ -112,7 +112,8 @@
             READ_COUNT, BOARD_DEL_FL, BOARD_CREAT_DATE
         ) VALUES (
             #{boardNo}, #{boardTypeNo}, #{memberNo}, #{boardTitle}, #{boardContent}, 
-            0, 'N', SYSDATE
+            0, 'N', 
+            SYSDATE
         )
     </insert>
 
