@@ -28,13 +28,6 @@ export const usePagination = ({
     (page) => {
       if (page < 1 || page > totalPages) return;
       setCurrentPage(page);
-
-      setTimeout(() => {
-        const list = document.querySelector(".paginated-list");
-        if (list) {
-          list.scrollIntoView({ behavior: "auto", block: "start" });
-        }
-      }, 0);
     },
     [totalPages]
   );
@@ -158,9 +151,8 @@ function Pagination({
         <button
           type="button"
           key={pageNum}
-          className={`pagination-btn${
-            currentPage === pageNum ? " active" : ""
-          }`}
+          className={`pagination-btn${currentPage === pageNum ? " active" : ""
+            }`}
           onClick={() => onPageChange(pageNum)}
           aria-label={`${pageNum} 페이지로 이동`}
           aria-current={currentPage === pageNum ? "page" : undefined}

@@ -352,19 +352,19 @@
 /* FestiveCalendar.css에 추가 */
 
 /* 캘린더 전체를 둥글게 */
-.fc {
+.calendar-container .fc {
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(157, 196, 254, 0.2);
     position: relative;
 }
 
-.fc-daygrid-event {
+.calendar-container .fc-daygrid-event {
     border-radius: 0px;
 }
 
 /* 헤더 스타일링 */
-.fc-header-toolbar {
+.calendar-container .fc-header-toolbar {
     background: linear-gradient(135deg, rgb(105, 105, 105) 0%);
     padding: 15px;
     margin-bottom: 0;
@@ -372,49 +372,49 @@
     z-index: 1;
 }
 
-.fc-toolbar-title {
+.calendar-container .fc-toolbar-title {
     color: white !important;
     font-size: 1.3rem;
     font-weight: 600;
 }
 
 /* 버튼 스타일링 */
-.fc-button {
+.calendar-container .fc-button {
     background-color: rgba(255, 255, 255, 0.2) !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
     border-radius: 8px !important;
     color: white !important;
 }
 
-.fc-button:hover {
+.calendar-container .fc-button:hover {
     background-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* 날짜 셀 호버 효과 */
-.fc-daygrid-day:hover {
+.calendar-container .fc-daygrid-day:hover {
     background-color: #f8faff;
     cursor: pointer;
 }
 
 /* 축제 개수별 색상 클래스 (선택사항 - 더 세밀한 스타일링이 필요한 경우) */
-.fc-event.festival-low {
+.calendar-container .fc-event.festival-low {
     border-left: 4px solid #74c314 !important;
 }
 
-.fc-event.festival-mediumone {
+.calendar-container .fc-event.festival-mediumone {
     border-left: 4px solid #60a5fa !important;
 }
 
-.fc-event.festival-mediumtwo {
+.calendar-container .fc-event.festival-mediumtwo {
     border-left: 4px solid rgb(220, 143, 0) !important;
 }
 
-.fc-event.festival-high {
+.calendar-container .fc-event.festival-high {
     border-left: 4px solid #cd8bd5 !important;
 }
 
 /* 이벤트 스타일링 */
-.fc-event {
+.calendar-container .fc-event {
     background-color: white !important;
     border: none !important;
     /* border-radius: 6px !important; */
@@ -426,14 +426,14 @@
     z-index: 2;
 }
 
-.fc-event:hover {
+.calendar-container .fc-event:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
     transform: translateY(-1px);
     transition: all 0.2s ease;
 }
 
-.fc-event,
-.fc-event * {
+.calendar-container .fc-event,
+.calendar-container .fc-event * {
     color: black !important;
 }
 

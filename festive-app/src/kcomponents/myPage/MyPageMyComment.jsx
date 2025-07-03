@@ -4,16 +4,28 @@ import "./MyPageMyComment.css";
 import MyPageSideBar from "./MyPageSideBar";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
+import Pagination, { usePagination } from "./Pagination";
+
+const PAGE_SIZE = 5;
 
 const MyPageMyComment = () => {
   const { member } = useAuthStore();
   const [comments, setComments] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); // 페이지네이션 구현 시 필요
   const navigate = useNavigate();
 
   const location = useLocation();
   const { name, profileImageUrl } = location.state || {};
 
+  // 커스텀 페이지네이션 훅
+  const {
+    currentPage,
+    totalPages,
+    goToPage,
+    currentItems
+  } = usePagination({
+    totalItems: comments.length,
+    pageSize: PAGE_SIZE,
+  });
 
   useEffect(() => {
     if (!member) {
@@ -28,7 +40,7 @@ const MyPageMyComment = () => {
       .then((res) => res.json())
       .then((data) => setComments(data))
       .catch((err) => console.error(err));
-  }, [member]);
+  }, [member, navigate]); // navigate 추가 권장
 
   return (
     <div className="page-container">
@@ -60,13 +72,12 @@ const MyPageMyComment = () => {
           </div>
 
           <br />
-          <div className="mypage-comments-list">
+          <div className="mypage-comments-list paginated-list">
             {comments.length > 0 ? (
-              comments.map((comment) => (
+              currentItems(comments).map((comment) => (
                 <div
                   key={comment.commentNo}
                   className="mypage-comment-item"
-                  // 이 부분을 추가하여 클릭 시 해당 게시글로 이동
                   onClick={() => navigate(`/wagle/${comment.boardNo}`)}
                 >
                   <div className="mypage-comment-content">
@@ -99,21 +110,13 @@ const MyPageMyComment = () => {
             )}
           </div>
           <br />
-          <div className="pagination">
-            <button className="page-btn">{"<"}</button>
-            <button className="page-btn">{"<<"}</button>
-            {[1, 2, 3, 4, 5].map((page) => (
-              <button
-                key={page}
-                className={`page-btn ${page === currentPage ? "active" : ""}`}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
-            ))}
-            <button className="page-btn">{">"}</button>
-            <button className="page-btn">{">>"}</button>
-          </div>
+          {/* 페이지네이션 */}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            className="wagle-pagination"
+          />
         </section>
       </main>
     </div>
