@@ -32,6 +32,7 @@ const TravelCourseDetail = () => {
 
   const key = import.meta.env.VITE_KAKAO_MAP_API_KEY;
   const mapRef = useRef(null);
+  const [map, setMap] = useState(null);
   const [loadingMap, error] = useKakaoLoader({
     appkey: key,
     libraries: ["services"],
@@ -242,7 +243,7 @@ const TravelCourseDetail = () => {
       loading,
       courseDetailsLength: courseDetails.length,
       selectedDay,
-      mapRef: !!mapRef.current,
+      map: !!map,
       kakao: !!window.kakao,
       polylinePathLength: polylinePath.length,
       polylinePath,
@@ -260,8 +261,8 @@ const TravelCourseDetail = () => {
       return;
     }
 
-    if (!mapRef.current) {
-      console.log("❌ mapRef.current가 없음");
+    if (!map) {
+      console.log("❌ map이 없음");
       return;
     }
     if (!window.kakao) {
@@ -276,12 +277,6 @@ const TravelCourseDetail = () => {
     // 지도가 완전히 로드된 후 실행하도록 지연 추가
     const timer = setTimeout(() => {
       console.log("⏰ 지연 후 거리 표시 시작");
-      const map = mapRef.current;
-
-      if (!map) {
-        console.log("❌ 지연 후에도 map이 없음");
-        return;
-      }
 
       // 기존 거리 표시 제거
       if (map._distanceOverlays) {
@@ -349,14 +344,12 @@ const TravelCourseDetail = () => {
     // 컴포넌트 언마운트 시 거리 표시 정리
     return () => {
       clearTimeout(timer);
-      if (mapRef.current && mapRef.current._distanceOverlays) {
-        mapRef.current._distanceOverlays.forEach((overlay) =>
-          overlay.setMap(null)
-        );
-        mapRef.current._distanceOverlays = [];
+      if (map && map._distanceOverlays) {
+        map._distanceOverlays.forEach((overlay) => overlay.setMap(null));
+        map._distanceOverlays = [];
       }
     };
-  }, [loading, courseDetails, polylinePath, calculateDistance]);
+  }, [loading, courseDetails, polylinePath, calculateDistance, map]);
 
   // areaCode 기준 지역명 반환
   const getRegionByAreaCode = (areaCode) => {
@@ -934,9 +927,9 @@ const TravelCourseDetail = () => {
             height: "100%",
           }}
           level={8}
-          ref={mapRef}
-          onCreate={(map) => {
-            mapRef.current = map;
+          onCreate={(mapInstance) => {
+            console.log("🗺️ Map onCreate 호출:", mapInstance);
+            setMap(mapInstance);
           }}
         >
           {/* 선택된 날짜의 마커들 */}

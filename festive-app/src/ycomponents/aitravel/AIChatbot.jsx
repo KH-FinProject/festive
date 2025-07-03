@@ -883,7 +883,7 @@ const AIChatbot = () => {
 
       if (result.success) {
         alert(
-          `✅ ${
+          ` ${
             saveData.isShared === "Y" ? "공유" : "개인"
           } 여행코스가 성공적으로 저장되었습니다!`
         );
@@ -897,9 +897,9 @@ const AIChatbot = () => {
 
       // 로그인 관련 오류인 경우 특별 처리
       if (error.message.includes("로그인") || error.message.includes("인증")) {
-        alert("🔒 로그인이 필요한 서비스입니다.\n다시 로그인해주세요!");
+        alert("로그인이 필요한 서비스입니다.\n다시 로그인해주세요!");
       } else {
-        alert(`❌ 저장 실패: ${error.message}`);
+        alert(` 저장 실패: ${error.message}`);
       }
     } finally {
       setIsSaving(false);
