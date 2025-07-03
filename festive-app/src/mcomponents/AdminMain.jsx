@@ -29,20 +29,6 @@ const AdminMain = () => {
               </div>
               <div className="chart">차트 들어가는 부분</div>
             </div>
-
-            {/* 신고 알림 안내 */}
-            <div className="reports-section">
-              <h2>실시간 신고 알림</h2>
-              <div className="reports-info">
-                <p>
-                  새로운 신고가 접수되면 실시간으로 알림을 받을 수 있습니다.
-                </p>
-                <p>
-                  신고 처리는 <strong>고객센터 관리</strong> 페이지에서 할 수
-                  있습니다.
-                </p>
-              </div>
-            </div>
           </main>
         </div>
       </div>

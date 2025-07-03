@@ -60,6 +60,10 @@ public class AdminController {
 		
 	}
 	
+	/** 탈퇴 회원 조회
+	 * @return
+	 * @author 미애
+	 */
 	@GetMapping("withdraw")
 	public ResponseEntity<Object> selectWithdrawMembers() {
 		try {
@@ -75,6 +79,11 @@ public class AdminController {
 	}
 	
 	
+	/** 탈퇴 회원 영구삭제
+	 * @param memberNoList
+	 * @return
+	 * @author 미애
+	 */
 	@PostMapping("withdrawDelete")
 	public ResponseEntity<Object> deleteWithdrawMember(@RequestBody List<Integer> memberNoList) {
 		try {
@@ -88,6 +97,11 @@ public class AdminController {
 		
 	}
 	
+	/** 탈퇴 회원 복구
+	 * @param memberNoList
+	 * @return
+	 * @author 미애
+	 */
 	@PostMapping("withdrawRestore")
 	public ResponseEntity<Object> updateWithdrawMember(@RequestBody List<Integer> memberNoList) {
 		try {
