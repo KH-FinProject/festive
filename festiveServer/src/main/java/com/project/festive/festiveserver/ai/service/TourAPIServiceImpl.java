@@ -27,7 +27,7 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public List<AITravelServiceImpl.TourAPIResponse.Item> fetchTourismDataSecurely(String areaCode, String sigunguCode, String contentTypeId) {
-        log.info(" TourAPI 데이터 조회 시작 - areaCode: {}, sigunguCode: {}, contentTypeId: {}", areaCode, sigunguCode, contentTypeId);
+        log.info("🔍 TourAPI 데이터 조회 시작 - areaCode: {}, sigunguCode: {}, contentTypeId: {}", areaCode, sigunguCode, contentTypeId);
         
         List<AITravelServiceImpl.TourAPIResponse.Item> results = new ArrayList<>();
         
@@ -39,6 +39,7 @@ public class TourAPIServiceImpl implements TourAPIService {
                 .queryParam("MobileApp", "festive")
                 .queryParam("_type", "json")
                 .queryParam("arrange", "O")
+                .queryParam("numOfRows", "20")  // 50 → 20으로 제한하여 성능 개선
                 .queryParam("areaCode", areaCode);
             
             // 시군구코드가 있고 "_" 포함되어 있으면 분리해서 사용
@@ -52,6 +53,7 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (contentTypeId != null && !contentTypeId.trim().isEmpty()) {
                 builder.queryParam("contentTypeId", contentTypeId);
+                log.info("📂 콘텐츠 타입 설정: {} ({})", contentTypeId, getContentTypeName(contentTypeId));
             }
             
             // URL 구성 후 serviceKey를 직접 추가 (이중 인코딩 방지)
@@ -68,18 +70,27 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
-                log.info("TourAPI 응답 길이: {}", responseBody.length());
+                log.info("✅ TourAPI 응답 성공 - 길이: {}", responseBody.length());
                 
                 // 응답 파싱 (JSON/XML 자동 감지)
                 results = parseTourAPIResponse(responseBody);
                 
-                log.info("TourAPI 데이터 조회 완료 - 총 {}개 아이템", results.size());
+                log.info("📋 TourAPI 데이터 조회 완료 - 총 {}개 아이템", results.size());
+                
+                // 축제 데이터인 경우 추가 로깅
+                if ("15".equals(contentTypeId)) {
+                    log.info("🎪 축제 데이터 수집 완료: {}개", results.size());
+                    for (int i = 0; i < Math.min(3, results.size()); i++) {
+                        AITravelServiceImpl.TourAPIResponse.Item item = results.get(i);
+                        log.info("  - 축제 {}: {}", i+1, item.getTitle());
+                    }
+                }
             } else {
-                log.warn("TourAPI 응답 실패 - status: {}", response.getStatusCode());
+                log.warn("❌ TourAPI 응답 실패 - status: {}", response.getStatusCode());
             }
             
         } catch (Exception e) {
-            log.error(" TourAPI 데이터 조회 실패 - areaCode: {}, error: {}", areaCode, e.getMessage(), e);
+            log.error("❌ TourAPI 데이터 조회 실패 - areaCode: {}, contentTypeId: {}, error: {}", areaCode, contentTypeId, e.getMessage(), e);
         }
         
         return results;
@@ -425,9 +436,21 @@ public class TourAPIServiceImpl implements TourAPIService {
         return null;
     }
     
-
-    
-
-    
+    /**
+     * 콘텐츠 타입 이름 반환
+     */
+    private String getContentTypeName(String contentTypeId) {
+        switch (contentTypeId) {
+            case "12": return "관광지";
+            case "14": return "문화시설";
+            case "15": return "축제공연행사";
+            case "25": return "여행코스";
+            case "28": return "레포츠";
+            case "32": return "숙박";
+            case "38": return "쇼핑";
+            case "39": return "음식점";
+            default: return "기타";
+        }
+    }
 
 } 

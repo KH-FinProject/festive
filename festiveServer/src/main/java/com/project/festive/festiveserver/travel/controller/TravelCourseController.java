@@ -137,15 +137,16 @@ public class TravelCourseController {
     }
     
     /**
-     * 여행코스 상세 정보 조회
+     * 여행코스 상세 정보 조회 (공유된 코스는 인증 없이, 개인 코스는 본인만 접근 가능)
      */
     @GetMapping("/{courseNo}")
-    public ResponseEntity<Map<String, Object>> getCourseDetails(@PathVariable Long courseNo) {
+    public ResponseEntity<Map<String, Object>> getCourseDetails(
+            @PathVariable Long courseNo,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         
         try {
             TravelCourse course = travelCourseService.getTravelCourseWithDetails(courseNo);
-            List<TravelCourseDetail> details = travelCourseService.getTravelCourseDetails(courseNo);
             
             if (course == null) {
                 response.put("success", false);
@@ -153,14 +154,35 @@ public class TravelCourseController {
                 return ResponseEntity.notFound().build();
             }
             
+            // 공유된 코스가 아닌 경우 본인 확인 필요
+            if (!"Y".equals(course.getIsShared())) {
+                if (userDetails == null) {
+                    response.put("success", false);
+                    response.put("message", "로그인이 필요합니다.");
+                    return ResponseEntity.status(401).body(response);
+                }
+                
+                // 본인 코스가 아닌 경우 접근 거부
+                if (!course.getMemberNo().equals(userDetails.getMemberNo())) {
+                    response.put("success", false);
+                    response.put("message", "접근 권한이 없습니다.");
+                    return ResponseEntity.status(403).body(response);
+                }
+            }
+            
+            List<TravelCourseDetail> details = travelCourseService.getTravelCourseDetails(courseNo);
+            
             response.put("success", true);
             response.put("course", course);
             response.put("details", details);
             
+            log.info("✅ 여행코스 상세 조회 성공 - 코스번호: {}, 공유여부: {}", 
+                    courseNo, course.getIsShared());
+            
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            log.error("❌ 여행코스 상세 조회 실패", e);
+            log.error("❌ 여행코스 상세 조회 실패 - 코스번호: {}", courseNo, e);
             response.put("success", false);
             response.put("message", "여행코스 상세 조회에 실패했습니다.");
             return ResponseEntity.status(500).body(response);

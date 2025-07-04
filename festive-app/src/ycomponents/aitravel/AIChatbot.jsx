@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import axiosApi from "../../api/axiosAPI";
 import "./AIChatbot.css";
 import AItitle from "./AItitle";
 import TravelCourseSaveModal from "./TravelCourseSaveModal";
@@ -349,7 +351,7 @@ const AIChatbot = () => {
     const bounds = new window.kakao.maps.LatLngBounds();
 
     // 🎪 축제 검색인지 여행코스 검색인지 구분
-    const isFestivalOnly = travelInfo.requestType === "festival_only";
+    const isFestivalOnly = travelInfo.requestType === "festival_info";
 
     console.log(
       `🗺️ 마커 표시 모드: ${isFestivalOnly ? "축제" : "여행"}, ${
@@ -665,17 +667,19 @@ const AIChatbot = () => {
       console.log("🛡️ 보안 강화된 AI 시스템 시작:", userMessage);
 
       // 🎯 백엔드에 원본 메시지만 전달 - 모든 TourAPI 처리를 백엔드가 안전하게 담당
-      const response = await fetch(`${API_BASE_URL}/ai/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage }),
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/ai/chat`,
+        { message: userMessage },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error(`서버 오류: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = response.data;
       console.log("✅ 백엔드에서 TourAPI 통합 처리 완료:", data);
 
       const content = data.content || "죄송합니다. 응답을 생성할 수 없습니다.";
@@ -782,13 +786,23 @@ const AIChatbot = () => {
         courseDescription: data.courseDescription, // AI가 생성한 day별 코스 설명
       });
 
-      // 🎯 여행코스 저장 가능 여부 확인 (축제가 아닌 여행 추천만, 필터링된 데이터 기준)
+      // 🎯 여행코스 저장 가능 여부 확인 (여행 계획 요청만 저장 가능)
       const hasFilteredLocations = finalLocations && finalLocations.length > 0;
       const isTravelRecommendation =
-        data.requestType && !data.requestType.includes("festival");
+        data.requestType &&
+        (data.requestType === "travel_only" ||
+          data.requestType === "festival_travel");
+      console.log("🔍 저장 버튼 조건 확인:", {
+        requestType: data.requestType,
+        hasFilteredLocations,
+        isTravelRecommendation,
+        canSave: hasFilteredLocations && isTravelRecommendation,
+      });
       setCanSaveCourse(hasFilteredLocations && isTravelRecommendation);
 
       console.log("✅ 백엔드 중심 보안 시스템 완료 - 타입:", data.requestType);
+      console.log("🔍 travelCourse 데이터 확인:", data.travelCourse);
+      console.log("🔍 locations 길이:", data.locations?.length || 0);
       if (isRejectedRequest) {
         console.log("🚫 일반 대화 요청 거부됨 - 여행/축제 안내 메시지 표시");
       } else {
@@ -834,50 +848,11 @@ const AIChatbot = () => {
     try {
       console.log("🚀 여행코스 저장 시작:", saveData);
 
-      // JWT 토큰 가져오기 (쿠키 또는 로컬스토리지)
-      const getAuthToken = () => {
-        // 1. 쿠키에서 토큰 찾기
-        const cookies = document.cookie.split(";");
-        for (let cookie of cookies) {
-          const [name, value] = cookie.trim().split("=");
-          if (name === "access_token" || name === "jwt" || name === "token") {
-            return value;
-          }
-        }
+      // 🔐 axiosApi 사용으로 자동 인증 처리
+      const response = await axiosApi.post("/api/travel-course/save", saveData);
+      const result = response.data;
 
-        // 2. 로컬스토리지에서 토큰 찾기
-        return (
-          localStorage.getItem("access_token") ||
-          localStorage.getItem("jwt") ||
-          localStorage.getItem("token") ||
-          sessionStorage.getItem("access_token") ||
-          sessionStorage.getItem("jwt") ||
-          sessionStorage.getItem("token")
-        );
-      };
-
-      const token = getAuthToken();
-      console.log("🔑 인증 토큰 확인:", token ? "토큰 존재" : "토큰 없음");
-
-      const headers = {
-        "Content-Type": "application/json",
-      };
-
-      // 토큰이 있으면 Authorization 헤더에 추가
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/travel-course/save`, {
-        method: "POST",
-        headers: headers,
-        credentials: "include", // 쿠키 포함 (인증용)
-        body: JSON.stringify(saveData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error(result.message || "저장에 실패했습니다.");
       }
 
@@ -895,11 +870,11 @@ const AIChatbot = () => {
     } catch (error) {
       console.error("❌ 여행코스 저장 실패:", error);
 
-      // 로그인 관련 오류인 경우 특별 처리
-      if (error.message.includes("로그인") || error.message.includes("인증")) {
+      // axiosApi가 자동으로 401 에러 처리를 하므로 간단한 에러 메시지만 표시
+      if (error.response?.status === 401) {
         alert("로그인이 필요한 서비스입니다.\n다시 로그인해주세요!");
       } else {
-        alert(` 저장 실패: ${error.message}`);
+        alert(`저장 실패: ${error.response?.data?.message || error.message}`);
       }
     } finally {
       setIsSaving(false);
@@ -1105,9 +1080,8 @@ const AIChatbot = () => {
           !travelInfo.isRejected && (
             <div className="ai-chatbot-travel-summary">
               <div className="ai-chatbot-travel-info-grid">
-                {/* 축제 정보 섹션 - festival_only 또는 festival_with_travel일 때만 표시 */}
-                {(travelInfo.requestType === "festival_only" ||
-                  travelInfo.requestType === "festival_with_travel") &&
+                {/* 축제 정보 섹션 - festival_info일 때만 표시 */}
+                {travelInfo.requestType === "festival_info" &&
                   travelInfo.festivals &&
                   travelInfo.festivals.length > 0 && (
                     <div className="ai-chatbot-festival-info">
@@ -1248,18 +1222,25 @@ const AIChatbot = () => {
                     </div>
                   )}
 
-                {/* 🗺️ 여행지 갤러리 - 축제 검색이 아닐 때만 표시 */}
-                {travelInfo.requestType !== "festival_only" &&
+                {/* 🗺️ 여행지 갤러리 - 축제 정보 검색이 아닐 때만 표시 */}
+                {travelInfo.requestType !== "festival_info" &&
                   locations.length > 0 && (
-                    <div className="ai-chatbot-gallery-info">
+                    <div
+                      className="ai-chatbot-gallery-info"
+                      style={{
+                        maxHeight: "70vh",
+                        overflow: "auto",
+                      }}
+                    >
                       <h3>여행지 갤러리</h3>
 
-                      {/* 가로 스크롤 한 줄 배치 - 카카오맵 마커 수만큼만 표시 */}
+                      {/* 그리드 배치 - 모든 Day가 잘 보이도록 */}
                       <div
                         style={{
-                          display: "flex",
+                          display: "grid",
+                          gridTemplateColumns:
+                            "repeat(auto-fit, minmax(280px, 1fr))",
                           gap: "20px",
-                          overflowX: "auto",
                           paddingBottom: "20px",
                         }}
                       >
@@ -1291,9 +1272,6 @@ const AIChatbot = () => {
                             <div
                               key={`${location.day}-${location.dayIndex}`}
                               style={{
-                                minWidth: "300px",
-                                maxWidth: "320px",
-                                flex: "0 0 auto",
                                 background: "white",
                                 borderRadius: "12px",
                                 padding: "16px",
@@ -1303,6 +1281,7 @@ const AIChatbot = () => {
                                 border: `2px solid ${getDayColor(
                                   location.day
                                 )}20`,
+                                height: "fit-content",
                               }}
                               onClick={() => {
                                 // 클릭 시 해당 마커로 이동
@@ -1475,19 +1454,34 @@ const AIChatbot = () => {
                     </div>
                   )}
 
-                {/* 추천 코스 정보 - festival_with_travel 또는 travel_only일 때만 표시 */}
-                {(travelInfo.requestType === "festival_with_travel" ||
-                  travelInfo.requestType === "travel_only") &&
-                  locations.length > 0 && (
-                    <div className="ai-chatbot-course-info">
-                      <h3>추천 코스</h3>
-                      <div className="ai-chatbot-course-content">
-                        <h4 style={{ color: "#1e40af", marginBottom: "15px" }}>
-                          {travelInfo.travelCourse?.title || "AI 추천 여행코스"}
-                        </h4>
+                {/* 추천 코스 정보 - festival_travel 또는 travel_only일 때만 표시 */}
+                {(() => {
+                  const typeCheck =
+                    travelInfo.requestType === "festival_travel" ||
+                    travelInfo.requestType === "travel_only";
+                  const dataCheck =
+                    locations.length > 0 || travelInfo.travelCourse;
+                  console.log("🔍 추천코스 조건 확인:", {
+                    requestType: travelInfo.requestType,
+                    typeCheck,
+                    locationsLength: locations.length,
+                    hasTravelCourse: !!travelInfo.travelCourse,
+                    dataCheck,
+                    shouldShow: typeCheck && dataCheck,
+                  });
+                  return typeCheck && dataCheck;
+                })() && (
+                  <div className="ai-chatbot-course-info">
+                    <h3>추천 코스</h3>
+                    <div className="ai-chatbot-course-content">
+                      <h4 style={{ color: "#1e40af", marginBottom: "15px" }}>
+                        {travelInfo.travelCourse?.title || "AI 추천 여행코스"}
+                      </h4>
 
-                        {(() => {
-                          // 🎯 카카오맵과 동일한 locations 데이터를 Day별로 그룹화
+                      {(() => {
+                        // 🎯 locations가 있으면 locations 사용, 없으면 travelCourse.dailySchedule 사용
+                        if (locations.length > 0) {
+                          // 기존 locations 데이터를 Day별로 그룹화
                           const dayGroups = {};
                           locations.forEach((location) => {
                             if (!dayGroups[location.day]) {
@@ -1575,10 +1569,105 @@ const AIChatbot = () => {
                                 </ul>
                               </div>
                             ));
-                        })()}
-                      </div>
+                        } else if (travelInfo.travelCourse?.dailySchedule) {
+                          // travelCourse의 dailySchedule 사용
+                          return travelInfo.travelCourse.dailySchedule.map(
+                            (daySchedule, index) => (
+                              <div
+                                key={index + 1}
+                                style={{ marginBottom: "25px" }}
+                              >
+                                <h5
+                                  style={{
+                                    color: getDayColor(index + 1),
+                                    fontWeight: "bold",
+                                    fontSize: "16px",
+                                    marginBottom: "10px",
+                                    borderBottom: `2px solid ${getDayColor(
+                                      index + 1
+                                    )}`,
+                                    paddingBottom: "5px",
+                                  }}
+                                >
+                                  Day {index + 1}
+                                </h5>
+
+                                <ul
+                                  style={{
+                                    marginLeft: "0",
+                                    paddingLeft: "16px",
+                                  }}
+                                >
+                                  {daySchedule.places?.map(
+                                    (place, placeIndex) => (
+                                      <li
+                                        key={placeIndex}
+                                        style={{ marginBottom: "10px" }}
+                                      >
+                                        <span
+                                          style={{
+                                            color: getDayColor(index + 1),
+                                            fontWeight: "bold",
+                                          }}
+                                        >
+                                          {placeIndex + 1}.
+                                        </span>{" "}
+                                        <strong style={{ color: "#374151" }}>
+                                          {place.name}
+                                        </strong>
+                                        {place.category && (
+                                          <span
+                                            style={{
+                                              marginLeft: "8px",
+                                              background: getDayColor(
+                                                index + 1
+                                              ),
+                                              color: "white",
+                                              padding: "2px 6px",
+                                              borderRadius: "8px",
+                                              fontSize: "10px",
+                                            }}
+                                          >
+                                            {place.category}
+                                          </span>
+                                        )}
+                                        {place.address && (
+                                          <p
+                                            style={{
+                                              marginLeft: "20px",
+                                              fontSize: "12px",
+                                              color: "#64748b",
+                                              marginTop: "2px",
+                                            }}
+                                          >
+                                            📍 {place.address}
+                                          </p>
+                                        )}
+                                      </li>
+                                    )
+                                  )}
+                                </ul>
+                              </div>
+                            )
+                          );
+                        } else {
+                          // 둘 다 없으면 기본 메시지
+                          return (
+                            <div
+                              style={{
+                                textAlign: "center",
+                                padding: "20px",
+                                color: "#64748b",
+                              }}
+                            >
+                              <p>여행 코스 정보를 불러오는 중입니다...</p>
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* 교통 안내 - 여행코스가 있고 데이터가 있을 때만 표시 */}
                 {travelInfo.travelCourse &&
