@@ -51,6 +51,8 @@
   border-radius: 50%;
   background: linear-gradient(135deg, #f0f0f0, #ddd);
   flex-shrink: 0;
+  object-fit: cover;
+  border: 1px solid #e0e0e0;
 }
 
 .customer-detail-author {
