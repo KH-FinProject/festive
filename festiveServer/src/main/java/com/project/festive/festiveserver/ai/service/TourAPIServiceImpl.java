@@ -27,7 +27,7 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public List<AITravelServiceImpl.TourAPIResponse.Item> fetchTourismDataSecurely(String areaCode, String sigunguCode, String contentTypeId) {
-        log.info("🔍 TourAPI 데이터 조회 시작 - areaCode: {}, sigunguCode: {}, contentTypeId: {}", areaCode, sigunguCode, contentTypeId);
+
         
         List<AITravelServiceImpl.TourAPIResponse.Item> results = new ArrayList<>();
         
@@ -47,20 +47,17 @@ public class TourAPIServiceImpl implements TourAPIService {
                 String[] parts = sigunguCode.split("_");
                 if (parts.length >= 2) {
                     builder.queryParam("sigunguCode", parts[1]);
-                    log.info("🔧 시군구코드 분리: {} → {}", sigunguCode, parts[1]);
                 }
             }
             
             if (contentTypeId != null && !contentTypeId.trim().isEmpty()) {
                 builder.queryParam("contentTypeId", contentTypeId);
-                log.info("📂 콘텐츠 타입 설정: {} ({})", contentTypeId, getContentTypeName(contentTypeId));
             }
             
             // URL 구성 후 serviceKey를 직접 추가 (이중 인코딩 방지)
             String url = builder.build().toUriString();
             url += "&serviceKey=" + tourApiServiceKey;
             
-            log.info("🔗 TourAPI 호출 URL: {}", url);
             
             // RestTemplate로 API 호출 (URI.create 사용으로 추가 인코딩 방지)
             ResponseEntity<String> response = restTemplate.getForEntity(
@@ -70,19 +67,16 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
-                log.info("✅ TourAPI 응답 성공 - 길이: {}", responseBody.length());
+    
                 
                 // 응답 파싱 (JSON/XML 자동 감지)
                 results = parseTourAPIResponse(responseBody);
                 
-                log.info("📋 TourAPI 데이터 조회 완료 - 총 {}개 아이템", results.size());
                 
                 // 축제 데이터인 경우 추가 로깅
                 if ("15".equals(contentTypeId)) {
-                    log.info("🎪 축제 데이터 수집 완료: {}개", results.size());
                     for (int i = 0; i < Math.min(3, results.size()); i++) {
                         AITravelServiceImpl.TourAPIResponse.Item item = results.get(i);
-                        log.info("  - 축제 {}: {}", i+1, item.getTitle());
                     }
                 }
             } else {
@@ -98,7 +92,7 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public List<AITravelServiceImpl.TourAPIResponse.Item> searchTourismByKeyword(String keyword, String areaCode, String sigunguCode) {
-        log.info("🔍 키워드 검색 시작 - keyword: {}, areaCode: {}, sigunguCode: {}", keyword, areaCode, sigunguCode);
+
         
         List<AITravelServiceImpl.TourAPIResponse.Item> results = new ArrayList<>();
         
@@ -124,7 +118,6 @@ public class TourAPIServiceImpl implements TourAPIService {
             String url = builder.build().toUriString();
             url += "&serviceKey=" + tourApiServiceKey;
             
-            log.info("키워드 검색 URL: {}", url);
             
             ResponseEntity<String> response = restTemplate.getForEntity(
                 java.net.URI.create(url), 
@@ -133,7 +126,6 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 results = parseTourAPIResponse(response.getBody());
-                log.info(" 키워드 검색 완료 - {}개 결과", results.size());
             }
             
         } catch (Exception e) {
@@ -145,7 +137,6 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public List<AITravelServiceImpl.TourAPIResponse.Item> searchFestivals(String areaCode, String sigunguCode) {
-        log.info("🎪축제 검색 시작 - areaCode: {}, sigunguCode: {}", areaCode, sigunguCode);
         
         List<AITravelServiceImpl.TourAPIResponse.Item> results = new ArrayList<>();
         
@@ -175,7 +166,7 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 results = parseTourAPIResponse(response.getBody());
-                log.info("✅ 축제 검색 완료 - {}개 결과", results.size());
+    
             }
             
         } catch (Exception e) {
@@ -187,7 +178,6 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public List<Map<String, Object>> getPlaceImages(String contentId) {
-        log.info("🖼️ 장소 이미지 조회 시작 - contentId: {}", contentId);
         
         List<Map<String, Object>> images = new ArrayList<>();
         
@@ -210,7 +200,6 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 images = parseDetailImageResponse(response.getBody());
-                log.info("✅ 이미지 조회 완료 - 총 {}개 이미지", images.size());
             }
             
         } catch (Exception e) {
@@ -222,7 +211,6 @@ public class TourAPIServiceImpl implements TourAPIService {
 
     @Override
     public AITravelServiceImpl.TourAPIResponse.Item fetchDetailCommon2(String contentId) {
-        log.info("📋 상세 정보 조회 시작 - contentId: {}", contentId);
         
         try {
             String url = UriComponentsBuilder
@@ -244,7 +232,6 @@ public class TourAPIServiceImpl implements TourAPIService {
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 List<AITravelServiceImpl.TourAPIResponse.Item> items = parseDetailCommon2Response(response.getBody());
                 if (!items.isEmpty()) {
-                    log.info("✅ 상세 정보 조회 완료 - contentId: {}", contentId);
                     return items.get(0);
                 }
             }
