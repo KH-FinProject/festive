@@ -1,8 +1,15 @@
 package com.project.festive.festiveserver.common.util;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URI;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.UUID;
 
 // 프로그램 전체적으로 사용될 유용한 기능 모음
 public class Utility {
@@ -69,5 +76,37 @@ public class Utility {
 		
 		return randomCode.toString();
 		
+	}
+
+	public static String downloadImageToServer(String imageUrl, String saveDir) throws IOException {
+		// 1. URL에서 확장자 추출 (없으면 .jpg 기본)
+		String extension = ".jpg";
+		String path = URI.create(imageUrl).getPath();
+		int lastDot = path.lastIndexOf('.');
+		if (lastDot != -1 && lastDot < path.length() - 1) {
+			extension = path.substring(lastDot);
+			// 확장자에 쿼리스트링이 붙어있으면 제거
+			int qIdx = extension.indexOf('?');
+			if (qIdx != -1) extension = extension.substring(0, qIdx);
+		}
+
+		// 2. UUID로 파일명 생성
+		String fileName = UUID.randomUUID().toString() + extension;
+
+		// 3. 저장 디렉토리 생성
+		File dir = new File(saveDir);
+		if (!dir.exists()) dir.mkdirs();
+
+		// 4. 파일 저장
+		File file = new File(dir, fileName);
+		try (InputStream in = URI.create(imageUrl).toURL().openStream();
+			 OutputStream out = new FileOutputStream(file)) {
+			byte[] buffer = new byte[8192];
+			int bytesRead;
+			while ((bytesRead = in.read(buffer)) != -1) {
+				out.write(buffer, 0, bytesRead);
+			}
+		}
+		return file.getAbsolutePath();
 	}
 }
