@@ -1,5 +1,6 @@
 package com.project.festive.festiveserver.admin.model.service;
 
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.project.festive.festiveserver.admin.model.mapper.AdminMapper;
 import com.project.festive.festiveserver.member.dto.MemberDto;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -104,6 +106,45 @@ public class AdminServiceImpl implements AdminService{
 				result ++;
 			} else {
 				log.debug("멤버 복구 실패 : " + memberNo);
+			}
+		}
+		
+		return result;
+	}
+
+	// 공지글 작성 by 지현
+	@Override
+	public int createBoard(BoardDto boardDto) {
+		try {
+            boardDto.setBoardCreateDate(LocalDateTime.now());
+            boardDto.setBoardDeleteYn("N");
+            return mapper.insertBoard(boardDto);
+        } catch (Exception e) {
+            log.error("게시글 작성 중 오류 발생", e);
+            throw new RuntimeException("게시글 작성에 실패했습니다.");
+        }
+	}
+	
+	// 게시글 조회 by 지현
+	@Override
+    public List<BoardDto> getAllBoards() {
+        return mapper.selectAllBoards();
+    }
+
+	// 선택한 글 삭제 by 지현
+	@Override
+	public int deleteBoard(List<Integer> boardNoList) {
+		int result = 0;
+		int deleteBoard = 0;
+		
+		for (int boardNo : boardNoList) {
+			
+			deleteBoard = mapper.deleteBoard(boardNo);
+			
+			if(deleteBoard > 0) {
+				result ++;
+			} else {
+				log.debug("게시글 삭제 실패 : " + boardNo);
 			}
 		}
 		
