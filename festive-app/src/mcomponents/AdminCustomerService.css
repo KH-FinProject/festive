@@ -27,6 +27,9 @@
   margin-bottom: 12px;
   background: #fff;
   transition: box-shadow 0.2s ease;
+  /* 파란색 border, box-shadow, background 등 제거 */
+  box-shadow: none;
+  border-left: none;
 }
 
 .inquiry-item:hover,
@@ -406,18 +409,17 @@
 
 /* Inquiry Content */
 .inquiry-content {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
-  border-left: 4px solid #4a90e2;
-  margin-top: 12px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 .inquiry-text {
-  font-size: 15px;
-  line-height: 1.6;
-  color: #495057;
-  white-space: pre-wrap;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 .new-badge {

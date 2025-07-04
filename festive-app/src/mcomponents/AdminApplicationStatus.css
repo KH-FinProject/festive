@@ -190,6 +190,73 @@
   border-color: #4a90e2;
 }
 
+/* 테이블(card) 스타일 통일 */
+.application-table {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.application-table th,
+.application-table td {
+  padding: 16px 12px;
+  font-size: 15px;
+  color: #333;
+  border-bottom: 1px solid #f1f3f4;
+  text-align: center;
+}
+
+.application-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  text-align: center;
+}
+
+.application-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* 상세(card) 스타일 */
+.application-detail-form {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 32px 28px;
+  margin-top: 12px;
+  font-size: 15px;
+  color: #333;
+  max-width: 600px;
+}
+
+.application-detail-form > div {
+  margin-bottom: 18px;
+}
+
+/* 버튼 스타일 고객센터와 통일 */
+.btn-detail,
+.app-action-btn {
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #4a90e2;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-detail:hover,
+.app-action-btn:hover {
+  background: #e8f0fe;
+  color: #1a73e8;
+  border-color: #b3d7ff;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .application-status {

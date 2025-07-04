@@ -59,7 +59,6 @@ const CustomerBoard = ({
                 })
                 .replace(/\. /g, ".")
                 .replace(".", ".")
-                .slice(0, -1)
             : "날짜 없음",
           likes: post.boardLikeCount || 0,
           views: post.boardViewCount || 0,

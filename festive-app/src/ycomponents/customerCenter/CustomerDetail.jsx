@@ -42,8 +42,7 @@ function CustomerDetail() {
             minute: "2-digit",
           })
           .replace(/\. /g, ".")
-          .replace(".", ".")
-          .slice(0, -1),
+          .replace(".", "."),
         content: data.boardContent,
         views: data.boardViewCount,
         // 고객센터 전용 정보

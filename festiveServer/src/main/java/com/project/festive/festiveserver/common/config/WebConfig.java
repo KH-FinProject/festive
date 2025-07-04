@@ -21,7 +21,7 @@ public class WebConfig implements WebMvcConfigurer {
   public void addCorsMappings(@NonNull CorsRegistry registry) {
       registry.addMapping("/**") // 서버의 모든 API 경로(/**)에 대해 CORS 설정을 적용
               .allowedOrigins("http://localhost:5173", "http://localhost:3000") // 이 주소에서 오는 요청만 허용
-              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 클라이언트가 사용할 수 있는 HTTP 메서드를 지정
+              .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH") // 클라이언트가 사용할 수 있는 HTTP 메서드를 지정
               .allowedHeaders("*") // 클라이언트가 보낼 수 있는 헤더를 모두 허용
               .allowCredentials(true) // 브라우저가 쿠키, 인증 정보 등을 포함해서 요청할 수 있도록 허용
               .maxAge(3600); // 브라우저가 CORS preflight 요청(OPTIONS)을 캐싱할 시간(초)
@@ -33,6 +33,9 @@ public class WebConfig implements WebMvcConfigurer {
       // /profile-images/** 요청이 오면 C:/upload/festive/profile/ 경로에서 파일을 찾도록 매핑
       registry.addResourceHandler("/profile-images/**")
               .addResourceLocations("file:///C:/upload/festive/profile/"); // 실제 저장 경로와 일치
+      // /upload/festive/booth/** 요청이 오면 C:/upload/festive/booth/ 경로에서 파일을 찾도록 매핑
+      registry.addResourceHandler("/upload/festive/booth/**")
+              .addResourceLocations("file:///C:/upload/festive/booth/");
   }
   
   // 찜달력(MypageServiceImpl) - 지현이가 추가함
