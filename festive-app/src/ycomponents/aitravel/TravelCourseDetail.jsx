@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Map, MapMarker, Polyline, useKakaoLoader } from "react-kakao-maps-sdk";
+import axios from "axios";
+import axiosApi from "../../api/axiosAPI";
 import "./TravelCourseDetail.css";
 import logo from "../../assets/festiveLogo.png";
 
@@ -42,24 +44,37 @@ const TravelCourseDetail = () => {
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
-        const baseUrl =
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-        const response = await fetch(
-          `${baseUrl}/api/travel-course/${courseId}`,
-          {
-            method: "GET",
+        let response;
+        let data;
+
+        // 🔐 1단계: 먼저 공유된 여행코스로 시도 (인증 불필요)
+        try {
+          console.log("🔓 공유된 여행코스로 먼저 시도 (인증 없음)");
+          response = await axios.get(`/api/travel-course/${courseId}`, {
             headers: {
               "Content-Type": "application/json",
             },
-            credentials: "include",
+            // withCredentials 없이 요청
+          });
+          data = response.data;
+          console.log("✅ 공유 여행코스 로드 성공");
+        } catch (publicError) {
+          // 🔐 2단계: 공유 접근 실패시 인증이 필요한 개인 여행코스로 시도
+          console.log("🔐 공유 접근 실패, 개인 여행코스로 시도 (인증 필요)");
+          try {
+            response = await axiosApi.get(`/api/travel-course/${courseId}`);
+            data = response.data;
+            console.log("✅ 개인 여행코스 로드 성공");
+          } catch (privateError) {
+            console.error("❌ 개인 여행코스 접근도 실패:", privateError);
+            throw new Error("여행코스를 찾을 수 없거나 접근 권한이 없습니다.");
           }
-        );
+        }
 
-        if (!response.ok) {
+        if (response.status !== 200) {
           throw new Error("여행코스를 찾을 수 없습니다.");
         }
 
-        const data = await response.json();
         if (data.success) {
           console.log("📅 받은 여행코스 데이터:", data.course);
           console.log("📅 createdDate 값:", data.course?.createdDate);
@@ -78,7 +93,7 @@ const TravelCourseDetail = () => {
           throw new Error(data.message || "데이터를 불러올 수 없습니다.");
         }
       } catch (error) {
-        console.error("여행코스 데이터 로드 실패:", error);
+        console.error("🚨 여행코스 데이터 로드 실패:", error);
         alert("여행코스를 불러오는데 실패했습니다.");
         navigate("/ai-travel");
       } finally {
@@ -97,20 +112,15 @@ const TravelCourseDetail = () => {
 
     setLoadingImages(true);
     try {
-      const baseUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-      const response = await fetch(
-        `${baseUrl}/api/ai/place-images/${contentId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // 🖼️ 장소 이미지는 공개 API이므로 인증 없이 요청
+      const response = await axios.get(`/api/ai/place-images/${contentId}`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200) {
+        const data = response.data;
         return data.images || [];
       }
     } catch (error) {
@@ -122,39 +132,52 @@ const TravelCourseDetail = () => {
   };
 
   // 장소의 상세 정보(overview)를 가져오는 함수
-  const fetchPlaceOverview = async (contentId) => {
+  const fetchPlaceOverview = async (contentId, place) => {
     if (!contentId) {
+      console.log("📝 contentId 없음, overview 스킵");
       setPlaceOverview("");
       return;
     }
 
+    console.log("📝 장소 상세 정보 요청 시작:", contentId);
     setLoadingOverview(true);
     try {
-      const baseUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-      const response = await fetch(
-        `${baseUrl}/api/ai/place-overview/${contentId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // 📝 장소 상세 정보도 공개 API이므로 인증 없이 요청
+      const response = await axios.get(`/api/ai/place-overview/${contentId}`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        // overview가 존재하고 실제 내용이 있는지 더 엄격하게 검사
+      console.log("📝 API 응답 상태:", response.status);
+      console.log("📝 API 응답 데이터:", response.data);
+
+      if (response.status === 200) {
+        const data = response.data;
+        console.log("📝 응답 분석:", {
+          success: data.success,
+          overview: data.overview,
+          overviewLength: data.overview ? data.overview.length : 0,
+          overviewTrimmed: data.overview ? data.overview.trim().length : 0,
+        });
+
+        // overview가 존재하고 실제 내용이 있는지 확인
         if (data.success && data.overview && data.overview.trim().length > 0) {
+          console.log("✅ TourAPI Overview 설정:", data.overview.trim());
           setPlaceOverview(data.overview.trim());
         } else {
-          setPlaceOverview(""); // fallback으로 AI 설명 사용
+          console.log("❌ TourAPI Overview 없음, AI 설명 사용");
+          // TourAPI에서 overview를 가져오지 못했을 때 AI 설명 생성
+          const aiDescription = generateAIDescription(place);
+          setPlaceOverview(aiDescription);
         }
       } else {
+        console.log("❌ 응답 상태 오류:", response.status);
         setPlaceOverview("");
       }
     } catch (error) {
-      console.error("장소 상세 정보 로드 실패:", error);
+      console.error("❌ 장소 상세 정보 로드 실패:", error);
+      console.error("❌ 에러 응답:", error.response?.data);
       setPlaceOverview("");
     } finally {
       setLoadingOverview(false);
@@ -416,6 +439,11 @@ const TravelCourseDetail = () => {
 
   // AI 장소 설명 생성
   const generateAIDescription = (place) => {
+    // place가 null이거나 undefined인 경우 기본 설명 반환
+    if (!place) {
+      return "이곳은 여행 코스의 중요한 일부입니다. 특별한 경험과 추억을 만들어보세요.\n\n인생샷을 남기기 좋은 포토존이 있어요!";
+    }
+
     const baseDescriptions = {
       관광지:
         "이곳은 많은 관광객들이 찾는 인기 관광명소입니다. 아름다운 경치와 특별한 체험을 즐길 수 있어요.",
@@ -529,7 +557,7 @@ const TravelCourseDetail = () => {
     if (place.contentId) {
       const [images, overview] = await Promise.all([
         fetchPlaceImages(place.contentId),
-        fetchPlaceOverview(place.contentId),
+        fetchPlaceOverview(place.contentId, place),
       ]);
       setPlaceImages(images);
       // fetchPlaceOverview는 내부에서 setPlaceOverview를 호출하므로 추가 처리 불필요

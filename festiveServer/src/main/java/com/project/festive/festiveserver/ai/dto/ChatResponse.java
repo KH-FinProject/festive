@@ -12,7 +12,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class ChatResponse {
     private String content;              // AI 응답 내용
-    private String requestType;          // 요청 타입 (festival_only, festival_with_travel, travel_only)
+    private String requestType;          // 요청 타입 (festival_only, travel_only)
     private List<LocationInfo> locations; // 카카오맵 표시용 위치 정보
     private List<FestivalInfo> festivals; // 축제 정보 리스트 (TourAPI 데이터)
     private TravelCourse travelCourse;   // 구조화된 여행코스

@@ -56,4 +56,9 @@ public interface OpenAIService {
      * 거부 메시지 생성
      */
     String createRejectionMessage();
+    
+    /**
+     * AI 기반 지역 추출
+     */
+    String extractRegionWithAI(String userMessage, String availableRegions);
 } 

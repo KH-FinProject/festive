@@ -12,12 +12,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.3s ease;
+  /* transition: width 0.3s ease; - 제거하여 width 변경 방지 */
 }
 
-.travel-detail-sidebar.with-side-panel {
-  width: 330px;
-}
+/* .travel-detail-sidebar.with-side-panel {
+  width: 330px; - 제거하여 width 고정
+} */
 
 /* 헤더 영역 */
 .travel-detail-header {
@@ -418,12 +418,12 @@
   flex: 1;
   height: 100%;
   position: relative;
-  transition: all 0.3s ease;
+  /* transition: all 0.3s ease; - 제거하여 크기 변경 방지 */
 }
 
-.travel-detail-map-container.with-side-panel {
-  width: calc(100% - 300px - 400px); /* 사이드바 - 패널 */
-}
+/* .travel-detail-map-container.with-side-panel {
+  width: calc(100% - 300px - 400px); - 제거하여 크기 고정
+} */
 
 /* 로딩 및 에러 상태 */
 .travel-detail-loading,

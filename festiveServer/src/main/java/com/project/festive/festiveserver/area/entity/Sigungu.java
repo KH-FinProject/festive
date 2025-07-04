@@ -10,6 +10,7 @@ public class Sigungu {
     @EmbeddedId // 복합키 사용
     private SigunguId id;
     
+    @Column(name = "SIGUNGU_NAME")
     private String sigunguName;
     
     @ManyToOne(fetch = FetchType.LAZY) // 다대일 관계
@@ -20,7 +21,10 @@ public class Sigungu {
     @Data
     @Embeddable // 복합키 클래스
     public static class SigunguId implements java.io.Serializable {
+        @Column(name = "AREA_CODE")
         private String areaCode;
+        
+        @Column(name = "SIGUNGU_CODE")
         private String sigunguCode;
     }
 }
