@@ -1,9 +1,20 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import "./AdminCommon.css";
 import { useAdminNotification } from "./AdminNotificationContext.jsx";
 
 const AdminSidebar = () => {
   const { hasNewReport } = useAdminNotification();
+  const location = useLocation();
+
+  // 신청 현황 active 처리
+  const isApplicationsActive =
+    location.pathname === "/admin/applications" ||
+    location.pathname === "/admin/appDetail";
+
+  // 고객센터 관리 active 처리
+  const isCustomerActive =
+    location.pathname.startsWith("/admin/customer") ||
+    location.pathname.startsWith("/admin/reply");
 
   return (
     <div className="admin-management-container">
@@ -58,8 +69,10 @@ const AdminSidebar = () => {
             <h3 className="sidebar-title">고객 관리</h3>
             <NavLink
               to="/admin/customer"
-              className={({ isActive }) =>
-                `sidebar-item ${isActive ? "active" : "inactive"}`
+              className={
+                isCustomerActive
+                  ? "sidebar-item active"
+                  : "sidebar-item inactive"
               }
             >
               <span>고객센터 관리</span>
@@ -87,8 +100,10 @@ const AdminSidebar = () => {
             <h3 className="sidebar-title">푸드트럭 및 플리마켓 신청 현황</h3>
             <NavLink
               to="/admin/applications"
-              className={({ isActive }) =>
-                `sidebar-item ${isActive ? "active" : "inactive"}`
+              className={
+                isApplicationsActive
+                  ? "sidebar-item active"
+                  : "sidebar-item inactive"
               }
             >
               <span>신청 현황</span>

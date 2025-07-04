@@ -4,7 +4,10 @@ import AISideMenu from "./AISideMenu";
 import Title from "./Title";
 import "./AISideMenu.css";
 import "../monthFestive/Title.css";
+import axios from "axios";
+import useAuthStore from "../../store/useAuthStore";
 import { useLocation } from "react-router-dom";
+
 
 // 투어 API 연동 함수 (LocalFestive.jsx 방식 fetch 기반)
 async function fetchFestivals({ keyword, region, startDate, endDate }) {
@@ -241,7 +244,10 @@ function FestivalSearchModal({ open, onClose, onSelect, areaOptions }) {
               <li
                 key={festival.contentId}
                 onClick={() => {
-                  onSelect(festival.title);
+                  onSelect({
+                    title: festival.title,
+                    contentId: festival.contentId,
+                  });
                   onClose();
                 }}
                 style={{
@@ -274,11 +280,78 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [festivalName, setFestivalName] = useState(contentTitle || "");
   const [showFestivalModal, setShowFestivalModal] = useState(false);
+  const [name, setName] = useState("");
+  const [shop, setShop] = useState("");
+  const [phone, setPhone] = useState("");
+  const [item, setItem] = useState("");
+  const [desc, setDesc] = useState("");
+  const [loading, setLoading] = useState(false);
+  // 상태 추가
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [contentId, setContentId] = useState("");
+  const { member } = useAuthStore();
+  const memberNo = member?.memberNo;
   const [applyContentId, setApplyContentId] = useState(contentId || "");
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (
+      !festivalName ||
+      !name ||
+      !shop ||
+      !phone ||
+      !item ||
+      !desc ||
+      !selectedFile
+    ) {
+      alert("모든 필수 항목을 입력/선택해 주세요.");
+      return;
+    }
+    if (!memberNo) {
+      alert("로그인 후 신청 가능합니다.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("memberNo", memberNo); // 로그인 사용자 번호 추가
+      formData.append("applicantName", name);
+      formData.append("applicantCompany", shop);
+      formData.append("boothTel", phone);
+      formData.append("products", item);
+      formData.append("contentTitle", festivalName); // 축제명
+      formData.append("boothType", 1); // 플리마켓: 1, 푸드트럭: 2
+      formData.append("image", selectedFile);
+      // 필요시 boothStartDate, boothEndDate, contentId 등 추가
+      formData.append("boothStartDate", startDate);
+      formData.append("boothEndDate", endDate);
+      formData.append("contentId", contentId);
+      // axios.post 직전: formData 값 모두 출력
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      await axios.post("/api/booth/request", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("신청이 완료되었습니다!");
+      setFestivalName("");
+      setName("");
+      setShop("");
+      setPhone("");
+      setItem("");
+      setDesc("");
+      setSelectedFile(null);
+    } catch {
+      alert("신청에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -308,6 +381,43 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             </button>
           </div>
         </div>
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            축제 ID(contentId){" "}
+            <span className="booth-required" style={{ color: "red" }}>
+              *
+            </span>
+          </label>
+          <input
+            type="text"
+            className="booth-form-input"
+            value={contentId}
+            disabled
+          />
+        </div>
+
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            시작 날짜 <span className="booth-required">*</span>
+          </label>
+          <input
+            type="date"
+            className="booth-form-input"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            끝 날짜 <span className="booth-required">*</span>
+          </label>
+          <input
+            type="date"
+            className="booth-form-input"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
 
         <div className="booth-form-field">
           <label className="booth-form-label">
@@ -317,6 +427,8 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             type="text"
             className="booth-form-input"
             placeholder="성함을 입력해주세요"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
 
@@ -328,6 +440,8 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             type="text"
             className="booth-form-input"
             placeholder="상호명을 입력해주세요"
+            value={shop}
+            onChange={(e) => setShop(e.target.value)}
           />
         </div>
 
@@ -339,6 +453,8 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             type="tel"
             className="booth-form-input"
             placeholder="000-0000-0000"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
         </div>
 
@@ -350,6 +466,8 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             type="text"
             className="booth-form-input"
             placeholder="판매할 품목을 입력해주세요"
+            value={item}
+            onChange={(e) => setItem(e.target.value)}
           />
         </div>
 
@@ -361,6 +479,8 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             rows={4}
             className="booth-form-textarea"
             placeholder="상품에 대한 상세한 소개를 입력해주세요"
+            value={desc}
+            onChange={(e) => setDesc(e.target.value)}
           />
         </div>
 
@@ -398,11 +518,20 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
       <FestivalSearchModal
         open={showFestivalModal}
         onClose={() => setShowFestivalModal(false)}
-        onSelect={setFestivalName}
+        onSelect={({ title, contentId }) => {
+          setFestivalName(title);
+          setContentId(contentId);
+        }}
         areaOptions={areaOptions}
       />
       <div className="booth-submit-section">
-        <button className="booth-submit-button">신청하기</button>
+        <button
+          className="booth-submit-button"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "신청 중..." : "신청하기"}
+        </button>
       </div>
     </div>
   );
@@ -413,11 +542,76 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [festivalName, setFestivalName] = useState(contentTitle || "");
   const [showFestivalModal, setShowFestivalModal] = useState(false);
+  const [name, setName] = useState("");
+  const [truck, setTruck] = useState("");
+  const [phone, setPhone] = useState("");
+  const [biznum, setBiznum] = useState("");
+  const [menu, setMenu] = useState("");
+  const [size, setSize] = useState("");
+  const [loading, setLoading] = useState(false);
+  // FoodTruckForm 등에서 contentId 상태 추가
+  const [contentId, setContentId] = useState("");
+  const { member } = useAuthStore();
+  const memberNo = member?.memberNo;
   const [applyContentId, setApplyContentId] = useState(contentId || "");
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
     setSelectedFiles(files);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (
+      !festivalName ||
+      !name ||
+      !truck ||
+      !phone ||
+      !biznum ||
+      !menu ||
+      !size ||
+      selectedFiles.length === 0
+    ) {
+      alert("모든 필수 항목을 입력/선택해 주세요.");
+      return;
+    }
+    if (!memberNo) {
+      alert("로그인 후 신청 가능합니다.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("memberNo", memberNo); // 로그인 사용자 번호 추가
+      formData.append("type", "푸드트럭");
+      formData.append("name", name);
+      formData.append("truck", truck);
+      formData.append("phone", phone);
+      formData.append("biznum", biznum);
+      formData.append("menu", menu);
+      formData.append("size", size);
+      formData.append("festivalName", festivalName);
+      formData.append("boothTitle", festivalName); // DB 저장용 축제명
+      formData.append("image", selectedFiles[0]);
+      // memberNo 등 추가 필요시 append
+      formData.append("contentId", contentId);
+      await axios.post("/api/booth/request", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("신청이 완료되었습니다!");
+      setFestivalName("");
+      setName("");
+      setTruck("");
+      setPhone("");
+      setBiznum("");
+      setMenu("");
+      setSize("");
+      setSelectedFiles([]);
+    } catch {
+      alert("신청에 실패했습니다.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -456,6 +650,8 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
             type="text"
             className="booth-form-input"
             placeholder="성함을 입력해주세요"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
         </div>
 
@@ -467,6 +663,8 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
             type="text"
             className="booth-form-input"
             placeholder="푸드트럭 이름을 입력해주세요"
+            value={truck}
+            onChange={(e) => setTruck(e.target.value)}
           />
         </div>
 
@@ -478,6 +676,8 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
             type="tel"
             className="booth-form-input"
             placeholder="000-0000-0000"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
           />
         </div>
 
@@ -489,6 +689,8 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
             type="text"
             className="booth-form-input"
             placeholder="000-00-00000"
+            value={biznum}
+            onChange={(e) => setBiznum(e.target.value)}
           />
         </div>
 
@@ -496,7 +698,11 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
           <label className="booth-form-label">
             메뉴 종류 <span className="booth-required">*</span>
           </label>
-          <select className="booth-form-select">
+          <select
+            className="booth-form-select"
+            value={menu}
+            onChange={(e) => setMenu(e.target.value)}
+          >
             <option value="">메뉴 종류를 선택해주세요</option>
             <option value="한식">한식</option>
             <option value="중식">중식</option>
@@ -513,7 +719,11 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
           <label className="booth-form-label">
             트럭 크기 <span className="booth-required">*</span>
           </label>
-          <select className="booth-form-select">
+          <select
+            className="booth-form-select"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+          >
             <option value="">트럭 크기를 선택해주세요</option>
             <option value="소형">소형 (1톤 이하)</option>
             <option value="중형">중형 (1톤 ~ 2.5톤)</option>
@@ -567,11 +777,20 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
       <FestivalSearchModal
         open={showFestivalModal}
         onClose={() => setShowFestivalModal(false)}
-        onSelect={setFestivalName}
+        onSelect={({ title, contentId }) => {
+          setFestivalName(title);
+          setContentId(contentId);
+        }}
         areaOptions={areaOptions}
       />
       <div className="booth-submit-section">
-        <button className="booth-submit-button">신청하기</button>
+        <button
+          className="booth-submit-button"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "신청 중..." : "신청하기"}
+        </button>
       </div>
     </div>
   );

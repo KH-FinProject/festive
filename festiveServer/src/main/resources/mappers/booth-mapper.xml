@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.festive.festiveserver.booth.mapper.BoothRequestMapper">
+
+    <insert id="insertBoothRequest" parameterType="com.project.festive.festiveserver.booth.entity.BoothRequest">
+        INSERT INTO BOOTH_REQUEST (
+           BOOTH_NO ,MEMBER_NO, CONTENT_ID, APPLICANT_NAME, APPLICANT_COMPANY, BOOTH_START_DATE, BOOTH_END_DATE, BOOTH_TEL, PRODUCTS, BOOTH_IMG, BOOTH_TYPE, BOOTH_ACCEPT, CONTENT_TITLE
+        ) VALUES (
+           BOOTH_NO_SEQ.NEXTVAL, #{memberNo}, #{contentId}, #{applicantName}, #{applicantCompany}, #{boothStartDate}, #{boothEndDate}, #{boothTel}, #{products}, #{boothImg}, #{boothType}, #{boothAccept}, #{contentTitle}
+        )
+    </insert>
+
+    <select id="selectAllRequests" resultType="com.project.festive.festiveserver.booth.entity.BoothRequest">
+        SELECT * FROM BOOTH_REQUEST ORDER BY BOOTH_NO DESC
+    </select>
+
+    <select id="selectRequestDetail" parameterType="long" resultType="com.project.festive.festiveserver.booth.entity.BoothRequest">
+        SELECT * FROM BOOTH_REQUEST WHERE BOOTH_NO = #{boothNo}
+    </select>
+
+    <update id="updateAccept" parameterType="long">
+        UPDATE BOOTH_REQUEST SET BOOTH_ACCEPT = 'Y' WHERE BOOTH_NO = #{boothNo}
+    </update>
+
+    <delete id="deleteRequest" parameterType="long">
+        DELETE FROM BOOTH_REQUEST WHERE BOOTH_NO = #{boothNo}
+    </delete>
+
+</mapper> 

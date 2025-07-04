@@ -124,6 +124,9 @@ public class SecurityConfig {
             .requestMatchers("/*.ico", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg").permitAll()
             .requestMatchers("/error", "/actuator/**", "/.well-known/**").permitAll()
 
+            // 부스 신청 관련 API - 인증 없이 허용
+            .requestMatchers("/api/booth/**").permitAll()
+
             // 그 외 모든 요청은 인증 필요
             .anyRequest().authenticated())
         
