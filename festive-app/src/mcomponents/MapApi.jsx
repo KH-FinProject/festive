@@ -55,12 +55,12 @@ export default function PublicCarParkWithMap({
       const field = encodeURIComponent("지역코드::EQ");
       const serviceKey = import.meta.env.VITE_PUBLIC_CARPARK_API;
 
-      const url = `/carpark-api/api/15050093/v1/uddi:d19c8e21-4445-43fe-b2a6-865dff832e08?page=1&perPage=50&returnType=json&cond[${field}]=${areaCode}&serviceKey=${serviceKey}`;
+      const url = `/carpark-api/api/15050093/v1/uddi:d19c8e21-4445-43fe-b2a6-865dff832e08?page=1&perPage=1000&returnType=json&cond[${field}]=${areaCode}&serviceKey=${serviceKey}`;
 
       const response = await fetch(url);
       const respData = await response.json();
       const items = respData?.data;
-
+      console.log("조회된 공영 주차장 수 : ", respData.matchCount);
       if (!items || !Array.isArray(items)) {
         setListCarPark([]);
         setIsParkingLoading(false);
@@ -204,6 +204,7 @@ export default function PublicCarParkWithMap({
           borderRadius: "8px",
         }}
         level={3} // 기본 줌 레벨 설정
+        onCreate={(map) => setMapInstance(map)}
       >
         {/* 메인 장소 마커 */}
         <MapMarker position={center} />
@@ -249,14 +250,14 @@ export default function PublicCarParkWithMap({
                     onClick={() => handleMarkerClick(index, marker)}
                   >
                     {info === index && (
-                      <div style={{ margin: "0 2px", fontSize: "14px" }}>
+                      <div style={{ margin: "0 2px", fontSize: "13px" }}>
                         {marker.name} <br />
                         <a
                           href={`https://map.kakao.com/link/map/${marker.name},${marker.mapy},${marker.mapx}`}
                           style={{
                             color: "#333",
                             fontWeight: "500",
-                            fontSize: "14px",
+                            fontSize: "12px",
                             textAlign: "center",
                             whiteSpace: "nowrap",
                             textDecoration: "none",
@@ -271,7 +272,7 @@ export default function PublicCarParkWithMap({
                           style={{
                             color: "#333",
                             fontWeight: "500",
-                            fontSize: "14px",
+                            fontSize: "12px",
                             textAlign: "center",
                             whiteSpace: "nowrap",
                             textDecoration: "none",
