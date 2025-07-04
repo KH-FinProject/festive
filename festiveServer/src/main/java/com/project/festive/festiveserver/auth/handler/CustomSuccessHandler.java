@@ -63,7 +63,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
           .secure(false)
           .sameSite("Lax")
           .maxAge(Duration.ofDays(7))
-          .path("/")
+          .path("/auth/refresh")
           .build();
 
       response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());

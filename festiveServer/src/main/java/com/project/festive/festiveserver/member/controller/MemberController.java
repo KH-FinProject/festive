@@ -22,21 +22,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("member")
+@RequestMapping("/member")
 @RequiredArgsConstructor
 public class MemberController {
 
     private final MemberService memberService;
     
     /**
-     * 소셜 계정 사용자의 닉네임 체크
+     * 소셜 계정 사용자의 닉네임 체크 (DB에서 최신 정보 조회, memberNo만 사용)
      */
-    @GetMapping("check-nickname")
+    @GetMapping("/check-nickname")
     public ResponseEntity<Map<String, Object>> checkNicknameForSocialUser() {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // 현재 인증된 사용자 정보 가져오기
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             
             if (authentication == null || authentication.getPrincipal() == null) {
@@ -54,11 +53,20 @@ public class MemberController {
             }
             
             CustomUserDetails userDetails = (CustomUserDetails) principal;
-            
+            // DB에서 최신 Member 정보 조회 (memberNo만 사용)
+            Member member = null;
+            if (userDetails.getMemberNo() != null) {
+                member = memberService.findByMemberNo(userDetails.getMemberNo());
+            }
+            if (member == null) {
+                response.put("success", false);
+                response.put("message", "회원 정보를 찾을 수 없습니다.");
+                return ResponseEntity.status(404).body(response);
+            }
             // 소셜 계정 사용자인지 확인 (socialId가 있으면 소셜 계정)
-            if (userDetails.getSocialId() != null && !userDetails.getSocialId().isEmpty()) {
-                String nickname = userDetails.getNickname();
-                
+            if (member.getSocialId() != null && !member.getSocialId().isEmpty()) {
+                String nickname = member.getNickname();
+
                 if (nickname == null || nickname.trim().isEmpty()) {
                     response.put("success", false);
                     response.put("message", "닉네임을 먼저 설정해주세요.");
@@ -68,6 +76,7 @@ public class MemberController {
                     response.put("hasNickname", false);
                     
                     return ResponseEntity.ok(response);
+
                 } else {
                     response.put("success", true);
                     response.put("message", "닉네임이 설정되어 있습니다.");
@@ -96,7 +105,7 @@ public class MemberController {
     }
     
     // 단일 쿼리스트링 엔드포인트: /member/exists?type=id&value=xxx
-    @GetMapping("exists")
+    @GetMapping("/exists")
     public ResponseEntity<Map<String, Object>> checkExists(@RequestParam("type") String type, @RequestParam("value") String value) {
         Map<String, Object> response = new HashMap<>();
         boolean isAvailable = false;
@@ -172,7 +181,7 @@ public class MemberController {
         }
     }
     
-    @PostMapping("signup")
+    @PostMapping("/signup")
     public int signup(@RequestBody Member member) {
         try {
             memberService.signup(member);

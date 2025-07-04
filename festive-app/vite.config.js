@@ -34,6 +34,57 @@ export default defineConfig({
         target: "http://localhost:8080",
         changeOrigin: true,
         secure: false,
+      // 백엔드 API 경로 - 우선순위 높음
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy) => {
+          proxy.on("error", (err) => {
+            console.log("🚨 백엔드 프록시 오류:", err.message);
+          });
+          proxy.on("proxyReq", (proxyReq, req) => {
+            console.log("📡 백엔드 프록시 요청:", req.method, req.url);
+          });
+          proxy.on("proxyRes", (proxyRes, req) => {
+            console.log("📊 백엔드 프록시 응답:", proxyRes.statusCode, req.url);
+          });
+        },
+      },
+
+      // TourAPI 경로 - 별도 경로로 분리
+      "/tour-api": {
+        target: "https://apis.data.go.kr",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/tour-api/, ""),
+        secure: true,
+        configure: (proxy) => {
+          proxy.on("error", (err) => {
+            console.log("🚨 TourAPI 프록시 오류:", err.message);
+          });
+          proxy.on("proxyReq", (proxyReq, req) => {
+            console.log("📡 TourAPI 프록시 요청:", req.method, req.url);
+            // CORS 헤더 추가
+            proxyReq.setHeader("Accept", "application/json");
+            proxyReq.setHeader(
+              "User-Agent",
+              "Mozilla/5.0 (compatible; Festive-App/1.0)"
+            );
+          });
+          proxy.on("proxyRes", (proxyRes, req) => {
+            console.log(
+              "📊 TourAPI 프록시 응답:",
+              proxyRes.statusCode,
+              req.url
+            );
+            // CORS 헤더 설정
+            proxyRes.headers["Access-Control-Allow-Origin"] = "*";
+            proxyRes.headers["Access-Control-Allow-Methods"] =
+              "GET, POST, PUT, DELETE, OPTIONS";
+            proxyRes.headers["Access-Control-Allow-Headers"] =
+              "Content-Type, Authorization";
+          });
+        },
       },
 
       /* 전기차충전소 API 사용시 CORS policy 에러로 추가 : 미애 */

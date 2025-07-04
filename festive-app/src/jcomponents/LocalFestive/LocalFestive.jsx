@@ -1,5 +1,5 @@
 import "./LocalFestive.css";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import ScrollToTop from "../../scomponents/monthFestive/ScrollToTop.jsx";
 import { useNavigate } from "react-router-dom";
 import axiosApi from "../../api/axiosAPI";
@@ -7,14 +7,24 @@ import axiosApi from "../../api/axiosAPI";
 const LocalFestive = () => {
   // 축제 목록 상태
   const [festivals, setFestivals] = useState([]);
-  const [originalFestivals, setOriginalFestivals] = useState([]); // 원본 데이터 보존
-  const [sortType, setSortType] = useState("date"); // 'date', 'distance'
-  const [searchStartDate, setSearchStartDate] = useState("");
-  const [searchEndDate, setSearchEndDate] = useState("");
-  const [searchLocation, setSearchLocation] = useState("");
+  const [sortType, setSortType] = useState("date"); // '축제일순', '거리순'
+  const [searchStartDate, setSearchStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [searchEndDate, setSearchEndDate] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
   const [userLocation, setUserLocation] = useState(null); // 사용자 위치
   const [areaOptions, setAreaOptions] = useState([]);
   const navigate = useNavigate();
+
+  // 무한 스크롤을 위한 상태
+  const [page, setPage] = useState(1); // 현재 페이지
+  const [hasMore, setHasMore] = useState(true); // 더 많은 데이터 존재 여부
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
+  const [displayedFestivals, setDisplayedFestivals] = useState([]); // 화면에 표시할 축제
+  const [pageSize] = useState(25); // 한 번에 로드할 개수
+
+  // Intersection Observer 관련 ref
+  const observerRef = useRef();
+  const loadingRef = useRef();
 
   // 사용자 위치 가져오기
   const getUserLocation = () => {
@@ -56,24 +66,188 @@ const LocalFestive = () => {
     }
   };
 
-  // 거리순 정렬 함수 (투어API 사용)
-  const sortByDistance = async () => {
+  // DB 조회해서 처음 마운트시 지역 옵션 생성
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const response = await axiosApi.get(`${import.meta.env.VITE_API_URL}/area/areas`);
+        setAreaOptions(response.data);
+
+      } catch (error) {
+        console.error("지역 옵션 생성 중 오류 발생:", error.response?.data || error.message);
+      }
+    };
+
+    fetchAreas();
+  }, []);
+  
+  // 초기 축제 데이터 로드
+  useEffect(() => {
+    fetchInitialFestivals();
+  }, []);
+
+  // 축제 데이터 가져오기 함수
+  const fetchFestivalData = async () => {
+    const today = new Date();
+    const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
+    const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+
+    const params = new URLSearchParams({
+      MobileOS: "WEB",
+      MobileApp: "Festive",
+      _type: "json",
+      eventStartDate: yyyyMMdd,
+      arrange: "A",
+      numOfRows: "100",
+      pageNo: "1"
+    });
+
+    const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&${params.toString()}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    const items = data?.response?.body?.items?.item;
+
+    if (!items || !Array.isArray(items)) return [];
+
+    // 축제일순 정렬
+    items.sort((a, b) => a.eventstartdate.localeCompare(b.eventstartdate));
+
+    return items.map((item) => {
+      const start = item.eventstartdate;
+      const end = item.eventenddate;
+
+      return {
+        id: item.contentid,
+        title: item.title,
+        location: item.addr1 || "장소 미정",
+        date: `${start?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
+        image: item.firstimage || "/logo.png",
+        startDate: start,
+        status: getFestivalStatus(start, end),
+        mapx: item.mapx,
+        mapy: item.mapy,
+      };
+    });
+  };
+
+  // 초기 데이터 로드
+  const fetchInitialFestivals = async () => {
+    setIsLoading(true);
+
     try {
-      // 투어API 거리순 정렬이 제대로 지원되지 않으므로 클라이언트 사이드 거리 계산 사용
-      return await sortByDistanceClientSide();
+      const data = await fetchFestivalData();
+      setFestivals(data);
+      setDisplayedFestivals(data);
+      setHasMore(data.length > pageSize);
+      setPage(1);
+
     } catch (error) {
-      console.error("거리순 정렬 실패:", error);
-      throw error;
+      console.error("초기 축제 로드 실패:", error);
+
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // 클라이언트 사이드 거리 계산 함수
-  const sortByDistanceClientSide = async () => {
+  // 검색 함수
+  const searchFestivals = async () => {
+    setIsLoading(true);
+    setPage(1);
+    setHasMore(true);
+
+    try {
+      const formatDate = (dateStr) => dateStr ? dateStr.replaceAll("-", "") : "";
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+      const params = new URLSearchParams({
+        MobileOS: "WEB",
+        MobileApp: "Festive",
+        _type: "json",
+        eventStartDate: formatDate(searchStartDate),
+        eventEndDate: formatDate(searchEndDate),
+        arrange: "A",
+        numOfRows: "100",
+        pageNo: "1",
+      });
+
+      if (searchLocation) {
+        params.append("areaCode", searchLocation);
+      }
+
+      const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&${params.toString()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const items = data?.response?.body?.items?.item;
+
+      if (!items || !Array.isArray(items)) {
+        setFestivals([]);
+        setDisplayedFestivals([]);
+        setHasMore(false);
+        return;
+      }
+
+      // 종료된 축제 제외
+      const filtered = items.filter((item) => {
+        return getFestivalStatus(item.eventstartdate, item.eventenddate) !== "종료";
+      });
+
+      // 매핑
+      let mapped = filtered.map((item) => {
+        const start = item.eventstartdate;
+        const end = item.eventenddate;
+
+        return {
+          id: item.contentid,
+          title: item.title,
+          location: item.addr1 || "장소 미정",
+          date: `${start?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
+          image: item.firstimage || "/logo.png",
+          startDate: start,
+          status: getFestivalStatus(start, end),
+          mapx: item.mapx,
+          mapy: item.mapy,
+        };
+      });
+
+      // 정렬
+      if (sortType === "distance") {
+        try {
+          const festivalsWithDistance = await addDistanceToFestivals(mapped);
+          mapped = festivalsWithDistance.sort((a, b) => {
+            if (a.distance === null && b.distance === null) return 0;
+            if (a.distance === null) return 1;
+            if (b.distance === null) return -1;
+
+            return a.distance - b.distance;
+          });
+
+        } catch (error) {
+          console.error("거리순 정렬 실패, 축제일순으로 대체:", error);
+          mapped = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
+        }
+
+      } else {
+        mapped = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
+      }
+      setFestivals(mapped);
+      setDisplayedFestivals(mapped.slice(0, pageSize));
+      setHasMore(mapped.length > pageSize);
+
+    } catch (error) {
+      console.error("축제 검색 실패:", error);
+
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 축제 목록에 거리 정보 추가하는 함수
+  const addDistanceToFestivals = async (festivals) => {
     try {
       // 사용자 위치 가져오기
       let currentLocation = userLocation;
       if (!currentLocation) {
         currentLocation = await requestLocationPermission();
+
         if (!currentLocation) {
           throw new Error("위치 정보를 가져올 수 없습니다.");
         }
@@ -95,8 +269,8 @@ const LocalFestive = () => {
         return distance;
       };
 
-      // 원본 데이터에서 거리 계산
-      const festivalsWithDistance = originalFestivals.map((festival) => {
+      // 축제 목록에 거리 정보 추가
+      return festivals.map((festival) => {
         if (festival.mapx && festival.mapy && currentLocation) {
           const distance = calculateDistance(
             currentLocation.lat,
@@ -104,158 +278,19 @@ const LocalFestive = () => {
             parseFloat(festival.mapy), // 위도
             parseFloat(festival.mapx) // 경도
           );
+
           return {
             ...festival,
             distance: Math.round(distance * 10) / 10, // 소수점 첫째 자리까지 반올림
           };
         }
+
         return { ...festival, distance: null }; // 좌표가 없으면 null로 설정
       });
 
-      // 거리순으로 정렬 (좌표가 있는 축제들을 먼저, 그 다음에 좌표가 없는 축제들)
-      const sorted = festivalsWithDistance.sort((a, b) => {
-        if (a.distance === null && b.distance === null) return 0;
-        if (a.distance === null) return 1; // 좌표가 없는 축제는 뒤로
-        if (b.distance === null) return -1; // 좌표가 없는 축제는 뒤로
-        return a.distance - b.distance;
-      });
-
-      return sorted;
     } catch (error) {
-      console.error("클라이언트 사이드 거리 계산 실패:", error);
+      console.error("거리 정보 추가 실패:", error);
       throw error;
-    }
-  };
-
-  // DB 조회해서 처음 마운트시 지역 옵션 생성
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const response = await axiosApi.get(
-          `${import.meta.env.VITE_API_URL}/area/areas`
-        );
-        setAreaOptions(response.data);
-      } catch (error) {
-        console.error(
-          "지역 옵션 생성 중 오류 발생:",
-          error.response?.data || error.message
-        );
-      }
-    };
-
-    fetchAreas();
-  }, []);
-
-  useEffect(() => {
-    const fetchFestivals = async () => {
-      try {
-        const today = new Date();
-        const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
-        const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
-
-        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=100&pageNo=1`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-        const items = data?.response?.body?.items?.item;
-
-        if (!items || !Array.isArray(items)) return;
-
-        const mapped = items.map((item) => {
-          const start = item.eventstartdate;
-          const end = item.eventenddate;
-          return {
-            id: item.contentid,
-            title: item.title,
-            location: item.addr1 || "장소 미정",
-            date: `${start?.replace(
-              /(\d{4})(\d{2})(\d{2})/,
-              "$1.$2.$3"
-            )} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
-            image: item.firstimage || "/logo.png",
-            startDate: start,
-            status: getFestivalStatus(start, end),
-            mapx: item.mapx, // 경도
-            mapy: item.mapy, // 위도
-          };
-        });
-
-        // 날짜순 정렬
-        const sorted = mapped.sort((a, b) =>
-          a.startDate.localeCompare(b.startDate)
-        );
-
-        setFestivals(sorted);
-        setOriginalFestivals(sorted); // 원본 데이터 보존
-      } catch (error) {
-        console.error("축제 정보 로드 실패:", error);
-      }
-    };
-
-    fetchFestivals();
-  }, []);
-
-  const searchFestivals = async () => {
-    try {
-      const formatDate = (dateStr) =>
-        dateStr ? dateStr.replaceAll("-", "") : "";
-      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
-      const params = new URLSearchParams({
-        MobileOS: "WEB",
-        MobileApp: "Festive",
-        _type: "json",
-        eventStartDate: formatDate(searchStartDate),
-        eventEndDate: formatDate(searchEndDate),
-        arrange: "A",
-        numOfRows: "100",
-        pageNo: "1",
-      });
-      if (searchLocation) {
-        params.append("areaCode", searchLocation);
-      }
-      const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&${params.toString()}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      const items = data?.response?.body?.items?.item;
-
-      if (!items || !Array.isArray(items)) return;
-
-      // 종료된 축제 제외
-      const filtered = items.filter((item) => {
-        const start = item.eventstartdate;
-        const end = item.eventenddate;
-        if (getFestivalStatus(start, end) === "종료") {
-          return false;
-        }
-        return true;
-      });
-
-      const mapped = filtered.map((item) => {
-        const start = item.eventstartdate;
-        const end = item.eventenddate;
-        return {
-          id: item.contentid,
-          title: item.title,
-          location: item.addr1 || "장소 미정",
-          date: `${start?.replace(
-            /(\d{4})(\d{2})(\d{2})/,
-            "$1.$2.$3"
-          )} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
-          image: item.firstimage || "/logo.png",
-          startDate: start,
-          status: getFestivalStatus(start, end),
-          mapx: item.mapx,
-          mapy: item.mapy,
-        };
-      });
-
-      // 날짜순 정렬
-      const sorted = mapped.sort((a, b) =>
-        a.startDate.localeCompare(b.startDate)
-      );
-      setFestivals(sorted);
-    } catch (error) {
-      console.error("축제 검색 실패:", error);
     }
   };
 
@@ -275,9 +310,19 @@ const LocalFestive = () => {
 
     if (newSortType === "distance") {
       try {
-        // 거리순 정렬 시도
-        const sortedFestivals = await sortByDistance();
+        // 현재 축제 목록에 거리 정보 추가 후 정렬
+        const festivalsWithDistance = await addDistanceToFestivals(festivals);
+        const sortedFestivals = festivalsWithDistance.sort((a, b) => {
+          if (a.distance === null && b.distance === null) return 0;
+          if (a.distance === null) return 1; // 좌표가 없는 축제는 뒤로
+          if (b.distance === null) return -1; // 좌표가 없는 축제는 뒤로
+
+          return a.distance - b.distance;
+        });
+
         setFestivals(sortedFestivals);
+        setDisplayedFestivals(sortedFestivals);
+
       } catch (error) {
         // 위치 권한이 거부된 경우
         if (error.code === 1) {
@@ -285,21 +330,24 @@ const LocalFestive = () => {
             "위치 기반 서비스에 동의해주세요. 거리순 정렬을 사용하려면 위치 권한이 필요합니다."
           );
           setSortType("date"); // 날짜순으로 되돌리기
+
         } else {
           alert("거리순 정렬 중 오류가 발생했습니다. 다시 시도해주세요.");
           setSortType("date"); // 날짜순으로 되돌리기
         }
       }
+
     } else if (newSortType === "date") {
-      // 날짜순 정렬 (원본 데이터에서 정렬)
-      const sorted = [...originalFestivals].sort((a, b) =>
+      // 날짜순 정렬 (현재 축제 목록에서 정렬)
+      const sorted = [...festivals].sort((a, b) =>
         a.startDate.localeCompare(b.startDate)
       );
       setFestivals(sorted);
+      setDisplayedFestivals(sorted);
     }
   };
 
-  // 축제 상태 반환 함수 복구
+  // 축제 상태 반환 함수
   const getFestivalStatus = (start, end) => {
     const now = new Date();
     const startDate = new Date(
@@ -313,6 +361,61 @@ const LocalFestive = () => {
     else if (now > endDate) return "종료";
     else return "진행중";
   };
+
+  // 데이터 받아오면 렌더링 개수 관리
+  useEffect(() => {
+    setDisplayedFestivals(festivals.slice(0, page * pageSize));
+    setHasMore(festivals.length > page * pageSize);
+  }, [festivals, page, pageSize]);
+
+  // 무한 스크롤은 클라이언트에서 slice로만 처리 (추가 API 호출 없음)
+  const loadMoreFestivals = useCallback(() => {
+    if (isLoading || !hasMore) return;
+    setIsLoading(true);
+
+    setTimeout(() => {
+      const nextPage = page + 1;
+      const newDisplayed = festivals.slice(0, nextPage * pageSize);
+
+      setDisplayedFestivals(newDisplayed);
+      setPage(nextPage);
+      setHasMore(newDisplayed.length < festivals.length);
+      setIsLoading(false);
+    }, 400); // 0.4초 뒤에 로딩 되도록 설정
+  }, [page, pageSize, isLoading, hasMore, festivals]);
+
+  // Intersection Observer 설정
+  useEffect(() => {
+    // 1. IntersectionObserver 인스턴스 생성
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        // 2. 타겟이 화면에 보이고, 더 불러올 데이터가 있고, 로딩 중이 아닐 때만 loadMoreFestivals 실행
+        if (target.isIntersecting && hasMore && !isLoading) {
+          loadMoreFestivals();
+        }
+      },
+      {
+        root: null,           // 뷰포트(브라우저 창) 기준으로 관찰
+        rootMargin: '100px',  // 타겟이 실제로 뷰포트에 닿기 100px 전에 미리 감지
+        threshold: 0.1        // 타겟 요소의 10%만 보여도 콜백 실행
+      }
+    );
+
+    // 3. loadingRef가 가리키는 DOM 요소를 관찰 시작
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current);
+    }
+
+    observerRef.current = observer;
+
+    // 4. 컴포넌트 언마운트 시 observer 해제
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoading, loadMoreFestivals]);
 
   return (
     <>
@@ -378,8 +481,27 @@ const LocalFestive = () => {
 
       {/* 새로운 축제 갤러리 섹션 */}
       <div className="festival-gallery-section">
+        {/* 정렬 옵션 */}
+        <div className="sort-options">
+          <span
+            className={`sort-option ${sortType === "date" ? "active" : ""}`}
+            onClick={() => handleSortChange("date")}
+          >
+            축제일순
+          </span>
+          <span className="divider">|</span>
+          <span
+            className={`sort-option ${
+              sortType === "distance" ? "active" : ""
+            }`}
+            onClick={() => handleSortChange("distance")}
+          >
+            거리순
+          </span>
+        </div>
+        
         <div className="gallery-grid">
-          {festivals.slice(0, 9).map((festival, index) => (
+          {displayedFestivals.slice(0, 9).map((festival, index) => (
             <div
               key={festival.id}
               className={`gallery-card ${index === 0 ? "large-card" : ""}`}
@@ -427,28 +549,9 @@ const LocalFestive = () => {
       <div className="festival-main">
         {/* 축제 목록 섹션 */}
         <section className="festivals-section">
-          {/* 정렬 옵션 */}
-          <div className="sort-options">
-            <span
-              className={`sort-option ${sortType === "date" ? "active" : ""}`}
-              onClick={() => handleSortChange("date")}
-            >
-              축제일순
-            </span>
-            <span className="divider">|</span>
-            <span
-              className={`sort-option ${
-                sortType === "distance" ? "active" : ""
-              }`}
-              onClick={() => handleSortChange("distance")}
-            >
-              거리순
-            </span>
-          </div>
-
           {/* 축제 그리드 */}
           <div className="festivals-grid">
-            {festivals.slice(9).map((festival) => (
+            {displayedFestivals.slice(9).map((festival) => (
               <div
                 key={festival.id}
                 className="festival-card"
@@ -514,6 +617,27 @@ const LocalFestive = () => {
               </div>
             ))}
           </div>
+          
+          {/* 로딩 인디케이터 */}
+          {isLoading && (
+            <div className="loading-indicator">
+              <div className="spinner"></div>
+              <p>축제를 불러오는 중...</p>
+            </div>
+          )}
+          
+          {/* Intersection Observer 타겟 */}
+          {hasMore && (
+            <div ref={loadingRef} className="observer-target" style={{ height: '20px' }} />
+          )}
+          
+          {/* 더 이상 데이터가 없을 때 */}
+          {!hasMore && displayedFestivals.length > 0 && (
+            <div className="no-more-data">
+              <p>모든 축제를 불러왔습니다.</p>
+            </div>
+          )}
+          
           <ScrollToTop />
         </section>
       </div>

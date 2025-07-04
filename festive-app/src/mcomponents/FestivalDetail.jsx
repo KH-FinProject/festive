@@ -17,6 +17,7 @@ import PublicCarPark from "./MapApi";
 import StayModal from "./StayModal";
 import DetailWeather from "./DetailWeatherAPI";
 import LikeButton from "./LikeButton";
+import useAuthStore from "../store/useAuthStore";
 
 // 축제 상태 진행
 const getFestivalStatus = (start, end) => {
@@ -47,6 +48,9 @@ const FestivalDetail = () => {
   const { contentId } = useParams();
 
   const navigate = useNavigate();
+
+  // 현재 로그인 상태인지 확인하기 위함
+  const { member } = useAuthStore();
 
   // 숙소 관련 모달창 열기
   const [isOpen, setIsOpen] = useState(false);
@@ -255,6 +259,26 @@ const FestivalDetail = () => {
     setSelectedStay(null);
   };
 
+  // 부스 참가 신청 페이지로 이동
+  const handleClickApply = (
+    contentId,
+    contentTitle,
+    startDate,
+    endDate,
+    category
+  ) => {
+    console.log(`부스참가신청 : ${contentId} `);
+    navigate("/booth", {
+      state: {
+        contentId: contentId,
+        contentTitle: contentTitle,
+        startDate: startDate,
+        endDate: endDate,
+        category: category,
+      },
+    });
+  };
+
   // useEffect
   useEffect(() => {
     fetchFestivals();
@@ -308,7 +332,41 @@ const FestivalDetail = () => {
           {/* Content Section */}
           <div className="content-wrapper">
             <div className="festival-description">
-              <h1 className="festival-name">{festival.title}</h1>
+              <div className="festival-title-row">
+                <h1 className="festival-name">{festival.title}</h1>
+                {member != null && (
+                  <div className="festival-apply-buttons">
+                    <button
+                      className="both-apply-btn"
+                      onClick={() => {
+                        handleClickApply(
+                          contentId,
+                          festival.title,
+                          festivalDetail.eventstartdate,
+                          festivalDetail.eventenddate,
+                          "foodtruck"
+                        );
+                      }}
+                    >
+                      🚒 푸드트럭 참가 신청
+                    </button>
+                    <button
+                      className="both-apply-btn"
+                      onClick={() => {
+                        handleClickApply(
+                          contentId,
+                          festival.title,
+                          festivalDetail.eventstartdate,
+                          festivalDetail.eventenddate,
+                          "fleamarket"
+                        );
+                      }}
+                    >
+                      🎪 플리마켓 참가 신청
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="festival-badge">
                 <span className="badge-button">{eventState}</span>
                 <div className="headerweather-placeholder">
@@ -369,7 +427,12 @@ const FestivalDetail = () => {
 
                 <div className="detail-info-item">
                   <h3>입장료</h3>
-                  <p>{festivalDetail?.usetimefestival}</p>
+                  <p style={{ whiteSpace: "pre-line" }}>
+                    {festivalDetail?.usetimefestival?.replace(
+                      /<br\s*\/?>/gi,
+                      "\n"
+                    )}
+                  </p>
                 </div>
 
                 <div className="detail-info-item">

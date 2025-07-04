@@ -11,6 +11,7 @@ public class TravelCourseSaveRequest {
     private String thumbnailImage;   // 썸네일 이미지 URL (선택사항)
     private String regionName;       // 지역명
     private String areaCode;         // TourAPI 지역코드
+    private String sigunguCode;      // TourAPI 시군구코드
     private Integer totalDays;       // 총 여행일수
     private String requestType;      // 요청타입
     private String courseDescription; // AI가 생성한 day별 코스 설명
@@ -86,6 +87,9 @@ public class TravelCourseSaveRequest {
 
     public String getAreaCode() { return areaCode; }
     public void setAreaCode(String areaCode) { this.areaCode = areaCode; }
+
+    public String getSigunguCode() { return sigunguCode; }
+    public void setSigunguCode(String sigunguCode) { this.sigunguCode = sigunguCode; }
 
     public Integer getTotalDays() { return totalDays; }
     public void setTotalDays(Integer totalDays) { this.totalDays = totalDays; }

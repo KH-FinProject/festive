@@ -90,6 +90,31 @@
   height: 16px;
 }
 
+/* 제목과 버튼을 한 줄에 넣기 위하여 div로 묶어줌 */
+.festival-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap; /* 화면 작을 때 줄바꿈되게 */
+}
+
+.festival-apply-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* 부스 참여 신청 버튼 */
+.both-apply-btn {
+  background: #ffffff;
+  color: #464646;
+  border: 1px solid rgb(202, 202, 202);
+  border-radius: 4px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
 /* Festival Images */
 .swiper {
   width: 1200px;

@@ -162,6 +162,8 @@ public class AuthController {
                     .httpOnly(true)
                     .maxAge(7 * 24 * 60 * 60)
                     .path("/auth/refresh")
+                    .sameSite("Lax")
+                    .secure(false)
                     .build();
 
             ResponseEntity<Object> response = ResponseEntity.ok()
@@ -197,12 +199,16 @@ public class AuthController {
         ResponseCookie expiredRefreshToken = ResponseCookie.from("refreshToken", "")
             .httpOnly(true).path("/").maxAge(0)
             .sameSite("Lax").secure(false).build();
+        ResponseCookie expiredRefreshTokenAlt = ResponseCookie.from("refreshToken", "")
+            .httpOnly(true).path("/auth/refresh").maxAge(0)
+            .sameSite("Lax").secure(false).build();
 
         log.info("로그아웃 처리 완료 - memberNo: {}", memberNo);
 
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, expiredAccessToken.toString())
             .header(HttpHeaders.SET_COOKIE, expiredRefreshToken.toString())
+            .header(HttpHeaders.SET_COOKIE, expiredRefreshTokenAlt.toString())
             .body(Map.of("success", true, "message", "로그아웃 완료"));
     }
     

@@ -6,6 +6,8 @@ import "./AISideMenu.css";
 import "../monthFestive/Title.css";
 import axios from "axios";
 import useAuthStore from "../../store/useAuthStore";
+import { useLocation } from "react-router-dom";
+
 
 // 투어 API 연동 함수 (LocalFestive.jsx 방식 fetch 기반)
 async function fetchFestivals({ keyword, region, startDate, endDate }) {
@@ -274,9 +276,9 @@ function FestivalSearchModal({ open, onClose, onSelect, areaOptions }) {
 }
 
 // 플리마켓 신청 폼
-const FleaMarketForm = ({ areaOptions }) => {
+const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [festivalName, setFestivalName] = useState("");
+  const [festivalName, setFestivalName] = useState(contentTitle || "");
   const [showFestivalModal, setShowFestivalModal] = useState(false);
   const [name, setName] = useState("");
   const [shop, setShop] = useState("");
@@ -290,6 +292,7 @@ const FleaMarketForm = ({ areaOptions }) => {
   const [contentId, setContentId] = useState("");
   const { member } = useAuthStore();
   const memberNo = member?.memberNo;
+  const [applyContentId, setApplyContentId] = useState(contentId || "");
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -535,9 +538,9 @@ const FleaMarketForm = ({ areaOptions }) => {
 };
 
 // 푸드트럭 신청 폼
-const FoodTruckForm = ({ areaOptions }) => {
+const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [festivalName, setFestivalName] = useState("");
+  const [festivalName, setFestivalName] = useState(contentTitle || "");
   const [showFestivalModal, setShowFestivalModal] = useState(false);
   const [name, setName] = useState("");
   const [truck, setTruck] = useState("");
@@ -550,6 +553,7 @@ const FoodTruckForm = ({ areaOptions }) => {
   const [contentId, setContentId] = useState("");
   const { member } = useAuthStore();
   const memberNo = member?.memberNo;
+  const [applyContentId, setApplyContentId] = useState(contentId || "");
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
@@ -812,6 +816,18 @@ const Booth = () => {
     fetchAreas();
   }, []);
 
+  // 신청한 축제 정보 불러오기
+  const location = useLocation();
+  const { contentId, contentTitle, startDate, endDate, category } =
+    location.state || {};
+
+  // category 값이 있으면 강제로 activeTab 세팅 가능
+  useEffect(() => {
+    if (category) {
+      setActiveTab(category); // "fleamarket" 또는 "foodtruck"
+    }
+  }, [category]);
+
   return (
     <div className="booth-page">
       <Title />
@@ -826,9 +842,17 @@ const Booth = () => {
           {/* 메인 콘텐츠 */}
           <div className="booth-form-wrapper">
             {activeTab === "fleamarket" ? (
-              <FleaMarketForm areaOptions={areaOptions} />
+              <FleaMarketForm
+                areaOptions={areaOptions}
+                contentId={contentId}
+                contentTitle={contentTitle}
+              />
             ) : (
-              <FoodTruckForm areaOptions={areaOptions} />
+              <FoodTruckForm
+                areaOptions={areaOptions}
+                contentId={contentId}
+                contentTitle={contentTitle}
+              />
             )}
           </div>
         </div>

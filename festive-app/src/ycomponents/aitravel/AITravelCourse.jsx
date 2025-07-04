@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import axiosApi from "../../api/axiosAPI";
 import "./AITravelCourse.css";
 import AItitle from "./AItitle";
 import ScrollToTop from "./ScrollToTop";
@@ -22,44 +24,43 @@ const AITravelCourse = () => {
   const [myTravelCourses, setMyTravelCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { member } = useAuthStore(); // 현재 로그인한 사용자 정보
+  const { member, isLoggedIn } = useAuthStore(); // 현재 로그인한 사용자 정보
 
   useEffect(() => {
     const fetchTravelCourses = async () => {
       try {
-        const baseUrl =
-          import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+        setLoading(true);
 
-        // 공유된 여행코스와 내 여행코스를 위한 API 호출
-        const sharedUrl = `${baseUrl}/api/travel-course/shared-courses`;
-        const myUrl = `${baseUrl}/api/travel-course/my-courses`;
+        // 🔐 1. 공유 코스는 항상 가져오기 (로그인 상관없이)
+        let sharedItems = [];
+        try {
+          const sharedResponse = await axiosApi.get(
+            "/api/travel-course/shared-courses"
+          );
+          const sharedData = sharedResponse.data;
+          sharedItems = sharedData.success ? sharedData.courses : [];
+          console.log("✅ 공유 코스 로드 성공:", sharedItems.length);
+        } catch (error) {
+          console.error("❌ 공유 코스 로드 실패:", error);
+          sharedItems = [];
+        }
 
-        // 공유 코스는 인증 없이 가져오기
-        const sharedResponse = await fetch(sharedUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        // 내 여행코스는 쿠키 인증 포함하여 가져오기
-        const myResponse = await fetch(myUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // 쿠키 포함 (JWT 토큰)
-        });
-
-        // 공유 코스 응답 처리
-        const sharedData = await sharedResponse.json();
-        const sharedItems = sharedData.success ? sharedData.courses : [];
-
-        // 내 여행코스 응답 처리
+        // 🔐 2. 내 여행코스는 로그인된 상태에서만 가져오기
         let myItems = [];
-        if (myResponse && myResponse.ok) {
-          const myData = await myResponse.json();
-          myItems = myData.success ? myData.courses : [];
+        if (isLoggedIn && member) {
+          try {
+            const myResponse = await axiosApi.get(
+              "/api/travel-course/my-courses"
+            );
+            const myData = myResponse.data;
+            myItems = myData.success ? myData.courses : [];
+            console.log("✅ 내 여행코스 로드 성공:", myItems.length);
+          } catch (error) {
+            console.error("❌ 내 여행코스 로드 실패:", error);
+            myItems = [];
+          }
+        } else {
+          console.log("🔐 로그인 안됨: 내 여행코스 스킵");
         }
 
         // 공유 코스 데이터 매핑
@@ -175,15 +176,18 @@ const AITravelCourse = () => {
 
         setSharedCourses(mappedSharedCourses);
         setMyTravelCourses(mappedMyTravelCourses);
-        setLoading(false);
       } catch (error) {
-        console.error("여행 코스 데이터 로드 실패:", error);
+        console.error("🚨 전체 데이터 로딩 중 예상치 못한 오류:", error);
+        // 오류가 발생해도 빈 배열로 초기화해서 UI가 표시되도록 함
+        setSharedCourses([]);
+        setMyTravelCourses([]);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchTravelCourses();
-  }, [member]);
+  }, [member, isLoggedIn]);
 
   // 스크롤 이벤트 핸들러
   const handleScroll = () => {
@@ -223,11 +227,31 @@ const AITravelCourse = () => {
   };
 
   const handleMenuClick = (menu) => {
+    // 🔐 "나만의 여행코스" 메뉴 클릭 시 로그인 체크
+    if (menu === "myTravel" && (!isLoggedIn || !member)) {
+      alert(
+        "로그인이 필요한 서비스입니다.\n로그인 후 나만의 여행코스를 확인해보세요!"
+      );
+      navigate("/signin");
+      return;
+    }
     setActiveMenu(menu);
   };
 
   const handleCourseClick = (courseId) => {
     navigate(`/course/${courseId}`);
+  };
+
+  // 🔐 AI 추천받으러 가기 버튼 클릭 핸들러
+  const handleRecommendationClick = () => {
+    if (!isLoggedIn || !member) {
+      alert(
+        "로그인이 필요한 서비스입니다.\n로그인 후 AI 여행 추천을 받아보세요!"
+      );
+      navigate("/signin");
+      return;
+    }
+    navigate("/ai-travel/chat");
   };
 
   // 공유 상태 변경 함수
@@ -237,18 +261,18 @@ const AITravelCourse = () => {
         import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
       const newIsShared = currentIsShared === "Y" ? "N" : "Y";
 
-      const response = await fetch(
+      const response = await axios.patch(
         `${baseUrl}/api/travel-course/${courseId}/share-status?isShared=${newIsShared}`,
+        {},
         {
-          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+          withCredentials: true,
         }
       );
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         // 현재 코스 정보 미리 가져오기 (상태 업데이트 전)
@@ -308,15 +332,17 @@ const AITravelCourse = () => {
       const baseUrl =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-      const response = await fetch(`${baseUrl}/api/travel-course/${courseId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+      const response = await axios.delete(
+        `${baseUrl}/api/travel-course/${courseId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         // 나만의 여행코스에서 제거
@@ -365,7 +391,7 @@ const AITravelCourse = () => {
           </p>
           <button
             className="recommendation-btn"
-            onClick={() => navigate("/ai-travel/chat")}
+            onClick={handleRecommendationClick}
           >
             추천받으러 가기 →
           </button>
@@ -397,7 +423,7 @@ const AITravelCourse = () => {
                     <p>AI에게 여행코스를 추천받아보세요</p>
                     <button
                       className="ai-travel__empty-btn"
-                      onClick={() => navigate("/ai-travel/chat")}
+                      onClick={handleRecommendationClick}
                     >
                       AI 여행코스 추천받기
                     </button>

@@ -31,10 +31,25 @@ public interface DetailMapper {
 	 */
 	int deleteFavorite(FavoritesDto favorites);
 
+	/** 좋아요 갯수 가져오기
+	 * @param contentId
+	 * @return
+	 * @author 미애
+	 */
 	int selectLikes(String contentId);
 
+	/** 좋아요 제거
+	 * @param likes
+	 * @return
+	 * @author 미애
+	 */
 	int deleteLike(LikesDto likes);
 
+	/** 좋아요 추가
+	 * @param likes
+	 * @return
+	 * @author 미애
+	 */
 	int insertLike(LikesDto likes);
 
 }

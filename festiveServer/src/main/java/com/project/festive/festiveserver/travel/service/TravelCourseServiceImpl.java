@@ -4,12 +4,14 @@ import com.project.festive.festiveserver.travel.dto.TravelCourseSaveRequest;
 import com.project.festive.festiveserver.travel.entity.TravelCourse;
 import com.project.festive.festiveserver.travel.entity.TravelCourseDetail;
 import com.project.festive.festiveserver.travel.mapper.TravelCourseMapper;
+import com.project.festive.festiveserver.area.service.AreaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 여행코스 서비스 구현체
@@ -20,6 +22,7 @@ import java.util.List;
 public class TravelCourseServiceImpl implements TravelCourseService {
     
     private final TravelCourseMapper travelCourseMapper;
+    private final AreaService areaService;
     
     @Override
     @Transactional
@@ -33,16 +36,34 @@ public class TravelCourseServiceImpl implements TravelCourseService {
             travelCourse.setCourseTitle(request.getCourseTitle());
             travelCourse.setThumbnailImage(request.getThumbnailImage());
             
-            // areaCode가 null이거나 빈 문자열이면 "전국"으로 처리
+            // areaCode가 null이거나 빈 문자열이면 시군구 매칭 시도 후 "전국"으로 처리
             String regionName = request.getRegionName();
             String areaCode = request.getAreaCode();
+            String sigunguCode = request.getSigunguCode();
+            
             if (areaCode == null || areaCode.trim().isEmpty()) {
-                regionName = "전국";
-                areaCode = "0"; // 전국 코드로 설정
+                log.info("🔍 areaCode가 null입니다. 시군구 매칭을 시도합니다 - regionName: {}", regionName);
+                
+                // 시군구 매칭 시도
+                SigunguMatchResult matchResult = tryMatchSigunguFromRegionName(regionName);
+                
+                if (matchResult != null) {
+                    areaCode = matchResult.getAreaCode();
+                    sigunguCode = matchResult.getSigunguCode();
+                    log.info("✅ 시군구 매칭 성공 - regionName: {}, areaCode: {}, sigunguCode: {}", 
+                             regionName, areaCode, sigunguCode);
+                } else {
+                    // 시군구 매칭도 실패하면 전국으로 처리
+                    regionName = "전국";
+                    areaCode = "0"; // 전국 코드로 설정
+                    sigunguCode = null; // 전국일 때는 시군구 코드 없음
+                    log.info("⚠️ 시군구 매칭 실패, 전국으로 처리 - regionName: {}", regionName);
+                }
             }
             
             travelCourse.setRegionName(regionName);
             travelCourse.setAreaCode(areaCode);
+            travelCourse.setSigunguCode(sigunguCode);
             travelCourse.setTotalDays(request.getTotalDays());
             travelCourse.setRequestType(request.getRequestType());
             travelCourse.setIsShared(request.getIsShared());
@@ -150,5 +171,93 @@ public class TravelCourseServiceImpl implements TravelCourseService {
             log.error("❌ 여행코스 공유 상태 변경 실패", e);
             return false;
         }
+    }
+    
+    /**
+     * 시군구 매칭 결과를 담는 내부 클래스
+     */
+    private static class SigunguMatchResult {
+        private final String areaCode;
+        private final String sigunguCode;
+        
+        public SigunguMatchResult(String areaCode, String sigunguCode) {
+            this.areaCode = areaCode;
+            this.sigunguCode = sigunguCode;
+        }
+        
+        public String getAreaCode() { return areaCode; }
+        public String getSigunguCode() { return sigunguCode; }
+    }
+    
+    /**
+     * 지역명에서 시군구 매칭을 시도하여 areaCode와 sigunguCode를 찾는 메서드
+     * @param regionName 지역명 (예: "경상남도 통영시", "통영", "통영시" 등)
+     * @return 매칭된 SigunguMatchResult, 실패하면 null
+     */
+    private SigunguMatchResult tryMatchSigunguFromRegionName(String regionName) {
+        if (regionName == null || regionName.trim().isEmpty()) {
+            return null;
+        }
+        
+        try {
+            String normalizedRegionName = regionName.toLowerCase().trim();
+            log.info("🔍 시군구 매칭 시도 - 입력: '{}'", regionName);
+            
+            // DB에서 시군구 매핑 정보 가져오기
+            Map<String, String> sigunguCodeMapping = areaService.getSigunguCodeMapping();
+            
+            // 시군구 매칭 시도
+            for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
+                String sigunguName = entry.getKey();
+                String sigunguCode = entry.getValue(); // "36_17" 형태
+                
+                // 다양한 매칭 패턴 시도
+                if (isRegionNameMatch(normalizedRegionName, sigunguName)) {
+                    // sigunguCode에서 areaCode 추출 (예: "36_17" → "36")
+                    String areaCode = sigunguCode.split("_")[0];
+                    String actualSigunguCode = sigunguCode.split("_")[1];
+                    log.info("✅ 시군구 매칭 성공 - '{}' → 시군구: {}, areaCode: {}, sigunguCode: {}", 
+                             regionName, sigunguName, areaCode, actualSigunguCode);
+                    return new SigunguMatchResult(areaCode, actualSigunguCode);
+                }
+            }
+            
+            log.info("⚠️ 시군구 매칭 실패 - 매칭되는 시군구 없음: '{}'", regionName);
+            return null;
+            
+        } catch (Exception e) {
+            log.error("❌ 시군구 매칭 중 오류 발생 - regionName: {}", regionName, e);
+            return null;
+        }
+    }
+    
+    /**
+     * 지역명과 시군구명이 매칭되는지 확인하는 헬퍼 메서드
+     */
+    private boolean isRegionNameMatch(String normalizedRegionName, String sigunguName) {
+        String normalizedSigunguName = sigunguName.toLowerCase().trim();
+        
+        // 1. 정확한 매칭 (통영시 -> 통영시)
+        if (normalizedRegionName.contains(normalizedSigunguName)) {
+            return true;
+        }
+        
+        // 2. 시/군/구 제거 매칭 (통영시 -> 통영)
+        if (normalizedSigunguName.endsWith("시") || normalizedSigunguName.endsWith("군") || normalizedSigunguName.endsWith("구")) {
+            String baseSigunguName = normalizedSigunguName.substring(0, normalizedSigunguName.length() - 1);
+            if (normalizedRegionName.contains(baseSigunguName)) {
+                return true;
+            }
+        }
+        
+        // 3. 반대 매칭 (통영 -> 통영시)
+        if (sigunguName.length() > 2) {
+            String baseSigunguName = sigunguName.substring(0, sigunguName.length() - 1).toLowerCase();
+            if (normalizedRegionName.contains(baseSigunguName)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 } 
