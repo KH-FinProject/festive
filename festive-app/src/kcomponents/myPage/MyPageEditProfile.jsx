@@ -258,21 +258,24 @@ const MyPageEditProfile = () => {
                 />
               </div>
 
-              <button
-                type="button"
-                className="edit-btn"
-                onClick={() => setShowModal(true)}
-              >
-                사진 변경
-              </button>
-              <button
-                type="button"
-                className="edit-btn"
-                style={{ marginLeft: "8px", background: "#f0f0f0", color: "#666" }}
-                onClick={handleResetProfileImage}
-              >
-                기본 이미지로 변경
-              </button>
+              <div className="form-buttons">
+                <button
+                  type="button"
+                  className="edit-btn"
+                  onClick={() => setShowModal(true)}
+                >
+                  사진 변경
+                </button>
+                <button
+                  type="button"
+                  className="edit-btn"
+                  style={{ marginLeft: "8px", background: "#f0f0f0", color: "#666" }}
+                  onClick={handleResetProfileImage}
+                >
+                  기본 이미지로 변경
+                </button>
+              </div>
+
 
               <div className="form-section">
                 <div className="mypage-form-row">
@@ -323,13 +326,6 @@ const MyPageEditProfile = () => {
               <div className="form-buttons">
                 <button type="submit" className="submit-btn">
                   수정하기
-                </button>
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => navigate("/mypage/profile")}
-                >
-                  취소하기
                 </button>
               </div>
             </div>

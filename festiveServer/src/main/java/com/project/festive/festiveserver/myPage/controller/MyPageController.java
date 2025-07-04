@@ -285,7 +285,9 @@ public class MyPageController {
     // 기본 이미지로 변경
     @PostMapping("/profile/reset-image")
     public ResponseEntity<?> resetProfileImage(HttpServletRequest request) {
-        Long memberNo = (Long) request.getSession().getAttribute("memberNo");
+    	String accessToken = getAccessTokenFromCookie(request);
+    	Long memberNo = jwtUtil.getMemberNo(accessToken);
+    	
         if (memberNo == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("success", false, "message", "로그인이 필요합니다."));
