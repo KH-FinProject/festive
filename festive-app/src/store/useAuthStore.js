@@ -19,7 +19,11 @@ const useAuthStore = create(
 
       // 상태 설정 함수
       login: (userInfo) => set({ isLoggedIn: true, member: userInfo }),
-      logout: () => set({ isLoggedIn: false, member: null }),
+      logout: () => {
+        // localStorage에서 인증 관련 데이터 명시적 제거
+        localStorage.removeItem("auth-store");
+        set({ isLoggedIn: false, member: null });
+      },
 
       // 닉네임 업데이트 함수
       updateNickname: (newNickname) =>
