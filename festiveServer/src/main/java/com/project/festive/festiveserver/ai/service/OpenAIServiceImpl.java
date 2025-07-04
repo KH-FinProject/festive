@@ -43,7 +43,7 @@ public class OpenAIServiceImpl implements OpenAIService {
         }
 
         try {
-            log.info("🤖 OpenAI API 호출 시작 - 프롬프트 길이: {}", prompt.length());
+    
 
             // OpenAI API 요청 헤더
             HttpHeaders headers = new HttpHeaders();
@@ -81,7 +81,7 @@ public class OpenAIServiceImpl implements OpenAIService {
                     Map<String, Object> message_response = (Map<String, Object>) choices.get(0).get("message");
                     String content = (String) message_response.get("content");
                     
-                    log.info("✅ OpenAI API 호출 성공 - 응답 길이: {}", content.length());
+        
                     return content.trim();
                 }
             }
@@ -294,7 +294,7 @@ public class OpenAIServiceImpl implements OpenAIService {
     
     @Override
     public String extractRegionWithAI(String userMessage, String availableRegions) {
-        log.info("🤖 AI 기반 지역 추출 시작 - 사용자 메시지: '{}'", userMessage);
+
         
         StringBuilder prompt = new StringBuilder();
         prompt.append("사용자의 메시지에서 한국의 지역명을 정확히 추출해주세요.\n\n");

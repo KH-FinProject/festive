@@ -79,6 +79,12 @@ public class AITravelServiceImpl implements AITravelService {
             TravelAnalysis analysis;
             try {
                 analysis = createFastAnalysis(request.getMessage());
+                
+                // 🚫 애매한 요청 체크
+                if ("unclear_request".equals(analysis.getRequestType())) {
+                    return createUnclearRequestResponse();
+                }
+                
             } catch (IllegalArgumentException e) {
                 if ("INVALID_REQUEST".equals(e.getMessage())) {
                     // 여행/축제 관련 질문이 아닌 경우 정중하게 거부
@@ -130,6 +136,40 @@ public class AITravelServiceImpl implements AITravelService {
                "• \"대전 가볼만한 곳\"\n" +
                "• \"충남 여행코스\"\n\n" +
                "여행이나 축제 관련 질문을 해주시면 최고의 추천을 드릴게요! 😊";
+    }
+    
+    /**
+     * 애매한 요청에 대한 응답 생성 (이용법 안내)
+     */
+    private ChatResponse createUnclearRequestResponse() {
+        ChatResponse response = new ChatResponse();
+        
+        StringBuilder content = new StringBuilder();
+        content.append("제가 응답하기 어렵습니다. 이용법을 다시한번 숙지해주세요.\n\n");
+        content.append("⭐ 올바른 이용 방법:\n");
+        content.append("• \"서울 2박3일 여행계획 짜줘\" - 다양한 타입 랜덤 추천\n");
+        content.append("• \"부산 1박2일 관광지 위주로 추천해줘\" - 관광지 중심\n");
+        content.append("• \"제주도 당일치기 음식점 위주로 짜줘\" - 맛집 탐방\n");
+        content.append("• \"경주 2박3일 여행코스 위주로 계획해줘\" - 여행코스 중심\n");
+        content.append("• \"대구 1박2일 문화시설 위주로 추천\" - 문화/박물관 중심\n");
+        content.append("• \"인천 당일치기 레포츠 위주로 짜줘\" - 레포츠/체험 중심\n");
+        content.append("• \"광주 1박2일 쇼핑 위주로 계획해줘\" - 쇼핑몰/시장 중심\n\n");
+        content.append("🎪 축제 검색:\n");
+        content.append("• \"서울 축제 알려줘\" - 단순 축제 정보\n");
+        content.append("• \"부산 축제위주 2박3일 여행계획\" - 축제 기반 여행코스\n\n");
+        content.append("⚠️ 주의사항:\n");
+        content.append("• 최대 4박5일까지만 여행 계획을 세울 수 있습니다\n");
+        content.append("• 지역명과 기간을 명확히 말씀해주세요\n");
+        content.append("• 여행/축제 관련 요청만 처리 가능합니다");
+        
+        response.setContent(content.toString());
+        response.setRequestType("unclear_request");
+        response.setStreaming(false);
+        response.setLocations(new ArrayList<>());
+        response.setFestivals(new ArrayList<>());
+        response.setTravelCourse(null);
+        
+        return response;
     }
     
     /**
