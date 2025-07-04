@@ -261,9 +261,9 @@ const LocalFestive = () => {
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.cos((lat1 * Math.PI) / 180) *
-          Math.cos((lat2 * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c; // km 단위
         return distance;
@@ -424,7 +424,7 @@ const LocalFestive = () => {
         <div className="local-sub-title">
           # 지역별로 다양한 축제를 만나보세요.
         </div>
-        
+
         {/* 검색 섹션 */}
         <div className="search-section">
           <div className="search-title">축제 검색</div>
@@ -433,51 +433,51 @@ const LocalFestive = () => {
           </div>
           <div className="search-container">
             <div className="search-form-row">
-            <div className="input-block">
-              <span className="input-label">시작 날짜</span>
-              <input
-                id="searchStartDate"
-                type="date"
-                className="search-input date-input"
-                value={searchStartDate}
-                onChange={e => setSearchStartDate(e.target.value)}
-                placeholder="시작일"
-              />
+              <div className="input-block">
+                <span className="input-label">시작 날짜</span>
+                <input
+                  id="searchStartDate"
+                  type="date"
+                  className="search-input date-input"
+                  value={searchStartDate}
+                  onChange={(e) => setSearchStartDate(e.target.value)}
+                  placeholder="시작일"
+                />
+              </div>
+              <span className="date-range-tilde">~</span>
+              <div className="input-block">
+                <span className="input-label">끝 날짜</span>
+                <input
+                  id="searchEndDate"
+                  type="date"
+                  className="search-input date-input"
+                  value={searchEndDate}
+                  onChange={(e) => setSearchEndDate(e.target.value)}
+                  placeholder="종료일"
+                />
+              </div>
+              <div className="input-block">
+                <span className="input-label">지역</span>
+                <select
+                  className="search-input location-select"
+                  value={searchLocation}
+                  onChange={(e) => setSearchLocation(e.target.value)}
+                >
+                  <option value="">전체 지역</option>
+                  {areaOptions.map((area) => (
+                    <option key={area.areaCode} value={area.areaCode}>
+                      {area.areaName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button className="search-button" onClick={handleSearch}>
+                검색
+              </button>
             </div>
-            <span className="date-range-tilde">~</span>
-            <div className="input-block">
-              <span className="input-label">끝 날짜</span>
-              <input
-                id="searchEndDate"
-                type="date"
-                className="search-input date-input"
-                value={searchEndDate}
-                onChange={e => setSearchEndDate(e.target.value)}
-                placeholder="종료일"
-              />
-            </div>
-            <div className="input-block">
-              <span className="input-label">지역</span>
-              <select
-                className="search-input location-select"
-                value={searchLocation}
-                onChange={e => setSearchLocation(e.target.value)}
-              >
-                <option value="">전체 지역</option>
-                {areaOptions.map(area => (
-                  <option key={area.areaCode} value={area.areaCode}>
-                    {area.areaName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button className="search-button" onClick={handleSearch}>
-              검색
-            </button>
           </div>
         </div>
       </div>
-    </div>
 
       {/* 새로운 축제 갤러리 섹션 */}
       <div className="festival-gallery-section">

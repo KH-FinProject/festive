@@ -27,7 +27,7 @@ public interface DetailService {
 	 */
 	int selectLikes(String contentId);
 
-	/** 좋아여 상태 변경
+	/** 좋아요 상태 변경
 	 * @param likes
 	 * @return
 	 * @author 미애
