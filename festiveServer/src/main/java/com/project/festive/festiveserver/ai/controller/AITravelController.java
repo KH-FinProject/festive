@@ -101,12 +101,22 @@ public class AITravelController {
     @GetMapping("/place-overview/{contentId}")
     public ResponseEntity<Map<String, Object>> getPlaceOverview(@PathVariable String contentId) {
         try {
-            log.info("장소 상세 정보 요청 - contentId: {}", contentId);
+            log.info("📝 장소 상세 정보 요청 - contentId: {}", contentId);
             
             // detailCommon2 API 호출
             var detailInfo = tourAPIService.fetchDetailCommon2(contentId);
             
             Map<String, Object> response = new HashMap<>();
+            
+            // 상세 로그 추가
+            log.info("📝 detailCommon2 호출 결과: {}", detailInfo != null ? "성공" : "실패");
+            if (detailInfo != null) {
+                log.info("📝 detailInfo 분석 - title: {}, overview: {}, overview 길이: {}", 
+                        detailInfo.getTitle(),
+                        detailInfo.getOverview() != null ? "존재" : "null",
+                        detailInfo.getOverview() != null ? detailInfo.getOverview().length() : 0);
+            }
+            
             if (detailInfo != null && detailInfo.getOverview() != null && 
                 !detailInfo.getOverview().trim().isEmpty()) {
                 response.put("success", true);
@@ -118,13 +128,14 @@ public class AITravelController {
                 response.put("success", false);
                 response.put("message", "상세 정보가 없어 AI 설명을 사용합니다.");
                 response.put("overview", "");
-                log.info("⚠️ 상세 정보 없음 - contentId: {}, fallback 사용", contentId);
+                log.info("⚠️ 상세 정보 없음 - contentId: {}, fallback 사용 (detailInfo: {})", 
+                        contentId, detailInfo != null ? "존재하지만 overview 없음" : "null");
             }
             
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            log.error("장소 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage());
+            log.error("❌ 장소 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage(), e);
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);

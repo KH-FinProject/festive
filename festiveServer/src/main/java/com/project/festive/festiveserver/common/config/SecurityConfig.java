@@ -100,8 +100,9 @@ public class SecurityConfig {
             .requestMatchers("/api/ai/chat", "/api/ai/health").permitAll()
             .requestMatchers("/api/ai/place-overview/**", "/api/ai/place-images/**").permitAll()
 
-            // 여행코스 - 공유 코스 조회는 공개, 나머지는 인증 필요
+            // 여행코스 - 공유 코스 조회와 상세 조회는 공개, 저장/삭제/수정은 인증 필요
             .requestMatchers(HttpMethod.GET, "/api/travel-course/shared-courses").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/travel-course/*").permitAll() // 상세 조회 공개
             .requestMatchers("/api/travel-course/**").authenticated()
 
             // 신고 - 등록/상세만 공개, 나머지는 관리자
@@ -122,6 +123,9 @@ public class SecurityConfig {
             .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
             .requestMatchers("/*.ico", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg").permitAll()
             .requestMatchers("/error", "/actuator/**", "/.well-known/**").permitAll()
+
+            // 부스 신청 관련 API - 인증 없이 허용
+            .requestMatchers("/api/booth/**").permitAll()
 
             // 그 외 모든 요청은 인증 필요
             .anyRequest().authenticated())

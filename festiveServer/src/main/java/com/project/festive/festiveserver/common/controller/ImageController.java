@@ -1,4 +1,4 @@
-package com.project.festive.festiveserver.common.config;
+package com.project.festive.festiveserver.common.controller;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;

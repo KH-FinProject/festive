@@ -214,7 +214,7 @@ public class OpenAIServiceImpl implements OpenAIService {
         
         // 키워드 기반 인사말
         if (keyword != null && !keyword.trim().isEmpty()) {
-            recommendation.append(String.format("🎯 **%s** 관련 여행 정보를 찾아드렸어요!\n\n", keyword));
+            recommendation.append(String.format(" **%s** 관련 여행 정보를 찾아드렸어요!\n\n", keyword));
         } else {
             recommendation.append("**맞춤 여행 추천**을 준비했어요!\n\n");
         }
@@ -290,5 +290,38 @@ public class OpenAIServiceImpl implements OpenAIService {
         return "죄송합니다. 현재 실제 여행 데이터를 기반으로 한 추천만 제공하고 있습니다. " +
                "좀 더 구체적인 지역명이나 여행 키워드를 입력해주시면, " +
                "해당 지역의 실제 관광지와 여행코스를 추천해드릴게요! ";
+    }
+    
+    @Override
+    public String extractRegionWithAI(String userMessage, String availableRegions) {
+        log.info("🤖 AI 기반 지역 추출 시작 - 사용자 메시지: '{}'", userMessage);
+        
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("사용자의 메시지에서 한국의 지역명을 정확히 추출해주세요.\n\n");
+        prompt.append("**사용자 메시지**: \"").append(userMessage).append("\"\n\n");
+        prompt.append("**가능한 지역 목록**:\n");
+        prompt.append(availableRegions).append("\n\n");
+        
+        prompt.append("**추출 규칙**:\n");
+        prompt.append("1. 메시지에서 지역명을 찾아서 위 목록에서 정확히 일치하는 것을 선택\n");
+        prompt.append("2. 지역명의 별칭이나 줄임말도 고려 (예: 통영 → 통영시)\n");
+        prompt.append("3. 조사나 어미는 무시 (예: '통영으로' → '통영시')\n");
+        prompt.append("4. 오타나 표기 변형도 고려\n");
+        prompt.append("5. 지역명이 없으면 'NONE' 반환\n\n");
+        
+        prompt.append("**응답 형식** (JSON):\n");
+        prompt.append("{\n");
+        prompt.append("  \"region\": \"정확한 지역명\",\n");
+        prompt.append("  \"areaCode\": \"지역코드\",\n");
+        prompt.append("  \"sigunguCode\": \"시군구코드\",\n");
+        prompt.append("  \"confidence\": \"HIGH|MEDIUM|LOW\"\n");
+        prompt.append("}\n\n");
+        
+        prompt.append("**예시**:\n");
+        prompt.append("- '통영 2박3일 음식점위주로 여행계획 짜줘' → {\"region\": \"통영시\", \"areaCode\": \"36\", \"sigunguCode\": \"17\", \"confidence\": \"HIGH\"}\n");
+        prompt.append("- '부산 여행 가고싶어' → {\"region\": \"부산광역시\", \"areaCode\": \"6\", \"sigunguCode\": null, \"confidence\": \"HIGH\"}\n");
+        prompt.append("- '맛집 추천해줘' → {\"region\": \"NONE\", \"areaCode\": null, \"sigunguCode\": null, \"confidence\": \"LOW\"}\n");
+        
+        return callOpenAI(prompt.toString());
     }
 } 

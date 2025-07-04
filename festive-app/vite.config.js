@@ -23,17 +23,47 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\/api/, ''), // 필요하다면 경로 재작성 (예: /api/users -> /users)
         // 이 경우엔 /profile-images 자체가 백엔드 경로이므로 필요 없음
       },
+      "/upload/festive/booth": {
+        target: "http://localhost:8080", // 백엔드 Spring Boot 서버 주소
+        changeOrigin: true, // 대상 서버의 호스트 이름을 변경 (CORS 문제 해결에 유용)
+        secure: false, // HTTPS 백엔드를 사용하지 않는 경우 (개발 환경에서 보통 false)
+        // rewrite: (path) => path.replace(/^\/api/, ''), // 필요하다면 경로 재작성 (예: /api/users -> /users)
+        // 이 경우엔 /profile-images 자체가 백엔드 경로이므로 필요 없음
+      },
       "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        secure: false,
+      // 백엔드 API 경로 - 우선순위 높음
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy) => {
+          proxy.on("error", (err) => {
+            console.log("🚨 백엔드 프록시 오류:", err.message);
+          });
+          proxy.on("proxyReq", (proxyReq, req) => {
+            console.log("📡 백엔드 프록시 요청:", req.method, req.url);
+          });
+          proxy.on("proxyRes", (proxyRes, req) => {
+            console.log("📊 백엔드 프록시 응답:", proxyRes.statusCode, req.url);
+          });
+        },
+      },
+
+      // TourAPI 경로 - 별도 경로로 분리
+      "/tour-api": {
         target: "https://apis.data.go.kr",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        rewrite: (path) => path.replace(/^\/tour-api/, ""),
         secure: true,
         configure: (proxy) => {
           proxy.on("error", (err) => {
-            console.log("🚨 프록시 오류:", err.message);
+            console.log("🚨 TourAPI 프록시 오류:", err.message);
           });
           proxy.on("proxyReq", (proxyReq, req) => {
-            console.log("📡 프록시 요청:", req.method, req.url);
+            console.log("📡 TourAPI 프록시 요청:", req.method, req.url);
             // CORS 헤더 추가
             proxyReq.setHeader("Accept", "application/json");
             proxyReq.setHeader(
@@ -42,7 +72,11 @@ export default defineConfig({
             );
           });
           proxy.on("proxyRes", (proxyRes, req) => {
-            console.log("📊 프록시 응답:", proxyRes.statusCode, req.url);
+            console.log(
+              "📊 TourAPI 프록시 응답:",
+              proxyRes.statusCode,
+              req.url
+            );
             // CORS 헤더 설정
             proxyRes.headers["Access-Control-Allow-Origin"] = "*";
             proxyRes.headers["Access-Control-Allow-Methods"] =

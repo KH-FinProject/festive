@@ -3,24 +3,28 @@ import useAuthStore from "../store/useAuthStore";
 import axiosApi from "../api/axiosAPI";
 
 const useAuth = () => {
-  const { login, member, isLoggedIn } = useAuthStore();
+  const { login, logout, member, isLoggedIn } = useAuthStore();
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // 사용자 정보 요청 시도 (OAuth2 로그인 후에도 자동으로 작동)
-        const response = await axiosApi.get("/auth/userInfo");
-        if (response.status === 200) {
-          login(response.data);
+        // authStore에 로그인 상태가 없을 때만 서버에 요청
+        if (!isLoggedIn || !member) {
+          const response = await axiosApi.get("/auth/userInfo");
+          if (response.status === 200) {
+            login(response.data);
+          }
         }
       } catch (error) {
         // 401 오류는 정상적인 상황 (로그인되지 않은 상태)
         if (error.response?.status === 401) {
           console.log("인증되지 않은 상태입니다.");
-          // 로그인되지 않은 상태에서는 아무것도 하지 않음
-          // 필요한 페이지에서 개별적으로 로그인 요청 처리
+          // 서버에서 인증되지 않았다고 응답하면 로컬 상태도 초기화
+          logout();
         } else {
           console.error("앱 초기화 중 인증 확인 오류:", error);
+          // 네트워크 오류 등으로 인해 서버에 접근할 수 없는 경우에는 
+          // 기존 상태를 유지 (로그아웃하지 않음)
         }
       }
     };
@@ -28,8 +32,8 @@ const useAuth = () => {
   }, []);
 
   useEffect(() => {
-    console.log(member);
-  }, [member]);
+    console.log("현재 인증 상태:", { isLoggedIn, member });
+  }, [isLoggedIn, member]);
 };
 
 export default useAuth;

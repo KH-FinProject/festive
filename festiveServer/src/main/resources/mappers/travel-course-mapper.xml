@@ -11,6 +11,7 @@
         <result property="thumbnailImage" column="THUMBNAIL_IMAGE"/>
         <result property="regionName" column="REGION_NAME"/>
         <result property="areaCode" column="AREA_CODE"/>
+        <result property="sigunguCode" column="SIGUNGU_CODE"/>
         <result property="totalDays" column="TOTAL_DAYS"/>
         <result property="requestType" column="REQUEST_TYPE"/>
         <result property="isShared" column="IS_SHARED"/>
@@ -44,11 +45,11 @@
         </selectKey>
         INSERT INTO TRAVEL_COURSE (
             COURSE_NO, MEMBER_NO, COURSE_TITLE, THUMBNAIL_IMAGE, 
-            REGION_NAME, AREA_CODE, TOTAL_DAYS, REQUEST_TYPE, 
+            REGION_NAME, AREA_CODE, SIGUNGU_CODE, TOTAL_DAYS, REQUEST_TYPE, 
             IS_SHARED, COURSE_DESCRIPTION, CREATED_DATE
         ) VALUES (
             #{courseNo}, #{memberNo}, #{courseTitle}, #{thumbnailImage},
-            #{regionName}, #{areaCode}, #{totalDays}, #{requestType},
+            #{regionName}, #{areaCode}, #{sigunguCode}, #{totalDays}, #{requestType},
             #{isShared}, #{courseDescription}, SYSDATE
         )
     </insert>
@@ -70,7 +71,7 @@
     <select id="selectTravelCoursesByMemberNo" resultMap="TravelCourseResultMap">
         SELECT 
             tc.COURSE_NO, tc.MEMBER_NO, tc.COURSE_TITLE, tc.THUMBNAIL_IMAGE,
-            tc.REGION_NAME, tc.AREA_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
+            tc.REGION_NAME, tc.AREA_CODE, tc.SIGUNGU_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
             tc.IS_SHARED, tc.COURSE_DESCRIPTION, tc.CREATED_DATE,
             m.NICKNAME as MEMBER_NICKNAME,
             m.NAME as MEMBER_NAME,
@@ -85,7 +86,7 @@
     <select id="selectSharedTravelCourses" resultMap="TravelCourseResultMap">
         SELECT 
             tc.COURSE_NO, tc.MEMBER_NO, tc.COURSE_TITLE, tc.THUMBNAIL_IMAGE,
-            tc.REGION_NAME, tc.AREA_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
+            tc.REGION_NAME, tc.AREA_CODE, tc.SIGUNGU_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
             tc.IS_SHARED, tc.COURSE_DESCRIPTION, tc.CREATED_DATE,
             m.NICKNAME as MEMBER_NICKNAME,
             m.NAME as MEMBER_NAME,
@@ -100,7 +101,7 @@
     <select id="selectTravelCourseWithDetails" resultMap="TravelCourseResultMap">
         SELECT 
             tc.COURSE_NO, tc.MEMBER_NO, tc.COURSE_TITLE, tc.THUMBNAIL_IMAGE,
-            tc.REGION_NAME, tc.AREA_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
+            tc.REGION_NAME, tc.AREA_CODE, tc.SIGUNGU_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
             tc.IS_SHARED, tc.COURSE_DESCRIPTION, tc.CREATED_DATE,
             m.NICKNAME as MEMBER_NICKNAME,
             m.NAME as MEMBER_NAME,
