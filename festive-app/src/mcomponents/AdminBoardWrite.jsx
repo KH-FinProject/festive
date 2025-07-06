@@ -108,6 +108,7 @@ const AdminBoardWrite = () => {
                 disabled={isSubmitting}
               />
             </div>
+            <br />
             <div className="action-buttons">
               <button
                 type="submit"
