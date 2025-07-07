@@ -95,7 +95,7 @@ function NoticeBoard({ hideTitle }) {
             style={{
               marginTop: "10px",
               padding: "8px 16px",
-              background: "#3498db",
+              background: "#60a5fa",
               color: "white",
               border: "none",
               borderRadius: "4px",
@@ -131,8 +131,8 @@ function NoticeBoard({ hideTitle }) {
                     src={
                       notice.memberProfileImage
                         ? notice.memberProfileImage.startsWith(
-                            "/profile-images/"
-                          )
+                          "/profile-images/"
+                        )
                           ? `http://localhost:8080${notice.memberProfileImage}`
                           : notice.memberProfileImage
                         : "/logo.png"

@@ -159,7 +159,7 @@
 }
 
 .pagination-btn.active {
-  background-color: #4285f4;
+  background-color: #60a5fa;
   color: white;
 }
 
@@ -232,7 +232,7 @@
   max-width: 600px;
 }
 
-.application-detail-form > div {
+.application-detail-form>div {
   margin-bottom: 18px;
 }
 

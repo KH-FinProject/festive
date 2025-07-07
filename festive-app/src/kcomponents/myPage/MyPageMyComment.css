@@ -47,7 +47,7 @@
 }
 
 .menu-item.active {
-    background-color: #9DC4FE;
+    background-color: #60a5fa;
     color: white;
     font-weight: 500;
 }
@@ -98,7 +98,7 @@
 }
 
 .tab-button.active {
-    background-color: #9DC4FE;
+    background-color: #60a5fa;
     color: 25272B;
 }
 
@@ -137,7 +137,7 @@
 .mypage-comment-avatar {
     width: 32px;
     height: 32px;
-    background-color: #9DC4FE;
+    background-color: #60a5fa;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -206,7 +206,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s;
-    border: 1px solid #9DC4FE;
+    border: 1px solid #60a5fa;
     background-color: white;
 }
 
@@ -239,13 +239,13 @@
 
 .page-btn:hover {
     background: #f8f9fa;
-    border-color: #9DC4FE;
+    border-color: #60a5fa;
 }
 
 .page-btn.active {
-    background: #9DC4FE;
+    background: #60a5fa;
     color: white;
-    border-color: #9DC4FE;
+    border-color: #60a5fa;
 }
 
 .partner-item {
@@ -275,7 +275,7 @@
 }
 
 .partner-icon.weather {
-    background-color: #3b82f6;
+    background-color: #60a5fa;
     border-radius: 50%;
 }
 

@@ -12,10 +12,12 @@
 .thumbnail-section {
   width: 100%;
   height: 400px;
-  overflow: hidden; /* 넘치는 이미지 잘라내기 */
+  overflow: hidden;
+  /* 넘치는 이미지 잘라내기 */
   position: relative;
   margin: 0 auto;
 }
+
 .thumbnail-section img {
   width: 100%;
 }
@@ -67,7 +69,7 @@
 }
 
 .badge-button {
-  background: #9dc4fe;
+  background: #60a5fa;
   color: white;
   border: none;
   padding: 6px 16px;
@@ -96,7 +98,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap; /* 화면 작을 때 줄바꿈되게 */
+  flex-wrap: wrap;
+  /* 화면 작을 때 줄바꿈되게 */
 }
 
 .festival-apply-buttons {
@@ -250,7 +253,7 @@
 .title-icon {
   width: 20px;
   height: 20px;
-  color: #9dc4fe;
+  color: #60a5fa;
 }
 
 .map-container-grid {
@@ -258,6 +261,7 @@
   grid-template-columns: 1fr 420px;
   gap: 24px;
 }
+
 .map-container {
   height: 400px;
   border-radius: 8px;

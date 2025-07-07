@@ -83,11 +83,11 @@ const FestivalDetail = () => {
         pagination={{ clickable: true }}
         modules={[Navigation, Pagination]}
         className="mySwiper"
-        /*       breakpoints={{
-      320: { slidesPerView: 1 },
-      640: { slidesPerView: 2 },
-      1024: { slidesPerView: 3 },
-    }} */
+      /*       breakpoints={{
+    320: { slidesPerView: 1 },
+    640: { slidesPerView: 2 },
+    1024: { slidesPerView: 3 },
+  }} */
       >
         {festivalImg.map((img, idx) => (
           <SwiperSlide key={idx}>
@@ -394,6 +394,7 @@ const FestivalDetail = () => {
                   {festivalDetail.eventenddate}
                 </span>
                 <LikeButton contentId={contentId} />
+
               </div>
             </div>
 
@@ -610,9 +611,8 @@ const FestivalDetail = () => {
                       className="festival-image"
                     />
                     <div
-                      className={`festival-status ${
-                        festival.status === "진행중" ? "active" : "upcoming"
-                      }`}
+                      className={`festival-status ${festival.status === "진행중" ? "active" : "upcoming"
+                        }`}
                     >
                       {festival.status}
                     </div>

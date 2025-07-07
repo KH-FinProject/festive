@@ -133,7 +133,7 @@
 }
 
 .mypage-input-group input:focus {
-    border-color: #9DC4FE;
+    border-color: #60a5fa;
 }
 
 .check-btn {
@@ -151,7 +151,7 @@
 .check-btn:hover {
     background: #f8f9fa;
     border-color: #60a5fa;
-    /* color: #9DC4FE; */
+    /* color: #60a5fa; */
 }
 
 .form-buttons {
@@ -187,7 +187,7 @@
 .cancel-btn:hover {
     background: #f8f9fa;
     border-color: #60a5fa;
-    /* color: #9DC4FE; */
+    /* color: #60a5fa; */
 }
 
 .partner-logos {
