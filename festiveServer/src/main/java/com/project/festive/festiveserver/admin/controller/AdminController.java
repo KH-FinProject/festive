@@ -23,12 +23,10 @@ import com.project.festive.festiveserver.wagle.dto.BoardDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import oracle.jdbc.clio.annotations.Debug;
 
 @RestController // 비동기 컨트롤러
 @CrossOrigin(origins="http://localhost:5173", allowCredentials = "true")
 @RequestMapping("admin")
-@CrossOrigin(origins = {"http://localhost:5173"}) // CORS 설정 추가
 @Slf4j
 @RequiredArgsConstructor
 @SessionAttributes({"loginMember"})
