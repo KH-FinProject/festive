@@ -71,7 +71,7 @@
 
 .content-card {
   background: #f8f9fa;
-  border: 1px solid #dee2e6;
+  border: 1px solid #60a5fa;
   border-radius: 6px;
   padding: 20px;
 }
@@ -142,7 +142,7 @@
 .parent-post-info {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid #60a5fa;
 }
 
 .parent-post-meta {

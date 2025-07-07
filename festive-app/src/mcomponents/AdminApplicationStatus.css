@@ -97,15 +97,15 @@
 }
 
 .btn-detail:hover {
-  background-color: #e8eaed;
-  color: #333;
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
 }
 
 .btn-approve {
   background: white;
-  color: #4a90e2;
-  border-color: #4a90e2;
-  border: 1px solid #dee2e6;
+  color: #60a5fa;
+  border-color: #60a5fa;
+  border: 1px solid #60a5fa;
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 14px;
@@ -116,7 +116,7 @@
 }
 
 .btn-approve:hover:not(:disabled) {
-  background-color: #4a90e2;
+  background-color: #60a5fa;
   color: white;
 }
 
@@ -176,7 +176,7 @@
 .app-action-btn {
   flex: 1;
   padding: 4px 16px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #60a5fa;
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
@@ -186,8 +186,8 @@
 
 .app-detail-btn {
   flex: 1;
-  color: #4a90e2;
-  border-color: #4a90e2;
+  color: #60a5fa;
+  border-color: #60a5fa;
 }
 
 /* 테이블(card) 스타일 통일 */
@@ -241,9 +241,9 @@
 .app-action-btn {
   padding: 8px 18px;
   border-radius: 6px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #25272B;
   background: #fff;
-  color: #4a90e2;
+  color: #25272B;
   font-weight: 500;
   font-size: 14px;
   cursor: pointer;
@@ -252,9 +252,8 @@
 
 .btn-detail:hover,
 .app-action-btn:hover {
-  background: #e8f0fe;
-  color: #1a73e8;
-  border-color: #b3d7ff;
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
 }
 
 /* 반응형 디자인 */
