@@ -30,12 +30,6 @@ const MyPageEditInfo = () => {
     const navigate = useNavigate();
     const { member } = useAuthStore();
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            handleSubmit();
-        }
-    };
-
     // 이메일 도메인 옵션
     const emailDomains = [
         { value: "", label: "선택하세요" },
@@ -297,7 +291,7 @@ const MyPageEditInfo = () => {
             fullAddressForDB += ` (${memberInfo.address.extra})`;
         }
 
-        // 소셜 로그인 사용자는 currentPassword 없이 업데이트
+        // 백엔드 요구에 맞게 password 포함하여 전송
         const updatedData = member?.socialId
             ? {
                 tel: fullPhoneNumber,
@@ -308,7 +302,7 @@ const MyPageEditInfo = () => {
                 tel: fullPhoneNumber,
                 email: fullEmail,
                 address: fullAddressForDB,
-                currentPassword: memberInfo.password,
+                password: memberInfo.password, // 이 필드명 반드시 "password"로!
             };
 
         try {
@@ -328,13 +322,14 @@ const MyPageEditInfo = () => {
                 fetchMyInfo();
                 setMemberInfo((prev) => ({ ...prev, password: "" }));
             } else {
-                alert(`정보 수정 실패: ${data.message}`);
+                alert(`${data.message}`);
             }
         } catch (error) {
             console.error("정보 수정 중 오류 발생:", error);
             alert("정보 수정 중 오류가 발생했습니다. 다시 시도해주세요.");
         }
     };
+
 
     useEffect(() => {
         return () => {
@@ -550,7 +545,6 @@ const MyPageEditInfo = () => {
                                         }
                                         placeholder="비밀번호"
                                         className="form-input full-width"
-                                        onKeyDown={handleKeyDown}
                                     />
                                 </div>
                             )}
