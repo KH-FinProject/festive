@@ -81,7 +81,9 @@ function getFestivalStatus(start, end) {
 function FestivalSearchModal({ open, onClose, onSelect, areaOptions }) {
   const [query, setQuery] = useState("");
   const [region, setRegion] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
   const [endDate, setEndDate] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -382,7 +384,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             </button>
           </div>
         </div>
-        <div className="booth-form-field">
+        <div className="booth-form-field" style={{ display: "none" }}>
           <label className="booth-form-label">
             축제 ID(contentId) <span style={{ color: "red" }}>*</span>
           </label>
