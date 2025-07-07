@@ -4,11 +4,13 @@ import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSideBar";
 import axiosApi from "../api/axiosAPI";
+import { useAdminNotification } from "./AdminNotificationContext.jsx";
 
 const AdminApplicationStatus = () => {
   const [applications, setApplications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const { setHasNewBooth } = useAdminNotification();
 
   useEffect(() => {
     async function fetchApplications() {
@@ -20,6 +22,10 @@ const AdminApplicationStatus = () => {
       }
     }
     fetchApplications();
+  }, []);
+
+  useEffect(() => {
+    setHasNewBooth(false);
   }, []);
 
   // 페이지네이션 계산
@@ -88,7 +94,9 @@ const AdminApplicationStatus = () => {
                         : "-"}
                     </td>
                     <td>{application.contentTitle}</td>
-                    <td>{application.boothAccept === "Y" ? "수락완료" : ""}</td>
+                    <td>
+                      {application.boothAccept === "Y" ? "수락완료" : "대기"}
+                    </td>
                     <td>
                       <button
                         className="btn-detail"

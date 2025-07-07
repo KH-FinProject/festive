@@ -47,4 +47,7 @@ public interface MyPageService {
 
      // 축제 찜 해제
     void removeFavorite(long memberNo, String contentId);
+    
+    // 기본 이미지로 변경
+    boolean resetProfileImage(Long memberNo);
 }

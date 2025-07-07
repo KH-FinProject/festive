@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,12 +16,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
 import com.project.festive.festiveserver.admin.model.service.AdminService;
+import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
 import com.project.festive.festiveserver.member.dto.MemberDto;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import oracle.jdbc.clio.annotations.Debug;
 
 @RestController // 비동기 컨트롤러
+@CrossOrigin(origins="http://localhost:5173", allowCredentials = "true")
 @RequestMapping("admin")
 @Slf4j
 @RequiredArgsConstructor
@@ -114,5 +121,67 @@ public class AdminController {
 		}
 		
 	}
+	
+	/**
+     * 공지글 작성
+     */
+    @PostMapping("/write")
+    public ResponseEntity<String> createBoard(@RequestBody BoardDto boardDto) {
+        try {
+            // 안전한 인증 정보 추출
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(401).body("인증 정보가 없습니다.");
+            }
+            
+            Object principal = authentication.getPrincipal();
+            if (!(principal instanceof CustomUserDetails)) {
+                log.error("인증 정보 타입 오류: {}", principal.getClass().getName());
+                return ResponseEntity.status(401).body("유효하지 않은 인증 정보입니다.");
+            }
+            
+            CustomUserDetails userDetails = (CustomUserDetails) principal;
+            Long memberNo = userDetails.getMemberNo();
+            
+            boardDto.setMemberNo(memberNo);
+            // boardTypeNo가 없으면 기본값 1(일반 게시판)로 설정
+            if (boardDto.getBoardTypeNo() == null) {
+                boardDto.setBoardTypeNo(1L);
+            }
+            int result = service.createBoard(boardDto);
+            if (result > 0) {
+                return ResponseEntity.ok("게시글이 작성되었습니다.");
+            } else {
+                return ResponseEntity.badRequest().body("게시글 작성에 실패했습니다.");
+            }
+        } catch (Exception e) {
+            log.error("게시글 작성 실패", e);
+            return ResponseEntity.internalServerError().body("서버 오류가 발생했습니다.");
+        }
+    }
+    
+    // 글 목록 조회
+    @GetMapping("/board")
+    public List<BoardDto> getAllBoards() {
+    	
+    	log.debug("키키" + service.getAllBoards().toString());
+        return service.getAllBoards();
+    }
+    
+    // 선택한 글 삭제
+	@PostMapping("/boardDelete")
+	public ResponseEntity<Object> deleteBoard(@RequestBody List<Integer> boardNoList) {
+		try {
+			int result = service.deleteBoard(boardNoList);
+			return ResponseEntity.status(HttpStatus.OK).body(result);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+		
+	}
+    
+    
 	
 }

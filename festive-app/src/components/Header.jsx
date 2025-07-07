@@ -10,13 +10,12 @@ import "./HeaderFooter.css";
 const Header = () => {
   const [login, setLogin] = useState(false);
   const { member, logout, isLoggedIn } = useAuthStore();
-  const { hasNewReport } = useAdminNotification();
+  const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotification();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // 로그아웃 관련 상태
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState(null);
 
   useEffect(() => {
     setLogin(isLoggedIn);
@@ -24,32 +23,32 @@ const Header = () => {
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
-    
+
     setIsLoggingOut(true);
-    setLogoutError(null);
-    
+
     let retryCount = 0;
     const maxRetries = 2;
-    
+
     while (retryCount <= maxRetries) {
       try {
         await axiosApi.post("/auth/logout");
         console.log("로그아웃 성공");
-        
+
         // 서버 요청 성공 시에만 클라이언트 상태 초기화
         logout();
         navigate("/");
         return;
-        
       } catch (error) {
         retryCount++;
-        console.error(`로그아웃 요청 실패 (${retryCount}/${maxRetries + 1}):`, error);
-        
+        console.error(
+          `로그아웃 요청 실패 (${retryCount}/${maxRetries + 1}):`,
+          error
+        );
+
         if (retryCount > maxRetries) {
           // 최대 재시도 횟수 초과
           const errorMessage = getLogoutErrorMessage(error);
-          setLogoutError(errorMessage);
-          
+
           // 보안상 중요한 경우에만 사용자에게 알림
           if (error.response?.status === 401) {
             // 인증 오류는 이미 로그아웃된 상태로 간주
@@ -57,29 +56,28 @@ const Header = () => {
             navigate("/");
           } else {
             // 다른 오류는 사용자에게 알림
-            alert(`로그아웃에 실패했습니다: ${errorMessage}\n잠시 후 다시 시도해주세요.`);
+            alert(
+              `로그아웃에 실패했습니다: ${errorMessage}\n잠시 후 다시 시도해주세요.`
+            );
           }
         } else {
           // 재시도 전 짧은 대기
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     }
-    
+
     setIsLoggingOut(false);
   };
 
   // 에러 메시지 생성 함수
   const getLogoutErrorMessage = (error) => {
-    if (error.code === 'NETWORK_ERROR') {
+    if (error.code === "NETWORK_ERROR") {
       return "네트워크 연결을 확인해주세요.";
-
     } else if (error.response?.status === 500) {
       return "서버 오류가 발생했습니다.";
-
     } else if (error.response?.status === 401) {
       return "이미 로그아웃된 상태입니다.";
-      
     } else {
       return "알 수 없는 오류가 발생했습니다.";
     }
@@ -121,25 +119,26 @@ const Header = () => {
             }`}
           >
             {item.name}
-            {item.name === "관리자" && hasNewReport && (
-              <span
-                style={{
-                  background: "#ff4757",
-                  color: "white",
-                  borderRadius: "8px",
-                  fontSize: "10px",
-                  fontWeight: "bold",
-                  padding: "1px 6px",
-                  marginLeft: "6px",
-                  verticalAlign: "middle",
-                  position: "relative",
-                  top: "-7px",
-                  animation: "popIn 0.3s",
-                }}
-              >
-                new!
-              </span>
-            )}
+            {item.name === "관리자" &&
+              (hasNewReport || hasNewBooth || hasNewInquiry) && (
+                <span
+                  style={{
+                    background: "#ff4757",
+                    color: "white",
+                    borderRadius: "8px",
+                    fontSize: "10px",
+                    fontWeight: "bold",
+                    padding: "1px 6px",
+                    marginLeft: "6px",
+                    verticalAlign: "middle",
+                    position: "relative",
+                    top: "-7px",
+                    animation: "popIn 0.3s",
+                  }}
+                >
+                  new!
+                </span>
+              )}
           </Link>
         ))}
       </nav>

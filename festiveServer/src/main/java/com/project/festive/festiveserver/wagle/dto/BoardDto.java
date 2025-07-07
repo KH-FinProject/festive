@@ -34,12 +34,17 @@ public class BoardDto {
     private List<String> boardImages;
     private String memberProfileImage;
     
+    // 지현이가 추가
+    private String category;
+    private String priority;
+    private String inquiryStatus;
+    
     
     
     // 목록 조회용 생성자
     public BoardDto(Long boardNo, String boardTitle, String memberNickname, 
                    LocalDateTime boardCreateDate, Integer boardViewCount, 
-                   Integer boardLikeCount, Integer boardCommentCount, String memberProfileImage) {
+                   Integer boardLikeCount, Integer boardCommentCount, String memberProfileImage, long boardCode) {
         this.boardNo = boardNo;
         this.boardTitle = boardTitle;
         this.memberNickname = memberNickname;
@@ -48,5 +53,6 @@ public class BoardDto {
         this.boardLikeCount = boardLikeCount;
         this.boardCommentCount = boardCommentCount;
         this.memberProfileImage = memberProfileImage;
+        this.boardTypeNo = boardCode; // 지현이가 추가함
     }
 } 

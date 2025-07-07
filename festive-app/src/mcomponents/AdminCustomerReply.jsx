@@ -158,11 +158,10 @@ const AdminCustomerReply = () => {
                 </span>
                 <div className="inquiry-badges">
                   <span
-                    className={`status-badge ${
-                      (inquiry?.inquiryStatus || "대기중") === "답변완료"
-                        ? "completed"
-                        : "waiting"
-                    }`}
+                    className={`status-badge ${(inquiry?.inquiryStatus || "대기중") === "답변완료"
+                      ? "completed"
+                      : "waiting"
+                      }`}
                   >
                     {inquiry?.inquiryStatus || "대기중"}
                   </span>
@@ -202,9 +201,10 @@ const AdminCustomerReply = () => {
               <Editor
                 ref={editorRef}
                 height="300px"
-                initialEditType="wysiwyg"
+                initialEditType="markdown"
                 placeholder="답변 내용을 입력하세요"
                 previewStyle="vertical"
+                hideModeSwitch={true}
                 disabled={isSubmitting}
                 initialValue={inquiry?.answerContent || ""}
               />

@@ -27,7 +27,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
 
     @Override
     public TravelAnalysis createFastAnalysis(String userMessage) {
-        log.info("🔍 빠른 여행 분석 시작 - 메시지: {}", userMessage);
+
         
         try {
             // 기본값 설정
@@ -48,7 +48,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             TravelAnalysis analysis = new TravelAnalysis(requestType, region, keyword, duration, intent, areaCode, sigunguCode);
             analysis.setPreferredContentType(preferredContentType);
             
-            log.info("✅ 빠른 분석 완료 - 지역: {}, 기간: {}, 타입: {}", region, duration, requestType);
+
             return analysis;
             
         } catch (Exception e) {
@@ -126,12 +126,25 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return false;
         }
         
-        String lowerMessage = message.toLowerCase();
+        String lowerMessage = message.toLowerCase().trim();
         
-        // 여행 관련 키워드
+        // 🚫 너무 짧거나 애매한 요청은 거부
+        if (lowerMessage.length() <= 2) {
+            return false;
+        }
+        
+        // 🚫 단순한 단어만 있는 경우 거부 (지역명이나 구체적인 키워드 없이)
+        String[] ambiguousWords = {"추천", "알려줘", "찾아줘", "뭐가", "어떤", "좋은", "괜찮은"};
+        for (String ambiguous : ambiguousWords) {
+            if (lowerMessage.equals(ambiguous)) {
+                return false; // 단독으로 사용된 경우 거부
+            }
+        }
+        
+        // 여행 관련 키워드 (구체적인 키워드만)
         String[] travelKeywords = {
             "여행", "관광", "휴가", "여행지", "관광지", "명소", "볼거리",
-            "일정", "코스", "루트", "동선", "가볼만한", "추천",
+            "일정", "코스", "루트", "동선", "가볼만한",
             "박물관", "미술관", "전시", "문화", "역사", "유적",
             "맛집", "음식", "식당", "먹거리", "카페",
             "숙박", "호텔", "펜션", "민박", "리조트",
@@ -140,18 +153,45 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             "온천", "스파", "체험", "액티비티"
         };
         
+        // 추천 키워드는 다른 키워드와 함께 사용될 때만 유효
+        boolean hasRecommendationWord = lowerMessage.contains("추천");
+        boolean hasOtherTravelKeyword = false;
+        
         for (String keyword : travelKeywords) {
             if (lowerMessage.contains(keyword)) {
-                return true;
+                hasOtherTravelKeyword = true;
+                break;
             }
         }
         
-        // 지역명이 포함되어 있으면 여행 관련으로 간주
+        // "추천"이 있으면서 다른 여행 키워드도 있는 경우에만 유효
+        if (hasRecommendationWord && hasOtherTravelKeyword) {
+            return true;
+        }
+        
+        // "추천"이 없고 다른 여행 키워드가 있는 경우
+        if (!hasRecommendationWord && hasOtherTravelKeyword) {
+            return true;
+        }
+        
+        // 지역명 체크 - 하지만 지역명만 있고 다른 키워드가 없으면 애매한 요청으로 간주
         Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
+        boolean hasRegionName = false;
         for (String region : areaCodeMapping.keySet()) {
             if (lowerMessage.contains(region.toLowerCase())) {
-                return true;
+                hasRegionName = true;
+                break;
             }
+        }
+        
+        // 지역명이 있으면서 다른 여행 키워드도 있는 경우에만 유효
+        if (hasRegionName && (hasOtherTravelKeyword || hasRecommendationWord)) {
+            return true;
+        }
+        
+        // 기간이 포함된 경우 (박, 일 등) - 지역명과 함께 있어야 함
+        if (lowerMessage.matches(".*\\d+박.*") || lowerMessage.matches(".*\\d+일.*")) {
+            return hasRegionName; // 지역명이 있어야 유효한 여행 요청
         }
         
         return false;
@@ -183,7 +223,6 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
                     
                     // 🚫 4박5일 제한: 4박을 초과하면 4박5일로 제한
                     if (nights > 4) {
-                        log.info("⚠️ 여행 기간 제한: {}박{}일 → 4박5일로 제한됨", nights, days);
                         return "4박5일";
                     }
                     
@@ -194,7 +233,6 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
                     
                     // 🚫 4박5일 제한: 4박을 초과하면 4박5일로 제한
                     if (nights > 4) {
-                        log.info("⚠️ 여행 기간 제한: {}박 → 4박5일로 제한됨", nights);
                         return "4박5일";
                     }
                     
@@ -205,7 +243,6 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
                     
                     // 🚫 5일 제한: 5일을 초과하면 4박5일로 제한
                     if (days > 5) {
-                        log.info("⚠️ 여행 기간 제한: {}일 → 4박5일로 제한됨", days);
                         return "4박5일";
                     }
                     
@@ -230,7 +267,6 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "4박5일";
         } else if (lowerMessage.contains("5박") || lowerMessage.contains("6박") || lowerMessage.contains("7박") || 
                    lowerMessage.contains("8박") || lowerMessage.contains("9박") || lowerMessage.contains("10박")) {
-            log.info("⚠️ 여행 기간 제한: 5박 이상 요청 → 4박5일로 제한됨");
             return "4박5일";
         }
         
@@ -255,25 +291,11 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         }
         
         String message = userMessage.toLowerCase().trim();
-        log.info("🔍 지역 정보 추출 시작 - 입력: '{}'", userMessage);
         
         // DB 기반 시군구 매핑 사용
         Map<String, String> sigunguCodeMapping = areaService.getSigunguCodeMapping();
-        log.info("📊 시군구 매핑 데이터 개수: {}", sigunguCodeMapping.size());
         
-        // 🔎 통영 관련 디버깅: 시군구 매핑에 통영 데이터가 있는지 확인
-        boolean hasChangwon = sigunguCodeMapping.containsKey("창원시");
-        boolean hasTongyeong = sigunguCodeMapping.containsKey("통영시");
-        boolean hasTongyeongShort = sigunguCodeMapping.containsKey("통영");
-        String tongyeongCode = sigunguCodeMapping.get("통영시");
-        String tongyeongShortCode = sigunguCodeMapping.get("통영");
-        
-        log.info("🐛 [TONGYEONG DEBUG] 창원시: {}, 통영시: {}, 통영: {}", hasChangwon, hasTongyeong, hasTongyeongShort);
-        log.info("🐛 [TONGYEONG DEBUG] 통영시 코드: {}, 통영 코드: {}", tongyeongCode, tongyeongShortCode);
-        
-        if (message.contains("통영")) {
-            log.info("🐛 [TONGYEONG DEBUG] '통영' 키워드 감지! 메시지: '{}'", message);
-        }
+
         
         // 🚫 일반적인 조사/어미 제외 리스트 (대폭 강화)
         String[] excludedWords = {
@@ -312,10 +334,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
                 continue;
             }
             
-            // 🔎 통영 관련 디버깅
-            if (cityName.contains("통영")) {
-                log.info("🐛 [TONGYEONG DEBUG] 시군구 데이터에서 통영 발견: '{}'", cityName);
-            }
+
             
             // 더 정확한 매칭을 위한 다양한 패턴 체크
             boolean isMatched = false;
@@ -349,13 +368,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
                 String areaCode = parts[0];
                 String regionName = findRegionNameByAreaCode(areaCode) + " " + cityName;
                 
-                log.info("✅ 시군구 매핑 성공: '{}' → areaCode: {}, sigunguCode: {}, regionName: {} (매칭타입: {})", 
-                        cityName, areaCode, sigunguCode, regionName, matchType);
-                
-                // 🔎 통영 관련 추가 디버깅
-                if (cityName.contains("통영")) {
-                    log.info("🎯 [TONGYEONG SUCCESS] 통영 지역 인식 성공! 최종 결과 - areaCode: {}, sigunguCode: {}", areaCode, sigunguCode);
-                }
+
                 
                 return new RegionInfo(areaCode, sigunguCode, regionName);
             }
@@ -363,31 +376,16 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         // DB 기반 지역 매핑 사용 (광역시/도)
         Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
-        log.info("📊 지역 매핑 데이터 개수: {}", areaCodeMapping.size());
         
         for (Map.Entry<String, String> entry : areaCodeMapping.entrySet()) {
             String regionName = entry.getKey();
             if (message.contains(regionName.toLowerCase())) {
                 String areaCode = entry.getValue();
-                log.info("✅ 지역 매핑 성공: '{}' → areaCode: {}", regionName, areaCode);
                 return new RegionInfo(areaCode, null, regionName);
             }
         }
         
-        // 🔎 매핑 실패 시 추가 디버깅
-        if (message.contains("통영")) {
-            log.error("❌ [TONGYEONG ERROR] '통영' 키워드가 있음에도 매핑 실패! 메시지: '{}'", userMessage);
-            log.error("❌ [TONGYEONG ERROR] 시군구 매핑 데이터 샘플 5개:");
-            int count = 0;
-            for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
-                if (count++ < 5) {
-                    log.error("  - '{}' → '{}'", entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        
         // 🤖 AI 기반 지역 추출 시도
-        log.info("🤖 기존 매핑 실패 - AI 기반 지역 추출 시도");
         RegionInfo aiRegionInfo = extractRegionWithAI(userMessage, sigunguCodeMapping, areaCodeMapping);
         if (aiRegionInfo != null) {
             return aiRegionInfo;
@@ -416,7 +414,10 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
     public String determineRequestType(String message) {
         String lowerMessage = message.toLowerCase();
         
-        log.info("🔍 RequestType 분류 시작 - 메시지: {}", message);
+        // 0. 먼저 여행/축제 관련성 체크
+        if (!isTravelOrFestivalRelated(message)) {
+            return "unclear_request";
+        }
         
         // 1. 축제 관련 키워드 확인
         boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("행사") || 
@@ -441,32 +442,23 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         if (hasFestivalKeyword && hasTravelPlanKeyword) {
             // 축제 + 여행 계획 키워드 = 축제 기반 여행 계획
             requestType = "festival_travel";
-            log.info("🎪 축제 기반 여행 계획 요청으로 분류");
         } else if (hasFestivalKeyword && hasInfoRequestKeyword) {
             // 축제 + 정보 요청 키워드 = 단순 축제 정보 요청
             requestType = "festival_info";
-            log.info("ℹ️ 단순 축제 정보 요청으로 분류");
         } else if (hasFestivalKeyword) {
             // 축제 키워드만 있는 경우 - 문맥에 따라 판단
             if (lowerMessage.contains("위주") || lowerMessage.contains("중심") || lowerMessage.contains("기반")) {
                 requestType = "festival_travel";
-                log.info("🎪 축제 위주 여행 계획 요청으로 분류 (위주/중심/기반 키워드)");
             } else {
                 requestType = "festival_info";
-                log.info("ℹ️ 기본 축제 정보 요청으로 분류");
             }
         } else if (hasTravelPlanKeyword) {
             // 여행 계획 키워드만 있는 경우 = 일반 여행 계획
             requestType = "travel_only";
-            log.info("🗺️ 일반 여행 계획 요청으로 분류");
         } else {
             // 기본값
             requestType = "travel_only";
-            log.info("🗺️ 기본 여행 계획 요청으로 분류 (기본값)");
         }
-        
-        log.info("✅ RequestType 분류 완료: {} (축제키워드: {}, 여행계획키워드: {}, 정보요청키워드: {})", 
-                requestType, hasFestivalKeyword, hasTravelPlanKeyword, hasInfoRequestKeyword);
         
         return requestType;
     }
@@ -570,7 +562,6 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             
             // AI 호출
             String aiResponse = openAIService.extractRegionWithAI(userMessage, availableRegions.toString());
-            log.info("🤖 AI 지역 추출 응답: {}", aiResponse);
             
             // JSON 파싱 시도
             return parseAIRegionResponse(aiResponse);
@@ -610,12 +601,8 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             String confidence = extractJsonValue(jsonStr, "confidence");
             
             if ("NONE".equals(region) || region == null || region.trim().isEmpty()) {
-                log.info("🤖 AI가 지역을 찾지 못함");
                 return null;
             }
-            
-            log.info("🎯 AI 지역 추출 성공: region={}, areaCode={}, sigunguCode={}, confidence={}", 
-                    region, areaCode, sigunguCode, confidence);
             
             return new RegionInfo(areaCode, sigunguCode, region);
             

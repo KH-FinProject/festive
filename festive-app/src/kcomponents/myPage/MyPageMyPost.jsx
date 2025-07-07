@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import Pagination, { usePagination } from "./Pagination";
 
-const PAGE_SIZE = 7;
+const PAGE_SIZE = 6;
 
 const MyPageMyPost = () => {
   // 게시글 데이터 상태

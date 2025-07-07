@@ -87,6 +87,16 @@
   white-space: nowrap;
 }
 
+.post-title-link {
+  color: #1a1a1a;
+  text-decoration: none;
+}
+
+.post-title-link:hover {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
 .post-meta {
   display: flex;
   align-items: center;
@@ -225,6 +235,12 @@
   font-weight: 500;
   margin-bottom: 8px;
   color: #333;
+}
+
+.post-item-header {
+  display: flex;
+  gap: 20px;
+  align-items: center;
 }
 
 /* 반응형 디자인 */

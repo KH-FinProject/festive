@@ -139,9 +139,10 @@ function EditPage() {
           <Editor
             ref={editorRef}
             height="400px"
-            initialEditType="wysiwyg"
+            initialEditType="markdown"
             placeholder="내용을 입력하세요"
             previewStyle="vertical"
+            hideModeSwitch={true}
             disabled={isSubmitting}
             initialValue={content}
           />
