@@ -17,11 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.project.festive.festiveserver.auth.dto.AuthKeyRequest;
 import com.project.festive.festiveserver.auth.dto.LoginRequest;
 import com.project.festive.festiveserver.auth.dto.LoginResponse;
-import com.project.festive.festiveserver.auth.entity.AuthKey;
+import com.project.festive.festiveserver.auth.entity.EmailAuthKey;
 import com.project.festive.festiveserver.auth.entity.RefreshToken;
+import com.project.festive.festiveserver.auth.entity.TelAuthKey;
 import com.project.festive.festiveserver.auth.mapper.AuthMapper;
-import com.project.festive.festiveserver.auth.repository.AuthKeyRepository;
+import com.project.festive.festiveserver.auth.repository.EmailAuthKeyRepository;
 import com.project.festive.festiveserver.auth.repository.RefreshTokenRepository;
+import com.project.festive.festiveserver.auth.repository.TelAuthKeyRepository;
+import com.project.festive.festiveserver.common.util.SolapiUtil;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.member.entity.Member;
 import com.project.festive.festiveserver.member.repository.MemberRepository;
@@ -40,10 +43,12 @@ public class AuthServiceImpl implements AuthService {
 	private final BCryptPasswordEncoder bcrypt;
 	private final MemberRepository memberRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
-	private final AuthKeyRepository authKeyRepository;
+	private final EmailAuthKeyRepository emailAuthKeyRepository;
+	private final TelAuthKeyRepository telAuthKeyRepository;
 	private final JwtUtil jwtUtil;
 	private final JavaMailSender mailSender;
 	private final AuthMapper authMapper;
+	private final SolapiUtil solapiUtil;
 
 	@Override
 	public Map<String, Object> login(LoginRequest request) {
@@ -164,13 +169,12 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public String sendEmail(String htmlName, String email) {
 		try {
-			// 이메일 발송 핵심 상황만 로그
 			log.info("이메일 발송 시작: {}", email);
 
 			String authKey = createAuthKey();
 
-			if (!storeAuthKey(AuthKey.builder().email(email).authKey(authKey).createTime(LocalDateTime.now()).build())) {
-				log.error("인증키 저장 실패");
+			if (!storeEmailAuthKey(email, authKey)) {
+				log.error("이메일 인증키 저장 실패");
 				throw new RuntimeException("인증키 저장에 실패했습니다.");
 			}
 
@@ -190,7 +194,6 @@ public class AuthServiceImpl implements AuthService {
 		} catch (MessagingException e) {
 			log.error("이메일 전송 중 오류 발생: {}", e.getMessage(), e);
 			throw new RuntimeException("이메일 전송에 실패했습니다.");
-			
 		} catch (Exception e) {
 			log.error("인증키 생성 중 오류 발생: {}", e.getMessage(), e);
 			throw new RuntimeException("인증키 생성에 실패했습니다.");
@@ -198,41 +201,69 @@ public class AuthServiceImpl implements AuthService {
 	}
 	
 	@Override
-	public int checkAuthKey(AuthKeyRequest authKeyRequest) {
-		AuthKey authKey = authKeyRepository.findByEmail(authKeyRequest.getEmail());
-		
-		if (authKey == null) {
-			return 0; // 인증키가 존재하지 않음
+	public String sendSms(String tel) {
+		try {
+			log.info("SMS 발송 시작: {}", tel);
+
+			String authKey = createAuthKey();
+
+			if (!storeTelAuthKey(tel, authKey)) {
+				log.error("전화번호 인증키 저장 실패");
+				throw new RuntimeException("인증키 저장에 실패했습니다.");
+			}
+
+			solapiUtil.sendVerificationCode(tel, "01073471916", authKey);
+
+			log.info("SMS 발송 성공: {}", tel);
+			return "인증번호가 SMS로 전송되었습니다.";
+
+		} catch (Exception e) {
+			log.error("인증키 생성 중 오류 발생: {}", e.getMessage(), e);
+			throw new RuntimeException("인증키 생성에 실패했습니다.");
 		}
-		
-		if (authKey.getAuthKey().equals(authKeyRequest.getAuthKey())) {
-			return 1; // 인증 성공
-		}
-		
-		return 2; // 인증키 불일치
 	}
 	
-	// 인증키와 이메일을 DB에 저장하는 메서드
-	private boolean storeAuthKey(AuthKey authKeyEntity) {
+	@Override
+	public int checkAuthKey(AuthKeyRequest req) {
+		if ("email".equals(req.getAuthMethod())) {
+			EmailAuthKey entity = emailAuthKeyRepository.findById(req.getEmail()).orElse(null);
+			if (entity == null) return 0;
+			if (entity.getAuthKey().equals(req.getAuthKey())) return 1;
+			return 2;
+			
+		} else if ("tel".equals(req.getAuthMethod())) {
+			TelAuthKey entity = telAuthKeyRepository.findById(req.getTel()).orElse(null);
+			if (entity == null) return 0;
+			if (entity.getAuthKey().equals(req.getAuthKey())) return 1;
+			return 2;
+		}
+		return 0;
+	}
+	
+	private boolean storeEmailAuthKey(String email, String authKey) {
 		try {
-			// 기존 이메일에 대한 인증키가 있는지 확인
-			AuthKey existingAuthKey = authKeyRepository.findByEmail(authKeyEntity.getEmail());
-			
-			if (existingAuthKey != null) {
-				// 기존 인증키가 있으면 업데이트
-				existingAuthKey.setAuthKey(authKeyEntity.getAuthKey());
-				existingAuthKey.setCreateTime(LocalDateTime.now());
-				authKeyRepository.save(existingAuthKey); // UPDATE
-				
-			} else {
-				// 기존 인증키가 없으면 새로 저장
-				authKeyRepository.save(authKeyEntity); // INSERT
-			}
-			
+			emailAuthKeyRepository.save(EmailAuthKey.builder()
+				.email(email)
+				.authKey(authKey)
+				.createTime(LocalDateTime.now())
+				.build());
 			return true;
-			
 		} catch (Exception e) {
-			log.error("인증키 저장 중 오류 발생: {}", e.getMessage(), e);
+			log.error("이메일 인증키 저장 오류: {}", e.getMessage(), e);
+			return false;
+		}
+	}
+	
+	private boolean storeTelAuthKey(String tel, String authKey) {
+		try {
+			telAuthKeyRepository.save(TelAuthKey.builder()
+				.tel(tel)
+				.authKey(authKey)
+				.createTime(LocalDateTime.now())
+				.build());
+			return true;
+		} catch (Exception e) {
+			log.error("전화번호 인증키 저장 오류: {}", e.getMessage(), e);
 			return false;
 		}
 	}

@@ -4,7 +4,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.project.festive.festiveserver.auth.repository.AuthKeyRepository;
+import com.project.festive.festiveserver.auth.repository.EmailAuthKeyRepository;
+import com.project.festive.festiveserver.auth.repository.TelAuthKeyRepository;
 import com.project.festive.festiveserver.member.entity.Member;
 import com.project.festive.festiveserver.member.repository.MemberRepository;
 
@@ -18,7 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
-    private final AuthKeyRepository authKeyRepository;
+    private final EmailAuthKeyRepository emailAuthKeyRepository;
+    private final TelAuthKeyRepository telAuthKeyRepository;
     private final BCryptPasswordEncoder bcrypt;
 
     @Override
@@ -71,8 +73,13 @@ public class MemberServiceImpl implements MemberService {
 
         memberRepository.save(member);
 
-        // 회원가입 시 인증키 삭제
-        authKeyRepository.deleteByEmail(member.getEmail());
+        // 회원가입 시 인증키 삭제 (이메일/전화번호 각각)
+        if (member.getEmail() != null && !member.getEmail().isEmpty()) {
+            emailAuthKeyRepository.deleteById(member.getEmail());
+        }
+        if (member.getTel() != null && !member.getTel().isEmpty()) {
+            telAuthKeyRepository.deleteById(member.getTel());
+        }
 
         return 1;
     }

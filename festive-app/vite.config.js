@@ -37,6 +37,7 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\/api/, ''), // 필요하다면 경로 재작성 (예: /api/users -> /users)
         // 이 경우엔 /profile-images 자체가 백엔드 경로이므로 필요 없음
       },
+      // 백엔드 API 경로 - 우선순위 높음
       "/api": {
         target: "http://localhost:8080",
         changeOrigin: true,

@@ -10,31 +10,20 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "AUTH_KEY")
+@Table(name = "EMAIL_AUTH_KEY")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthKey {
-  
+public class EmailAuthKey {
     @Id
-    @Column(name = "KEY_NO" , nullable = false)
-    @SequenceGenerator(
-            name = "key_seq",
-            sequenceName = "SEQ_KEY_NO",
-            allocationSize = 1
-    )
-    @GeneratedValue(strategy = GenerationType.SEQUENCE,
-            generator = "key_seq") // 기본 키 생성을 데이터베이스에 위임하는 전략을 설정
-    private Long keyNo;
-    
-    @Column(name = "EMAIL", unique = true)  // 이메일 중복 방지
+    @Column(name = "EMAIL", nullable = false, unique = true)
     private String email;
-    
+
     @Column(name = "AUTH_KEY", nullable = false)
     private String authKey;
-    
+
     @Column(name = "CREATE_TIME", nullable = false)
     private LocalDateTime createTime;
 }

@@ -296,30 +296,37 @@ const Find = () => {
   
   // 인증번호 확인
   const handleCheckAuthKey = async () => {
-    if (!formData.email || !formData.authKey) {
-      alert('이메일과 인증번호를 모두 입력해주세요.');
+    if (!formData.email || !formData.tel && !formData.authKey) {
+      alert('이메일 혹은 전화번호, 인증번호를 모두 입력해주세요.');
       return;
     }
     try {
       setIsVerifying(true);
       const response = await axiosApi.post('/auth/checkAuthKey', {
-        email: formData.email,
+        email: formData.email || null,
+        tel: formData.tel || null,
         authKey: formData.authKey
       });
+
       if (response.data.success) {
         alert('인증번호가 확인되었습니다.');
         setIsAuthKeyVerified(true);
+
       } else {
         alert(response.data.message || '인증번호가 일치하지 않습니다.');
         setIsAuthKeyVerified(false);
       }
+
     } catch (error) {
       setIsAuthKeyVerified(false);
+
       if (error.response && error.response.data && error.response.data.message) {
         alert(error.response.data.message);
+
       } else {
         alert('인증번호 확인 중 오류가 발생했습니다.');
       }
+      
     } finally {
       setIsVerifying(false);
     }

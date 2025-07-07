@@ -468,6 +468,24 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
     }
     
+    @PostMapping("sms")
+    public ResponseEntity<Map<String, Object>> authSms(@RequestBody AuthKeyRequest authKeyRequest) {
+        Map<String, Object> responseBody = new HashMap<>();
+        
+        String message = authService.sendSms(authKeyRequest.getTel());
+        
+        if(message != null) { // 인증번호 발급 성공 & SMS 보내기 성공
+            responseBody.put("success", true);
+            responseBody.put("message", message);
+            return ResponseEntity.ok(responseBody);
+        }
+        
+        // SMS 보내기 실패
+        responseBody.put("success", false);
+        responseBody.put("message", "SMS 전송에 실패했습니다.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+    }
+    
     /** 입력받은 이메일, 인증번호가 DB에 있는지 조회
      * @param authKeyRequest (email, authKey)
      * @return ResponseEntity 인증 결과
@@ -475,14 +493,18 @@ public class AuthController {
     @PostMapping("checkAuthKey")
     public ResponseEntity<Map<String, Object>> checkAuthKey(@RequestBody AuthKeyRequest authKeyRequest) {
         Map<String, Object> responseBody = new HashMap<>();
-        
         int result = authService.checkAuthKey(authKeyRequest);
-        
-        if(result == 1) { // 이메일, 인증번호 일치
+        if(result == 1) { // 인증 성공
             responseBody.put("success", true);
             responseBody.put("message", "인증번호가 확인되었습니다.");
             return ResponseEntity.ok(responseBody);
-        } else { // 인증번호 불일치
+
+        } else if(result == 0) { // 인증키 없음(만료/미발급 등)
+            responseBody.put("success", false);
+            responseBody.put("message", "인증번호가 만료되었거나 올바르지 않습니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+        
+        } else { // 인증키 불일치
             responseBody.put("success", false);
             responseBody.put("message", "인증번호가 일치하지 않습니다.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);

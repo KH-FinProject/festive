@@ -472,14 +472,16 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // 7. useEffect: 인증번호 실시간 체크
   useEffect(() => {
     const checkAuthKey = async () => {
-      if (!debounced.email || !debounced.authKey) {
+      if ((!debounced.email && !formData.tel) || !debounced.authKey) {
         setDuplicateStatus(prev => ({ ...prev, authKey: { checked: false, available: false, message: '' } }));
         return;
       }
       try {
         const res = await axiosAPI.post('/auth/checkAuthKey', {
           email: debounced.email,
-          authKey: debounced.authKey
+          tel: formData.tel,
+          authKey: debounced.authKey,
+          authMethod: formData.authMethod
         });
 
         if (res.data.success) {
@@ -489,17 +491,18 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
         }
 
       } catch (error) {
-        setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: false, message: '서버 오류' } }));
+        // 서버에서 401, 400 등 에러 응답 시 메시지를 그대로 안내
+        const msg = error.response?.data?.message || '서버 오류';
+        setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: false, message: msg } }));
       }
     };
 
     if (debounced.authKey.length === 6) {
       checkAuthKey();
-    
     } else {
       setDuplicateStatus(prev => ({ ...prev, authKey: { checked: false, available: false, message: '' } }));
     }
-  }, [debounced.authKey, debounced.email]);
+  }, [debounced.authKey, debounced.email, formData.tel, formData.authMethod]);
 
   // 8. 입력 핸들러 (validation, 중복확인 상태 초기화)
   // [handleInputChange] : 입력값 변경 시 formData, validationErrors, duplicateStatus를 업데이트
@@ -518,10 +521,19 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
         }
       }));
     } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
+      // 인증 방식(authMethod) 변경 시 인증번호(authKey)와 인증 상태 모두 초기화
+      if (field === 'authMethod') {
+        setFormData(prev => ({ ...prev, authMethod: value, authKey: '' }));
+        setDuplicateStatus(prev => ({
+          ...prev,
+          authKey: { checked: false, available: false, message: '' }
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, [field]: value }));
+      }
     }
 
-    if (['id', 'nickname', 'email', 'authKey'].includes(field)) {
+    if (["id", "nickname", "email", "authKey"].includes(field)) {
       setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
     }
 
@@ -538,12 +550,10 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     }
   };
 
-
-
   // 9. 기타 핸들러
-  // [handleSmsVerification] : SMS 인증 요청(추후 구현)
-  // [handleAuthKeyVerification] : 인증번호 확인(추후 구현)
-  // [handleAddressSearch] : 주소 검색(추후 구현)
+  // [handleSmsVerification] : SMS 인증 요청
+  // [handleAuthKeyVerification] : 인증번호 확인
+  // [handleAddressSearch] : 주소 검색
   const handleSmsVerification = async () => {
     const { email, tel } = formData;
 
@@ -591,10 +601,19 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       // SMS 인증
       try {
         setIsTelLoading(true);
-        // SMS 인증 로직 (실제 구현 시)
-        alert('전화번호로 인증번호가 전송되었습니다.');
+        // 실제 인증번호 발송 API 호출
+        const response = await axiosAPI.post('/auth/sms', { tel: tel.trim() });
+        if (response.data.success) {
+          alert('전화번호로 인증번호가 전송되었습니다.');
+          setFormData(prev => ({ ...prev, authMethod: 'tel', authKey: '' }));
+          if (authKeyInputRef.current) {
+            authKeyInputRef.current.focus();
+          }
+        } else {
+          alert(response.data.message || '전화번호로 인증번호 전송에 실패했습니다.');
+        }
       } catch (error) {
-        alert('전화번호로 인증번호 전송에 실패했습니다.');
+        alert(error.response?.data?.message || '전화번호로 인증번호 전송에 실패했습니다.');
       } finally {
         setIsTelLoading(false);
       }
