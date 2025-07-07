@@ -79,6 +79,12 @@ const MyPageWithdrawal = () => {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleWithdrawal();
+    }
+  };
+
   const handleLogout = async () => {
     // 로그아웃 시 토큰 삭제
     await axiosApi.post("/auth/logout");
@@ -165,6 +171,7 @@ const MyPageWithdrawal = () => {
                   placeholder="비밀번호"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               ) : (
                 <input
@@ -172,6 +179,7 @@ const MyPageWithdrawal = () => {
                   placeholder="탈퇴하겠습니다."
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               )}
               <button onClick={handleWithdrawal}>탈퇴하기</button>

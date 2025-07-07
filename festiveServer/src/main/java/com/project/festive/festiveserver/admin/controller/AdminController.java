@@ -22,6 +22,7 @@ import com.project.festive.festiveserver.wagle.dto.BoardDto;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import oracle.jdbc.clio.annotations.Debug;
 
 @RestController // 비동기 컨트롤러
 @CrossOrigin(origins="http://localhost:5173", allowCredentials = "true")
@@ -162,6 +163,8 @@ public class AdminController {
     // 글 목록 조회
     @GetMapping("/board")
     public List<BoardDto> getAllBoards() {
+    	
+    	log.debug("키키" + service.getAllBoards().toString());
         return service.getAllBoards();
     }
     
