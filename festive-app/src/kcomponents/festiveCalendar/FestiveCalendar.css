@@ -21,6 +21,7 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    width: 1000px;
 }
 
 .content-header {
@@ -435,16 +436,6 @@
 .calendar-container .fc-event,
 .calendar-container .fc-event * {
     color: black !important;
-}
-
-/* 페이지네이션 전체 영역 정렬 */
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-    /* margin: 20px auto 0; */
-    flex-wrap: wrap;
 }
 
 /* 숫자 버튼 및 이전/다음/처음/끝 버튼 공통 스타일 */
