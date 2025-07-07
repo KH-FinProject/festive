@@ -6,6 +6,9 @@ import org.apache.ibatis.annotations.Param;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
 import com.project.festive.festiveserver.detail.model.dto.LikesDto;
 
+import java.util.List;
+import java.util.Map;
+
 @Mapper
 public interface DetailMapper {
 	
@@ -51,5 +54,8 @@ public interface DetailMapper {
 	 * @author 미애
 	 */
 	int insertLike(LikesDto likes);
+
+    /** 좋아요 많은 순 인기 축제 CONTENT_ID + likeCount 반환 */
+    List<Map<String, Object>> selectPopularFestivals(int limit);
 
 }
