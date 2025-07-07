@@ -45,6 +45,9 @@ public interface MyPageMapper {
             @Param("nickname") String nickname,
             @Param("profileImagePath") String profileImagePath);
     
+    // 기본 이미지로 변경
+    int resetProfileImage(@Param("memberNo") Long memberNo);
+    
     // 특정 회원이 찜한 모든 축제의 contentId를 조회
     List<String> selectContentIdsByMemberNo(@Param("memberNo") Long memberNo);
 

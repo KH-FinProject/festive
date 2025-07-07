@@ -141,9 +141,10 @@ function CustomerEdit() {
           <Editor
             ref={editorRef}
             height="400px"
-            initialEditType="wysiwyg"
+            initialEditType="markdown"
             placeholder="문의 내용을 입력하세요"
             previewStyle="vertical"
+            hideModeSwitch={true}
             disabled={isSubmitting}
             initialValue={content}
           />

@@ -158,9 +158,8 @@ function Pagination({
         <button
           type="button"
           key={pageNum}
-          className={`pagination-btn${
-            currentPage === pageNum ? " active" : ""
-          }`}
+          className={`pagination-btn${currentPage === pageNum ? " active" : ""
+            }`}
           onClick={() => onPageChange(pageNum)}
           aria-label={`${pageNum} 페이지로 이동`}
           aria-current={currentPage === pageNum ? "page" : undefined}

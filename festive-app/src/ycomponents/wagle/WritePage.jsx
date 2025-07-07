@@ -102,9 +102,10 @@ function WritePage() {
           <Editor
             ref={editorRef}
             height="400px"
-            initialEditType="wysiwyg"
+            initialEditType="markdown"
             placeholder="내용을 입력하세요"
             previewStyle="vertical"
+            hideModeSwitch={true}
             disabled={isSubmitting}
             hooks={{
               addImageBlobHook: async (blob, callback) => {
