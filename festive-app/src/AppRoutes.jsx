@@ -28,6 +28,9 @@ import CustomerCenter from "./ycomponents/customerCenter/CustomerCenter.jsx";
 import CustomerWrite from "./ycomponents/customerCenter/CustomerWrite.jsx";
 import CustomerEdit from "./ycomponents/customerCenter/CustomerEdit.jsx";
 import CustomerDetail from "./ycomponents/customerCenter/CustomerDetail.jsx";
+import CompanyInfo from "./components/legal/CompanyInfo.jsx";
+import PrivacyPolicy from "./components/legal/PrivacyPolicy.jsx";
+import TermsOfService from "./components/legal/TermsOfService.jsx";
 
 const AppRoutes = () => {
   return (
@@ -64,6 +67,9 @@ const AppRoutes = () => {
         <Route path="/customer-center/write" element={<CustomerWrite />} />
         <Route path="/customer-center/edit/:id" element={<CustomerEdit />} />
         <Route path="/customer-center/:id" element={<CustomerDetail />} />
+        <Route path="/company" element={<CompanyInfo />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
       </Routes>
     </>
   );

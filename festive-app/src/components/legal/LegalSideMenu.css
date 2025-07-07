@@ -1,0 +1,120 @@
+.legal-side-menu {
+  width: 250px;
+  position: fixed;
+  left: 150px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  border: 1px solid #ddd;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.legal-side-menu .menu-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.legal-side-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.legal-side-menu li {
+  padding: 12px 0;
+  cursor: pointer;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #666;
+  position: relative;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.legal-side-menu li:last-child {
+  border-bottom: none;
+}
+
+.legal-side-menu li:hover {
+  color: #333;
+}
+
+.legal-side-menu li.active {
+  color: #333;
+  font-weight: 600;
+}
+
+.legal-side-menu li.active::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background-color: #333;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1440px) {
+  .legal-side-menu {
+    position: static;
+    width: 100%;
+    margin-bottom: 30px;
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .legal-side-menu {
+    width: 100%;
+    position: static;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .legal-side-menu ul {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .legal-side-menu li {
+    padding: 10px;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+  }
+
+  .legal-side-menu li.active {
+    background: #333;
+    color: white;
+  }
+
+  .legal-side-menu li.active::before {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .legal-side-menu {
+    padding: 10px;
+  }
+
+  .legal-side-menu .menu-title {
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+
+  .legal-side-menu li {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+}
