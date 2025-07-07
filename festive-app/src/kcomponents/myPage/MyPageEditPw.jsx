@@ -107,12 +107,6 @@ const MyPageEditPw = () => {
     }));
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitMessage("");
@@ -258,7 +252,6 @@ const MyPageEditPw = () => {
                   onChange={handlePasswordChange}
                   placeholder="새 비밀번호를 다시 입력하세요"
                   autoComplete="off"
-                  onKeyDown={handleKeyDown}
                 />
                 {confirmPwStatus === "matched" && passwordData.confirmPassword && (
                   <p className="nickname-message success">비밀번호가 일치합니다.</p>

@@ -183,7 +183,7 @@ public class MyPageController {
     // 개인정보 수정
     @PostMapping("/edit-info")
     public ResponseEntity<Map<String, String>> updateInfo(HttpServletRequest request,
-                                        @RequestBody MemberDto updatedInfo) {
+                                                          @RequestBody MemberDto updatedInfo) {
         try {
             String accessToken = getAccessTokenFromCookie(request);
             if (accessToken == null) {
@@ -193,18 +193,32 @@ public class MyPageController {
             Long memberNo = jwtUtil.getMemberNo(accessToken);
             log.info("회원 정보 수정 요청: memberNo = {}, updatedInfo = {}", memberNo, updatedInfo);
 
+            // 1. 프론트에서 MemberDto에 password도 같이 담아 보내야 함
+            String password = updatedInfo.getPassword();
+            if (password == null || password.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "비밀번호를 입력해주세요."));
+            }
+
+            // 2. 컨트롤러 내 checkPassword 로직 재사용 (서비스에서 비밀번호 확인)
+            boolean match = service.checkPassword(memberNo, password);
+            if (!match) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+            }
+
+            // 3. 비밀번호 일치 시 정보 수정 진행
             boolean result = service.updateMyInfo(memberNo, updatedInfo);
 
             if (result) {
                 return ResponseEntity.ok(Map.of("message", "정보 수정 성공"));
             } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
             }
         } catch (Exception e) {
             log.error("개인정보 수정 중 오류 발생: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
         }
     }
+
     
  // 프로필 정보 조회 (이름, 닉네임, 프로필 이미지) - /mypage/profile
     @GetMapping("/profile")
