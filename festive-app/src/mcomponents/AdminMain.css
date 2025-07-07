@@ -10,7 +10,7 @@
 
 .main-section {
   min-width: 754px;
-  height: 700px;
+  min-height: 700px;
   margin: 10px auto;
   border: 1px solid #eeeeee;
   border-radius: 12px;
@@ -28,6 +28,7 @@
   flex-wrap: nowrap;
   gap: 4px;
 }
+
 .item {
   border: 1px solid #eeeeee;
   background-color: #ffffff;
@@ -35,16 +36,81 @@
   width: 210px;
   height: 150px;
   margin: 20px 10px 20px 20px;
-  padding: 10px 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+.item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.item span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.item-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2563eb;
+  margin-top: 5px;
+}
+
 .chart {
   border: 1px solid #eeeeee;
   background-color: #ffffff;
   border-radius: 12px;
   width: 700px;
-  height: 450px;
+  min-height: 450px;
   margin: 20px;
-  padding: 10px 15px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chart-container {
+  width: 100%;
+  height: 100%;
+}
+
+.chart-container h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.chart-item {
+  margin-bottom: 30px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.chart-item h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 15px;
+  text-align: center;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.chart-item:last-child {
+  margin-bottom: 0;
 }
 
 /* 반응형 디자인 */
@@ -52,16 +118,40 @@
   .main-section {
     padding: 40px 30px;
     max-width: 100%;
+    min-width: auto;
   }
 
   .page-title {
     font-size: 20px;
     margin-bottom: 30px;
   }
+
+  .main-item {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .item {
+    width: 90%;
+    margin: 10px 0;
+  }
+
+  .chart {
+    width: 90%;
+    margin: 10px;
+  }
 }
 
 @media (max-width: 480px) {
   .main-section {
     padding: 30px 20px;
+  }
+
+  .chart-container h3 {
+    font-size: 18px;
+  }
+
+  .chart-item h4 {
+    font-size: 14px;
   }
 }
