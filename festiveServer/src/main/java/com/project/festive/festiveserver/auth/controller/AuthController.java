@@ -471,15 +471,22 @@ public class AuthController {
     @PostMapping("sms")
     public ResponseEntity<Map<String, Object>> authSms(@RequestBody AuthKeyRequest authKeyRequest) {
         Map<String, Object> responseBody = new HashMap<>();
-        
-        String message = authService.sendSms(authKeyRequest.getTel());
-        
+        String tel = authKeyRequest.getTel();
+
+        // 전화번호 유효성 검사 (010, 011, 016, 017, 018, 019로 시작, 10~11자리)
+        if (tel == null || !tel.matches("^01[016789][0-9]{7,8}$")) {
+            responseBody.put("success", false);
+            responseBody.put("message", "유효한 휴대폰 번호만 입력 가능합니다.");
+            return ResponseEntity.badRequest().body(responseBody);
+        }
+
+        String message = authService.sendSms(tel);
         if(message != null) { // 인증번호 발급 성공 & SMS 보내기 성공
             responseBody.put("success", true);
             responseBody.put("message", message);
             return ResponseEntity.ok(responseBody);
         }
-        
+
         // SMS 보내기 실패
         responseBody.put("success", false);
         responseBody.put("message", "SMS 전송에 실패했습니다.");
