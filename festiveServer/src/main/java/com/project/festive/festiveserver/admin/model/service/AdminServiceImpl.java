@@ -1,12 +1,16 @@
 package com.project.festive.festiveserver.admin.model.service;
 
-import java.util.Iterator;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.project.festive.festiveserver.admin.dto.AdminStatisticsDto;
 import com.project.festive.festiveserver.admin.model.mapper.AdminMapper;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 
@@ -108,6 +112,123 @@ public class AdminServiceImpl implements AdminService{
 		}
 		
 		return result;
+	}
+
+	// 관리자 통계 조회
+	@Override
+	public AdminStatisticsDto getAdminStatistics() {
+		try {
+			// 전체 통계 정보 조회 (실제 DB 데이터)
+			log.info("=== 관리자 통계 조회 시작 ===");
+			int totalMembers = mapper.getTotalMembers();
+			log.info("전체 회원 수: {}", totalMembers);
+			
+			int activeMembers = mapper.getActiveMembers();
+			log.info("활동 회원 수: {}", activeMembers);
+			
+			int withdrawMembers = mapper.getWithdrawMembers();
+			log.info("탈퇴 회원 수: {}", withdrawMembers);
+			
+			// 실제 DB 데이터 조회 시도
+			int weeklyNewMembers;
+			int weeklyWithdrawMembers;
+			int returnMembers;
+			List<Map<String, Object>> dailyNewMembersData;
+			List<Map<String, Object>> dailyWithdrawMembersData;
+			
+			// 실제 DB 통계 조회 (더미데이터 제거)
+			log.info("상세 통계 조회 시작");
+			weeklyNewMembers = mapper.getWeeklyNewMembers();
+			log.info("주간 신규 회원 수: {}", weeklyNewMembers);
+			
+			weeklyWithdrawMembers = mapper.getWeeklyWithdrawMembers();
+			log.info("주간 탈퇴 회원 수: {}", weeklyWithdrawMembers);
+			
+			returnMembers = mapper.getReturnMembers();
+			log.info("전체 활성 회원 수: {}", returnMembers);
+			
+			dailyNewMembersData = mapper.getDailyNewMembers();
+			log.info("일별 신규 회원 데이터: {}", dailyNewMembersData);
+			
+			dailyWithdrawMembersData = mapper.getDailyWithdrawMembers();
+			log.info("일별 탈퇴 회원 데이터: {}", dailyWithdrawMembersData);
+			
+			// 일별 활동 회원 데이터 추가
+			List<Map<String, Object>> dailyActiveMembersData = mapper.getDailyActiveMembers();
+			log.info("일별 활동 회원 데이터: {}", dailyActiveMembersData);
+			
+			log.info("실제 DB 통계 조회 완료");
+			
+			// 일별 통계 데이터 변환
+			List<AdminStatisticsDto.DailyStatistics> dailyStatistics = new ArrayList<>();
+			
+			// 최근 7일간의 데이터를 생성
+			for (int i = 6; i >= 0; i--) {
+				LocalDate date = LocalDate.now().minusDays(i);
+				String dateString = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+				
+				// 해당 날짜의 신규 회원 수 찾기
+				int newMembers = 0;
+				for (Map<String, Object> data : dailyNewMembersData) {
+					if (dateString.equals(data.get("ENROLL_DATE_STR"))) {
+						newMembers = ((Number) data.get("NEW_MEMBERS")).intValue();
+						break;
+					}
+				}
+				
+				// 해당 날짜의 탈퇴 회원 수 찾기
+				int withdrawMembersCount = 0;
+				for (Map<String, Object> data : dailyWithdrawMembersData) {
+					if (dateString.equals(data.get("WITHDRAW_DATE_STR"))) {
+						withdrawMembersCount = ((Number) data.get("WITHDRAW_MEMBERS")).intValue();
+						break;
+					}
+				}
+				
+				// 해당 날짜의 활동 회원 수 찾기
+				int activeMembersCount = 0;
+				for (Map<String, Object> data : dailyActiveMembersData) {
+					if (dateString.equals(data.get("ACTIVITY_DATE_STR"))) {
+						activeMembersCount = ((Number) data.get("ACTIVE_MEMBERS")).intValue();
+						break;
+					}
+				}
+				
+				// 실제 날짜 표시 (yyyy-MM-dd 형식)
+				String dayName = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+				
+				AdminStatisticsDto.DailyStatistics dailyStat = AdminStatisticsDto.DailyStatistics.builder()
+					.date(date)
+					.dayName(dayName)
+					.newMembers(newMembers)
+					.withdrawMembers(withdrawMembersCount)
+					.activeMembers(activeMembersCount)
+					.returnMembers(returnMembers)
+					.build();
+				
+				dailyStatistics.add(dailyStat);
+			}
+			
+			// 전체 통계 DTO 생성
+			AdminStatisticsDto statistics = AdminStatisticsDto.builder()
+				.totalMembers(totalMembers)
+				.activeMembers(activeMembers)
+				.withdrawMembers(withdrawMembers)
+				.weeklyNewMembers(weeklyNewMembers)
+				.weeklyWithdrawMembers(weeklyWithdrawMembers)
+				.returnMembers(returnMembers)  // returnMembers 추가
+				.dailyStatistics(dailyStatistics)
+				.build();
+			
+			log.info("통계 DTO 생성 완료: totalMembers={}, activeMembers={}, returnMembers={}", 
+					totalMembers, activeMembers, returnMembers);
+			
+			return statistics;
+			
+		} catch (Exception e) {
+			log.error("관리자 통계 조회 중 오류 발생", e);
+			throw new RuntimeException("통계 조회 중 오류 발생", e);
+		}
 	}
 
 

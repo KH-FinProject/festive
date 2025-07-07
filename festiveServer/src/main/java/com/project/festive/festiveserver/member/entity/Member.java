@@ -13,6 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
 
 /*
  * @Entity 
@@ -81,5 +83,12 @@ public class Member {
 
 	@Column(name = "MEMBER_DEL_FL", nullable = false)
 	private String memberDelFl;
+
+	@CreationTimestamp
+	@Column(name = "ENROLL_DATE")
+	private LocalDateTime enrollDate;
+
+	@Column(name = "WITHDRAW_DATE")
+	private LocalDateTime withdrawDate;
 
 }

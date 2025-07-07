@@ -19,6 +19,8 @@ public class MemberConverter {
       .profileImage(member.getProfileImage())
       .socialId(member.getSocialId())
       .role(member.getRole())
+      .enrollDate(member.getEnrollDate() != null ? member.getEnrollDate().toString() : null)
+      .withdrawDate(member.getWithdrawDate() != null ? member.getWithdrawDate().toString() : null)
       .build();
   }
 
@@ -33,6 +35,8 @@ public class MemberConverter {
       .profileImage(memberDto.getProfileImage())
       .socialId(memberDto.getSocialId())
       .role(memberDto.getRole())
+      .enrollDate(memberDto.getEnrollDate() != null ? java.time.LocalDateTime.parse(memberDto.getEnrollDate()) : null)
+      .withdrawDate(memberDto.getWithdrawDate() != null ? java.time.LocalDateTime.parse(memberDto.getWithdrawDate()) : null)
       .build();
   }
 }

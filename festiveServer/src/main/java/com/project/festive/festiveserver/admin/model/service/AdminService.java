@@ -2,6 +2,7 @@ package com.project.festive.festiveserver.admin.model.service;
 
 import java.util.List;
 
+import com.project.festive.festiveserver.admin.dto.AdminStatisticsDto;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 
 public interface AdminService {
@@ -31,5 +32,10 @@ public interface AdminService {
 	 * @author 미애
 	 */
 	int updateWithdrawMember(List<Integer> memberNoList);
+
+	/** 관리자 통계 조회
+	 * @return AdminStatisticsDto
+	 */
+	AdminStatisticsDto getAdminStatistics();
 
 }

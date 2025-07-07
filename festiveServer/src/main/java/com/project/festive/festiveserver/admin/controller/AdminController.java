@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.SessionAttributes;
 
+import com.project.festive.festiveserver.admin.dto.AdminStatisticsDto;
 import com.project.festive.festiveserver.admin.model.service.AdminService;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController // 비동기 컨트롤러
 @RequestMapping("admin")
+@CrossOrigin(origins = {"http://localhost:5173"}) // CORS 설정 추가
 @Slf4j
 @RequiredArgsConstructor
 @SessionAttributes({"loginMember"})
@@ -114,5 +117,25 @@ public class AdminController {
 		}
 		
 	}
+	
+	/** 관리자 통계 조회
+	 * @return AdminStatisticsDto
+	 */
+	@GetMapping("statistics")
+	public ResponseEntity<Object> getAdminStatistics() {
+		try {
+			log.info("통계 조회 요청 시작");
+			AdminStatisticsDto statistics = service.getAdminStatistics();
+			log.info("통계 조회 성공: {}", statistics);
+			return ResponseEntity.status(HttpStatus.OK).body(statistics);
+			
+		} catch (Exception e) {
+			log.error("통계 조회 중 오류 발생", e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+	}
+
+
 	
 }
