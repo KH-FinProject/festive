@@ -7,5 +7,7 @@ import lombok.Setter;
 @Setter
 public class AuthKeyRequest {
   private String email;
+  private String tel;
   private String authKey;
+  private String authMethod;
 }

@@ -35,6 +35,8 @@ public interface AuthService {
 
 	String sendEmail(String htmlName, String email);
 
+	String sendSms(String tel);
+	
 	int checkAuthKey(AuthKeyRequest authKeyRequest);
 
 	// 변경할 이메일 중복 검사 - 지현이가 추가한 코드
