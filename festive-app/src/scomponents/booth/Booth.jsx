@@ -8,7 +8,6 @@ import axios from "axios";
 import useAuthStore from "../../store/useAuthStore";
 import { useLocation } from "react-router-dom";
 
-
 // 투어 API 연동 함수 (LocalFestive.jsx 방식 fetch 기반)
 async function fetchFestivals({ keyword, region, startDate, endDate }) {
   const formatDate = (dateStr) => (dateStr ? dateStr.replaceAll("-", "") : "");
@@ -289,10 +288,10 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
   // 상태 추가
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [contentId, setContentId] = useState("");
+  const [formContentId, setFormContentId] = useState(contentId || "");
   const { member } = useAuthStore();
   const memberNo = member?.memberNo;
-  const [applyContentId, setApplyContentId] = useState(contentId || "");
+  // const [applyContentId, setApplyContentId] = useState(contentId || "");
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -331,7 +330,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
       // 필요시 boothStartDate, boothEndDate, contentId 등 추가
       formData.append("boothStartDate", startDate);
       formData.append("boothEndDate", endDate);
-      formData.append("contentId", contentId);
+      formData.append("contentId", formContentId);
       // axios.post 직전: formData 값 모두 출력
       for (let [key, value] of formData.entries()) {
         console.log(key, value);
@@ -391,7 +390,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
           <input
             type="text"
             className="booth-form-input"
-            value={contentId}
+            value={formContentId}
             disabled
           />
         </div>
@@ -520,7 +519,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
         onClose={() => setShowFestivalModal(false)}
         onSelect={({ title, contentId }) => {
           setFestivalName(title);
-          setContentId(contentId);
+          setFormContentId(contentId);
         }}
         areaOptions={areaOptions}
       />
@@ -550,10 +549,10 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
   const [size, setSize] = useState("");
   const [loading, setLoading] = useState(false);
   // FoodTruckForm 등에서 contentId 상태 추가
-  const [contentId, setContentId] = useState("");
+  const [truckContentId, setTruckContentId] = useState(contentId || "");
   const { member } = useAuthStore();
   const memberNo = member?.memberNo;
-  const [applyContentId, setApplyContentId] = useState(contentId || "");
+  // const [applyContentId, setApplyContentId] = useState(contentId || "");
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
@@ -594,7 +593,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
       formData.append("boothTitle", festivalName); // DB 저장용 축제명
       formData.append("image", selectedFiles[0]);
       // memberNo 등 추가 필요시 append
-      formData.append("contentId", contentId);
+      formData.append("contentId", truckContentId);
       await axios.post("/api/booth/request", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -779,7 +778,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
         onClose={() => setShowFestivalModal(false)}
         onSelect={({ title, contentId }) => {
           setFestivalName(title);
-          setContentId(contentId);
+          setTruckContentId(contentId);
         }}
         areaOptions={areaOptions}
       />
