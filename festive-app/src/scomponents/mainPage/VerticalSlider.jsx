@@ -121,22 +121,6 @@ const VerticalSlider = () => {
           ></div>
         ))}
       </div>
-
-      {/* 컨트롤 버튼 */}
-      <div className="vertical-action-buttons">
-        <button
-          className="vertical-slider-button vertical-down-button"
-          onClick={() => changeSlide("down")}
-        >
-          <ChevronDown size={20} />
-        </button>
-        <button
-          className="vertical-slider-button vertical-up-button"
-          onClick={() => changeSlide("up")}
-        >
-          <ChevronUp size={20} />
-        </button>
-      </div>
     </div>
   );
 };
