@@ -7,22 +7,33 @@ import useAuthStore from "../../store/useAuthStore";
 
 const MyPageEditInfo = () => {
     const [showEmailModal, setShowEmailModal] = useState(false);
+    const [showPhoneModal, setShowPhoneModal] = useState(false); // 전화번호 모달
 
     // 사용자 현재 정보 상태
     const [memberInfo, setMemberInfo] = useState({
         tel: { carrier: "", middle: "", last: "" },
         email: { local: "", domain: "" },
         address: { zipcode: "", detail: "", extra: "" },
-        password: "", // 현재 비밀번호 확인용
+        password: "",
     });
 
-    // 이메일 변경 모달 관련 상태
+    // 이메일 변경 모달 상태
     const [newEmailLocal, setNewEmailLocal] = useState("");
     const [newEmailDomain, setNewEmailDomain] = useState("");
     const [inputCode, setInputCode] = useState("");
-    const [isEmailVerified, setIsEmailVerified] = useState(false); // 이메일 인증 여부
-    const [timeLeft, setTimeLeft] = useState(0); // 초 단위
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(0);
     const timerRef = useRef(null);
+
+    // ----------- 전화번호 인증 모달 관련 상태 추가 -----------
+    const [newPhoneCarrier, setNewPhoneCarrier] = useState("");
+    const [newPhoneMiddle, setNewPhoneMiddle] = useState("");
+    const [newPhoneLast, setNewPhoneLast] = useState("");
+    const [phoneInputCode, setPhoneInputCode] = useState("");
+    const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+    const [phoneTimeLeft, setPhoneTimeLeft] = useState(0);
+    const phoneTimerRef = useRef(null);
+    // -------------------------------------------------------
 
     const location = useLocation();
     const { name, profileImageUrl } = location.state || {};
@@ -70,7 +81,6 @@ const MyPageEditInfo = () => {
                 throw new Error("Failed to fetch member info");
             }
             const data = await response.json();
-            // console.log("Fetched Member Info:", data);
 
             let parsedTel = { carrier: "", middle: "", last: "" };
             if (data.tel && data.tel.length === 11) {
@@ -93,7 +103,7 @@ const MyPageEditInfo = () => {
             let parsedAddress = { zipcode: "", detail: "", extra: "" };
             if (data.address) {
                 const fullAddress = data.address;
-                const match = fullAddress.match(/^(\d{5})\s(.*?)(\s\(.*\))?$/); // "우편번호 전체주소 (상세주소)" 패턴
+                const match = fullAddress.match(/^(\d{5})\s(.*?)(\s\(.*\))?$/);
                 if (match) {
                     parsedAddress.zipcode = match[1];
                     parsedAddress.detail = match[2].trim();
@@ -123,6 +133,9 @@ const MyPageEditInfo = () => {
 
             setNewEmailLocal(parsedEmail.local);
             setNewEmailDomain(parsedEmail.domain);
+            setNewPhoneCarrier(parsedTel.carrier);
+            setNewPhoneMiddle(parsedTel.middle);
+            setNewPhoneLast(parsedTel.last);
         } catch (error) {
             console.error("회원 정보 불러오기 실패:", error);
             alert("회원 정보를 불러오는데 실패했습니다.");
@@ -248,6 +261,98 @@ const MyPageEditInfo = () => {
         }
     };
 
+    // --- 전화번호 변경 모달 관련 핸들러 ---
+    const handlePhoneCarrierChange = (e) => setNewPhoneCarrier(e.target.value);
+    const handlePhoneMiddleChange = (e) => setNewPhoneMiddle(e.target.value.replace(/[^0-9]/g, ""));
+    const handlePhoneLastChange = (e) => setNewPhoneLast(e.target.value.replace(/[^0-9]/g, ""));
+
+    const handleGeneratePhoneVerificationCode = async () => {
+        const fullPhone = `${newPhoneCarrier}${newPhoneMiddle}${newPhoneLast}`;
+        if (!/^\d{10,11}$/.test(fullPhone)) {
+            alert("유효한 전화번호를 입력해주세요.");
+            return;
+        }
+        try {
+            const response = await fetch("http://localhost:8080/auth/phone/send", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({ tel: fullPhone }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || "인증번호 발송 실패");
+                return;
+            }
+
+            alert(data.message);
+            setPhoneTimeLeft(300);
+            setIsPhoneVerified(false);
+            setPhoneInputCode("");
+
+            if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
+            phoneTimerRef.current = setInterval(() => {
+                setPhoneTimeLeft((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(phoneTimerRef.current);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        } catch (error) {
+            alert(`인증번호 발송 중 오류: ${error.message}`);
+        }
+    };
+
+    const handleVerifyPhoneCode = async () => {
+        const fullPhone = `${newPhoneCarrier}${newPhoneMiddle}${newPhoneLast}`;
+        if (phoneTimeLeft === 0) {
+            alert("인증 시간이 만료되었습니다.");
+            return;
+        }
+        if (!phoneInputCode) {
+            alert("인증번호를 입력해주세요.");
+            return;
+        }
+        try {
+            const response = await fetch("http://localhost:8080/auth/phone/verify", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({ tel: fullPhone, authKey: phoneInputCode }),
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                alert(data.message);
+                setIsPhoneVerified(true);
+                clearInterval(phoneTimerRef.current);
+                setMemberInfo((prev) => ({
+                    ...prev,
+                    tel: {
+                        carrier: newPhoneCarrier,
+                        middle: newPhoneMiddle,
+                        last: newPhoneLast,
+                    },
+                }));
+                setShowPhoneModal(false);
+            } else {
+                alert(`인증 실패: ${data.message}`);
+                setIsPhoneVerified(false);
+            }
+        } catch (error) {
+            alert(`인증번호 확인 중 오류: ${error.message}`);
+        }
+    };
+
+    // 주소 검색
     const handlePostCode = useCallback(() => {
         new window.daum.Postcode({
             oncomplete: function (data) {
@@ -291,7 +396,6 @@ const MyPageEditInfo = () => {
             fullAddressForDB += ` (${memberInfo.address.extra})`;
         }
 
-        // 백엔드 요구에 맞게 password 포함하여 전송
         const updatedData = member?.socialId
             ? {
                 tel: fullPhoneNumber,
@@ -302,7 +406,7 @@ const MyPageEditInfo = () => {
                 tel: fullPhoneNumber,
                 email: fullEmail,
                 address: fullAddressForDB,
-                password: memberInfo.password, // 이 필드명 반드시 "password"로!
+                password: memberInfo.password,
             };
 
         try {
@@ -330,12 +434,10 @@ const MyPageEditInfo = () => {
         }
     };
 
-
     useEffect(() => {
         return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
+            if (timerRef.current) clearInterval(timerRef.current);
+            if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
         };
     }, []);
 
@@ -372,7 +474,7 @@ const MyPageEditInfo = () => {
                             {/* 전화번호 */}
                             <div className="password-form-row">
                                 <label className="form-label">전화번호</label>
-                                <div className="phone-input-container">
+                                <div className="form-row">
                                     <select
                                         className="form-input phone-carrier"
                                         value={memberInfo.tel.carrier}
@@ -382,6 +484,7 @@ const MyPageEditInfo = () => {
                                                 tel: { ...prev.tel, carrier: e.target.value },
                                             }))
                                         }
+                                        disabled
                                     >
                                         {phoneCarriers.map((carrier) => (
                                             <option key={carrier.value} value={carrier.value}>
@@ -403,6 +506,7 @@ const MyPageEditInfo = () => {
                                                 tel: { ...prev.tel, middle: e.target.value },
                                             }))
                                         }
+                                        disabled
                                     />
                                     <span className="phone-separator">-</span>
                                     <input
@@ -418,7 +522,23 @@ const MyPageEditInfo = () => {
                                                 tel: { ...prev.tel, last: e.target.value },
                                             }))
                                         }
+                                        disabled
                                     />
+                                    <button
+                                        type="button"
+                                        className="form-button secondary"
+                                        onClick={() => {
+                                            setShowPhoneModal(true);
+                                            setNewPhoneCarrier(memberInfo.tel.carrier);
+                                            setNewPhoneMiddle(memberInfo.tel.middle);
+                                            setNewPhoneLast(memberInfo.tel.last);
+                                            setIsPhoneVerified(false);
+                                            setPhoneTimeLeft(0);
+                                            if (phoneTimerRef.current) clearInterval(phoneTimerRef.current);
+                                        }}
+                                    >
+                                        전화번호 수정
+                                    </button>
                                 </div>
                             </div>
                             <br />
@@ -445,7 +565,6 @@ const MyPageEditInfo = () => {
                                             readOnly
                                         />
                                     </div>
-                                    {/* socialId 없을 때만 이메일 수정 버튼 노출 */}
                                     {!member?.socialId && (
                                         <button
                                             type="button"
@@ -518,19 +637,6 @@ const MyPageEditInfo = () => {
                                     <p className="form-note">
                                         *비밀번호 확인 후 정보 수정이 가능합니다.
                                     </p>
-                                    {/* <input
-                                        type="password"
-                                        className="form-input full-width"
-                                        placeholder="비밀번호"
-                                        value={memberInfo.password}
-                                        onChange={(e) =>
-                                            setMemberInfo((prev) => ({
-                                                ...prev,
-                                                password: e.target.value,
-                                            }))
-                                        }
-                                        required
-                                    /> */}
                                     <input
                                         id="password"
                                         name="password"
@@ -622,9 +728,7 @@ const MyPageEditInfo = () => {
                                                         type="text"
                                                         className="email-input email-custom-domain"
                                                         placeholder="도메인 입력"
-                                                        value={
-                                                            newEmailDomain === "custom" ? "" : newEmailDomain
-                                                        }
+                                                        value={newEmailDomain === "custom" ? "" : newEmailDomain}
                                                         onChange={(e) => setNewEmailDomain(e.target.value)}
                                                         disabled={isEmailVerified}
                                                     />
@@ -694,6 +798,142 @@ const MyPageEditInfo = () => {
                                         type="button"
                                         className="modal-button secondary"
                                         onClick={() => setShowEmailModal(false)}
+                                    >
+                                        취소하기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Phone Modal */}
+                    {showPhoneModal && (
+                        <div
+                            className="modal-overlay"
+                            onClick={() => setShowPhoneModal(false)}
+                        >
+                            <div
+                                className="modal-content"
+                                style={{ width: "600px" }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="modal-header">
+                                    <h3>전화번호 변경 안내</h3>
+                                    <button
+                                        className="modal-close"
+                                        onClick={() => setShowPhoneModal(false)}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                                <div className="modal-body">
+                                    <p>회원님의 전화번호 수정을 위해</p>
+                                    <p>새로운 전화번호 인증을 받으셔야 합니다.</p>
+                                    <br />
+                                    <div className="current-email-section">
+                                        <div className="email-input-group">
+                                            <label>수정할 전화번호</label>
+                                            <div className="form-row" style={{ gap: "8px" }}>
+                                                <select
+                                                    className="form-input phone-carrier"
+                                                    value={newPhoneCarrier}
+                                                    onChange={handlePhoneCarrierChange}
+                                                    disabled={isPhoneVerified}
+                                                    style={{ width: "90px" }}
+                                                >
+                                                    {phoneCarriers.map((carrier) => (
+                                                        <option key={carrier.value} value={carrier.value}>
+                                                            {carrier.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <span className="phone-separator">-</span>
+                                                <input
+                                                    type="text"
+                                                    className="form-input phone-middle"
+                                                    placeholder="0000"
+                                                    maxLength="4"
+                                                    style={{ width: "100px" }}
+                                                    value={newPhoneMiddle}
+                                                    onChange={handlePhoneMiddleChange}
+                                                    disabled={isPhoneVerified}
+                                                />
+                                                <span className="phone-separator">-</span>
+                                                <input
+                                                    type="text"
+                                                    className="form-input phone-last"
+                                                    placeholder="0000"
+                                                    maxLength="4"
+                                                    style={{ width: "100px" }}
+                                                    value={newPhoneLast}
+                                                    onChange={handlePhoneLastChange}
+                                                    disabled={isPhoneVerified}
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="verify-btn"
+                                                onClick={handleGeneratePhoneVerificationCode}
+                                                disabled={
+                                                    isPhoneVerified ||
+                                                    (phoneTimeLeft > 0 && phoneTimeLeft < 300) ||
+                                                    !newPhoneCarrier ||
+                                                    !newPhoneMiddle ||
+                                                    !newPhoneLast
+                                                }
+                                            >
+                                                {phoneTimeLeft > 0 && !isPhoneVerified
+                                                    ? "재전송"
+                                                    : "인증"}
+                                            </button>
+                                        </div>
+                                        <div className="email-input-group">
+                                            <label>전화번호 인증키</label>
+                                            <input
+                                                type="text"
+                                                className="email-input"
+                                                placeholder="인증번호를 입력하세요"
+                                                value={phoneInputCode}
+                                                onChange={(e) => setPhoneInputCode(e.target.value)}
+                                                disabled={isPhoneVerified}
+                                            />
+                                            <button
+                                                type="button"
+                                                className="confirm-btn"
+                                                onClick={handleVerifyPhoneCode}
+                                                disabled={
+                                                    isPhoneVerified ||
+                                                    phoneTimeLeft === 0 ||
+                                                    !newPhoneCarrier ||
+                                                    !newPhoneMiddle ||
+                                                    !newPhoneLast
+                                                }
+                                            >
+                                                확인
+                                            </button>
+                                        </div>
+                                        {phoneTimeLeft > 0 && !isPhoneVerified && (
+                                            <p style={{ color: "red", fontSize: "13px" }}>
+                                                <span style={{ marginLeft: "115px" }}>
+                                                    남은 시간: {formatTime(phoneTimeLeft)}
+                                                </span>
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="modal-actions">
+                                    <button
+                                        type="button"
+                                        className="modal-button primary"
+                                        onClick={handleVerifyPhoneCode}
+                                        disabled={!isPhoneVerified}
+                                    >
+                                        전화번호 변경 적용
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="modal-button secondary"
+                                        onClick={() => setShowPhoneModal(false)}
                                     >
                                         취소하기
                                     </button>
