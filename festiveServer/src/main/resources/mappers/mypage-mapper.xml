@@ -30,7 +30,7 @@
 	<!-- 기본 이미지로 변경 -->
 	<update id="resetProfileImage">
         UPDATE MEMBER
-        SET PROFILE_IMAGE = ''
+        SET PROFILE_IMAGE = NULL
         WHERE MEMBER_NO = #{memberNo}
     </update>
 

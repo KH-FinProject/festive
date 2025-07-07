@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUserShield,
-  faChevronDown,
-  faChevronUp,
-} from "@fortawesome/free-solid-svg-icons";
+import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import Title from "./Title";
 import "./NoticeBoard.css";
 import { useNavigate } from "react-router-dom";
@@ -52,8 +48,8 @@ function NoticeBoard({ hideTitle }) {
             minute: "2-digit",
           })
           .replace(/\. /g, ".")
-          .replace(".", ".")
-          .slice(0, -1),
+          .replace(".", "."),
+        memberProfileImage: notice.memberProfileImage, // 필드명 통일
       }));
 
       setNotices(formattedNotices);
@@ -131,9 +127,30 @@ function NoticeBoard({ hideTitle }) {
               </div>
               <div className="notice-content">
                 <div className="notice-meta">
-                  <span className="notice-admin-badge">
-                    <FontAwesomeIcon icon={faUserShield} /> 관
-                  </span>
+                  <img
+                    src={
+                      notice.memberProfileImage
+                        ? notice.memberProfileImage.startsWith(
+                            "/profile-images/"
+                          )
+                          ? `http://localhost:8080${notice.memberProfileImage}`
+                          : notice.memberProfileImage
+                        : "/logo.png"
+                    }
+                    alt="관리자 프로필"
+                    className="notice-profile-img"
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      marginRight: "6px",
+                      verticalAlign: "middle",
+                    }}
+                    onError={(e) => {
+                      e.target.src = "/logo.png";
+                    }}
+                  />
                   <span className="notice-author">{notice.author}</span>
                   <span className="notice-date">{notice.date}</span>
                 </div>
