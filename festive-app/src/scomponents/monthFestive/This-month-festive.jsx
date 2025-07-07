@@ -248,12 +248,6 @@ const FestivalMainPage = () => {
         a.startDate.localeCompare(b.startDate)
       );
       setListFestivals(sorted);
-    } else if (newSortType === "popularity") {
-      // 인기순 정렬 (원본 데이터에서 랜덤 정렬)
-      const shuffled = [...originalListFestivals].sort(
-        () => Math.random() - 0.5
-      );
-      setListFestivals(shuffled);
     }
 
     console.log(`정렬 변경: ${newSortType}`);
@@ -289,15 +283,6 @@ const FestivalMainPage = () => {
               onClick={() => handleSortChange("distance")}
             >
               거리순
-            </span>
-            <span className="divider">|</span>
-            <span
-              className={`sort-option ${
-                sortType === "popularity" ? "active" : ""
-              }`}
-              onClick={() => handleSortChange("popularity")}
-            >
-              인기순
             </span>
           </div>
 

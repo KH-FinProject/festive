@@ -450,7 +450,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
           <input
             type="tel"
             className="booth-form-input"
-            placeholder="000-0000-0000"
+            placeholder=" - 는 제외하고 작성해 주세요 "
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
@@ -721,7 +721,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
           <input
             type="tel"
             className="booth-form-input"
-            placeholder="000-0000-0000"
+            placeholder=" - 는 제외하고 작성해 주세요 "
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />

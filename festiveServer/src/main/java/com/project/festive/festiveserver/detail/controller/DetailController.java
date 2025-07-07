@@ -20,11 +20,13 @@ import com.project.festive.festiveserver.common.handler.GlobalExceptionHandler;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
 import com.project.festive.festiveserver.detail.model.dto.LikesDto;
+import com.project.festive.festiveserver.detail.model.dto.FestivalDetailDto;
 import com.project.festive.festiveserver.detail.model.service.DetailService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -169,6 +171,14 @@ public class DetailController {
 		}
 
 	}
+
+    /**
+     * 좋아요 많은 순 인기 축제 리스트 반환
+     */
+    @GetMapping("popular")
+    public ResponseEntity<List<FestivalDetailDto>> getPopularFestivals(@RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(service.getPopularFestivals(limit));
+    }
 	
 	/** 참여부스 리스트 받아오기
 	 * @param contentId
