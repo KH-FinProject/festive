@@ -667,6 +667,29 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
+            시작 날짜 <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="date"
+            className="booth-form-input"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            끝 날짜 <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="date"
+            className="booth-form-input"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+
+        <div className="booth-form-field">
+          <label className="booth-form-label">
             신청자 성함 <span style={{ color: "red" }}>*</span>
           </label>
           <input
@@ -752,29 +775,6 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
             <option value="중형">중형 (1톤 ~ 2.5톤)</option>
             <option value="대형">대형 (2.5톤 이상)</option>
           </select>
-        </div>
-
-        <div className="booth-form-field">
-          <label className="booth-form-label">
-            시작 날짜 <span style={{ color: "red" }}>*</span>
-          </label>
-          <input
-            type="date"
-            className="booth-form-input"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </div>
-        <div className="booth-form-field">
-          <label className="booth-form-label">
-            끝 날짜 <span style={{ color: "red" }}>*</span>
-          </label>
-          <input
-            type="date"
-            className="booth-form-input"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
         </div>
 
         <div className="booth-form-field">

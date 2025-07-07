@@ -1,9 +1,12 @@
 package com.project.festive.festiveserver.detail.model.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.project.festive.festiveserver.booth.dto.BoothRequestDto;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
 import com.project.festive.festiveserver.detail.model.dto.LikesDto;
 import com.project.festive.festiveserver.detail.model.mapper.DetailMapper;
@@ -77,6 +80,13 @@ public class DetailServiceImpl implements DetailService{
 		}
 		
 		return result;
+	}
+
+	// 참여부스 리스트 받아오기
+	@Override
+	public List<BoothRequestDto> selectBoothList(String contentId) {
+		List<BoothRequestDto> boothList = mapper.selectBoothList(contentId);
+		return boothList;
 	}
 
 

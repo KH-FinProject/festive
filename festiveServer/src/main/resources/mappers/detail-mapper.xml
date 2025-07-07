@@ -43,5 +43,14 @@
 	  AND ROWNUM = 1
 	)
 	</delete>
+	
+	
+	<!-- 참여부스 정보 받아오기 -->
+	<select id="selectBoothList">
+		SELECT CONTENT_ID, CONTENT_TITLE, APPLICANT_COMPANY, BOOTH_START_DATE, BOOTH_END_DATE, PRODUCTS, BOOTH_IMG
+		FROM BOOTH_REQUEST
+		WHERE CONTENT_ID = #{contentId}
+		AND BOOTH_ACCEPT = 'Y'
+	</select>
 
 </mapper> 
