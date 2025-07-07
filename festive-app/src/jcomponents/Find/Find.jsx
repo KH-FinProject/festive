@@ -48,7 +48,7 @@ const Find = () => {
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: field === 'tel' ? value.replace(/[^\d]/g, '') : value
     }));
     // 이메일이 변경되면 인증번호 입력값과 인증 성공 상태 초기화
     if (field === 'email') {
@@ -130,12 +130,17 @@ const Find = () => {
     if (formData.authMethod === 'email' && !formData.email) {
       alert('이메일을 입력해주세요.');
       return false;
-
-    } else if (formData.authMethod === 'tel' && !formData.tel) {
-      alert('전화번호를 입력해주세요.');
-      return false;
+    } else if (formData.authMethod === 'tel') {
+      if (!formData.tel) {
+        alert('전화번호를 입력해주세요.');
+        return false;
+      }
+      // 국내 휴대폰 번호 패턴(010, 011, 016, 017, 018, 019로 시작, 10~11자리)
+      if (!/^01[016789][0-9]{7,8}$/.test(formData.tel)) {
+        alert('유효한 휴대폰 번호(010, 011, 016, 017, 018, 019로 시작, 10~11자리 숫자)만 입력 가능합니다.');
+        return false;
+      }
     }
-
     return true;
   };
 
@@ -507,13 +512,8 @@ const Find = () => {
                           required
                           value={formData.tel}
                           onChange={(e) => handleInputChange('tel', e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !isSending && !isAuthKeyVerified) {
-                              e.preventDefault();
-                              activeTab === 'id' ? handleIdAuthRequest() : handlePwAuthRequest();
-                            }
-                          }}
-                          placeholder="전화번호"
+                          maxLength={11}
+                          placeholder="숫자만 입력(예: 01012345678)"
                           className="find-input-field"
                       />
                     </div>

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.project.festive.festiveserver.booth.dto.BoothRequestDto;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
+import com.project.festive.festiveserver.detail.model.dto.FestivalDetailDto;
 import com.project.festive.festiveserver.detail.model.dto.LikesDto;
 
 public interface DetailService {
@@ -43,4 +44,9 @@ public interface DetailService {
 	 */
 	List<BoothRequestDto> selectBoothList(String contentId);
 
+	/** 인기 축제 리스트 받아오기
+	 * @param limit
+	 * @return
+	 */
+	List<FestivalDetailDto> getPopularFestivals(int limit);
 }

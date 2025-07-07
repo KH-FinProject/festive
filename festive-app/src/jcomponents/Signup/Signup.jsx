@@ -312,6 +312,18 @@ const validationRules = {
       required: '인증번호를 입력해주세요',
       length: '인증번호는 6자리로 입력해주세요'
     }
+  },
+  tel: {
+    required: true,
+    minLength: 10,
+    maxLength: 11,
+    pattern: /^\d{10,11}$/,
+    message: {
+      required: '전화번호를 입력해주세요',
+      minLength: '전화번호는 10~11자리 숫자만 입력 가능합니다',
+      maxLength: '전화번호는 10~11자리 숫자만 입력 가능합니다',
+      pattern: '숫자만 입력해주세요 (예: 01012345678)'
+    }
   }
 };
 
@@ -528,6 +540,10 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           ...prev,
           authKey: { checked: false, available: false, message: '' }
         }));
+      } else if (field === 'tel') {
+        // 숫자만 허용
+        const onlyNumber = value.replace(/[^\d]/g, '');
+        setFormData(prev => ({ ...prev, tel: onlyNumber }));
       } else {
         setFormData(prev => ({ ...prev, [field]: value }));
       }
@@ -767,7 +783,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
           </div>
           <div className="user-form-group">
             <label className="form-label">전화번호 <span className="required">*</span></label>
-            <input type="tel" className="form-input" placeholder="전화번호를 입력해주세요" value={formData.tel} onChange={e => handleInputChange('tel', e.target.value.trim())} />
+            <input type="tel" className="form-input" placeholder="숫자만 입력(예: 01012345678)" value={formData.tel} onChange={e => handleInputChange('tel', e.target.value)} maxLength={11} />
           </div>
         </div>
         <div className="user-form-group">
