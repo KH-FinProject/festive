@@ -1,8 +1,8 @@
 package com.project.festive.festiveserver.admin.model.service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -230,6 +230,7 @@ public class AdminServiceImpl implements AdminService{
 			log.error("관리자 통계 조회 중 오류 발생", e);
 			throw new RuntimeException("통계 조회 중 오류 발생", e);
 		}
+	}
 
 	// 공지글 작성 by 지현
 	@Override
