@@ -67,7 +67,6 @@ function CommentItem({
 
   const navigate = useNavigate();
 
-
   return (
     <li className="wagle-detail-comment-item">
       <div className="comment-main-row">
@@ -111,7 +110,6 @@ function CommentItem({
               >
                 내 댓글 목록
               </button>
-
             </>
           )}
           <button
@@ -418,8 +416,7 @@ function WagleDetail() {
             minute: "2-digit",
           })
           .replace(/\. /g, ".")
-          .replace(".", ".")
-          .slice(0, -1),
+          .replace(".", "."),
         content: data.boardContent,
         views: data.boardViewCount,
         likes: data.boardLikeCount,
@@ -773,7 +770,10 @@ function WagleDetail() {
                   <button className="delete" onClick={handleDeletePost}>
                     삭제
                   </button>
-                  <button className="delete" onClick={() => navigate("/mypage/mypost")}>
+                  <button
+                    className="delete"
+                    onClick={() => navigate("/mypage/mypost")}
+                  >
                     내 게시글 목록
                   </button>
                 </>

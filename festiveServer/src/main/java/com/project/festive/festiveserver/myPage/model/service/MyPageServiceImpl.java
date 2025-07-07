@@ -162,6 +162,12 @@ public class MyPageServiceImpl implements MyPageService {
     }
     
     @Override
+    public boolean resetProfileImage(Long memberNo) {
+        int result = mapper.resetProfileImage(memberNo);
+        return result > 0;
+    }
+    
+    @Override
     public List<MyCalendarDto> getFavoriteFestivals(long memberNo) {
         List<String> myFavoriteContentIds = mapper.selectContentIdsByMemberNo(memberNo);
         if (myFavoriteContentIds.isEmpty()) {

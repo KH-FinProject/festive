@@ -32,6 +32,7 @@ function CustomerDetail() {
         memberNo: data.memberNo, // 작성자 회원번호 추가
         title: data.boardTitle,
         author: data.memberNickname || "익명",
+        memberProfileImage: data.memberProfileImage, // 프로필 이미지 추가
         date: new Date(data.boardCreateDate)
           .toLocaleDateString("ko-KR", {
             year: "numeric",
@@ -41,8 +42,7 @@ function CustomerDetail() {
             minute: "2-digit",
           })
           .replace(/\. /g, ".")
-          .replace(".", ".")
-          .slice(0, -1),
+          .replace(".", "."),
         content: data.boardContent,
         views: data.boardViewCount,
         // 고객센터 전용 정보
@@ -302,7 +302,20 @@ function CustomerDetail() {
             )}
           </div>
           <div className="customer-detail-meta">
-            <span className="customer-detail-profile-img"></span>
+            <img
+              src={
+                post.memberProfileImage
+                  ? post.memberProfileImage.startsWith("/profile-images/")
+                    ? post.memberProfileImage + "?t=" + Date.now()
+                    : post.memberProfileImage
+                  : "/logo.png"
+              }
+              alt="프로필"
+              className="customer-detail-profile-img"
+              onError={(e) => {
+                e.target.src = "/logo.png";
+              }}
+            />
             <span className="customer-detail-author">{post.author}</span>
             <span className="customer-detail-date">{post.date}</span>
             <span className="customer-detail-views">조회수 {post.views}</span>

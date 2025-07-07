@@ -82,7 +82,8 @@ public class Member {
 	private String role;
 
 	@Column(name = "MEMBER_DEL_FL", nullable = false)
-	private String memberDelFl;
+	@Builder.Default
+	private String memberDelFl = "N";
 
 	@CreationTimestamp
 	@Column(name = "ENROLL_DATE")

@@ -1,70 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./AdminApplicationStatus.css";
 import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSideBar";
+import axiosApi from "../api/axiosAPI";
+import { useAdminNotification } from "./AdminNotificationContext.jsx";
 
 const AdminApplicationStatus = () => {
-  const [applications, setApplications] = useState([
-    {
-      id: 1,
-      category: "플리마켓",
-      title: "제가 축제 매 업면 못 빠짐!!",
-      applicant: "신짱구",
-      date: "2505.06.12 16:45",
-      status: "pending",
-    },
-    {
-      id: 2,
-      category: "푸드트럭",
-      title: "홍천 집우수수 축제 / 옥수수",
-      applicant: "신짱구",
-      date: "2505.06.12 16:45",
-      status: "pending",
-    },
-    {
-      id: 3,
-      category: "플리마켓",
-      title: "홍천 집우수수 축제 / 반팔 업새스리",
-      applicant: "신짱구",
-      date: "2505.06.12 16:45",
-      status: "pending",
-    },
-    {
-      id: 4,
-      category: "푸드트럭",
-      title: "태백 해바라기축제 / 신제모 몇녀이",
-      applicant: "신짱구",
-      date: "2505.06.12 16:45",
-      status: "pending",
-    },
-    {
-      id: 5,
-      category: "푸드트럭",
-      title: "태백 해바라기축제 / 절제 턱요아끼",
-      applicant: "신짱구",
-      date: "2505.06.12 16:45",
-      status: "pending",
-    },
-  ]);
-
+  const [applications, setApplications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const { setHasNewBooth } = useAdminNotification();
 
-  const handleApprove = (id) => {
-    setApplications(
-      applications.map((app) =>
-        app.id === id ? { ...app, status: "approved" } : app
-      )
-    );
-  };
+  useEffect(() => {
+    async function fetchApplications() {
+      try {
+        const response = await axiosApi.get("/api/booth/requests");
+        setApplications(response.data);
+      } catch {
+        alert("신청 목록을 불러오지 못했습니다.");
+      }
+    }
+    fetchApplications();
+  }, []);
 
-  const handleReject = (id) => {
-    setApplications(
-      applications.map((app) =>
-        app.id === id ? { ...app, status: "rejected" } : app
-      )
-    );
-  };
+  useEffect(() => {
+    setHasNewBooth(false);
+  }, []);
+
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(applications.length / itemsPerPage);
+  const pagedApplications = applications.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -72,7 +41,7 @@ const AdminApplicationStatus = () => {
 
   const renderPagination = () => {
     const pages = [];
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= totalPages; i++) {
       pages.push(
         <button
           key={i}
@@ -88,8 +57,8 @@ const AdminApplicationStatus = () => {
 
   // 상세보기 페이지로 이동
   const navigate = useNavigate();
-  const handleGotoDetail = (id) => {
-    navigate("/admin/appDetail");
+  const handleGotoDetail = (boothNo) => {
+    navigate("/admin/appDetail", { state: { boothNo } });
   };
 
   return (
@@ -103,47 +72,60 @@ const AdminApplicationStatus = () => {
           </div>
 
           <div className="status-content">
-            <div className="application-list">
-              {applications.map((application) => (
-                <div key={application.id} className="application-item">
-                  <div className="application-info">
-                    <div className="category-badge">
-                      <span className="category">{application.category}</span>
-                    </div>
-                    <h3 className="application-title">{application.title}</h3>
-                    <div className="application-meta">
-                      <span className="applicant">{application.applicant}</span>
-                      <span className="date">{application.date}</span>
-                    </div>
-                  </div>
-
-                  <div className="application-actions">
-                    <button
-                      className="btn-detail"
-                      onClick={() => handleGotoDetail(application.id)}
-                    >
-                      내용보기
-                    </button>
-                    <button
-                      className={`btn-approve ${
-                        application.status === "approved" ? "approved" : ""
-                      }`}
-                      onClick={() => handleApprove(application.id)}
-                      disabled={application.status === "approved"}
-                    >
-                      {application.status === "approved"
-                        ? "취소됨"
-                        : "신청 취소"}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <table className="application-table">
+              <thead>
+                <tr>
+                  <th>신청자명</th>
+                  <th>신청유형</th>
+                  <th>신청 축제</th>
+                  <th>상태</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagedApplications.map((application) => (
+                  <tr key={application.boothNo}>
+                    <td>{application.applicantName || application.name}</td>
+                    <td>
+                      {application.boothType === 1
+                        ? "플리마켓"
+                        : application.boothType === 2
+                        ? "푸드트럭"
+                        : "-"}
+                    </td>
+                    <td>{application.contentTitle}</td>
+                    <td>
+                      {application.boothAccept === "Y" ? "수락완료" : "대기"}
+                    </td>
+                    <td>
+                      <button
+                        className="btn-detail"
+                        onClick={() => handleGotoDetail(application.boothNo)}
+                      >
+                        내용보기
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
             <div className="pagination">
-              <button className="pagination-btn nav-btn">‹</button>
+              <button
+                className="pagination-btn nav-btn"
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              >
+                ‹
+              </button>
               {renderPagination()}
-              <button className="pagination-btn nav-btn">›</button>
+              <button
+                className="pagination-btn nav-btn"
+                onClick={() =>
+                  handlePageChange(Math.min(totalPages, currentPage + 1))
+                }
+              >
+                ›
+              </button>
             </div>
           </div>
         </main>

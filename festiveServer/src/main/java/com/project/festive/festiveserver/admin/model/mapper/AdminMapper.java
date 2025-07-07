@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.project.festive.festiveserver.member.dto.MemberDto;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
 
 @Mapper
 public interface AdminMapper {
@@ -35,6 +36,15 @@ public interface AdminMapper {
 	 * @author 미애
 	 */
 	int updateWithdrawMember(int memberNo);
+	
+	// 공지글 작성 by 지현
+    int insertBoard(BoardDto boardDto);
+    
+    // 게시글 조회 by 지현
+    List<BoardDto> selectAllBoards();
+
+    // 게시글 삭제 by 지현
+	int deleteBoard(int boardNo);
 
 	// 통계 조회 메서드들
 	/** 전체 회원 수 조회 */

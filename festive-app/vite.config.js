@@ -23,7 +23,13 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\/api/, ''), // 필요하다면 경로 재작성 (예: /api/users -> /users)
         // 이 경우엔 /profile-images 자체가 백엔드 경로이므로 필요 없음
       },
-      // 백엔드 API 경로 - 우선순위 높음
+      "/upload/festive/booth": {
+        target: "http://localhost:8080", // 백엔드 Spring Boot 서버 주소
+        changeOrigin: true, // 대상 서버의 호스트 이름을 변경 (CORS 문제 해결에 유용)
+        secure: false, // HTTPS 백엔드를 사용하지 않는 경우 (개발 환경에서 보통 false)
+        // rewrite: (path) => path.replace(/^\/api/, ''), // 필요하다면 경로 재작성 (예: /api/users -> /users)
+        // 이 경우엔 /profile-images 자체가 백엔드 경로이므로 필요 없음
+      },
       "/api": {
         target: "http://localhost:8080",
         changeOrigin: true,

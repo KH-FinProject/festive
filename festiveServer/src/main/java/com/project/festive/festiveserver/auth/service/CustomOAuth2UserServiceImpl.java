@@ -1,5 +1,8 @@
 package com.project.festive.festiveserver.auth.service;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -12,6 +15,7 @@ import com.project.festive.festiveserver.auth.dto.GoogleResponse;
 import com.project.festive.festiveserver.auth.dto.KakaoResponse;
 import com.project.festive.festiveserver.auth.dto.NaverResponse;
 import com.project.festive.festiveserver.auth.dto.OAuth2Response;
+import com.project.festive.festiveserver.common.util.Utility;
 import com.project.festive.festiveserver.member.converter.MemberConverter;
 import com.project.festive.festiveserver.member.entity.Member;
 import com.project.festive.festiveserver.member.repository.MemberRepository;
@@ -58,13 +62,25 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
             Member existingMember = memberRepository.findBySocialId(socialId);
 
             if(existingMember == null) {
+                String profileImageUrl = oAuth2Response.getProfileImage();
+                String profileImagePath = null;
+                if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+                    String saveDir = "C:/upload/festive/profile";
+                    try {
+                        String savedPath = Utility.downloadImageToServer(profileImageUrl, saveDir);
+                        profileImagePath = "/profile-images/" + new File(savedPath).getName();
+                    } catch (IOException e) {
+                        log.error("프로필 이미지 다운로드 실패: {}", e.getMessage());
+                    }
+                }
+
                 Member newMember = Member.builder()
                     .name(oAuth2Response.getName())
                     .email(oAuth2Response.getEmail())
                     .socialId(socialId)
                     .role("USER")
                     .nickname(oAuth2Response.getNickname())
-                    .profileImage(oAuth2Response.getProfileImage())
+                    .profileImage(profileImagePath) // 서버 url 경로만 저장
                     .tel(oAuth2Response.getTel())
                     .build();
 
