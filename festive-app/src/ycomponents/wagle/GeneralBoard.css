@@ -166,7 +166,7 @@
 .page-btn {
   background: #fff;
   border: 1.5px solid #60a5fa;
-  color: #3266cc;
+  color: #60a5fa;
   border-radius: 6px;
   width: 48px;
   height: 38px;
@@ -212,18 +212,21 @@
 }
 
 @media (max-width: 1200px) {
+
   .general-board-container,
   .wagle-general-board-search-row,
   .general-board-list {
     max-width: 100%;
     width: 100%;
   }
+
   .general-board-item {
     padding: 0 12px;
   }
 }
 
 @media (max-width: 800px) {
+
   .general-board-container,
   .wagle-general-board-search-row,
   .general-board-list {
@@ -231,6 +234,7 @@
     width: 100vw;
     padding: 0 4vw;
   }
+
   .general-board-item {
     padding: 0 4vw;
     font-size: 0.98rem;
@@ -238,16 +242,19 @@
 }
 
 @media (max-width: 600px) {
+
   .general-board-container,
   .wagle-general-board-search-row,
   .general-board-list {
     padding: 0 2vw;
   }
+
   .general-board-item {
     padding: 0 2vw;
     font-size: 0.92rem;
     height: auto;
   }
+
   .wagle-search-type,
   .wagle-search-input,
   .wagle-search-btn,

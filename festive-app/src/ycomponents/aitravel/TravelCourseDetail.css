@@ -27,7 +27,7 @@
 }
 
 .travel-detail-back-btn {
-  background: #3b82f6;
+  background: #60a5fa;
   color: white;
   border: none;
   border-radius: 8px;
@@ -738,7 +738,7 @@
 }
 
 .travel-detail-ai-btn.primary:hover {
-  background-color: #3b82f6;
+  background-color: #60a5fa;
 }
 
 .travel-detail-ai-btn.secondary {
@@ -756,6 +756,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -766,6 +767,7 @@
     transform: translateY(30px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -846,6 +848,7 @@
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -1115,7 +1118,7 @@
 }
 
 .travel-detail-action-btn.primary {
-  background: #3b82f6;
+  background: #60a5fa;
   color: white;
 }
 

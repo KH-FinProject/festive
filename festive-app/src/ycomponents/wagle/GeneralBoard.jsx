@@ -161,7 +161,7 @@ function GeneralBoard({ hideWriteBtn }) {
               style={{
                 marginTop: "10px",
                 padding: "8px 16px",
-                background: "#3498db",
+                background: "#60a5fa",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",

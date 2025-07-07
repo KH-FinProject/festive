@@ -35,7 +35,8 @@
 /* 폼 래퍼 - 중요: flex 속성 추가 */
 .booth-form-wrapper {
   flex: 1;
-  min-width: 0; /* flex item이 축소될 수 있도록 */
+  min-width: 0;
+  /* flex item이 축소될 수 있도록 */
 }
 
 /* 폼 컨테이너 */
@@ -88,7 +89,7 @@
 
 .booth-form-input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #60a5fa;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -107,7 +108,7 @@
 
 .booth-form-textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #60a5fa;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -124,7 +125,7 @@
 
 .booth-form-select:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #60a5fa;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -172,12 +173,11 @@
 
 /* 파일이 선택되었을 때 스타일 */
 .booth-file-upload:has(.booth-file-input:not([value=""])) {
-  border-color: #3b82f6;
+  border-color: #60a5fa;
   background-color: #f0f9ff;
 }
 
-.booth-file-upload:has(.booth-file-input:not([value=""]))
-  .booth-file-upload-text {
+.booth-file-upload:has(.booth-file-input:not([value=""])) .booth-file-upload-text {
   color: #1d4ed8;
   font-weight: 500;
 }
@@ -189,7 +189,7 @@
 }
 
 .booth-submit-button {
-  background-color: #3b82f6;
+  background-color: #60a5fa;
   color: #fff;
   padding: 12px 32px;
   border: none;

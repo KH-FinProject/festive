@@ -51,16 +51,16 @@ function CustomerDetail() {
         answerContent: data.answerContent,
         answerDate: data.answerDate
           ? new Date(data.answerDate)
-              .toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-              .replace(/\. /g, ".")
-              .replace(".", ".")
-              .slice(0, -1)
+            .toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+            .replace(/\. /g, ".")
+            .replace(".", ".")
+            .slice(0, -1)
           : null,
         priority: data.priority || "일반",
         category: data.category || "기타",
@@ -163,7 +163,7 @@ function CustomerDetail() {
                 style={{
                   marginTop: "10px",
                   padding: "8px 16px",
-                  background: "#3498db",
+                  background: "#60a5fa",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -197,7 +197,7 @@ function CustomerDetail() {
                 style={{
                   marginTop: "10px",
                   padding: "8px 16px",
-                  background: "#3498db",
+                  background: "#60a5fa",
                   color: "white",
                   border: "none",
                   borderRadius: "4px",
@@ -242,9 +242,8 @@ function CustomerDetail() {
               }}
             >
               <span
-                className={`status-badge ${
-                  post.hasAnswer ? "answered" : "waiting"
-                }`}
+                className={`status-badge ${post.hasAnswer ? "answered" : "waiting"
+                  }`}
                 style={{
                   padding: "6px 12px",
                   borderRadius: "12px",
@@ -273,7 +272,7 @@ function CustomerDetail() {
                   onClick={handleEditPost}
                   style={{
                     padding: "6px 12px",
-                    background: "#3498db",
+                    background: "#60a5fa",
                     color: "white",
                     border: "none",
                     borderRadius: "4px",
@@ -323,7 +322,7 @@ function CustomerDetail() {
           <div className="customer-detail-content">
             <h3
               style={{
-                borderBottom: "2px solid #3498db",
+                borderBottom: "2px solid #60a5fa",
                 paddingBottom: "10px",
                 marginBottom: "20px",
               }}

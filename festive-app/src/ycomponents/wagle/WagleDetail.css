@@ -3,11 +3,13 @@
   background: #fafbfc;
   padding-bottom: 60px;
 }
+
 .wagle-detail-container {
   width: 1160px;
   margin: 0 auto;
   background: none;
 }
+
 .wagle-detail-nav {
   font-size: 15px;
   color: #888;
@@ -16,13 +18,16 @@
   align-items: center;
   gap: 4px;
 }
+
 .wagle-detail-nav .arrow {
   margin: 0 4px;
 }
+
 .wagle-detail-nav .current {
-  color: #3266cc;
+  color: #60a5fa;
   font-weight: 600;
 }
+
 .wagle-detail-main {
   background: #fff;
   border-radius: 16px;
@@ -30,6 +35,7 @@
   padding: 32px 40px 24px 40px;
   margin-top: 18px;
 }
+
 .wagle-detail-title-row {
   display: flex;
   justify-content: space-between;
@@ -37,6 +43,7 @@
   gap: 16px;
   flex-wrap: wrap;
 }
+
 .wagle-detail-title {
   font-size: 1.5rem;
   font-weight: 700;
@@ -48,11 +55,13 @@
   overflow: visible;
   text-overflow: unset;
 }
+
 .wagle-detail-btns {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
 }
+
 .wagle-detail-btns button,
 .like-btn,
 .report-btn,
@@ -71,12 +80,14 @@
   font-weight: 500;
   transition: background 0.2s, color 0.2s;
 }
+
 .wagle-detail-btns button:first-child,
 .like-btn:first-child,
 .report-btn:first-child,
 .list-btn:first-child {
   margin-left: 0;
 }
+
 .like-btn,
 .report-btn {
   background: none;
@@ -93,14 +104,17 @@
   font-weight: 500;
   transition: color 0.2s;
 }
+
 .like-btn.liked {
   color: #e74c3c;
 }
+
 .like-btn:hover,
 .report-btn:hover {
-  color: #3266cc;
+  color: #60a5fa;
   background: none;
 }
+
 .wagle-detail-actions-bar {
   display: flex;
   justify-content: space-between;
@@ -108,10 +122,12 @@
   margin-top: 24px;
   gap: 12px;
 }
+
 .wagle-detail-actions {
   display: flex;
   gap: 8px;
 }
+
 .list-btn {
   background: #60a5fa;
   color: #fff;
@@ -127,10 +143,12 @@
   font-weight: 500;
   transition: background 0.2s, color 0.2s;
 }
+
 .list-btn:hover {
   background: #7bb0f7;
   color: #fff;
 }
+
 .wagle-detail-meta {
   display: flex;
   align-items: center;
@@ -140,6 +158,7 @@
   margin: 18px 0 0 0;
   position: relative;
 }
+
 .wagle-detail-meta .profile-img {
   width: 28px;
   height: 28px;
@@ -148,6 +167,7 @@
   display: inline-block;
   margin-right: 4px;
 }
+
 .wagle-detail-meta .report-btn {
   margin-left: auto;
   background: none;
@@ -162,9 +182,11 @@
   border-radius: 4px;
   transition: color 0.2s;
 }
+
 .wagle-detail-meta .report-btn:hover {
   color: #c0392b;
 }
+
 .wagle-detail-content {
   margin: 28px 0 0 0;
   font-size: 1.08rem;
@@ -172,12 +194,14 @@
   line-height: 1.7;
   white-space: pre-line;
 }
+
 .wagle-detail-images {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 16px;
   margin: 28px 0 0 0;
 }
+
 .wagle-detail-images img {
   width: 100%;
   height: 120px;
@@ -185,11 +209,13 @@
   border-radius: 10px;
   background: #60a5fa;
 }
+
 .wagle-detail-actions {
   display: flex;
   gap: 18px;
   margin: 24px 0 0 0;
 }
+
 .wagle-detail-actions button {
   background: none;
   border: none;
@@ -201,9 +227,11 @@
   gap: 5px;
   transition: color 0.2s;
 }
+
 .wagle-detail-actions button:hover {
-  color: #3266cc;
+  color: #60a5fa;
 }
+
 .wagle-detail-comments {
   background: #fff;
   border-radius: 16px;
@@ -211,16 +239,19 @@
   margin-top: 32px;
   padding: 28px 40px 32px 40px;
 }
+
 .wagle-detail-comments-title {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 18px;
 }
+
 .wagle-detail-comment-form {
   display: flex;
   gap: 8px;
   margin-bottom: 18px;
 }
+
 .wagle-detail-comment-form input {
   flex: 1;
   border: 1px solid #d0d0d0;
@@ -228,6 +259,7 @@
   padding: 8px 12px;
   font-size: 1rem;
 }
+
 .wagle-detail-comment-form button {
   background: #60a5fa;
   color: #fff;
@@ -238,17 +270,20 @@
   cursor: pointer;
   font-weight: 500;
 }
+
 .wagle-detail-comment-list {
   list-style: none;
   padding: 0;
   margin: 0;
   overflow: hidden;
 }
+
 .wagle-detail-comment-item {
   border-bottom: 1px solid #f0f0f0;
   padding: 16px 0;
   overflow: hidden;
 }
+
 .comment-main-row {
   display: flex;
   align-items: center;
@@ -256,26 +291,31 @@
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
+
 .comment-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .comment-author {
   font-weight: 600;
   color: #333;
   margin-right: 8px;
 }
+
 .comment-date {
   color: #888;
   font-size: 0.9em;
 }
+
 .comment-actions {
   margin-left: auto;
   display: flex;
   gap: 8px;
 }
+
 .comment-btn {
   background: none;
   border: none;
@@ -286,16 +326,19 @@
   border-radius: 4px;
   transition: all 0.2s;
 }
+
 .comment-btn:hover {
   background: #f5f5f5;
-  color: #3266cc;
+  color: #60a5fa;
 }
+
 .comment-content {
   color: #333;
   line-height: 1.5;
   margin: 8px 0 8px 48px;
   white-space: pre-line;
 }
+
 /* 대댓글 스타일링 */
 .reply-row {
   margin: 12px 0 0 48px;
@@ -303,10 +346,12 @@
   width: calc(100% - 48px);
   box-sizing: border-box;
 }
+
 .reply-row .comment-main-row {
   margin-bottom: 4px;
   position: relative;
 }
+
 .reply-row .comment-main-row::before {
   content: "└‣";
   position: absolute;
@@ -316,15 +361,18 @@
   color: #bbb;
   font-size: 14px;
 }
+
 .reply-row .comment-content {
   margin-left: 48px;
   color: #444;
   font-size: 0.98em;
 }
+
 .reply-row .comment-avatar {
   width: 32px;
   height: 32px;
 }
+
 .wagle-detail-bottom-list {
   margin-top: 48px;
 }
@@ -340,6 +388,7 @@
   margin: 0;
   padding: 0;
 }
+
 .wagle-detail-sub-title {
   font-size: 14px;
   color: #999999;
@@ -353,6 +402,7 @@
   text-align: left;
   padding-left: 0;
 }
+
 @media (max-width: 1200px) {
   .wagle-detail-container {
     width: 90%;
@@ -364,6 +414,7 @@
     padding: 24px 20px;
   }
 }
+
 @media (max-width: 768px) {
   .wagle-detail-title-row {
     flex-direction: column;
@@ -422,6 +473,7 @@
     margin-left: 0;
   }
 }
+
 @media (max-width: 480px) {
   .wagle-detail-images {
     grid-template-columns: 1fr;
@@ -461,6 +513,7 @@
     height: 28px;
   }
 }
+
 .wagle-detail-btns button:hover,
 .wagle-detail-comment-form button:hover {
   background: #7bb0f7;
