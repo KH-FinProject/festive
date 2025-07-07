@@ -4,6 +4,8 @@ import lombok.Data;
 import java.util.Date;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 @Data
 public class BoothRequestDto {
     private Long boothNo; // BOOTH_NO
@@ -12,8 +14,10 @@ public class BoothRequestDto {
     private String applicantName; // APPLICANT_NAME (신청자 이름)
     private String applicantCompany; // APPLICANT_COMPANY (기업명)
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private Date boothStartDate; // BOOTH_START_DATE
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
     private Date boothEndDate; // BOOTH_END_DATE
     private String boothTel; // BOOTH_TEL
     private String products; // PRODUCTS (판매 품목)

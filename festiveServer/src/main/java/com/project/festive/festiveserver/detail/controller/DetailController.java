@@ -1,5 +1,7 @@
 package com.project.festive.festiveserver.detail.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.WebUtils;
+
+import com.project.festive.festiveserver.booth.dto.BoothRequestDto;
 import com.project.festive.festiveserver.common.handler.GlobalExceptionHandler;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
@@ -161,6 +165,25 @@ public class DetailController {
 			}
 		} catch (Exception e) {
 			 e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+
+	}
+	
+	/** 참여부스 리스트 받아오기
+	 * @param contentId
+	 * @return
+	 */
+	@GetMapping("BoothList")
+	public ResponseEntity<Object> selectBoothList(@RequestParam("contentId") String contentId) {
+		try {
+
+			List<BoothRequestDto> boothList = service.selectBoothList(contentId);
+			System.out.println("BoothList 사이즈 : " + boothList.size());
+			System.out.println("BoothList 상태보기 : " + boothList);
+			return ResponseEntity.status(HttpStatus.OK).body(boothList);
+
+		} catch (Exception e) {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 

@@ -1,8 +1,11 @@
 package com.project.festive.festiveserver.detail.model.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.project.festive.festiveserver.booth.dto.BoothRequestDto;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
 import com.project.festive.festiveserver.detail.model.dto.LikesDto;
 
@@ -51,5 +54,12 @@ public interface DetailMapper {
 	 * @author 미애
 	 */
 	int insertLike(LikesDto likes);
+
+	/** 참여부스 리스트 받아오기
+	 * @param contentId
+	 * @return
+	 * @author 미애
+	 */
+	List<BoothRequestDto> selectBoothList(String contentId);
 
 }
