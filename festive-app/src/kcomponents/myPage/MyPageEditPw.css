@@ -33,7 +33,7 @@
 }
 
 .password-form-row input:focus {
-    border-color: #9DC4FE;
+    border-color: #60a5fa;
     background: white;
 }
 
@@ -92,7 +92,7 @@
 .phone {
     font-size: 24px;
     font-weight: bold;
-    color: #9DC4FE;
+    color: #60a5fa;
     margin-bottom: 8px;
 }
 

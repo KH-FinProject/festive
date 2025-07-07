@@ -131,12 +131,12 @@
   transition: all 0.2s ease;
 }
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark {
+.checkbox-label input[type="checkbox"]:checked+.checkmark {
   background-color: #60a5fa;
   border-color: #60a5fa;
 }
 
-.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+.checkbox-label input[type="checkbox"]:checked+.checkmark::after {
   content: "✓";
   color: white;
   font-size: 0.75rem;
@@ -215,12 +215,12 @@
   transition: all 0.2s ease;
 }
 
-.select-all-label input[type="checkbox"]:checked + .checkmark {
+.select-all-label input[type="checkbox"]:checked+.checkmark {
   background-color: #60a5fa;
   border-color: #60a5fa;
 }
 
-.select-all-label input[type="checkbox"]:checked + .checkmark::after {
+.select-all-label input[type="checkbox"]:checked+.checkmark::after {
   content: "✓";
   color: white;
   font-size: 0.75rem;
@@ -243,7 +243,7 @@
 }
 
 .step-btn:hover {
-  background-color: #9DC4FE;
+  background-color: #60a5fa;
 }
 
 .step-btn:disabled {
@@ -327,7 +327,7 @@
 }
 
 .action-btn:hover {
-  background-color: #9DC4FE;
+  background-color: #60a5fa;
 }
 
 .address-group {
@@ -374,7 +374,7 @@
 }
 
 .next-btn:hover {
-  background-color: #9DC4FE;
+  background-color: #60a5fa;
 }
 
 .next-btn:disabled {
@@ -433,6 +433,7 @@
   align-items: center;
   padding: 1rem;
 }
+
 .feature-card:nth-child(2) {
   flex-direction: row-reverse;
 }
@@ -461,7 +462,7 @@
   justify-content: center;
   padding: 1.6rem;
   background-color: #f8fafc;
-  border: 1px solid #9DC4FE;
+  border: 1px solid #60a5fa;
   border-radius: 0.75rem;
   transition: all 0.3s ease;
   max-width: 400px;
@@ -471,7 +472,7 @@
 .feature-content:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(157, 196, 254, 0.3);
-  border-color: #9DC4FE;
+  border-color: #60a5fa;
 }
 
 /* 두 번째 카드(오른쪽 정렬)의 텍스트는 오른쪽 정렬 */
@@ -513,7 +514,7 @@
 }
 
 .login-btn:hover {
-  background-color: #9DC4FE;
+  background-color: #60a5fa;
   box-shadow: 0 4px 12px rgba(157, 196, 254, 0.4);
 }
 
@@ -522,42 +523,42 @@
   .signup-container {
     padding: 1rem 0.5rem;
   }
-  
+
   .signup-content {
     padding: 1.5rem;
   }
-  
+
   .progress-steps {
     margin-bottom: 2rem;
   }
-  
+
   .step-line {
     width: 2rem;
     margin: 0 0.5rem 0.5rem;
   }
-  
+
   .user-form-row {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .nav-buttons {
     flex-direction: column;
   }
-  
+
   .form-input-group {
     flex-direction: column;
   }
-  
+
   .form-input-group .form-input {
     flex: none;
   }
-  
+
   .feature-cards {
     padding: 0 1rem;
     gap: 1.5rem;
   }
-  
+
   /* 모바일에서는 모든 카드를 중앙 정렬하고 세로 레이아웃으로 변경 */
   .feature-card,
   .feature-card:nth-child(1),
@@ -568,10 +569,11 @@
     text-align: center;
     max-width: 100%;
   }
+
   .feature-card:nth-child(2) {
     flex-direction: column-reverse;
   }
-  
+
   .feature-content,
   .feature-card:nth-child(2) .feature-content {
     text-align: center;
@@ -697,7 +699,7 @@
   display: none;
 }
 
-.auth-method-option input[type="radio"]:checked + .auth-method-label {
+.auth-method-option input[type="radio"]:checked+.auth-method-label {
   color: #60a5fa;
   font-weight: 700;
 }
@@ -746,12 +748,12 @@
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .auth-method-option {
     flex: none;
     min-height: 50px;
   }
-  
+
   .auth-method-label {
     font-size: 0.9rem;
   }

@@ -70,6 +70,7 @@
   display: flex;
   gap: 8px;
 }
+
 .admin-section-title {
   font-size: 20px;
   font-weight: 450;
@@ -79,7 +80,8 @@
 
 /* Member List Container */
 .member-list-container {
-  height: 500px; /* 고정 높이 설정 */
+  height: 500px;
+  /* 고정 높이 설정 */
   display: flex;
   flex-direction: column;
 }
@@ -119,7 +121,8 @@
 /* Member List Body */
 .member-list-body {
   flex: 1;
-  overflow-y: auto; /* 이 영역만 스크롤 */
+  overflow-y: auto;
+  /* 이 영역만 스크롤 */
   min-height: 0;
   min-width: 754px;
 }
@@ -153,7 +156,7 @@
 .member-checkbox {
   width: 16px;
   height: 16px;
-  accent-color: #9dc4fe;
+  accent-color: #60a5fa;
   cursor: pointer;
 }
 
@@ -199,8 +202,8 @@
   border-radius: 4px;
 }
 
-.member-list-body::-webkit-scrollbar-thumb {
-  background: #9dc4fe;
+60a5fa .member-list-body::-webkit-scrollbar-thumb {
+  background: #60a5fa;
   border-radius: 4px;
 }
 

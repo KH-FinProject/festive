@@ -85,7 +85,7 @@
 }
 
 .form-input:focus {
-    border-color: #9dc4fe;
+    border-color: #60a5fa;
 }
 
 .form-input.full-width {
@@ -104,7 +104,7 @@
 }
 
 .form-button.primary {
-    background: #9dc4fe;
+    background: #60a5fa;
     color: #25272B;
 }
 
@@ -115,7 +115,7 @@
 .form-button.secondary {
     background: #f8f9fa;
     color: #25272B;
-    border: 1px solid #9dc4fe;
+    border: 1px solid #60a5fa;
 }
 
 .form-button.secondary:hover {
@@ -224,7 +224,7 @@
 }
 
 .email-input:focus {
-    border-color: #9dc4fe;
+    border-color: #60a5fa;
 }
 
 .verify-btn,
@@ -270,13 +270,13 @@
 }
 
 .modal-button.primary:hover {
-    background: #9dc4fe;
+    background: #60a5fa;
 }
 
 .modal-button.secondary {
     background: white;
     color: #25272B;
-    border: 1px solid #9dc4fe;
+    border: 1px solid #60a5fa;
 }
 
 .modal-button.secondary:hover {
