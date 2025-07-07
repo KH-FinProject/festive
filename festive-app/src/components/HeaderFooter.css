@@ -119,10 +119,18 @@
   font-weight: bold;
 }
 
-.footerfooter-links a {
+.footerfooter-links a,
+.footerfooter-links a:visited,
+.footerfooter-links a:link {
   margin-right: 1rem;
   color: #666;
   text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footerfooter-links a:hover {
+  color: #e74c3c;
+  text-decoration: underline;
 }
 
 .footerapi-images {
