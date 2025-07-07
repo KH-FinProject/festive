@@ -1,5 +1,8 @@
 package com.project.festive.festiveserver.detail.model.service;
 
+import java.util.List;
+
+import com.project.festive.festiveserver.booth.dto.BoothRequestDto;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
 import com.project.festive.festiveserver.detail.model.dto.LikesDto;
 
@@ -33,5 +36,11 @@ public interface DetailService {
 	 * @author 미애
 	 */
 	int changeLikes(LikesDto likes);
+
+	/** 참여부스 리스트 받아오기
+	 * @param contentId
+	 * @return
+	 */
+	List<BoothRequestDto> selectBoothList(String contentId);
 
 }

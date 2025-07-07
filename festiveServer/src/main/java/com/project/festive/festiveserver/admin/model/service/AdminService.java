@@ -2,6 +2,7 @@ package com.project.festive.festiveserver.admin.model.service;
 
 import java.util.List;
 
+import com.project.festive.festiveserver.admin.dto.AdminStatisticsDto;
 import com.project.festive.festiveserver.member.dto.MemberDto;
 import com.project.festive.festiveserver.wagle.dto.BoardDto;
 
@@ -33,6 +34,12 @@ public interface AdminService {
 	 */
 	int updateWithdrawMember(List<Integer> memberNoList);
 
+
+	/** 관리자 통계 조회
+	 * @return AdminStatisticsDto
+	 */
+	AdminStatisticsDto getAdminStatistics();
+
 	// 공지글 작성
 	int createBoard(BoardDto boardDto);
 	
@@ -41,5 +48,6 @@ public interface AdminService {
 
 	// 선택한 글 삭제
 	int deleteBoard(List<Integer> boardNoList);
+
 
 }

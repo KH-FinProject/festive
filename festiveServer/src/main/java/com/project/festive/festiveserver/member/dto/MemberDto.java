@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -36,6 +37,8 @@ public class MemberDto {
   private String address;
   
   private String withdrawDate;
+  
+  private String enrollDate;  // 가입일 추가
   
   // 마이페이지 비밀번호 변경 및 확인을 위해 추가함 - 지현
   private String currentPassword;

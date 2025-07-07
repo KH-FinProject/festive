@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import openapi from "../assets/openai.svg";
 import trip from "../assets/trip.png";
 import "./HeaderFooter.css";
@@ -11,14 +12,14 @@ function Footer() {
         <div className="footerfooter-sub">
           서울특별시 우자 산업단지 유튜브 99, 울트라사옥 대표이사 : 성원숭
         </div>
-        <div className="footerfooter-sub">이메일 : rkdwl811@gmail.com</div>
+        <div className="footerfooter-sub">이메일 : rlawlgh246@gmail.com</div>
       </div>
 
       <div className="footerfooter-center">
         <div className="footerfooter-links">
-          <a href="#">회사소개</a>
-          <a href="#">개인정보처리방침</a>
-          <a href="#">이용약관</a>
+          <Link to="/company">회사소개</Link>
+          <Link to="/privacy">개인정보처리방침</Link>
+          <Link to="/terms">이용약관</Link>
         </div>
         <div className="footerapi-images">
           <a>
@@ -36,7 +37,7 @@ function Footer() {
           09:00 ~ 18:00(토요일, 공휴일 휴무)
         </div>
         <div className="footerfooter-links">
-          <a href="#">1:1문의하기</a>
+          <a href="/customer-center">문의하기</a>
           <a href="#">자주 묻는 질문</a>
         </div>
         <div className="footerfooter-copy">

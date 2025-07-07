@@ -8,11 +8,14 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useNavigate } from 'react-router-dom';
 
+import Pagination from "../myPage/Pagination.jsx";
+
+const PAGE_SIZE = 4;
+
 function formatDate(yyyymmdd) {
     return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
 }
 
-// 오늘 날짜 yyyy-mm-dd 반환 함수
 function getTodayStr() {
     return new Date().toISOString().slice(0, 10);
 }
@@ -20,18 +23,17 @@ function getTodayStr() {
 const FestiveCalendar = () => {
     const [festivals, setFestivals] = useState([]);
     const [selectedDateFestivals, setSelectedDateFestivals] = useState([]);
-    // 초기값을 오늘 날짜로!
     const [clickedDate, setClickedDate] = useState(() => getTodayStr());
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 4;
 
     const navigate = useNavigate();
 
-    const totalPages = Math.ceil(selectedDateFestivals.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const currentFestivals = selectedDateFestivals.slice(startIndex, startIndex + itemsPerPage);
+    // 페이지네이션 관련 계산
+    const totalPages = Math.ceil(selectedDateFestivals.length / PAGE_SIZE);
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const currentFestivals = selectedDateFestivals.slice(startIndex, startIndex + PAGE_SIZE);
 
-    // 페이지 번호 버튼을 그룹화하여 5개씩만 보여주기
+    // 페이지 번호 버튼을 그룹화(5개씩만 보여주기)
     const pageGroupSize = 5;
     const pageGroupStart = Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize + 1;
     const pageGroupEnd = Math.min(pageGroupStart + pageGroupSize - 1, totalPages);
@@ -45,7 +47,6 @@ const FestiveCalendar = () => {
 
     async function fetchFestivalEventsByDate(dateStr, filterDate) {
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
-
         try {
             const response = await fetch(
                 `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=19960205&arrange=A&numOfRows=10000&pageNo=1`
@@ -79,28 +80,22 @@ const FestiveCalendar = () => {
                 };
             });
 
-            // 시작 날짜순 정렬 추가
+            // 시작 날짜순 정렬
             festivalCards.sort((a, b) => {
                 const statusPriority = {
                     '진행중': 1,
                     '예정': 2,
                     '종료': 3,
                 };
-
                 const aPriority = statusPriority[a.status];
                 const bPriority = statusPriority[b.status];
 
-                // 상태 우선순위 비교
                 if (aPriority !== bPriority) {
                     return aPriority - bPriority;
                 }
-
-                // 상태가 같을 때
                 if (a.status === '예정') {
-                    // 예정인 경우: 시작일 오름차순
                     return new Date(a.startDate) - new Date(b.startDate);
                 } else {
-                    // 그 외: 시작일 내림차순
                     return new Date(b.startDate) - new Date(a.startDate);
                 }
             });
@@ -113,10 +108,18 @@ const FestiveCalendar = () => {
 
             setFestivals(festivalCards);
             setSelectedDateFestivals(filteredFestivals);
+            setCurrentPage(1); // 날짜 바뀌면 1페이지로 초기화
         } catch (error) {
             console.error('축제 데이터 로딩 실패:', error);
         }
     }
+
+    // 페이지 이동 함수
+    const goToPage = (pageNumber) => {
+        if (pageNumber >= 1 && pageNumber <= totalPages) {
+            setCurrentPage(pageNumber);
+        }
+    };
 
     const handleDateClick = (info) => {
         const clicked = info.dateStr;
@@ -135,13 +138,6 @@ const FestiveCalendar = () => {
         }
     });
 
-    const handlePageChange = (pageNumber) => {
-        if (pageNumber >= 1 && pageNumber <= totalPages) {
-            setCurrentPage(pageNumber);
-            // window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
     const handleDatesSet = (arg) => {
         const calendarDate = arg.start;
         const today = new Date();
@@ -153,8 +149,6 @@ const FestiveCalendar = () => {
             const yyyymmdd = today.toISOString().slice(0, 10).replace(/-/g, '');
             const filterDate = today.toISOString().slice(0, 10);
             fetchFestivalEventsByDate(yyyymmdd, filterDate);
-
-            // 클릭된 날짜를 오늘 날짜로 설정
             setClickedDate(today.toISOString().slice(0, 10));
             setCurrentPage(1);
         }
@@ -173,7 +167,6 @@ const FestiveCalendar = () => {
         return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
     }
 
-    // 1. 색상을 결정하는 함수 추가
     function getEventColor(count) {
         const lowRanges = [
             [0, 10], [31, 40], [61, 70], [91, 100]
@@ -325,51 +318,16 @@ const FestiveCalendar = () => {
                             ))}
                         </div>
 
-                        {totalPages > 1 && (
-                            <div className="pagination-container">
-                                <button
-                                    className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
-                                    onClick={() => handlePageChange(1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    &laquo;
-                                </button>
-                                <button
-                                    className={`pagination-btn ${pageGroupStart === 1 ? 'disabled' : ''}`}
-                                    onClick={() => handlePageChange(pageGroupStart - 1)}
-                                    disabled={pageGroupStart === 1}
-                                >
-                                    &lsaquo;
-                                </button>
-                                <div className="pagination-numbers">
-                                    {Array.from({ length: pageGroupEnd - pageGroupStart + 1 }, (_, idx) => {
-                                        const pageNumber = pageGroupStart + idx;
-                                        return (
-                                            <button
-                                                key={pageNumber}
-                                                className={`pagination-number ${currentPage === pageNumber ? 'active' : ''}`}
-                                                onClick={() => handlePageChange(pageNumber)}
-                                            >
-                                                {pageNumber}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                                <button
-                                    className={`pagination-btn ${pageGroupEnd === totalPages ? 'disabled' : ''}`}
-                                    onClick={() => handlePageChange(pageGroupEnd + 1)}
-                                    disabled={pageGroupEnd === totalPages}
-                                >
-                                    &rsaquo;
-                                </button>
-                                <button
-                                    className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
-                                    onClick={() => handlePageChange(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    &raquo;
-                                </button>
-                            </div>
+                        {selectedDateFestivals.length > 0 && totalPages > 1 && (
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={goToPage}
+                                className="festival-pagination"
+                                pageGroupSize={pageGroupSize}
+                                pageGroupStart={pageGroupStart}
+                                pageGroupEnd={pageGroupEnd}
+                            />
                         )}
                     </div>
                 </section>

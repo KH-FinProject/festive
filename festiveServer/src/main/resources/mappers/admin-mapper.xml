@@ -5,8 +5,8 @@
 
 
 	<!-- 관리자 이메일 중복 검사 -->
-	<select id="checkEmail">
-		SELECT COUNT(*) FROM "MEMBER"
+	<select id="checkEmail" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
 		WHERE EMAIL = #{email}
 	</select>
 
@@ -38,10 +38,11 @@
 	</insert>
 
 	<!-- 탈퇴 회원 조회 : 미애 -->
-	<select id="selectWithdrawMembers">
+	<select id="selectWithdrawMembers" resultType="map">
 		SELECT MEMBER_NO, ID, NAME, NICKNAME, WITHDRAW_DATE
 		FROM MEMBER
 		WHERE MEMBER_DEL_FL = 'Y'
+		ORDER BY WITHDRAW_DATE DESC
 	</select>
 
 	<!-- 회원 영구 삭제 : 미애 -->
@@ -52,6 +53,107 @@
 		MEMBER_DEL_FL = 'Y'
 	</delete>
 
+	
+	<!-- 통계 조회: 전체 회원 수 -->
+	<select id="getTotalMembers" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+	</select>
+	
+	<!-- 통계 조회: 활동 회원 수 (최근 일주일 내 게시글/댓글 활동이 있는 회원) -->
+	<select id="getActiveMembers" resultType="int">
+		SELECT COUNT(DISTINCT m.MEMBER_NO) 
+		FROM MEMBER m
+		WHERE m.MEMBER_DEL_FL = 'N'
+		AND (
+			m.MEMBER_NO IN (
+				SELECT DISTINCT b.MEMBER_NO 
+				FROM BOARD b 
+				WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+				AND b.BOARD_DEL_FL = 'N'
+			)
+			OR 
+			m.MEMBER_NO IN (
+				SELECT DISTINCT c.MEMBER_NO 
+				FROM "COMMENT" c 
+				WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+				AND c.COMMENT_DEL_FL = 'N'
+			)
+		)
+	</select>
+	
+	<!-- 통계 조회: 탈퇴 회원 수 -->
+	<select id="getWithdrawMembers" resultType="int">
+		SELECT COUNT(*) FROM MEMBER WHERE MEMBER_DEL_FL = 'Y'
+	</select>
+	
+	<!-- 통계 조회: 최근 일주일 신규 회원 수 -->
+	<select id="getWeeklyNewMembers" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+	</select>
+	
+	<!-- 통계 조회: 최근 일주일 탈퇴 회원 수 -->
+	<select id="getWeeklyWithdrawMembers" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		AND WITHDRAW_DATE IS NOT NULL
+	</select>
+	
+	<!-- 통계 조회: 일반 활성 회원 수 (탈퇴하지 않은 전체 회원) -->
+	<select id="getReturnMembers" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE MEMBER_DEL_FL = 'N'
+	</select>
+
+	<!-- 통계 조회: 일별 신규 회원 수 -->
+	<select id="getDailyNewMembers" resultType="java.util.Map">
+		SELECT TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD') as ENROLL_DATE_STR,
+			   COUNT(*) as NEW_MEMBERS
+		FROM MEMBER
+		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+		GROUP BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
+		ORDER BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
+	</select>
+	
+	<!-- 통계 조회: 일별 탈퇴 회원 수 -->
+	<select id="getDailyWithdrawMembers" resultType="java.util.Map">
+		SELECT TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD') as WITHDRAW_DATE_STR,
+			   COUNT(*) as WITHDRAW_MEMBERS
+		FROM MEMBER
+		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		AND WITHDRAW_DATE IS NOT NULL
+		GROUP BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
+		ORDER BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
+	</select>
+	
+	<!-- 통계 조회: 일별 활동 회원 수 (게시글/댓글 활동이 있는 회원) -->
+	<select id="getDailyActiveMembers" resultType="java.util.Map">
+		SELECT activity_date as ACTIVITY_DATE_STR,
+			   COUNT(DISTINCT member_no) as ACTIVE_MEMBERS
+		FROM (
+			SELECT TO_CHAR(b.BOARD_CREAT_DATE, 'YYYY-MM-DD') as activity_date,
+				   b.MEMBER_NO as member_no
+			FROM BOARD b
+			WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+			AND b.BOARD_DEL_FL = 'N'
+			
+			UNION
+			
+			SELECT TO_CHAR(c.COMMENT_WRITE_DATE, 'YYYY-MM-DD') as activity_date,
+				   c.MEMBER_NO as member_no
+			FROM "COMMENT" c
+			WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+			AND c.COMMENT_DEL_FL = 'N'
+		)
+		GROUP BY activity_date
+		ORDER BY activity_date
+	</select>
+
+
+  
 	<!-- 탈퇴 회원 복구 : 미애 -->
 	<update id="updateWithdrawMember">
 		UPDATE MEMBER
@@ -81,11 +183,11 @@
 		B.BOARD_TITLE,
 		B.BOARD_CONTENT,
 		B.READ_COUNT AS boardViewCount,
-		B.BOARD_DEL_FL,
+		B.BOARD_DEL_FL AS boardDeleteYn,
 		CAST(B.BOARD_CREAT_DATE AS TIMESTAMP) AS boardCreateDate,
 		CAST(B.BOARD_UPDATE_DATE AS TIMESTAMP) AS boardUpdateDate,
 		B.MEMBER_NO,
-		B.BOARD_CODE AS boardCode,
+		B.BOARD_CODE AS boardTypeNo,
 		M.NICKNAME AS memberNickname,
 		NVL(L.LIKE_COUNT, 0) AS boardLikeCount,
 		NVL(C.COMMENT_COUNT, 0) AS boardCommentCount,
@@ -112,6 +214,7 @@
 		DELETE FROM BOARD
 		WHERE BOARD_NO = #{boardNo}
 	</delete>
+
 
 
 </mapper>

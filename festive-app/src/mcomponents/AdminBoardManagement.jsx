@@ -34,18 +34,22 @@ const AdminBoardManagement = () => {
   const fetchPosts = () => {
     axiosApi.get("/admin/board")
       .then((res) => {
-        const mapped = res.data.map((post) => ({
-          id: post.boardNo,
-          type: Number(post.boardCode ?? post.boardTypeNo) === 2 ? "공지" : "일반",
-          title: post.boardTitle,
-          author: post.memberNickname || "익명",
-          date: formatDate(post.boardCreateDate),
-          views: post.boardViewCount,
-          likes: post.boardLikeCount,
-          comments: post.boardCommentCount,
-          postNumber: `${post.boardNo}`,
-          checked: false,
-        }));
+        const mapped = res.data.map((post) => {
+          console.log('boardCode:', post.boardCode, 'boardTypeNo:', post.boardTypeNo, '전체 post:', post);
+          return {
+            id: post.boardNo,
+            type: Number(post.boardCode ?? post.boardTypeNo) === 2 ? "공지" : "일반",
+            title: post.boardTitle,
+            author: post.memberNickname || "익명",
+            date: formatDate(post.boardCreateDate),
+            views: post.boardViewCount,
+            likes: post.boardLikeCount,
+            comments: post.boardCommentCount,
+            postNumber: `${post.boardNo}`,
+            checked: false,
+          };
+        });
+
         setPosts(mapped);
         setSelectAll(false);
       })

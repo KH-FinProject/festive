@@ -1,4 +1,11 @@
-import { Calendar, Phone, Star, ChevronRight, MapPin } from "lucide-react";
+import {
+  Calendar,
+  Phone,
+  Star,
+  ChevronRight,
+  MapPin,
+  Section,
+} from "lucide-react";
 import "./FestivalDetail.css";
 
 // 모달 관련
@@ -18,6 +25,7 @@ import StayModal from "./StayModal";
 import DetailWeather from "./DetailWeatherAPI";
 import LikeButton from "./LikeButton";
 import useAuthStore from "../store/useAuthStore";
+import BoothList from "./BoothList";
 
 // 축제 상태 진행
 const getFestivalStatus = (start, end) => {
@@ -391,7 +399,7 @@ const FestivalDetail = () => {
 
             {/* Festival Images */}
             <div className="festival-slider">
-              {festivalImg > 0 && <FestivalSwiper />}
+              {festivalImg && festivalImg.length > 0 && <FestivalSwiper />}
             </div>
 
             {/* Festival Details 축제 상세설명*/}
@@ -533,6 +541,9 @@ const FestivalDetail = () => {
               </div>
             </div>
           </section> */}
+
+          {/* 플리마켓 / 푸드트럭 정보 */}
+          <BoothList contentId={contentId} />
 
           {/* Accommodation Section */}
           <section className="accommodation-section">

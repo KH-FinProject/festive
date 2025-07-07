@@ -20,8 +20,8 @@ const MONTHLY_PASTEL_PALETTES = {
     4: ["#eafff1", "#f6ffed", "#e8ffe9", "#e9fff7"],
     5: ["#eaeaff", "#f2eaff", "#faeaff", "#ffeafd"],
     6: ["#ffe9e3", "#fff7e6", "#ffe7c7", "#fffaf0"],
-    7: ["#e9f9ff", "#e5f6ff", "#f7f0ff", "#f2f8ff"],
-    8: ["#f6f6f6", "#fcfaff", "#fff6fb", "#fdf6ff"],
+    7: ["#ede0ff", "#d6f1ff", "#ffe6c9", "#f2f8ff"],
+    8: ["#f5d7d7", "#ffe494", "#ffe8f5", "#fdf6ff"],
     9: ["#f9e2ae", "#ffe0ac", "#ffd1dc", "#fffbe6"],
     10: ["#e2f0cb", "#b6efd4", "#e3ffe3", "#e6ffe9"],
     11: ["#ffe6fa", "#f8cdda", "#e2cfcf", "#f6dfeb"],
@@ -210,6 +210,7 @@ const MyPageCalendar = () => {
                                 right: 'dayGridMonth,listMonth'
                             }}
                             locale="ko"
+                            allDayText=""
                             eventDisplay="block"
                             dayMaxEvents={3}
                             moreLinkClick="popover"
