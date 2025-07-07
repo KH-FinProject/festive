@@ -16,6 +16,7 @@ const AdminCustomerService = () => {
 
   const navigate = useNavigate();
   const { setHasNewReport } = useAdminNotification();
+  const { setHasNewInquiry } = useAdminNotification();
 
   // 문의내역 페이지네이션 설정
   const inquiryPagination = usePagination({
@@ -105,6 +106,7 @@ const AdminCustomerService = () => {
     fetchInquiries();
     fetchReports();
     setHasNewReport(false);
+    setHasNewInquiry(false);
   }, []);
 
   const handleReply = (inquiry) => {

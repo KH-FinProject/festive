@@ -8,6 +8,8 @@ export function useAdminNotification() {
 
 export function AdminNotificationProvider({ children }) {
   const [hasNewReport, setHasNewReport] = useState(false);
+  const [hasNewBooth, setHasNewBooth] = useState(false);
+  const [hasNewInquiry, setHasNewInquiry] = useState(false);
 
   console.log("새로운 방식 AdminNotificationProvider 렌더링!");
 
@@ -38,7 +40,6 @@ export function AdminNotificationProvider({ children }) {
           console.log("WebSocket 메시지 받음:", event.data);
 
           if (event.data.includes("CONNECTED")) {
-            console.log("STOMP 연결 완료!");
             // 구독 프레임 전송
             const subscribeFrame =
               "SUBSCRIBE\nid:sub-0\ndestination:/topic/admin-alerts\n\n\x00";
@@ -46,10 +47,24 @@ export function AdminNotificationProvider({ children }) {
             console.log("/topic/admin-alerts 구독 요청 전송");
             return;
           }
-
-          // 기존 방식: /topic/admin-alerts 메시지 수신 시 바로 NEW 처리
           if (event.data.includes("/topic/admin-alerts")) {
-            setHasNewReport(true);
+            let isBooth = false;
+            try {
+              const alert = JSON.parse(event.data.split("\n").pop());
+              if (alert.message?.includes("부스")) isBooth = true;
+            } catch {
+              if (event.data.includes("부스")) isBooth = true;
+            }
+            if (isBooth) setHasNewBooth(true);
+            // 기존 신고 처리도 유지
+            try {
+              const alert = JSON.parse(event.data.split("\n").pop());
+              if (alert.message?.includes("신고")) setHasNewReport(true);
+              if (alert.message?.includes("문의")) setHasNewInquiry(true);
+            } catch {
+              if (event.data.includes("신고")) setHasNewReport(true);
+              if (event.data.includes("문의")) setHasNewInquiry(true);
+            }
           }
         };
 
@@ -85,7 +100,14 @@ export function AdminNotificationProvider({ children }) {
 
   return (
     <AdminNotificationContext.Provider
-      value={{ hasNewReport, setHasNewReport }}
+      value={{
+        hasNewReport,
+        setHasNewReport,
+        hasNewBooth,
+        setHasNewBooth,
+        hasNewInquiry,
+        setHasNewInquiry,
+      }}
     >
       {children}
     </AdminNotificationContext.Provider>

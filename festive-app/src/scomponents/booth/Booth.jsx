@@ -288,6 +288,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
   // 상태 추가
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [license, setLicense] = useState("");
   const [formContentId, setFormContentId] = useState(contentId || "");
   const { member } = useAuthStore();
   const memberNo = member?.memberNo;
@@ -306,7 +307,8 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
       !shop ||
       !phone ||
       !item ||
-      !desc ||
+      !startDate ||
+      !endDate ||
       !selectedFile
     ) {
       alert("모든 필수 항목을 입력/선택해 주세요.");
@@ -321,16 +323,16 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
       const formData = new FormData();
       formData.append("memberNo", memberNo); // 로그인 사용자 번호 추가
       formData.append("applicantName", name);
-      formData.append("applicantCompany", shop);
+      formData.append("applicantCompany", shop); // 플리마켓: shop, 푸드트럭: truck
       formData.append("boothTel", phone);
-      formData.append("products", item);
-      formData.append("contentTitle", festivalName); // 축제명
-      formData.append("boothType", 1); // 플리마켓: 1, 푸드트럭: 2
-      formData.append("image", selectedFile);
-      // 필요시 boothStartDate, boothEndDate, contentId 등 추가
+      formData.append("products", item); // 플리마켓: item, 푸드트럭: menu
       formData.append("boothStartDate", startDate);
       formData.append("boothEndDate", endDate);
       formData.append("contentId", formContentId);
+      formData.append("contentTitle", festivalName);
+      formData.append("boothType", 1); // 플리마켓: 1로 전송
+      formData.append("image", selectedFile);
+      // 영업허가증, 트럭크기 등은 formData에 추가하지 않음
       // axios.post 직전: formData 값 모두 출력
       for (let [key, value] of formData.entries()) {
         console.log(key, value);
@@ -360,7 +362,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
       <div className="booth-form-fields">
         <div className="booth-form-field">
           <label className="booth-form-label">
-            축제명 <span className="booth-required">*</span>
+            축제명 <span style={{ color: "red" }}>*</span>
           </label>
           <div style={{ display: "flex", gap: 8 }}>
             <input
@@ -382,10 +384,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
         </div>
         <div className="booth-form-field">
           <label className="booth-form-label">
-            축제 ID(contentId){" "}
-            <span className="booth-required" style={{ color: "red" }}>
-              *
-            </span>
+            축제 ID(contentId) <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
@@ -397,7 +396,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            시작 날짜 <span className="booth-required">*</span>
+            시작 날짜 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="date"
@@ -408,7 +407,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
         </div>
         <div className="booth-form-field">
           <label className="booth-form-label">
-            끝 날짜 <span className="booth-required">*</span>
+            끝 날짜 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="date"
@@ -420,7 +419,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            신청자 성함 <span className="booth-required">*</span>
+            신청자 성함 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
@@ -433,7 +432,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            상호명 <span className="booth-required">*</span>
+            상호명 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
@@ -446,7 +445,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            휴대 전화 <span className="booth-required">*</span>
+            휴대 전화 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="tel"
@@ -459,7 +458,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            판매 품목 <span className="booth-required">*</span>
+            판매 품목 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
@@ -472,7 +471,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            상품소개 <span className="booth-required">*</span>
+            상품소개 <span style={{ color: "red" }}>*</span>
           </label>
           <textarea
             rows={4}
@@ -485,7 +484,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            대표이미지 <span className="booth-required">*</span>
+            대표이미지 <span style={{ color: "red" }}>*</span>
           </label>
           <div className="booth-file-upload">
             <input
@@ -502,6 +501,19 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
               </p>
             </label>{" "}
           </div>
+        </div>
+
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            영업허가증 <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="text"
+            className="booth-form-input"
+            placeholder="영업허가증 번호를 입력해주세요"
+            value={license}
+            onChange={(e) => setLicense(e.target.value)}
+          />
         </div>
 
         <div className="booth-form-field">
@@ -544,10 +556,13 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
   const [name, setName] = useState("");
   const [truck, setTruck] = useState("");
   const [phone, setPhone] = useState("");
-  const [biznum, setBiznum] = useState("");
+  const [license, setLicense] = useState("");
   const [menu, setMenu] = useState("");
   const [size, setSize] = useState("");
   const [loading, setLoading] = useState(false);
+  // 날짜 상태 추가
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   // FoodTruckForm 등에서 contentId 상태 추가
   const [truckContentId, setTruckContentId] = useState(contentId || "");
   const { member } = useAuthStore();
@@ -561,14 +576,18 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // startDate, endDate가 이 컴포넌트의 상태임을 명확히 사용
+    const boothStartDate = startDate;
+    const boothEndDate = endDate;
     if (
       !festivalName ||
       !name ||
       !truck ||
       !phone ||
-      !biznum ||
       !menu ||
-      !size ||
+      !boothStartDate ||
+      !boothEndDate ||
+      !license ||
       selectedFiles.length === 0
     ) {
       alert("모든 필수 항목을 입력/선택해 주세요.");
@@ -582,18 +601,21 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
     try {
       const formData = new FormData();
       formData.append("memberNo", memberNo); // 로그인 사용자 번호 추가
-      formData.append("type", "푸드트럭");
-      formData.append("name", name);
-      formData.append("truck", truck);
-      formData.append("phone", phone);
-      formData.append("biznum", biznum);
-      formData.append("menu", menu);
-      formData.append("size", size);
-      formData.append("festivalName", festivalName);
-      formData.append("boothTitle", festivalName); // DB 저장용 축제명
-      formData.append("image", selectedFiles[0]);
-      // memberNo 등 추가 필요시 append
+      formData.append("applicantName", name);
+      formData.append("applicantCompany", truck); // 푸드트럭명은 applicantCompany로 보냄
+      formData.append("boothTel", phone);
+      formData.append("products", menu); // 메뉴 종류를 products로 보냄
+      formData.append("boothStartDate", boothStartDate);
+      formData.append("boothEndDate", boothEndDate);
       formData.append("contentId", truckContentId);
+      formData.append("contentTitle", festivalName);
+      formData.append("boothType", 2); // 푸드트럭: 2로 전송
+      formData.append("image", selectedFiles[0]);
+      // 영업허가증, 트럭크기 등은 formData에 추가하지 않음
+      // axios.post 직전: formData 값 모두 출력
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
       await axios.post("/api/booth/request", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -602,10 +624,12 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
       setName("");
       setTruck("");
       setPhone("");
-      setBiznum("");
+      setLicense("");
       setMenu("");
       setSize("");
       setSelectedFiles([]);
+      setStartDate("");
+      setEndDate("");
     } catch {
       alert("신청에 실패했습니다.");
     } finally {
@@ -620,7 +644,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
       <div className="booth-form-fields">
         <div className="booth-form-field">
           <label className="booth-form-label">
-            축제명 <span className="booth-required">*</span>
+            축제명 <span style={{ color: "red" }}>*</span>
           </label>
           <div style={{ display: "flex", gap: 8 }}>
             <input
@@ -643,7 +667,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            신청자 성함 <span className="booth-required">*</span>
+            신청자 성함 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
@@ -656,7 +680,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            푸드트럭명 <span className="booth-required">*</span>
+            푸드트럭명 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
@@ -669,7 +693,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            휴대 전화 <span className="booth-required">*</span>
+            휴대 전화 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="tel"
@@ -682,20 +706,20 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            사업자등록번호 <span className="booth-required">*</span>
+            영업허가증 <span style={{ color: "red" }}>*</span>
           </label>
           <input
             type="text"
             className="booth-form-input"
-            placeholder="000-00-00000"
-            value={biznum}
-            onChange={(e) => setBiznum(e.target.value)}
+            placeholder="영업허가증 번호를 입력해주세요"
+            value={license}
+            onChange={(e) => setLicense(e.target.value)}
           />
         </div>
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            메뉴 종류 <span className="booth-required">*</span>
+            메뉴 종류 <span style={{ color: "red" }}>*</span>
           </label>
           <select
             className="booth-form-select"
@@ -716,7 +740,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            트럭 크기 <span className="booth-required">*</span>
+            트럭 크기 <span style={{ color: "red" }}>*</span>
           </label>
           <select
             className="booth-form-select"
@@ -731,6 +755,29 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
         </div>
 
         <div className="booth-form-field">
+          <label className="booth-form-label">
+            시작 날짜 <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="date"
+            className="booth-form-input"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+        <div className="booth-form-field">
+          <label className="booth-form-label">
+            끝 날짜 <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="date"
+            className="booth-form-input"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+
+        <div className="booth-form-field">
           <label className="booth-form-label">영업허가증</label>
           <input
             type="text"
@@ -741,7 +788,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
 
         <div className="booth-form-field">
           <label className="booth-form-label">
-            파일 첨부 <span className="booth-required">*</span>
+            파일 첨부 <span style={{ color: "red" }}>*</span>
           </label>
           <div className="booth-file-upload">
             <input
