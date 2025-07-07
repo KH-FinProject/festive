@@ -178,7 +178,7 @@
 }
 
 .booth-file-upload:has(.booth-file-input:not([value=""])) .booth-file-upload-text {
-  color: #1d4ed8;
+  color: #60a5fa;
   font-weight: 500;
 }
 

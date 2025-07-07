@@ -200,7 +200,7 @@
 .ai-chatbot-chat-input textarea {
   flex: 1;
   padding: 12px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #60a5fa;
   border-radius: 8px;
   resize: none;
   height: 45px;
@@ -770,7 +770,7 @@
 .ai-chatbot-action-btn.cancel-btn {
   background-color: #f8f9fa;
   color: #6c757d;
-  border: 1px solid #dee2e6;
+  border: 1px solid #60a5fa;
   padding: 0 24px;
   border-radius: 8px;
   font-size: 14px;
