@@ -30,6 +30,12 @@ const MyPageEditInfo = () => {
     const navigate = useNavigate();
     const { member } = useAuthStore();
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            handleSubmit();
+        }
+    };
+
     // 이메일 도메인 옵션
     const emailDomains = [
         { value: "", label: "선택하세요" },
@@ -517,7 +523,7 @@ const MyPageEditInfo = () => {
                                     <p className="form-note">
                                         *비밀번호 확인 후 정보 수정이 가능합니다.
                                     </p>
-                                    <input
+                                    {/* <input
                                         type="password"
                                         className="form-input full-width"
                                         placeholder="비밀번호"
@@ -529,6 +535,22 @@ const MyPageEditInfo = () => {
                                             }))
                                         }
                                         required
+                                    /> */}
+                                    <input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        required
+                                        value={memberInfo.password}
+                                        onChange={(e) =>
+                                            setMemberInfo((prev) => ({
+                                                ...prev,
+                                                password: e.target.value,
+                                            }))
+                                        }
+                                        placeholder="비밀번호"
+                                        className="form-input full-width"
+                                        onKeyDown={handleKeyDown}
                                     />
                                 </div>
                             )}
