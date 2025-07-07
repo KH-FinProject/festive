@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class CustomerServiceImpl implements CustomerService {
     
     private final WagleService wagleService;
+    private final SimpMessagingTemplate messagingTemplate;
     
     private static final Long CUSTOMER_BOARD_TYPE = 3L;
     
@@ -89,8 +91,17 @@ public class CustomerServiceImpl implements CustomerService {
         try {
             BoardDto boardDto = convertToBoardDto(inquiryDto);
             boardDto.setBoardTypeNo(CUSTOMER_BOARD_TYPE);
-
-            return wagleService.createBoard(boardDto);
+            int result = wagleService.createBoard(boardDto);
+            if (result > 0) {
+                // WebSocket 알림 전송
+                Map<String, Object> alert = new HashMap<>();
+                alert.put("type", "고객센터 문의");
+                alert.put("message", "새로운 고객센터 문의가 등록되었습니다.");
+                alert.put("title", boardDto.getBoardTitle());
+                alert.put("memberNickname", boardDto.getMemberNickname());
+                messagingTemplate.convertAndSend("/topic/admin-alerts", alert);
+            }
+            return result;
         } catch (Exception e) {
             log.error("고객센터 문의글 작성 실패", e);
             throw new RuntimeException("문의글 작성에 실패했습니다.", e);

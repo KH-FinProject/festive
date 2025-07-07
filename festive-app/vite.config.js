@@ -34,11 +34,6 @@ export default defineConfig({
         target: "http://localhost:8080",
         changeOrigin: true,
         secure: false,
-      // 백엔드 API 경로 - 우선순위 높음
-      "/api": {
-        target: "http://localhost:8080",
-        changeOrigin: true,
-        secure: false,
         configure: (proxy) => {
           proxy.on("error", (err) => {
             console.log("🚨 백엔드 프록시 오류:", err.message);

@@ -12,14 +12,27 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import com.project.festive.festiveserver.booth.dto.BoothAlert;
 
 @Service
 @RequiredArgsConstructor
 public class BoothRequestServiceImpl implements BoothRequestService {
     private final BoothRequestMapper boothRequestMapper;
     private final TourAPIService tourAPIService;
+    private final SimpMessagingTemplate messagingTemplate;
     // 실제 파일 저장 경로는 절대경로로 지정
     private static final String UPLOAD_DIR = "C:/upload/festive/booth/";
+
+    private void sendBoothAlert(BoothRequest entity) {
+        System.out.println("=== 부스 WebSocket 알림 전송 ===");
+        BoothAlert alert = BoothAlert.builder()
+            .message("새로운 부스 신청이 접수되었습니다.")
+            .applicantName(entity.getApplicantName())
+            .contentTitle(entity.getContentTitle())
+            .build();
+        messagingTemplate.convertAndSend("/topic/admin-alerts", alert);
+    }
 
     @Override
     public void createBoothRequest(BoothRequestDto dto, MultipartFile image) {
@@ -54,6 +67,7 @@ public class BoothRequestServiceImpl implements BoothRequestService {
             }
         }
         boothRequestMapper.insertBoothRequest(entity);
+        sendBoothAlert(entity); // 알림 전송
     }
 
     @Override
