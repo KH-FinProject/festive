@@ -19,7 +19,6 @@ import java.util.ArrayList;
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "http://localhost:5173")
 public class AITravelController {
     
     private final AITravelService aiTravelService;
