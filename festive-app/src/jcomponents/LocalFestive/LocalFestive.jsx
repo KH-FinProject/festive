@@ -8,9 +8,11 @@ const LocalFestive = () => {
   // 축제 목록 상태
   const [festivals, setFestivals] = useState([]);
   const [sortType, setSortType] = useState("date"); // '축제일순', '거리순'
-  const [searchStartDate, setSearchStartDate] = useState(new Date().toISOString().slice(0, 10));
-  const [searchEndDate, setSearchEndDate] = useState('');
-  const [searchLocation, setSearchLocation] = useState('');
+  const [searchStartDate, setSearchStartDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [searchEndDate, setSearchEndDate] = useState("");
+  const [searchLocation, setSearchLocation] = useState("");
   const [userLocation, setUserLocation] = useState(null); // 사용자 위치
   const [areaOptions, setAreaOptions] = useState([]);
   const navigate = useNavigate();
@@ -70,17 +72,21 @@ const LocalFestive = () => {
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const response = await axiosApi.get(`${import.meta.env.VITE_API_URL}/area/areas`);
+        const response = await axiosApi.get(
+          `${import.meta.env.VITE_API_URL}/area/areas`
+        );
         setAreaOptions(response.data);
-
       } catch (error) {
-        console.error("지역 옵션 생성 중 오류 발생:", error.response?.data || error.message);
+        console.error(
+          "지역 옵션 생성 중 오류 발생:",
+          error.response?.data || error.message
+        );
       }
     };
 
     fetchAreas();
   }, []);
-  
+
   // 초기 축제 데이터 로드
   useEffect(() => {
     fetchInitialFestivals();
@@ -99,7 +105,7 @@ const LocalFestive = () => {
       eventStartDate: yyyyMMdd,
       arrange: "A",
       numOfRows: "100",
-      pageNo: "1"
+      pageNo: "1",
     });
 
     const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&${params.toString()}`;
@@ -120,7 +126,10 @@ const LocalFestive = () => {
         id: item.contentid,
         title: item.title,
         location: item.addr1 || "장소 미정",
-        date: `${start?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
+        date: `${start?.replace(
+          /(\d{4})(\d{2})(\d{2})/,
+          "$1.$2.$3"
+        )} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
         image: item.firstimage || "/logo.png",
         startDate: start,
         status: getFestivalStatus(start, end),
@@ -140,10 +149,8 @@ const LocalFestive = () => {
       setDisplayedFestivals(data);
       setHasMore(data.length > pageSize);
       setPage(1);
-
     } catch (error) {
       console.error("초기 축제 로드 실패:", error);
-
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +163,8 @@ const LocalFestive = () => {
     setHasMore(true);
 
     try {
-      const formatDate = (dateStr) => dateStr ? dateStr.replaceAll("-", "") : "";
+      const formatDate = (dateStr) =>
+        dateStr ? dateStr.replaceAll("-", "") : "";
       const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
       const params = new URLSearchParams({
         MobileOS: "WEB",
@@ -187,7 +195,9 @@ const LocalFestive = () => {
 
       // 종료된 축제 제외
       const filtered = items.filter((item) => {
-        return getFestivalStatus(item.eventstartdate, item.eventenddate) !== "종료";
+        return (
+          getFestivalStatus(item.eventstartdate, item.eventenddate) !== "종료"
+        );
       });
 
       // 매핑
@@ -199,7 +209,10 @@ const LocalFestive = () => {
           id: item.contentid,
           title: item.title,
           location: item.addr1 || "장소 미정",
-          date: `${start?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
+          date: `${start?.replace(
+            /(\d{4})(\d{2})(\d{2})/,
+            "$1.$2.$3"
+          )} - ${end?.replace(/(\d{4})(\d{2})(\d{2})/, "$1.$2.$3")}`,
           image: item.firstimage || "/logo.png",
           startDate: start,
           status: getFestivalStatus(start, end),
@@ -219,22 +232,20 @@ const LocalFestive = () => {
 
             return a.distance - b.distance;
           });
-
         } catch (error) {
           console.error("거리순 정렬 실패, 축제일순으로 대체:", error);
-          mapped = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
+          mapped = mapped.sort((a, b) =>
+            a.startDate.localeCompare(b.startDate)
+          );
         }
-
       } else {
         mapped = mapped.sort((a, b) => a.startDate.localeCompare(b.startDate));
       }
       setFestivals(mapped);
       setDisplayedFestivals(mapped.slice(0, pageSize));
       setHasMore(mapped.length > pageSize);
-
     } catch (error) {
       console.error("축제 검색 실패:", error);
-
     } finally {
       setIsLoading(false);
     }
@@ -287,7 +298,6 @@ const LocalFestive = () => {
 
         return { ...festival, distance: null }; // 좌표가 없으면 null로 설정
       });
-
     } catch (error) {
       console.error("거리 정보 추가 실패:", error);
       throw error;
@@ -322,7 +332,6 @@ const LocalFestive = () => {
 
         setFestivals(sortedFestivals);
         setDisplayedFestivals(sortedFestivals);
-
       } catch (error) {
         // 위치 권한이 거부된 경우
         if (error.code === 1) {
@@ -330,13 +339,11 @@ const LocalFestive = () => {
             "위치 기반 서비스에 동의해주세요. 거리순 정렬을 사용하려면 위치 권한이 필요합니다."
           );
           setSortType("date"); // 날짜순으로 되돌리기
-
         } else {
           alert("거리순 정렬 중 오류가 발생했습니다. 다시 시도해주세요.");
           setSortType("date"); // 날짜순으로 되돌리기
         }
       }
-
     } else if (newSortType === "date") {
       // 날짜순 정렬 (현재 축제 목록에서 정렬)
       const sorted = [...festivals].sort((a, b) =>
@@ -396,9 +403,9 @@ const LocalFestive = () => {
         }
       },
       {
-        root: null,           // 뷰포트(브라우저 창) 기준으로 관찰
-        rootMargin: '100px',  // 타겟이 실제로 뷰포트에 닿기 100px 전에 미리 감지
-        threshold: 0.1        // 타겟 요소의 10%만 보여도 콜백 실행
+        root: null, // 뷰포트(브라우저 창) 기준으로 관찰
+        rootMargin: "100px", // 타겟이 실제로 뷰포트에 닿기 100px 전에 미리 감지
+        threshold: 0.1, // 타겟 요소의 10%만 보여도 콜백 실행
       }
     );
 
@@ -463,7 +470,7 @@ const LocalFestive = () => {
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
                 >
-                  <option value="">전체 지역</option>
+                  <option value="">서울</option>
                   {areaOptions.map((area) => (
                     <option key={area.areaCode} value={area.areaCode}>
                       {area.areaName}
@@ -491,15 +498,13 @@ const LocalFestive = () => {
           </span>
           <span className="divider">|</span>
           <span
-            className={`sort-option ${
-              sortType === "distance" ? "active" : ""
-            }`}
+            className={`sort-option ${sortType === "distance" ? "active" : ""}`}
             onClick={() => handleSortChange("distance")}
           >
             거리순
           </span>
         </div>
-        
+
         <div className="gallery-grid">
           {displayedFestivals.slice(0, 9).map((festival, index) => (
             <div
@@ -617,7 +622,7 @@ const LocalFestive = () => {
               </div>
             ))}
           </div>
-          
+
           {/* 로딩 인디케이터 */}
           {isLoading && (
             <div className="loading-indicator">
@@ -625,19 +630,23 @@ const LocalFestive = () => {
               <p>축제를 불러오는 중...</p>
             </div>
           )}
-          
+
           {/* Intersection Observer 타겟 */}
           {hasMore && (
-            <div ref={loadingRef} className="observer-target" style={{ height: '20px' }} />
+            <div
+              ref={loadingRef}
+              className="observer-target"
+              style={{ height: "20px" }}
+            />
           )}
-          
+
           {/* 더 이상 데이터가 없을 때 */}
           {!hasMore && displayedFestivals.length > 0 && (
             <div className="no-more-data">
               <p>모든 축제를 불러왔습니다.</p>
             </div>
           )}
-          
+
           <ScrollToTop />
         </section>
       </div>

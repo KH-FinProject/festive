@@ -3,20 +3,14 @@ import "./TravelCourseSaveModal.css";
 import useAuthStore from "../../store/useAuthStore";
 import logo from "../../assets/festiveLogo.png";
 
-const TravelCourseSaveModal = ({
-  isOpen,
-  onClose,
-  onSave,
-  travelData,
-  loading = false,
-}) => {
+const TravelCourseSaveModal = ({ isOpen, onClose, onSave, travelData }) => {
   const [courseTitle, setCourseTitle] = useState("");
   const [isShared, setIsShared] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedThumbnail, setSelectedThumbnail] = useState(null);
 
   // 🔐 로그인 상태 확인
-  const { isLoggedIn, member } = useAuthStore();
+  const { isLoggedIn } = useAuthStore();
 
   // 모달이 열릴 때마다 초기화
   React.useEffect(() => {
@@ -87,8 +81,6 @@ const TravelCourseSaveModal = ({
           order: location.order || index + 1,
         })),
       };
-
-      console.log("여행코스 저장 데이터:", saveData);
 
       await onSave(saveData);
     } catch (error) {

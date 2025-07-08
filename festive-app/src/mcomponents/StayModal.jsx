@@ -6,7 +6,6 @@ const StayModal = ({ isOpen, selectedStay, onClose }) => {
 
   useEffect(() => {
     if (selectedStay && selectedStay.id) {
-      console.log("selectedStay.id : ", selectedStay.id);
       fetchStays(selectedStay.id);
     }
   }, [selectedStay]);

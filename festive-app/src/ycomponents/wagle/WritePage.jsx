@@ -18,7 +18,6 @@ function WritePage() {
     e.preventDefault();
 
     // 디버깅용 로그
-    console.log("현재 member:", member);
 
     // 로그인 체크
     if (!member) {

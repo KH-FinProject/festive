@@ -110,7 +110,6 @@ const AdminCustomerService = () => {
   }, []);
 
   const handleReply = (inquiry) => {
-    console.log("답변하기:", inquiry);
     navigate("/admin/reply", { state: { inquiry } });
   };
 
@@ -136,7 +135,6 @@ const AdminCustomerService = () => {
   };
 
   const handleReportDetail = (reportNo) => {
-    console.log("내용보기:", reportNo);
     navigate(`/admin/report-detail/${reportNo}`);
   };
 

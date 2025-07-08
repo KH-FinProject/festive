@@ -17,7 +17,6 @@ const AdminDeleteMember = () => {
       const data = resp.data;
 
       if (resp.status == 200) {
-        console.log(data);
         setWithdrawnMembers(data);
       }
     } catch (err) {
@@ -32,8 +31,6 @@ const AdminDeleteMember = () => {
         ? prev.filter((number) => number !== memberNo)
         : [...prev, memberNo]
     );
-
-    console.log("selectedMembers : ", selectedMembers);
   };
 
   // 체크박스 전체선택
@@ -43,7 +40,6 @@ const AdminDeleteMember = () => {
     } else {
       setSelectedMembers(withdrawnMembers.map((member) => member.memberNo));
     }
-    console.log("selectedMembers : ", selectedMembers);
   };
 
   // filteredMembers : id, 닉네임, 이름으로 검색된 회원들
@@ -65,11 +61,9 @@ const AdminDeleteMember = () => {
     if (!isConfirmed) return;
     try {
       const resp = await axiosApi.post("/admin/withdrawDelete", memberNoList);
-      const data = resp.data;
 
       if (resp.status == 200) {
-        console.log(data);
-        alert(data, "명 삭제되었습니다.");
+        alert(resp.data, "명 삭제되었습니다.");
 
         setSelectedMembers([]);
         fetchWithdrawMember();
@@ -90,10 +84,8 @@ const AdminDeleteMember = () => {
 
     try {
       const resp = await axiosApi.post("/admin/withdrawRestore", memberNoList);
-      const data = resp.data;
 
       if (resp.status == 200) {
-        console.log(data);
         alert("복구되었습니다.");
 
         setSelectedMembers([]);

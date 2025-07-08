@@ -11,8 +11,6 @@ const MyPageSideBar = () => {
   }
   const location = useLocation();
 
-  console.log("name : ", name);
-
   return (
     <aside className="mypage-sidebar">
       <br />
@@ -72,7 +70,7 @@ const MyPageSideBar = () => {
           state={{ name, profileImageUrl }}
           className={() =>
             location.pathname === "/mypage/mypost" ||
-              location.pathname === "/mypage/mycomment"
+            location.pathname === "/mypage/mycomment"
               ? "mypage-sidebar-item active"
               : "mypage-sidebar-item inactive"
           }
