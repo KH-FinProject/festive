@@ -35,20 +35,20 @@ public class BoothRequestController {
     }
 
     @GetMapping("/request/{boothNo}")
-    public ResponseEntity<BoothRequestDto> getRequestDetail(@PathVariable Long boothNo) {
+    public ResponseEntity<BoothRequestDto> getRequestDetail(@PathVariable("boothNo") Long boothNo) {
         BoothRequestDto dto = boothRequestService.getRequestDetail(boothNo);
         if (dto == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(dto);
     }
 
     @PatchMapping("/request/{boothNo}/accept")
-    public ResponseEntity<?> acceptRequest(@PathVariable Long boothNo) {
+    public ResponseEntity<?> acceptRequest(@PathVariable("boothNo") Long boothNo) {
         boothRequestService.acceptRequest(boothNo);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/request/{boothNo}")
-    public ResponseEntity<?> rejectRequest(@PathVariable Long boothNo) {
+    public ResponseEntity<?> rejectRequest(@PathVariable("boothNo") Long boothNo) {
         boothRequestService.rejectRequest(boothNo);
         return ResponseEntity.ok().build();
     }
