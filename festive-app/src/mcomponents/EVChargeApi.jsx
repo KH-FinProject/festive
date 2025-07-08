@@ -2,9 +2,6 @@ import { useEffect, useState } from "react";
 
 const EVChargeApi = ({ metroCode, cityCode }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [evChargeList, setEvChargeList] = useState([]);
-  console.log("metroCode:", metroCode);
-  console.log("cityCode:", cityCode);
 
   useEffect(() => {
     const fetchEvCharge = async () => {
@@ -19,17 +16,6 @@ const EVChargeApi = ({ metroCode, cityCode }) => {
 
         if (!items || !Array.isArray(items)) return;
 
-        const mapped = items.map((item) => ({
-          metro: item.metro,
-          city: item.city,
-          stnPlace: item.stnPlace,
-          stnAddr: item.stnAddr,
-          rapidCnt: item.rapidCnt,
-          slowCnt: item.slowCnt,
-          carType: item.carType,
-        }));
-
-        setEvChargeList(mapped);
         setIsLoading(false);
       } catch (error) {
         console.error("충전소 정보 로드 실패:", error);

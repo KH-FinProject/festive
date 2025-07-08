@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import axiosApi from "../../api/axiosAPI";
@@ -39,7 +38,6 @@ const AITravelCourse = () => {
           );
           const sharedData = sharedResponse.data;
           sharedItems = sharedData.success ? sharedData.courses : [];
-          console.log("✅ 공유 코스 로드 성공:", sharedItems.length);
         } catch (error) {
           console.error("❌ 공유 코스 로드 실패:", error);
           sharedItems = [];
@@ -54,17 +52,14 @@ const AITravelCourse = () => {
             );
             const myData = myResponse.data;
             myItems = myData.success ? myData.courses : [];
-            console.log("✅ 내 여행코스 로드 성공:", myItems.length);
           } catch (error) {
             console.error("❌ 내 여행코스 로드 실패:", error);
             myItems = [];
           }
-        } else {
-          console.log("🔐 로그인 안됨: 내 여행코스 스킵");
         }
 
         // 공유 코스 데이터 매핑
-        const mappedSharedCourses = sharedItems.map((course, index) => ({
+        const mappedSharedCourses = sharedItems.map((course) => ({
           id: course.courseNo,
           title: removeEmojis(course.courseTitle),
           date: course.createdDate
@@ -112,13 +107,15 @@ const AITravelCourse = () => {
           location: course.regionName || "지역 미정", // 개인 코스용 (호환성)
           image:
             course.thumbnailImage ||
-            [image9, image10, image11, image12, image13][index % 5],
+            [image9, image10, image11, image12, image13][
+              Math.floor(Math.random() * 5)
+            ],
           totalDays: course.totalDays,
           requestType: course.requestType,
         }));
 
         // 내 여행코스 데이터 매핑 (백엔드에서 제공하는 작성자 정보 우선 사용)
-        const mappedMyTravelCourses = myItems.map((course, index) => ({
+        const mappedMyTravelCourses = myItems.map((course) => ({
           id: course.courseNo,
           title: removeEmojis(course.courseTitle),
           date: course.createdDate

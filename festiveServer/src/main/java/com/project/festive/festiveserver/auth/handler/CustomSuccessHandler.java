@@ -74,13 +74,21 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       
       authService.saveRefreshToken(customUserDetails.getMemberNo(), refreshToken, localExpirationDate);
       
-      response.sendRedirect("http://localhost:5173/");
+      // 환경에 따라 다른 리다이렉트 URL 사용
+      String redirectUrl = System.getProperty("spring.profiles.active", "local").equals("prod") 
+          ? "https://www.festivekorea.site/" 
+          : "http://localhost:5173/";
+      response.sendRedirect(redirectUrl);
 
     } catch (Exception e) {
       log.error("OAuth2 로그인 성공 처리 중 오류 발생: {}", e.getMessage(), e);
       
       if (!response.isCommitted()) {
-        response.sendRedirect("http://localhost:5173/signin?error=oauth_failed");
+        // 환경에 따라 다른 에러 리다이렉트 URL 사용
+        String errorRedirectUrl = System.getProperty("spring.profiles.active", "local").equals("prod") 
+            ? "https://www.festivekorea.site/signin?error=oauth_failed" 
+            : "http://localhost:5173/signin?error=oauth_failed";
+        response.sendRedirect(errorRedirectUrl);
       }
     }
   }

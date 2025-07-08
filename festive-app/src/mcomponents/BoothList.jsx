@@ -2,29 +2,20 @@ import { useEffect, useState } from "react";
 import axiosApi from "../api/axiosAPI";
 import "./BoothList.css";
 
-export default function BoothList({ contentId }) {
+export default function BoothList() {
   const [boothList, setBoothList] = useState([]);
 
-  const fetchBoothList = async () => {
-    try {
-      const resp = await axiosApi.get("/festival/detail/BoothList", {
-        params: {
-          contentId: contentId,
-        },
-      });
-
-      const data = resp.data;
-      if (resp.status == 200) {
-        setBoothList(data);
-      }
-    } catch (error) {
-      console.log("축제 부스 리스트 소환 중 에러 발생 : ", error);
-    }
-  };
-
   useEffect(() => {
+    const fetchBoothList = async () => {
+      try {
+        const resp = await axiosApi.get("/booth/list");
+        setBoothList(resp.data);
+      } catch {
+        setBoothList([]);
+      }
+    };
     fetchBoothList();
-  }, [contentId]);
+  }, []);
 
   return (
     <section className="detail-booth-section">

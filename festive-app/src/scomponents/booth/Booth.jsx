@@ -335,10 +335,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
       formData.append("boothType", 1); // 플리마켓: 1로 전송
       formData.append("image", selectedFile);
       // 영업허가증, 트럭크기 등은 formData에 추가하지 않음
-      // axios.post 직전: formData 값 모두 출력
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
+
       await axios.post("/api/booth/request", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -614,10 +611,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
       formData.append("boothType", 2); // 푸드트럭: 2로 전송
       formData.append("image", selectedFiles[0]);
       // 영업허가증, 트럭크기 등은 formData에 추가하지 않음
-      // axios.post 직전: formData 값 모두 출력
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
+
       await axios.post("/api/booth/request", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -866,8 +860,7 @@ const Booth = () => {
 
   // 신청한 축제 정보 불러오기
   const location = useLocation();
-  const { contentId, contentTitle, startDate, endDate, category } =
-    location.state || {};
+  const { contentId, contentTitle, category } = location.state || {};
 
   // category 값이 있으면 강제로 activeTab 세팅 가능
   useEffect(() => {

@@ -9,7 +9,6 @@ const AdminDeleteMember = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [withdrawnMembers, setWithdrawnMembers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // 탈퇴 회원 데이터
   const fetchWithdrawMember = async () => {
@@ -18,7 +17,6 @@ const AdminDeleteMember = () => {
       const data = resp.data;
 
       if (resp.status == 200) {
-        console.log(data);
         setWithdrawnMembers(data);
       }
     } catch (err) {
@@ -33,8 +31,6 @@ const AdminDeleteMember = () => {
         ? prev.filter((number) => number !== memberNo)
         : [...prev, memberNo]
     );
-
-    console.log("selectedMembers : ", selectedMembers);
   };
 
   // 체크박스 전체선택
@@ -44,18 +40,15 @@ const AdminDeleteMember = () => {
     } else {
       setSelectedMembers(withdrawnMembers.map((member) => member.memberNo));
     }
-    console.log("selectedMembers : ", selectedMembers);
   };
-
-  const keyword = searchTerm.trim().toLowerCase();
 
   // filteredMembers : id, 닉네임, 이름으로 검색된 회원들
   const filteredMembers = (withdrawnMembers || []).filter((member) => {
     if (!member) return false;
     return (
-      member.ID?.toLowerCase().includes(keyword) ||
-      member.NAME?.toLowerCase().includes(keyword) ||
-      member.NICKNAME?.toLowerCase().includes(keyword)
+      member.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.name?.includes(searchTerm) ||
+      member.nickname?.includes(searchTerm)
     );
   });
 
@@ -68,11 +61,9 @@ const AdminDeleteMember = () => {
     if (!isConfirmed) return;
     try {
       const resp = await axiosApi.post("/admin/withdrawDelete", memberNoList);
-      const data = resp.data;
 
       if (resp.status == 200) {
-        console.log(data);
-        alert(data, "명 삭제되었습니다.");
+        alert(resp.data, "명 삭제되었습니다.");
 
         setSelectedMembers([]);
         fetchWithdrawMember();
@@ -93,10 +84,8 @@ const AdminDeleteMember = () => {
 
     try {
       const resp = await axiosApi.post("/admin/withdrawRestore", memberNoList);
-      const data = resp.data;
 
       if (resp.status == 200) {
-        console.log(data);
         alert("복구되었습니다.");
 
         setSelectedMembers([]);
@@ -203,12 +192,10 @@ const AdminDeleteMember = () => {
                             className="member-checkbox"
                           />
                         </div>
-                        <div className="member-cell">{member.ID}</div>
-                        <div className="member-cell">{member.NAME}</div>
-                        <div className="member-cell">{member.NICKNAME}</div>
-                        <div className="member-cell">
-                          {member.WITHDRAW_DATE}
-                        </div>
+                        <div className="member-cell">{member.id}</div>
+                        <div className="member-cell">{member.name}</div>
+                        <div className="member-cell">{member.nickname}</div>
+                        <div className="member-cell">{member.withdrawDate}</div>
                         <div className="member-cell action-cell">
                           <button
                             className="action-button delete-button"

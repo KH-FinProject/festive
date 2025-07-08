@@ -5,10 +5,9 @@ import "./AdminCommon.css";
 import AdminSidebar from "./AdminSideBar";
 
 const AdminCreateAccount = () => {
-
   const [form, setForm] = useState({
     email: "",
-    name: ""
+    name: "",
   });
 
   const handleChange = (e) => {
@@ -21,8 +20,6 @@ const AdminCreateAccount = () => {
 
   // 관리자 계정 생성
   const createAdminAccount = async () => {
-
-    console.log("createAdminAccount 실행");
     const { email, name } = form;
 
     if (!email || !name) {
@@ -33,15 +30,17 @@ const AdminCreateAccount = () => {
     try {
       const response = await axiosAPI.post("/admin/create", {
         email: email,
-        name: name
+        name: name,
       });
 
       if (response.status === 201) {
         const result = response.data;
-        alert(`발급된 비밀번호는 ${result}입니다. 다시 확인할 수 없으니 저장해주시기 바랍니다.`);
+        alert(
+          `발급된 비밀번호는 ${result}입니다. 다시 확인할 수 없으니 저장해주시기 바랍니다.`
+        );
         setForm({
           email: "",
-          name: ""
+          name: "",
         });
       }
     } catch (err) {
@@ -52,7 +51,7 @@ const AdminCreateAccount = () => {
   // form 제출 이벤트
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("폼 제출됨");
+
     createAdminAccount();
   };
 
@@ -73,7 +72,9 @@ const AdminCreateAccount = () => {
 
               <form className="admin-form" onSubmit={handleSubmit}>
                 <div className="admin-form-group">
-                  <label htmlFor="email" className="admin-form-label">이메일</label>
+                  <label htmlFor="email" className="admin-form-label">
+                    이메일
+                  </label>
                   <input
                     type="email"
                     id="email"
@@ -86,7 +87,9 @@ const AdminCreateAccount = () => {
                 </div>
 
                 <div className="admin-form-group">
-                  <label htmlFor="name" className="admin-form-label">이름</label>
+                  <label htmlFor="name" className="admin-form-label">
+                    이름
+                  </label>
                   <input
                     type="text"
                     id="name"

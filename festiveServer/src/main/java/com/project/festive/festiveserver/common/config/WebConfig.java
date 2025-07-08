@@ -1,5 +1,6 @@
 package com.project.festive.festiveserver.common.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -16,11 +17,14 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
   
+  @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+  private String allowedOrigins;
+  
   // 클라이언트에서 오는 Cross-Origin 요청(CORS)을 어떻게 처리할지 설정
   @Override
   public void addCorsMappings(@NonNull CorsRegistry registry) {
       registry.addMapping("/**") // 서버의 모든 API 경로(/**)에 대해 CORS 설정을 적용
-              .allowedOrigins("http://localhost:5173", "http://localhost:3000") // 이 주소에서 오는 요청만 허용
+              .allowedOrigins(allowedOrigins.split(",")) // 환경에 따라 다른 도메인 허용
               .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH") // 클라이언트가 사용할 수 있는 HTTP 메서드를 지정
               .allowedHeaders("*") // 클라이언트가 보낼 수 있는 헤더를 모두 허용
               .allowCredentials(true) // 브라우저가 쿠키, 인증 정보 등을 포함해서 요청할 수 있도록 허용

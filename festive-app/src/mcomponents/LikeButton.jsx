@@ -39,9 +39,9 @@ const LikeButton = ({ contentId }) => {
         if (resp.status === 200) {
           const checkFavoriteStatus = resp.data;
           setIsfavorite(checkFavoriteStatus); // true or false
-          console.log("checkFavoriteStatus : ", checkFavoriteStatus);
         } else if (resp.status === 401) {
-          console.log("로그인 필요");
+          // 로그인 필요
+          return;
         }
       }
     } catch (err) {
@@ -87,7 +87,6 @@ const LikeButton = ({ contentId }) => {
           localStorage.setItem("likes", JSON.stringify(updated));
         }
         fetchLikes();
-        console.log("좋아요 반영 성공 : ", newLikeStatus);
       }
     } catch (error) {
       console.log("좋아요 반영 중 에러 발생 : ", error);
@@ -96,7 +95,6 @@ const LikeButton = ({ contentId }) => {
 
   // 찜하기 눌렀을 때
   const handleClickFavorite = async () => {
-    console.log("isfavorite : ", isfavorite);
     try {
       const resp = await axiosApi.post("/festival/detail/favorites", {
         currFavorite: isfavorite,
@@ -105,7 +103,6 @@ const LikeButton = ({ contentId }) => {
 
       if (resp.status === 200) {
         setIsfavorite(!isfavorite);
-        console.log("찜목록 반영 성공");
       }
     } catch (error) {
       console.log("찜하기 반영 중 에러 발생 : ", error);

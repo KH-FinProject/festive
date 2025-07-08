@@ -38,7 +38,7 @@
 	</insert>
 
 	<!-- 탈퇴 회원 조회 : 미애 -->
-	<select id="selectWithdrawMembers" resultType="map">
+	<select id="selectWithdrawMembers">
 		SELECT MEMBER_NO, ID, NAME, NICKNAME, WITHDRAW_DATE
 		FROM MEMBER
 		WHERE MEMBER_DEL_FL = 'Y'

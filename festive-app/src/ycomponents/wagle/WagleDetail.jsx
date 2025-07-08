@@ -698,8 +698,7 @@ function WagleDetail() {
     setIsReportModalOpen(true);
   };
 
-  const handleReportSubmit = (reportPayload) => {
-    console.log("신고 처리 완료:", reportPayload);
+  const handleReportSubmit = () => {
     // 추가 처리 로직이 있다면 여기에 구현
   };
 

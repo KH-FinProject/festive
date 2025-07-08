@@ -38,11 +38,8 @@ const CustomerBoard = ({
 
       const data = await response.json();
 
-      console.log("고객센터 데이터:", data); // 디버깅용
-
       // 데이터 형식 변환 (inquiryList 사용)
       const formattedPosts = (data.inquiryList || []).map((post) => {
-        console.log("개별 게시글:", post); // 디버깅용
         return {
           id: post.boardNo,
           title: post.boardTitle,

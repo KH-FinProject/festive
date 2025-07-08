@@ -42,17 +42,6 @@ export default defineConfig({
         target: "http://localhost:8080",
         changeOrigin: true,
         secure: false,
-        configure: (proxy) => {
-          proxy.on("error", (err) => {
-            console.log("🚨 백엔드 프록시 오류:", err.message);
-          });
-          proxy.on("proxyReq", (proxyReq, req) => {
-            console.log("📡 백엔드 프록시 요청:", req.method, req.url);
-          });
-          proxy.on("proxyRes", (proxyRes, req) => {
-            console.log("📊 백엔드 프록시 응답:", proxyRes.statusCode, req.url);
-          });
-        },
       },
 
       // TourAPI 경로 - 별도 경로로 분리
@@ -75,11 +64,7 @@ export default defineConfig({
             );
           });
           proxy.on("proxyRes", (proxyRes, req) => {
-            console.log(
-              "📊 TourAPI 프록시 응답:",
-              proxyRes.statusCode,
-              req.url
-            );
+            console.log(proxyRes.statusCode, req.url);
             // CORS 헤더 설정
             proxyRes.headers["Access-Control-Allow-Origin"] = "*";
             proxyRes.headers["Access-Control-Allow-Methods"] =
