@@ -8,7 +8,6 @@ import axiosApi from "../api/axiosAPI.js";
 import "./HeaderFooter.css";
 
 const Header = () => {
-  const [login, setLogin] = useState(false);
   const { member, logout, isLoggedIn } = useAuthStore();
   const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotification();
   const navigate = useNavigate();
@@ -17,56 +16,18 @@ const Header = () => {
   // 로그아웃 관련 상태
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  useEffect(() => {
-    setLogin(isLoggedIn);
-  }, [isLoggedIn]);
-
   const handleLogout = async () => {
     if (isLoggingOut) return;
-
     setIsLoggingOut(true);
-
-    let retryCount = 0;
-    const maxRetries = 2;
-
-    while (retryCount <= maxRetries) {
-      try {
-        await axiosApi.post("/auth/logout");
-
-        // 서버 요청 성공 시에만 클라이언트 상태 초기화
-        logout();
-        navigate("/");
-        return;
-      } catch (error) {
-        retryCount++;
-        console.error(
-          `로그아웃 요청 실패 (${retryCount}/${maxRetries + 1}):`,
-          error
-        );
-
-        if (retryCount > maxRetries) {
-          // 최대 재시도 횟수 초과
-          const errorMessage = getLogoutErrorMessage(error);
-
-          // 보안상 중요한 경우에만 사용자에게 알림
-          if (error.response?.status === 401) {
-            // 인증 오류는 이미 로그아웃된 상태로 간주
-            logout();
-            navigate("/");
-          } else {
-            // 다른 오류는 사용자에게 알림
-            alert(
-              `로그아웃에 실패했습니다: ${errorMessage}\n잠시 후 다시 시도해주세요.`
-            );
-          }
-        } else {
-          // 재시도 전 짧은 대기
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
+    try {
+      const res = await axiosApi.post("/auth/logout");
+      logout();
+      navigate("/");
+    } catch (error) {
+      // 에러 핸들링 필요시 추가
+    } finally {
+      setIsLoggingOut(false);
     }
-
-    setIsLoggingOut(false);
   };
 
   // 에러 메시지 생성 함수
@@ -145,7 +106,7 @@ const Header = () => {
         <div className="headerweather-placeholder">
           <Weather />
         </div>
-        {login ? (
+        {isLoggedIn ? (
           <div className="header-user-info">
             <Link to="/mypage/profile">
               <img
@@ -166,7 +127,11 @@ const Header = () => {
                 {member?.nickname || member?.name}
               </span>
             </Link>
-            <span onClick={handleLogout} className="headernav-link hover-grow">
+            <span
+              onClick={isLoggingOut ? undefined : handleLogout}
+              className={`headernav-link hover-grow${isLoggingOut ? " disabled" : ""}`}
+              style={isLoggingOut ? { pointerEvents: "none", opacity: 0.5 } : {}}
+            >
               Sign Out
             </span>
           </div>
