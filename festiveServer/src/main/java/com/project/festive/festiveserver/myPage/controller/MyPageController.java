@@ -180,7 +180,6 @@ public class MyPageController {
         }
     }
 
-    // 개인정보 수정
     @PostMapping("/edit-info")
     public ResponseEntity<Map<String, String>> updateInfo(HttpServletRequest request,
                                                           @RequestBody MemberDto updatedInfo) {
@@ -193,19 +192,28 @@ public class MyPageController {
             Long memberNo = jwtUtil.getMemberNo(accessToken);
             log.info("회원 정보 수정 요청: memberNo = {}, updatedInfo = {}", memberNo, updatedInfo);
 
-            // 1. 프론트에서 MemberDto에 password도 같이 담아 보내야 함
-            String password = updatedInfo.getPassword();
-            if (password == null || password.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "비밀번호를 입력해주세요."));
+            // DB에서 회원정보 조회
+            MemberDto member = service.getMyInfo(memberNo);
+            if (member == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "회원을 찾을 수 없습니다."));
             }
 
-            // 2. 컨트롤러 내 checkPassword 로직 재사용 (서비스에서 비밀번호 확인)
-            boolean match = service.checkPassword(memberNo, password);
-            if (!match) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+            // 소셜회원 여부 체크 (socialId가 null이 아니면 소셜회원)
+            boolean isSocial = (member.getSocialId() != null && !member.getSocialId().isEmpty());
+
+            // 일반회원은 비밀번호를 반드시 입력, 소셜회원은 비번 체크 없이 진행
+            if (!isSocial) {
+                String password = updatedInfo.getPassword();
+                if (password == null || password.isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "비밀번호를 입력해주세요."));
+                }
+                boolean match = service.checkPassword(memberNo, password);
+                if (!match) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+                }
             }
 
-            // 3. 비밀번호 일치 시 정보 수정 진행
+            // 정보 수정 진행
             boolean result = service.updateMyInfo(memberNo, updatedInfo);
 
             if (result) {
@@ -218,6 +226,7 @@ public class MyPageController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
         }
     }
+
 
     
  // 프로필 정보 조회 (이름, 닉네임, 프로필 이미지) - /mypage/profile
