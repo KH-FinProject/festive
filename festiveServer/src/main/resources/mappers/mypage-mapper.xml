@@ -37,29 +37,30 @@
 
 	<!-- 내가 작성한 게시글 조회 -->
 	<select id="selectMyPosts">
-
 		SELECT
 		b.BOARD_NO as boardNo,
-		b.BOARD_TITLE as
-		boardTitle,
+		b.BOARD_TITLE as boardTitle,
+		b.BOARD_CODE as boardCode,
 		m.NICKNAME as memberNickname,
-		b.BOARD_CREAT_DATE as
-		boardCreateDate,
+		b.BOARD_CREAT_DATE as boardCreateDate,
 		b.READ_COUNT as boardViewCount,
-		COUNT(l.MEMBER_NO) AS
-		boardLikeCount
+		COUNT(l.MEMBER_NO) AS boardLikeCount
 		FROM BOARD b
 		JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
 		LEFT JOIN "LIKE" l ON b.BOARD_NO = l.BOARD_NO
-		WHERE b.MEMBER_NO =
-		#{memberNo}
+		WHERE b.MEMBER_NO = #{memberNo}
 		AND b.BOARD_DEL_FL = 'N'
-		GROUP BY b.BOARD_NO, b.BOARD_TITLE,
-		m.NICKNAME, b.BOARD_CREAT_DATE,
+		AND b.BOARD_CODE = 1
+		GROUP BY
+		b.BOARD_NO,
+		b.BOARD_TITLE,
+		b.BOARD_CODE,
+		m.NICKNAME,
+		b.BOARD_CREAT_DATE,
 		b.READ_COUNT
-		ORDER BY b.BOARD_CREAT_DATE
-		DESC
+		ORDER BY b.BOARD_CREAT_DATE DESC
 	</select>
+
 
 	<!-- 내가 작성한 댓글 조회 -->
 	<select id="selectMyComments">
