@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import com.project.festive.festiveserver.auth.dto.AuthKeyRequest;
+import com.project.festive.festiveserver.auth.dto.FindAuthKeyRequest;
 import com.project.festive.festiveserver.auth.dto.LoginRequest;
 import com.project.festive.festiveserver.member.entity.Member;
 
@@ -39,6 +40,8 @@ public interface AuthService {
 	
 	int checkAuthKey(AuthKeyRequest authKeyRequest);
 
+	int findCheckAuthKey(FindAuthKeyRequest findAuthKeyRequest);
+	
 	// 변경할 이메일 중복 검사 - 지현이가 추가한 코드
 	boolean isEmailDuplicate(String email);
 
@@ -46,4 +49,10 @@ public interface AuthService {
 	 * OAuth2 및 일반 로그인 시 refreshToken을 DB에 저장하는 메서드
 	 */
 	void saveRefreshToken(Long memberNo, String refreshToken, LocalDateTime expirationDate);
+
+	Map<String, Object> findIdSocialByEmail(String name, String email, String authKey);
+	Map<String, Object> findIdSocialByTel(String name, String tel, String authKey);
+
+	int findPwSocialByEmail(String userId, String email, String authKey);
+	int findPwSocialByTel(String userId, String tel, String authKey);
 }

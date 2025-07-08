@@ -43,19 +43,15 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
 
             OAuth2User oAuth2User = super.loadUser(userRequest);
             OAuth2Response oAuth2Response = null;
-
-            if(registrationId.equals("google")) {
-                oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
-
-            } else if(registrationId.equals("naver")) {
-                oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
-
-            } else if(registrationId.equals("kakao")) {
-                oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
-
-            } else {
-                log.error("지원하지 않는 OAuth2 제공자: {}", registrationId);
-                throw new OAuth2AuthenticationException("지원하지 않는 OAuth2 제공자입니다.");
+            
+            switch (registrationId) {
+                case "google" -> oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
+                case "naver" -> oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
+                case "kakao" -> oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
+                default -> {
+                    log.error("지원하지 않는 OAuth2 제공자: {}", registrationId);
+                    throw new OAuth2AuthenticationException("지원하지 않는 OAuth2 제공자입니다.");
+                }
             }
 
             String socialId = oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId();
@@ -81,8 +77,12 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
                     .role("USER")
                     .nickname(oAuth2Response.getNickname())
                     .profileImage(profileImagePath) // 서버 url 경로만 저장
-                    .tel(oAuth2Response.getTel())
                     .build();
+                
+                if(registrationId.equals("naver"))
+                    newMember.setTel(oAuth2Response.getTel().replaceAll("-", ""));
+                else
+                    newMember.setTel(oAuth2Response.getTel());
 
                 Member savedMember = memberRepository.save(newMember);
                 log.info("새로운 OAuth2 사용자 저장 완료: memberNo={}", savedMember.getMemberNo());

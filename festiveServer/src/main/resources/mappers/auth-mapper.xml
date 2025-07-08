@@ -26,4 +26,95 @@
     DELETE FROM REFRESH_TOKEN WHERE MEMBER_NO = #{memberNo}
   </delete>
 
+  <!-- 아이디 찾기 - 이름+이메일+인증번호 모두 일치 확인 (AUTH_KEY 테이블에서 먼저 인증번호 확인) -->
+  <select id="checkIdFindByEmail" resultType="int">
+    SELECT COUNT(*)
+    FROM MEMBER
+    WHERE NAME = #{name}
+      AND EMAIL = (
+        SELECT EMAIL FROM EMAIL_AUTH_KEY
+        WHERE EMAIL = #{email}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
+
+  <!-- 아이디 찾기 - 이름+전화번호+인증번호 모두 일치 확인 (AUTH_KEY 테이블에서 먼저 인증번호 확인) -->
+  <select id="checkIdFindByTel" resultType="int">
+    SELECT COUNT(*)
+    FROM MEMBER
+    WHERE NAME = #{name}
+      AND TEL = (
+        SELECT TEL FROM TEL_AUTH_KEY
+        WHERE TEL = #{tel}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
+
+  <!-- 비밀번호 찾기 - 아이디+이메일+인증번호 모두 일치 확인 (AUTH_KEY 테이블에서 먼저 인증번호 확인) -->
+  <select id="checkPwFindByEmail" resultType="int">
+    SELECT COUNT(*)
+    FROM MEMBER
+    WHERE ID = #{userId}
+      AND EMAIL = (
+        SELECT EMAIL FROM EMAIL_AUTH_KEY
+        WHERE EMAIL = #{email}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
+
+  <!-- 비밀번호 찾기 - 아이디+전화번호+인증번호 모두 일치 확인 (AUTH_KEY 테이블에서 먼저 인증번호 확인) -->
+  <select id="checkPwFindByTel" resultType="int">
+    SELECT COUNT(*)
+    FROM MEMBER
+    WHERE ID = #{userId}
+      AND TEL = (
+        SELECT TEL FROM TEL_AUTH_KEY
+        WHERE TEL = #{tel}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
+
+  <select id="findIdSocialByEmail" resultType="map">
+    SELECT ID, SOCIAL_ID
+    FROM MEMBER
+    WHERE NAME = #{name}
+      AND EMAIL = (
+        SELECT EMAIL FROM EMAIL_AUTH_KEY
+        WHERE EMAIL = #{email}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
+
+  <select id="findIdSocialByTel" resultType="map">
+    SELECT ID, SOCIAL_ID
+    FROM MEMBER
+    WHERE NAME = #{name}
+      AND TEL = (
+        SELECT TEL FROM TEL_AUTH_KEY
+        WHERE TEL = #{tel}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
+
+  <select id="findPwSocialByEmail" resultType="int">
+    SELECT COUNT(*)
+    FROM MEMBER
+    WHERE ID = #{userId}
+      AND EMAIL = (
+        SELECT EMAIL FROM EMAIL_AUTH_KEY
+        WHERE EMAIL = #{email}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
+
+  <select id="findPwSocialByTel" resultType="int">
+    SELECT COUNT(*)
+    FROM MEMBER
+    WHERE ID = #{userId}
+      AND TEL = (
+        SELECT TEL FROM TEL_AUTH_KEY
+        WHERE TEL = #{tel}
+          AND AUTH_KEY = #{authKey}
+      )
+  </select>
 </mapper>

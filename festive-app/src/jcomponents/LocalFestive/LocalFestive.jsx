@@ -193,11 +193,9 @@ const LocalFestive = () => {
         return;
       }
 
-      // 종료된 축제 제외
+      // contentTypeId가 15가 아니고 종료된 축제 제외
       const filtered = items.filter((item) => {
-        return (
-          getFestivalStatus(item.eventstartdate, item.eventenddate) !== "종료"
-        );
+        return item.contenttypeid === "15" && getFestivalStatus(item.eventstartdate, item.eventenddate) !== "종료";
       });
 
       // 매핑

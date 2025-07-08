@@ -27,14 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
   private final JwtUtil jwtUtil;
+  private final AuthService authService;
 
-  public CustomSuccessHandler(JwtUtil jwtUtil) {
+  public CustomSuccessHandler(JwtUtil jwtUtil, AuthService authService) {
     this.jwtUtil = jwtUtil;
+    this.authService = authService;
   }
-
-  // 순환 참조 방지를 위해 필드 주입 사용
-  @Autowired
-  private AuthService authService;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
