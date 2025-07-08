@@ -25,7 +25,6 @@ const Find = () => {
   const [isPwChanging, setIsPwChanging] = useState(false); // 비밀번호 변경 중
   const [currentView, setCurrentView] = useState('find'); // 'find' | 'resetPw'
   const navigate = useNavigate();
-  const [oldPassword, setOldPassword] = useState(''); // 기존 비밀번호
   
   // useRef로 입력 필드 참조
   const usernameRef = useRef(null);
@@ -173,24 +172,18 @@ const Find = () => {
       return;
     }
 
-    let payload;
+    let payload = {
+      id: formData.id,
+      authMethod: formData.authMethod,
+    };
     if (formData.authMethod === 'email') {
-      payload = {
-        id: formData.id,
-        email: formData.email
-      };
-
+      payload.email = formData.email;
     } else if (formData.authMethod === 'tel') {
-      // 전화번호 인증은 기존대로 /auth/findId 사용 (추후 별도 구현 가능)
-      payload = {
-        userId: formData.id,
-        authMethod: formData.authMethod,
-        tel: formData.tel
-      };
+      payload.tel = formData.tel;
     }
 
-    const endpoint = formData.authMethod === 'email' ? '/auth/findPw' : '/auth/findId';
-    await callAuthRequestApi(endpoint, payload);
+    // 이메일/전화번호 모두 /auth/findPw로 요청
+    await callAuthRequestApi('/auth/findPw', payload);
   };
 
   // 공통 API 호출 메서드
@@ -247,17 +240,15 @@ const Find = () => {
     }
     
     // API 호출
-    let payload;
+    let payload = {
+      name: formData.username,
+      authMethod: formData.authMethod,
+      authKey: formData.authKey
+    };
     if (formData.authMethod === 'email') {
-      payload = {
-        name: formData.username,
-        email: formData.email
-      };
+      payload.email = formData.email;
     } else if (formData.authMethod === 'tel') {
-      payload = {
-        name: formData.username,
-        tel: formData.tel
-      };
+      payload.tel = formData.tel;
     }
     
     const success = await callFindApi('/auth/findId/result', payload);
@@ -283,36 +274,29 @@ const Find = () => {
     setCurrentView('resetPw');
   };
   
-  const handleCancel = () => {
-    setFormData({
-      username: '', // 아이디 찾기용 이름
-      id: '', // 비밀번호 찾기용 아이디
-      email: '',
-      tel: '',
-      authKey: '',
-      authMethod: 'email'
-    });
-    setShowResult(false);
-  };
-  
-  const handleResultClick = () => {
-    alert('아이디 찾기 결과 처리');
-  };
-  
   // 인증번호 확인
   const handleCheckAuthKey = async () => {
-    if (!formData.email || !formData.tel && !formData.authKey) {
-      alert('이메일 혹은 전화번호, 인증번호를 모두 입력해주세요.');
+    if (
+      // 각자 탭별로 필수 정보 체크
+      (activeTab === 'id' && (!formData.username || !(formData.email || formData.tel) || !formData.authKey)) ||
+      (activeTab === 'pw' && (!formData.id || !(formData.email || formData.tel) || !formData.authKey))
+    ) {
+      alert('필수 정보를 모두 입력해주세요.');
       return;
     }
     try {
       setIsVerifying(true);
-      const response = await axiosApi.post('/auth/checkAuthKey', {
-        email: formData.email || null,
-        tel: formData.tel || null,
-        authKey: formData.authKey
-      });
-
+      // FindAuthKeyRequest 구조에 맞게 payload 생성
+      const payload = {
+        type: activeTab, // 'id' 또는 'pw'
+        name: activeTab === 'id' ? formData.username : null,
+        userId: activeTab === 'pw' ? formData.id : null,
+        email: formData.authMethod === 'email' ? formData.email : null,
+        tel: formData.authMethod === 'tel' ? formData.tel : null,
+        authKey: formData.authKey,
+        authMethod: formData.authMethod
+      };
+      const response = await axiosApi.post('/auth/findCheckAuthKey', payload);
       if (response.data.success) {
         alert('인증번호가 확인되었습니다.');
         setIsAuthKeyVerified(true);
@@ -338,16 +322,14 @@ const Find = () => {
   };
   
   const handlePasswordChange = async () => {
-    if (!oldPassword || !newPassword) {
-      alert('기존 비밀번호, 새 비밀번호를 모두 입력해주세요.');
+    if (!newPassword) {
+      alert('새 비밀번호를 입력해주세요.');
       return;
     }
-    
     try {
       setIsPwChanging(true);
-      // 실제 비밀번호 변경 API 호출 (엔드포인트는 /auth/findPw/reset 등으로 가정)
+      // 실제 비밀번호 변경 API 호출
       const response = await axiosApi.post('/auth/findPw/reset', {
-        oldPassword: oldPassword,
         newPassword: newPassword
       });
       if (response.data.success) {
@@ -362,7 +344,6 @@ const Find = () => {
           authMethod: 'email' 
         });
         setNewPassword('');
-        setOldPassword('');
         setIsAuthKeyVerified(false);
         // 로그인 페이지로 이동
         navigate('/signin');

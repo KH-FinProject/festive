@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.project.festive.festiveserver.auth.dto.AuthKeyRequest;
+import com.project.festive.festiveserver.auth.dto.FindAuthKeyRequest;
 import com.project.festive.festiveserver.auth.dto.LoginRequest;
 import com.project.festive.festiveserver.auth.dto.LoginResponse;
 import com.project.festive.festiveserver.auth.entity.EmailAuthKey;
@@ -24,8 +25,8 @@ import com.project.festive.festiveserver.auth.mapper.AuthMapper;
 import com.project.festive.festiveserver.auth.repository.EmailAuthKeyRepository;
 import com.project.festive.festiveserver.auth.repository.RefreshTokenRepository;
 import com.project.festive.festiveserver.auth.repository.TelAuthKeyRepository;
-import com.project.festive.festiveserver.common.util.SolapiUtil;
 import com.project.festive.festiveserver.common.util.JwtUtil;
+import com.project.festive.festiveserver.common.util.SolapiUtil;
 import com.project.festive.festiveserver.member.entity.Member;
 import com.project.festive.festiveserver.member.repository.MemberRepository;
 
@@ -240,6 +241,28 @@ public class AuthServiceImpl implements AuthService {
 		return 0;
 	}
 	
+	/** 아이디/비밀번호 찾기 인증번호 확인 메서드
+	 * @param req 아이디(+name)/비밀번호(+id) 추가 인증 요청
+	 * @return 0: 존재하지 않는 회원, 1: 존재하는 회원, 2: 인증번호 문제
+	 */
+	@Override
+	public int findCheckAuthKey(FindAuthKeyRequest req) {
+        int result = switch (req.getType()) {
+            case "id" -> switch (req.getAuthMethod()) {
+                case "email" -> authMapper.checkIdFindByEmail(req.getName(), req.getEmail(), req.getAuthKey()) > 0 ? 1 : 0;
+                case "tel" -> authMapper.checkIdFindByTel(req.getName(), req.getTel(), req.getAuthKey()) > 0 ? 1 : 0;
+                default -> 0;
+            };
+            case "pw" -> switch (req.getAuthMethod()) {
+                case "email" -> authMapper.checkPwFindByEmail(req.getUserId(), req.getEmail(), req.getAuthKey()) > 0 ? 1 : 0;
+                case "tel" -> authMapper.checkPwFindByTel(req.getUserId(), req.getTel(), req.getAuthKey()) > 0 ? 1 : 0;
+                default -> 0;
+            };
+            default -> 0;
+        };
+        return result;
+	}
+	
 	private boolean storeEmailAuthKey(String email, String authKey) {
 		try {
 			emailAuthKeyRepository.save(EmailAuthKey.builder()
@@ -318,6 +341,26 @@ public class AuthServiceImpl implements AuthService {
 		if (updateResult == 0) {
 			authMapper.insertRefreshToken(refreshTokenEntity);
 		}
+	}
+	
+	@Override
+	public Map<String, Object> findIdSocialByEmail(String name, String email, String authKey) {
+		return authMapper.findIdSocialByEmail(name, email, authKey);
+	}
+	
+	@Override
+	public Map<String, Object> findIdSocialByTel(String name, String tel, String authKey) {
+		return authMapper.findIdSocialByTel(name, tel, authKey);
+	}
+	
+	@Override
+	public int findPwSocialByEmail(String userId, String email, String authKey) {
+		return authMapper.findPwSocialByEmail(userId, email, authKey);
+	}
+
+	@Override
+	public int findPwSocialByTel(String userId, String tel, String authKey) {
+		return authMapper.findPwSocialByTel(userId, tel, authKey);
 	}
 	
 }

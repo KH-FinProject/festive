@@ -3,14 +3,13 @@ import axiosApi from '../../api/axiosAPI';
 import './ResetPw.css';
 
 const ResetPw = ({ userId, navigate }) => {
-  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isPwChanging, setIsPwChanging] = useState(false);
 
   const handlePasswordChange = async () => {
-    if (!userId || !oldPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
-      alert('아이디, 기존 비밀번호, 새 비밀번호, 새 비밀번호 확인을 모두 입력해주세요.');
+    if (!userId || !newPassword.trim() || !confirmPassword.trim()) {
+      alert('아이디, 새 비밀번호, 새 비밀번호 확인을 모두 입력해주세요.');
       return;
     }
     
@@ -23,14 +22,12 @@ const ResetPw = ({ userId, navigate }) => {
       setIsPwChanging(true);
       const payload = {
         userId: userId.trim(),
-        oldPassword: oldPassword.trim(),
         newPassword: newPassword.trim()
       };
 
       const response = await axiosApi.post('/auth/findPw/reset', payload);
       if (response.data.success) {
         alert('비밀번호가 성공적으로 변경되었습니다.');
-        setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
         navigate('/signin');
@@ -55,23 +52,6 @@ const ResetPw = ({ userId, navigate }) => {
   return (
     <div className="find-input-group">
       <div className="reset-pw-input-group">
-        <label htmlFor="oldPassword" className="find-input-label">
-          기존 비밀번호
-        </label>
-        <input
-          id="oldPassword"
-          name="oldPassword"
-          type="password"
-          required
-          value={oldPassword}
-          onChange={e => setOldPassword(e.target.value.trim())}
-          placeholder="기존 비밀번호 입력"
-          className="reset-pw-input-field"
-          autoFocus
-        />
-      </div>
-      
-      <div className="reset-pw-input-group">
         <label htmlFor="newPassword" className="find-input-label">
           새 비밀번호
         </label>
@@ -84,6 +64,7 @@ const ResetPw = ({ userId, navigate }) => {
           onChange={e => setNewPassword(e.target.value.trim())}
           placeholder="새 비밀번호 입력"
           className="reset-pw-input-field"
+          autoFocus
         />
       </div>
       
@@ -107,13 +88,13 @@ const ResetPw = ({ userId, navigate }) => {
         type="button"
         className="reset-pw-btn-submit"
         onClick={(e) => {
-          if (isPwChanging || !oldPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+          if (isPwChanging || !newPassword.trim() || !confirmPassword.trim()) {
             e.preventDefault();
             return;
           }
           handlePasswordChange();
         }}
-        disabled={isPwChanging || !oldPassword.trim() || !newPassword.trim() || !confirmPassword.trim()}
+        disabled={isPwChanging || !newPassword.trim() || !confirmPassword.trim()}
       >
         {isPwChanging ? '변경 중...' : '비밀번호 변경'}
       </button>
