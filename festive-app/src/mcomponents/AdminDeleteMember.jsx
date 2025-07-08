@@ -9,7 +9,6 @@ const AdminDeleteMember = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [withdrawnMembers, setWithdrawnMembers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   // 탈퇴 회원 데이터
   const fetchWithdrawMember = async () => {

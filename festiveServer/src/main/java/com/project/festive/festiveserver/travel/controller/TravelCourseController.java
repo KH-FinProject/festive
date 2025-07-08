@@ -141,7 +141,7 @@ public class TravelCourseController {
      */
     @GetMapping("/{courseNo}")
     public ResponseEntity<Map<String, Object>> getCourseDetails(
-            @PathVariable Long courseNo,
+            @PathVariable("courseNo") Long courseNo,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         
@@ -194,7 +194,7 @@ public class TravelCourseController {
      */
     @DeleteMapping("/{courseNo}")
     public ResponseEntity<Map<String, Object>> deleteCourse(
-            @PathVariable Long courseNo,
+            @PathVariable("courseNo") Long courseNo,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
         Map<String, Object> response = new HashMap<>();
@@ -232,7 +232,7 @@ public class TravelCourseController {
      */
     @PatchMapping("/{courseNo}/share-status")
     public ResponseEntity<Map<String, Object>> updateShareStatus(
-            @PathVariable Long courseNo,
+            @PathVariable("courseNo") Long courseNo,
             @RequestParam String isShared,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         
