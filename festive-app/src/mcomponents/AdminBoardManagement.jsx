@@ -20,25 +20,23 @@ const AdminBoardManagement = () => {
     initialPage: 1,
   });
 
-  const {
-    currentPage,
-    totalPages,
-    goToPage,
-    currentItems,
-  } = reportPagination;
+  const { currentPage, totalPages, goToPage, currentItems } = reportPagination;
 
   // 현재 페이지 게시글만 가져오기
   const currentPosts = currentItems(posts);
 
   // 게시글 목록 불러오기 함수 분리 (삭제 후 재사용)
   const fetchPosts = () => {
-    axiosApi.get("/admin/board")
+    axiosApi
+      .get("/admin/board")
       .then((res) => {
         const mapped = res.data.map((post) => {
-          console.log('boardCode:', post.boardCode, 'boardTypeNo:', post.boardTypeNo, '전체 post:', post);
           return {
             id: post.boardNo,
-            type: Number(post.boardCode ?? post.boardTypeNo) === 2 ? "공지" : "일반",
+            type:
+              Number(post.boardCode ?? post.boardTypeNo) === 2
+                ? "공지"
+                : "일반",
             title: post.boardTitle,
             author: post.memberNickname || "익명",
             date: formatDate(post.boardCreateDate),
@@ -82,21 +80,27 @@ const AdminBoardManagement = () => {
 
   // 개별 체크
   const handleSelectPost = (id) => {
-    setPosts(posts.map((post) =>
-      post.id === id ? { ...post, checked: !post.checked } : post
-    ));
+    setPosts(
+      posts.map((post) =>
+        post.id === id ? { ...post, checked: !post.checked } : post
+      )
+    );
   };
 
   // 선택된 게시글 삭제
   const handleDeleteSelected = async () => {
-    const selectedIds = posts.filter((post) => post.checked).map((post) => post.id);
+    const selectedIds = posts
+      .filter((post) => post.checked)
+      .map((post) => post.id);
 
     if (selectedIds.length === 0) {
       alert("삭제할 게시글을 선택하세요.");
       return;
     }
 
-    const confirmed = window.confirm(`${selectedIds.length}개 게시글을 영구적으로 삭제하시겠습니까?`);
+    const confirmed = window.confirm(
+      `${selectedIds.length}개 게시글을 영구적으로 삭제하시겠습니까?`
+    );
     if (!confirmed) return;
 
     setIsDeleting(true);
@@ -151,7 +155,11 @@ const AdminBoardManagement = () => {
                   </div>
 
                   <div className="post-badge">
-                    <span className={`badge ${post.type === "공지" ? "notice" : "general"}`}>
+                    <span
+                      className={`badge ${
+                        post.type === "공지" ? "notice" : "general"
+                      }`}
+                    >
                       {post.type}
                     </span>
                   </div>
@@ -161,7 +169,10 @@ const AdminBoardManagement = () => {
                       <span className="post-number">{post.postNumber}</span>
                     )}
                     <h3 className="post-title">
-                      <Link to={`/wagle/${post.id}`} className="post-title-link">
+                      <Link
+                        to={`/wagle/${post.id}`}
+                        className="post-title-link"
+                      >
                         {post.title}
                       </Link>
                     </h3>

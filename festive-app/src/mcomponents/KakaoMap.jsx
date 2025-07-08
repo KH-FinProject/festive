@@ -92,15 +92,6 @@ export default function KakaoMap({
     }, 100);
   };
 
-  console.log(
-    "지도 로딩 상태:",
-    loading,
-    "준비 상태:",
-    isReady,
-    "재시도 횟수:",
-    retryCount.current
-  );
-
   if (error) {
     return (
       <div

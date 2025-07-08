@@ -58,7 +58,6 @@ const FestivalMainPage = () => {
   const sortByDistance = async () => {
     try {
       // 투어API 거리순 정렬이 제대로 지원되지 않으므로 클라이언트 사이드 거리 계산 사용
-      console.log("클라이언트 사이드 거리 계산을 사용합니다.");
       return await sortByDistanceClientSide();
     } catch (error) {
       console.error("거리순 정렬 실패:", error);
@@ -77,11 +76,6 @@ const FestivalMainPage = () => {
           throw new Error("위치 정보를 가져올 수 없습니다.");
         }
       }
-
-      console.log(
-        "클라이언트 사이드 거리 계산 시작 - 사용자 위치:",
-        currentLocation
-      );
 
       // 두 지점 간의 거리 계산 (Haversine 공식)
       const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -124,12 +118,6 @@ const FestivalMainPage = () => {
         return a.distance - b.distance;
       });
 
-      console.log(
-        "거리순 정렬 완료:",
-        sorted
-          .slice(0, 5)
-          .map((f) => ({ title: f.title, distance: f.distance }))
-      );
       return sorted;
     } catch (error) {
       console.error("클라이언트 사이드 거리 계산 실패:", error);
@@ -217,7 +205,6 @@ const FestivalMainPage = () => {
   // 축제 클릭 핸들러
   const handleFestivalClick = (festivalId) => {
     // 실제로는 React Router로 상세페이지 이동
-    console.log(`축제 ${festivalId} 상세페이지로 이동`);
     navigate(`/festival/detail/${festivalId}`);
   };
 
@@ -249,8 +236,6 @@ const FestivalMainPage = () => {
       );
       setListFestivals(sorted);
     }
-
-    console.log(`정렬 변경: ${newSortType}`);
   };
 
   return (

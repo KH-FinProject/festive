@@ -60,7 +60,6 @@ export default function PublicCarParkWithMap({
       const response = await fetch(url);
       const respData = await response.json();
       const items = respData?.data;
-      console.log("조회된 공영 주차장 수 : ", respData.matchCount);
       if (!items || !Array.isArray(items)) {
         setListCarPark([]);
         setIsParkingLoading(false);
@@ -136,17 +135,6 @@ export default function PublicCarParkWithMap({
       onMarkerClick(markerData);
     }
   };
-
-  /*   console.log(
-    "지도 로딩 상태:",
-    loading,
-    "준비 상태:",
-    isReady,
-    "재시도 횟수:",
-    retryCount.current,
-    "주차장 데이터:",
-    listCarPark.length
-  ); */
 
   if (error) {
     return (

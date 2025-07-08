@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Map, MapMarker, Polyline, useKakaoLoader } from "react-kakao-maps-sdk";
 import axios from "axios";
@@ -33,9 +27,8 @@ const TravelCourseDetail = () => {
   const [selectedDescriptionDay, setSelectedDescriptionDay] = useState(1);
 
   const key = import.meta.env.VITE_KAKAO_MAP_API_KEY;
-  const mapRef = useRef(null);
   const [map, setMap] = useState(null);
-  const [loadingMap, error] = useKakaoLoader({
+  const [loadingMap] = useKakaoLoader({
     appkey: key,
     libraries: ["services"],
   });
@@ -49,7 +42,6 @@ const TravelCourseDetail = () => {
 
         // 🔐 1단계: 먼저 공유된 여행코스로 시도 (인증 불필요)
         try {
-          console.log("🔓 공유된 여행코스로 먼저 시도 (인증 없음)");
           response = await axios.get(`/api/travel-course/${courseId}`, {
             headers: {
               "Content-Type": "application/json",
@@ -57,16 +49,13 @@ const TravelCourseDetail = () => {
             // withCredentials 없이 요청
           });
           data = response.data;
-          console.log("✅ 공유 여행코스 로드 성공");
-        } catch (publicError) {
+        } catch (error) {
           // 🔐 2단계: 공유 접근 실패시 인증이 필요한 개인 여행코스로 시도
-          console.log("🔐 공유 접근 실패, 개인 여행코스로 시도 (인증 필요)");
           try {
             response = await axiosApi.get(`/api/travel-course/${courseId}`);
             data = response.data;
-            console.log("✅ 개인 여행코스 로드 성공");
-          } catch (privateError) {
-            console.error("❌ 개인 여행코스 접근도 실패:", privateError);
+          } catch (error) {
+            console.error("❌ 개인 여행코스 접근도 실패:", error);
             throw new Error("여행코스를 찾을 수 없거나 접근 권한이 없습니다.");
           }
         }
@@ -76,8 +65,6 @@ const TravelCourseDetail = () => {
         }
 
         if (data.success) {
-          console.log("📅 받은 여행코스 데이터:", data.course);
-          console.log("📅 createdDate 값:", data.course?.createdDate);
           setCourseData(data.course);
           setCourseDetails(data.details);
 
@@ -210,16 +197,6 @@ const TravelCourseDetail = () => {
   // 선택된 날짜의 장소들 메모이제이션
   const dayPlaces = useMemo(() => {
     const places = getPlacesByDay(selectedDay);
-    console.log("🏠 dayPlaces 계산:", {
-      selectedDay,
-      placesCount: places.length,
-      places: places.map((p) => ({
-        placeName: p.placeName,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        visitOrder: p.visitOrder,
-      })),
-    });
     return places;
   }, [getPlacesByDay, selectedDay]);
 
@@ -228,79 +205,41 @@ const TravelCourseDetail = () => {
     const filtered = dayPlaces.filter(
       (place) => place.latitude && place.longitude
     );
-    console.log("🗺️ 좌표 필터링:", {
-      totalPlaces: dayPlaces.length,
-      filteredPlaces: filtered.length,
-      filtered: filtered.map((p) => ({
-        placeName: p.placeName,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        visitOrder: p.visitOrder,
-      })),
-    });
 
     const sorted = filtered.sort((a, b) => a.visitOrder - b.visitOrder);
-    console.log("📋 순서 정렬:", {
-      sorted: sorted.map((p) => ({
-        placeName: p.placeName,
-        visitOrder: p.visitOrder,
-      })),
-    });
 
     const path = sorted.map((place) => ({
       lat: parseFloat(place.latitude),
       lng: parseFloat(place.longitude),
     }));
 
-    console.log("📍 최종 polylinePath:", {
-      pathLength: path.length,
-      path,
-    });
-
     return path;
   }, [dayPlaces]);
 
   // 카카오맵에 거리 표시를 추가하는 useEffect
   useEffect(() => {
-    console.log("🗺️ 거리 표시 useEffect 실행:", {
-      loading,
-      courseDetailsLength: courseDetails.length,
-      selectedDay,
-      map: !!map,
-      kakao: !!window.kakao,
-      polylinePathLength: polylinePath.length,
-      polylinePath,
-    });
-
     // 데이터가 로딩 중이면 기다림
     if (loading) {
-      console.log("⏳ 데이터 로딩 중...");
       return;
     }
 
     // 코스 상세 정보가 없으면 기다림
     if (courseDetails.length === 0) {
-      console.log("📋 코스 상세 정보 없음");
       return;
     }
 
     if (!map) {
-      console.log("❌ map이 없음");
       return;
     }
     if (!window.kakao) {
-      console.log("❌ window.kakao가 없음");
       return;
     }
     if (polylinePath.length <= 1) {
-      console.log("❌ polylinePath 길이가 1 이하:", polylinePath.length);
       return;
     }
 
     // 지도가 완전히 로드된 후 실행하도록 지연 추가
     const timer = setTimeout(() => {
-      console.log("⏰ 지연 후 거리 표시 시작");
-
       // 기존 거리 표시 제거
       if (map._distanceOverlays) {
         map._distanceOverlays.forEach((overlay) => overlay.setMap(null));
@@ -308,16 +247,10 @@ const TravelCourseDetail = () => {
       map._distanceOverlays = [];
 
       // 각 선분마다 거리 표시 추가
-      console.log("📍 거리 표시 시작:", polylinePath.length - 1, "개 선분");
 
       for (let i = 0; i < polylinePath.length - 1; i++) {
         const startPos = polylinePath[i];
         const endPos = polylinePath[i + 1];
-
-        console.log(`📏 선분 ${i + 1}:`, {
-          start: startPos,
-          end: endPos,
-        });
 
         // 거리 계산 (km)
         const distance = calculateDistance(
@@ -327,14 +260,10 @@ const TravelCourseDetail = () => {
           endPos.lng
         );
 
-        console.log(`📐 계산된 거리: ${distance.toFixed(1)}km`);
-
         // 선분 중간 지점 계산
         const midLat = (startPos.lat + endPos.lat) / 2;
         const midLng = (startPos.lng + endPos.lng) / 2;
         const midPosition = new window.kakao.maps.LatLng(midLat, midLng);
-
-        console.log(`📌 중간 지점:`, { lat: midLat, lng: midLng });
 
         // 거리 라벨 표시
         const distanceOverlay = new window.kakao.maps.CustomOverlay({
@@ -353,15 +282,9 @@ const TravelCourseDetail = () => {
           yAnchor: 0.5,
         });
 
-        console.log(`🎯 CustomOverlay 생성:`, distanceOverlay);
-
         distanceOverlay.setMap(map);
         map._distanceOverlays.push(distanceOverlay);
-
-        console.log(`✅ 거리 라벨 ${i + 1} 지도에 추가 완료`);
       }
-
-      console.log(`✅ 거리 표시 완료: ${polylinePath.length - 1}개`);
     }, 500); // 500ms 지연
 
     // 컴포넌트 언마운트 시 거리 표시 정리
@@ -507,42 +430,8 @@ const TravelCourseDetail = () => {
     return Math.max(...courseDetails.map((d) => d.dayNumber), 1);
   }, [courseData?.totalDays, courseDetails]);
 
-  // 총 거리 계산만 유지 (소요시간 계산 제거)
-  const totalDistance = useMemo(() => {
-    let totalDistance = 0;
-
-    for (let day = 1; day <= totalDays; day++) {
-      const dayPlaces = getPlacesByDay(day).sort(
-        (a, b) => a.visitOrder - b.visitOrder
-      );
-
-      // 각 날짜별 장소 간 거리 계산
-      for (let i = 0; i < dayPlaces.length - 1; i++) {
-        const place1 = dayPlaces[i];
-        const place2 = dayPlaces[i + 1];
-
-        if (
-          place1.latitude &&
-          place1.longitude &&
-          place2.latitude &&
-          place2.longitude
-        ) {
-          const distance = calculateDistance(
-            place1.latitude,
-            place1.longitude,
-            place2.latitude,
-            place2.longitude
-          );
-          totalDistance += distance;
-        }
-      }
-    }
-
-    return Math.round(totalDistance * 10) / 10; // 소수점 첫째자리
-  }, [getPlacesByDay, totalDays]);
-
   // 장소 클릭 핸들러 수정
-  const handlePlaceClick = async (place, index) => {
+  const handlePlaceClick = async (place) => {
     setSelectedPlace(place);
     setMapCenter({
       lat: parseFloat(place.latitude),
@@ -555,7 +444,7 @@ const TravelCourseDetail = () => {
 
     // 병렬로 장소 이미지와 상세 정보 가져오기
     if (place.contentId) {
-      const [images, overview] = await Promise.all([
+      const [images] = await Promise.all([
         fetchPlaceImages(place.contentId),
         fetchPlaceOverview(place.contentId, place),
       ]);
@@ -716,7 +605,7 @@ const TravelCourseDetail = () => {
     );
   }
 
-  if (error) {
+  if (loadingMap) {
     return (
       <div className="travel-detail-error">
         <div>지도를 불러올 수 없습니다.</div>
@@ -903,7 +792,7 @@ const TravelCourseDetail = () => {
                 <div
                   key={place.detailNo}
                   className="travel-detail-place-card"
-                  onClick={() => handlePlaceClick(place, index)}
+                  onClick={() => handlePlaceClick(place)}
                 >
                   <div className="travel-detail-place-number">{index + 1}</div>
                   <div className="travel-detail-place-image">
@@ -956,7 +845,6 @@ const TravelCourseDetail = () => {
           }}
           level={8}
           onCreate={(mapInstance) => {
-            console.log("🗺️ Map onCreate 호출:", mapInstance);
             setMap(mapInstance);
           }}
         >

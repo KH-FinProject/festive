@@ -69,7 +69,6 @@ const FestivalDetail = () => {
 
   const handleMarkerClick = (markerData) => {
     setSelectedMarkerInfo(markerData);
-    console.log("markerData : ", markerData);
   };
 
   // 슬라이더
@@ -83,7 +82,7 @@ const FestivalDetail = () => {
         pagination={{ clickable: true }}
         modules={[Navigation, Pagination]}
         className="mySwiper"
-      /*       breakpoints={{
+        /*       breakpoints={{
     320: { slidesPerView: 1 },
     640: { slidesPerView: 2 },
     1024: { slidesPerView: 3 },
@@ -132,7 +131,6 @@ const FestivalDetail = () => {
       setEventState(
         getFestivalStatus(item[0].eventstartdate, item[0].eventenddate)
       );
-      console.log(eventState);
     } catch (error) {
       console.error("축제 소개 정보 로드 실패:", error);
     }
@@ -170,7 +168,6 @@ const FestivalDetail = () => {
 
       setPosterImg(poster);
       setFestivalImg(subImgs);
-      // console.log(festivalImg);
     } catch (error) {
       console.error("축제 이미지 정보 로드 실패:", error);
     }
@@ -221,7 +218,6 @@ const FestivalDetail = () => {
   const handleFestivalClick = (festivalId) => {
     // 실제로는 React Router로 상세페이지 이동
     window.scrollTo(0, 0);
-    console.log(`축제 ${festivalId} 상세페이지로 이동`);
     navigate(`/festival/detail/${festivalId}`);
   };
 
@@ -275,7 +271,6 @@ const FestivalDetail = () => {
     endDate,
     category
   ) => {
-    console.log(`부스참가신청 : ${contentId} `);
     navigate("/booth", {
       state: {
         contentId: contentId,
@@ -394,7 +389,6 @@ const FestivalDetail = () => {
                   {festivalDetail.eventenddate}
                 </span>
                 <LikeButton contentId={contentId} />
-
               </div>
             </div>
 
@@ -611,8 +605,9 @@ const FestivalDetail = () => {
                       className="festival-image"
                     />
                     <div
-                      className={`festival-status ${festival.status === "진행중" ? "active" : "upcoming"
-                        }`}
+                      className={`festival-status ${
+                        festival.status === "진행중" ? "active" : "upcoming"
+                      }`}
                     >
                       {festival.status}
                     </div>

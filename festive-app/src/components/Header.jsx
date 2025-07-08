@@ -32,7 +32,6 @@ const Header = () => {
     while (retryCount <= maxRetries) {
       try {
         await axiosApi.post("/auth/logout");
-        console.log("로그아웃 성공");
 
         // 서버 요청 성공 시에만 클라이언트 상태 초기화
         logout();
