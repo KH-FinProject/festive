@@ -47,15 +47,13 @@ const AdminDeleteMember = () => {
     console.log("selectedMembers : ", selectedMembers);
   };
 
-  const keyword = searchTerm.trim().toLowerCase();
-
   // filteredMembers : id, 닉네임, 이름으로 검색된 회원들
   const filteredMembers = (withdrawnMembers || []).filter((member) => {
     if (!member) return false;
     return (
-      member.ID?.toLowerCase().includes(keyword) ||
-      member.NAME?.toLowerCase().includes(keyword) ||
-      member.NICKNAME?.toLowerCase().includes(keyword)
+      member.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.name?.includes(searchTerm) ||
+      member.nickname?.includes(searchTerm)
     );
   });
 
@@ -203,12 +201,10 @@ const AdminDeleteMember = () => {
                             className="member-checkbox"
                           />
                         </div>
-                        <div className="member-cell">{member.ID}</div>
-                        <div className="member-cell">{member.NAME}</div>
-                        <div className="member-cell">{member.NICKNAME}</div>
-                        <div className="member-cell">
-                          {member.WITHDRAW_DATE}
-                        </div>
+                        <div className="member-cell">{member.id}</div>
+                        <div className="member-cell">{member.name}</div>
+                        <div className="member-cell">{member.nickname}</div>
+                        <div className="member-cell">{member.withdrawDate}</div>
                         <div className="member-cell action-cell">
                           <button
                             className="action-button delete-button"
