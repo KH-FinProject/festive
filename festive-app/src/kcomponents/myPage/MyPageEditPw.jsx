@@ -4,6 +4,7 @@ import "./MyPageEditPw.css";
 import MyPageSideBar from "./MyPageSideBar";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
+import axiosApi from "../../api/axiosAPI";
 
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$/;
 
@@ -50,14 +51,12 @@ const MyPageEditPw = () => {
     if (currentPwTimeout.current) clearTimeout(currentPwTimeout.current);
     currentPwTimeout.current = setTimeout(async () => {
       try {
-        const response = await fetch("http://localhost:8080/mypage/check-current-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ password: currentPassword }),
-        });
-        const data = await response.json();
-        if (response.ok && data.match === true) {
+        const response = await axiosApi.post(
+          "/mypage/check-current-password",
+          { password: currentPassword }
+        );
+        const data = response.data;
+        if (response.status >= 200 && response.status < 300 && data.match === true) {
           setCurrentPwStatus("matched");
         } else {
           setCurrentPwStatus("unmatched");
@@ -150,25 +149,18 @@ const MyPageEditPw = () => {
     }
 
     try {
-      const response = await fetch(
-        "http://localhost:8080/mypage/change-password",
+      const response = await axiosApi.post(
+        "/mypage/change-password",
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            currentPassword,
-            newPassword,
-            confirmPassword,
-          }),
+          currentPassword,
+          newPassword,
+          confirmPassword,
         }
       );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         setSubmitMessage("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
         setSubmitStatus("success");
         setTimeout(() => {

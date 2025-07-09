@@ -4,6 +4,7 @@ import MyPageSideBar from "./MyPageSideBar";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import Pagination, { usePagination } from "./Pagination";
+import axiosApi from "../../api/axiosAPI";
 
 const PAGE_SIZE = 6;
 
@@ -35,11 +36,8 @@ const MyPageMyPost = () => {
       navigate("/signin");
       return;
     }
-    fetch(`http://localhost:8080/mypage/post`, {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => setPosts(data))
+    axiosApi.get("/mypage/post")
+      .then((res) => setPosts(res.data))
       .catch((err) => console.error(err));
   }, [member, navigate]);
 

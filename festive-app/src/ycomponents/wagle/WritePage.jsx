@@ -111,15 +111,10 @@ function WritePage() {
                 const formData = new FormData();
                 formData.append("image", blob);
                 try {
-                  const res = await fetch(
-                    "http://localhost:8080/api/board/upload-image",
-                    {
-                      method: "POST",
-                      body: formData,
-                      credentials: "include",
-                    }
-                  );
-                  const imageUrl = await res.text();
+                  const res = await axiosApi.post("/api/board/upload-image", formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                  });
+                  const imageUrl = res.data;
                   callback(imageUrl, "image");
                 } catch {
                   alert("이미지 업로드 실패");

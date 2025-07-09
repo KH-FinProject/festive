@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
   // headers : {"Content-Type" : "application/json"}
   // withCredentials : true // 쿠키 포함 설정
@@ -77,7 +77,7 @@ axiosApi.interceptors.response.use(
       try {
         // 토큰 갱신 요청 (axiosApi 인스턴스 사용하지 않음 - 무한 루프 방지)
         const refreshResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || "/api"}/auth/refresh`,
+          `${import.meta.env.VITE_API_URL}/auth/refresh`,
           {},
           {
             withCredentials: true,

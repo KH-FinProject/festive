@@ -4,6 +4,7 @@ import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import Title from "./Title";
 import "./NoticeBoard.css";
 import { useNavigate } from "react-router-dom";
+import axiosApi from "../../api/axiosAPI";
 
 const INITIAL_DISPLAY_COUNT = 3;
 
@@ -24,35 +25,30 @@ function NoticeBoard({ hideTitle }) {
         size: "50", // 공지사항은 많지 않으므로 넉넉하게 설정
       });
 
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards?${params}`
-      );
+      const response = await axiosApi.get(`/api/wagle/boards?${params}`);
+      if (response.status >= 200 && response.status < 300) {
+        const data = response.data;
 
-      if (!response.ok) {
-        throw new Error("공지사항을 불러오는데 실패했습니다.");
+        // 데이터 형식 변환
+        const formattedNotices = data.boardList.map((notice) => ({
+          id: notice.boardNo,
+          title: notice.boardTitle,
+          author: notice.memberNickname,
+          date: new Date(notice.boardCreateDate)
+            .toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+            .replace(/\. /g, ".")
+            .replace(".", "."),
+          memberProfileImage: notice.memberProfileImage, // 필드명 통일
+        }));
+
+        setNotices(formattedNotices);
       }
-
-      const data = await response.json();
-
-      // 데이터 형식을 기존 포맷에 맞게 변환
-      const formattedNotices = data.boardList.map((notice) => ({
-        id: notice.boardNo,
-        title: notice.boardTitle,
-        author: notice.memberNickname,
-        date: new Date(notice.boardCreateDate)
-          .toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-          .replace(/\. /g, ".")
-          .replace(".", "."),
-        memberProfileImage: notice.memberProfileImage, // 필드명 통일
-      }));
-
-      setNotices(formattedNotices);
     } catch (err) {
       console.error("공지사항 로딩 실패:", err);
       setError(err.message);

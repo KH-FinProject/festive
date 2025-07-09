@@ -51,22 +51,16 @@ const MyPageWithdrawal = () => {
       }
 
       // API 호출 (소셜/일반 공통 - 서버에서 분기 처리)
-      const response = await fetch("http://localhost:8080/mypage/withdrawal", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(
-          !member.socialId
-            ? { password }
-            : { socialId: member.socialId }
-        ),
-      });
+      const response = await axiosApi.post(
+        "/mypage/withdrawal",
+        !member.socialId
+          ? { password }
+          : { socialId: member.socialId }
+      );
 
-      const text = await response.text();
+      const text = response.data;
 
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         handleLogout();
         alert("회원 탈퇴가 완료되었습니다.");
         return;

@@ -5,6 +5,7 @@ import MyPageSideBar from "./MyPageSideBar";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import Pagination, { usePagination } from "./Pagination";
+import axiosApi from "../../api/axiosAPI";
 
 const PAGE_SIZE = 5;
 
@@ -34,11 +35,8 @@ const MyPageMyComment = () => {
       return;
     }
 
-    fetch("http://localhost:8080/mypage/comment", {
-      credentials: "include",
-    })
-      .then((res) => res.json())
-      .then((data) => setComments(data))
+    axiosApi.get("/mypage/comment")
+      .then((res) => setComments(res.data))
       .catch((err) => console.error(err));
   }, [member, navigate]); // navigate 추가 권장
 

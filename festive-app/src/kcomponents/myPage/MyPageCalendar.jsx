@@ -10,6 +10,7 @@ import listPlugin from "@fullcalendar/list";
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import Pagination, { usePagination } from "./Pagination";
+import axiosApi from "../../api/axiosAPI";
 
 const PAGE_SIZE = 2;
 
@@ -117,13 +118,8 @@ const MyPageCalendar = () => {
         const fetchFestivals = async () => {
             try {
                 setIsLoading(true);
-                const response = await fetch(`http://localhost:8080/mypage/mycalendar`, {
-                    credentials: "include",
-                });
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
+                const response = await axiosApi.get("/mypage/mycalendar");
+                const data = response.data;
                 const formattedData = data.map(festival => ({
                     ...festival,
                     formattedStartDate: formatApiDate(festival.startDate),
@@ -145,11 +141,8 @@ const MyPageCalendar = () => {
             return;
         }
         try {
-            const response = await fetch(`http://localhost:8080/mypage/favorites/${contentId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-            });
-            if (response.ok) {
+            const response = await axiosApi.delete(`/mypage/favorites/${contentId}`);
+            if (response.status >= 200 && response.status < 300) {
                 alert("찜 해제되었습니다.");
                 setFestivals(prev => prev.filter(f => f.contentId !== contentId));
             } else {
