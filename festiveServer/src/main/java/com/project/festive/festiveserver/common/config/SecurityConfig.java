@@ -83,6 +83,9 @@ public class SecurityConfig {
             // 축제 페이지
             .requestMatchers("/festival/**").permitAll()
             
+            // 관리자 페이지
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+            
             // 와글 게시판 - 읽기는 공개, 쓰기/수정/삭제는 인증 필요
             .requestMatchers(HttpMethod.GET, "/api/wagle/boards").permitAll()
             .requestMatchers(HttpMethod.GET, "/api/wagle/boards/*").permitAll()
@@ -112,9 +115,6 @@ public class SecurityConfig {
 
             // 마이페이지 - 인증 필요
             .requestMatchers("/mypage/**").authenticated()
-
-            // 관리자 페이지
-            .requestMatchers("/admin/**").hasRole("ADMIN")
 
             // 프로필 이미지
             .requestMatchers("/profile-images/**").permitAll()
