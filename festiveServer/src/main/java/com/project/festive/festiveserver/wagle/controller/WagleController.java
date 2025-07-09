@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.context.SecurityContextHolder;
 import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 
@@ -17,7 +16,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/wagle")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
 @Slf4j
 public class WagleController {
     
@@ -61,10 +59,9 @@ public class WagleController {
      * 게시글 작성
      */
     @PostMapping("/boards")
-    public ResponseEntity<String> createBoard(@RequestBody BoardDto boardDto) {
+    public ResponseEntity<String> createBoard(Authentication authentication, @RequestBody BoardDto boardDto) {
         try {
             // 안전한 인증 정보 추출
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return ResponseEntity.status(401).body("인증 정보가 없습니다.");
             }
@@ -136,10 +133,9 @@ public class WagleController {
      * 게시글 좋아요 토글
      */
     @PostMapping("/boards/{boardNo}/like")
-    public ResponseEntity<Map<String, Object>> toggleBoardLike(@PathVariable("boardNo") Long boardNo) {
+    public ResponseEntity<Map<String, Object>> toggleBoardLike(Authentication authentication, @PathVariable("boardNo") Long boardNo) {
         try {
             // 안전한 인증 정보 추출
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return ResponseEntity.status(401).build();
             }
@@ -165,10 +161,9 @@ public class WagleController {
      * 게시글 좋아요 상태 확인
      */
     @GetMapping("/boards/{boardNo}/like/check")
-    public ResponseEntity<Map<String, Object>> checkBoardLike(@PathVariable("boardNo") Long boardNo) {
+    public ResponseEntity<Map<String, Object>> checkBoardLike(Authentication authentication, @PathVariable("boardNo") Long boardNo) {
         try {
             // 안전한 인증 정보 추출
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return ResponseEntity.status(401).build();
             }
@@ -209,10 +204,9 @@ public class WagleController {
      * 댓글 작성
      */
     @PostMapping("/boards/{boardNo}/comments")
-    public ResponseEntity<String> createComment(@PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
+    public ResponseEntity<String> createComment(Authentication authentication, @PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
         try {
             // 안전한 인증 정보 추출
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return ResponseEntity.status(401).body("인증 정보가 없습니다.");
             }

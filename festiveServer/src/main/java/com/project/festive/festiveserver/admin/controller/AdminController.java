@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -145,10 +144,9 @@ public class AdminController {
      * 공지글 작성
      */
     @PostMapping("/write")
-    public ResponseEntity<String> createBoard(@RequestBody BoardDto boardDto) {
+    public ResponseEntity<String> createBoard(Authentication authentication, @RequestBody BoardDto boardDto) {
         try {
             // 안전한 인증 정보 추출
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return ResponseEntity.status(401).body("인증 정보가 없습니다.");
             }
