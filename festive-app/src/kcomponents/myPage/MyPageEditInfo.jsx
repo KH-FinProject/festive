@@ -518,6 +518,7 @@ const MyPageEditInfo = () => {
                       type="text"
                       className="form-input email-local"
                       value={memberInfo.email.local}
+                      disabled
                       readOnly
                     />
                     <span className="email-separator">@</span>
@@ -525,6 +526,7 @@ const MyPageEditInfo = () => {
                       type="text"
                       className="form-input email-domain-static"
                       value={memberInfo.email.domain}
+                      disabled
                       readOnly
                     />
                   </div>
