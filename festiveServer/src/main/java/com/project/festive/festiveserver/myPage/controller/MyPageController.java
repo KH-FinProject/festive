@@ -181,12 +181,14 @@ public class MyPageController {
     }
 
     @PostMapping("/edit-info")
-    public ResponseEntity<Map<String, String>> updateInfo(HttpServletRequest request,
-                                                          @RequestBody MemberDto updatedInfo) {
+    public ResponseEntity<Map<String, String>> updateInfo(
+            HttpServletRequest request,
+            @RequestBody MemberDto updatedInfo) {
         try {
             String accessToken = getAccessTokenFromCookie(request);
             if (accessToken == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "로그인이 필요합니다."));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "로그인이 필요합니다."));
             }
 
             Long memberNo = jwtUtil.getMemberNo(accessToken);
@@ -195,23 +197,27 @@ public class MyPageController {
             // DB에서 회원정보 조회
             MemberDto member = service.getMyInfo(memberNo);
             if (member == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "회원을 찾을 수 없습니다."));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("message", "회원을 찾을 수 없습니다."));
             }
 
             // 소셜회원 여부 체크 (socialId가 null이 아니면 소셜회원)
-            boolean isSocial = (member.getSocialId() != null && !member.getSocialId().isEmpty());
+            boolean isSocial = (jwtUtil.getSocialId(accessToken) != null);
 
-            // 일반회원은 비밀번호를 반드시 입력, 소셜회원은 비번 체크 없이 진행
+            // 일반회원만 비밀번호 검증, 소셜회원은 건너뜀
             if (!isSocial) {
                 String password = updatedInfo.getPassword();
                 if (password == null || password.isEmpty()) {
-                    return ResponseEntity.badRequest().body(Map.of("message", "비밀번호를 입력해주세요."));
+                    return ResponseEntity.badRequest()
+                            .body(Map.of("message", "비밀번호를 입력해주세요."));
                 }
                 boolean match = service.checkPassword(memberNo, password);
                 if (!match) {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "비밀번호가 일치하지 않습니다."));
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(Map.of("message", "비밀번호가 일치하지 않습니다."));
                 }
             }
+            // 소셜회원(isSocial == true)은 비밀번호 확인 없이 바로 진행
 
             // 정보 수정 진행
             boolean result = service.updateMyInfo(memberNo, updatedInfo);
@@ -219,13 +225,16 @@ public class MyPageController {
             if (result) {
                 return ResponseEntity.ok(Map.of("message", "정보 수정 성공"));
             } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
             }
         } catch (Exception e) {
             log.error("개인정보 수정 중 오류 발생: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "정보 수정 중 오류가 발생했습니다."));
         }
     }
+
 
 
     
