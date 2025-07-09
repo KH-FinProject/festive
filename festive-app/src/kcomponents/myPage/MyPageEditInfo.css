@@ -19,7 +19,6 @@
     }
 }
 
-/* Main Content */
 .main-content {
     flex: 1;
     max-width: 1200px;
@@ -29,7 +28,6 @@
     gap: 40px;
 }
 
-/* Content Area */
 .content-area {
     flex: 1;
     background: white;
@@ -70,8 +68,17 @@
 
 .form-row {
     display: flex;
-    gap: 12px;
     align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
 }
 
 .form-input {
@@ -81,7 +88,6 @@
     font-size: 14px;
     outline: none;
     transition: border-color 0.2s;
-    flex: 1;
 }
 
 .form-input.full-width {
@@ -128,6 +134,79 @@
     display: flex;
     gap: 12px;
     margin-top: 40px;
+}
+
+/* ---- 전화번호 input row ---- */
+.form-input.phone-carrier {
+    width: 100px;
+}
+
+.form-input.phone-middle,
+.form-input.phone-last {
+    width: 120px;
+    min-width: 80px;
+    max-width: 140px;
+}
+
+.phone-separator {
+    font-size: 18px;
+    color: #999;
+    margin: 0 4px;
+}
+
+/* ---- 이메일 input row ---- */
+.email-input-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-input.email-local {
+    width: 165px;
+}
+
+.email-separator {
+    font-size: 18px;
+    color: #999;
+    margin: 0 4px;
+}
+
+.form-input.email-domain-static {
+    width: 165px;
+}
+
+@media (max-width: 900px) {
+    .main-content {
+        flex-direction: column;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+
+    .form-input.phone-carrier,
+    .form-input.phone-middle,
+    .form-input.phone-last,
+    .form-input.email-local,
+    .form-input.email-domain-static {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .form-button {
+        width: 100px;
+    }
 }
 
 /* Modal Styles */
@@ -210,17 +289,25 @@
     font-weight: 500;
 }
 
-.email-input {
-    flex: 1;
+/* -- Modal 이메일/전화번호 인풋 사이즈 -- */
+.email-input,
+.email-input.email-local,
+.email-input.email-custom-domain,
+.email-input.email-domain-select {
     border: 1px solid #e0e0e0;
     border-radius: 6px;
     padding: 12px 14px;
     font-size: 14px;
     outline: none;
+    width: 500px;
 }
 
 .email-input:focus {
     border-color: #60a5fa;
+}
+
+.email-input.email-custom-domain {
+    margin-left: 5px;
 }
 
 .verify-btn,
@@ -279,38 +366,6 @@
     background: #e9ecef;
 }
 
-.partner-logo {
-    background: #34495e;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #bdc3c7;
-}
-
-.footer-right {
-    text-align: right;
-}
-
-.contact-info {
-    color: #bdc3c7;
-}
-
-.phone {
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
-    margin-bottom: 5px;
-}
-
-.hours,
-.lunch,
-.copyright {
-    font-size: 12px;
-    line-height: 1.4;
-    margin-bottom: 3px;
-}
-
-/* Responsive Design */
 @media (max-width: 768px) {
     .header-content {
         flex-direction: column;
