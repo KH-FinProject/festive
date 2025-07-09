@@ -106,7 +106,7 @@ public class SecurityConfig {
             .requestMatchers("/api/travel-course/**").authenticated()
 
             // 신고 - 등록/상세만 공개, 나머지는 관리자
-            .requestMatchers(HttpMethod.POST, "/api/reports").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
             .requestMatchers(HttpMethod.GET, "/api/reports/*", "/api/reports/*/detail").permitAll()
             .requestMatchers("/api/reports/**").hasRole("ADMIN")
 

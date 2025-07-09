@@ -22,13 +22,12 @@ const AdminCustomerReportDetail = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/reports/${reportNo}/detail`
-      );
-      if (!response.ok) throw new Error("상세 조회 실패");
-      const data = await response.json();
-
-      setDetail(data);
+      const response = await axiosApi.get(`/api/reports/${reportNo}/detail`);
+      if (response.status >= 200 && response.status < 300) {
+        setDetail(response.data);
+      } else {
+        throw new Error("상세 조회 실패");
+      }
     } catch {
       setError("상세 정보를 불러오지 못했습니다.");
     } finally {

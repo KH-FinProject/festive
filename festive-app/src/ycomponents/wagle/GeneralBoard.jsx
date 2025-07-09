@@ -5,6 +5,7 @@ import "./GeneralBoard.css";
 import { useNavigate } from "react-router-dom";
 import Pagination from "./Pagination";
 import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
+import axiosApi from "../../api/axiosAPI";
 
 const PAGE_SIZE = 7;
 
@@ -45,59 +46,54 @@ function GeneralBoard({ hideWriteBtn }) {
         params.append("searchKeyword", searchKeywordParam);
       }
 
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards?${params}`
-      );
+      const response = await axiosApi.get(`/api/wagle/boards?${params}`);
+      if (response.status >= 200 && response.status < 300) {
+        const data = response.data;
 
-      if (!response.ok) {
-        throw new Error("게시글을 불러오는데 실패했습니다.");
-      }
+        // 데이터 형식 변환
+        const formattedPosts = data.boardList.map((post) => {
+          // 날짜 포맷팅 함수
+          const formatDate = (dateString) => {
+            if (!dateString) return "날짜 없음";
 
-      const data = await response.json();
+            try {
+              const date = new Date(dateString);
+              if (isNaN(date.getTime())) {
+                console.warn("Invalid date:", dateString);
+                return "날짜 오류";
+              }
 
-      // 데이터 형식을 기존 포맷에 맞게 변환
-      const formattedPosts = data.boardList.map((post) => {
-        // 날짜 포맷팅 함수
-        const formatDate = (dateString) => {
-          if (!dateString) return "날짜 없음";
-
-          try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) {
-              console.warn("Invalid date:", dateString);
+              return date
+                .toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+                .replace(/\. /g, ".")
+                .replace(".", ".");
+            } catch (error) {
+              console.error("날짜 포맷팅 오류:", error, dateString);
               return "날짜 오류";
             }
+          };
 
-            return date
-              .toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-              .replace(/\. /g, ".")
-              .replace(".", ".");
-          } catch (error) {
-            console.error("날짜 포맷팅 오류:", error, dateString);
-            return "날짜 오류";
-          }
-        };
+          return {
+            id: post.boardNo,
+            title: post.boardTitle,
+            author: post.memberNickname,
+            memberProfileImage: post.memberProfileImage,
+            date: formatDate(post.boardCreateDate),
+            likes: post.boardLikeCount,
+            views: post.boardViewCount,
+          };
+        });
 
-        return {
-          id: post.boardNo,
-          title: post.boardTitle,
-          author: post.memberNickname,
-          memberProfileImage: post.memberProfileImage,
-          date: formatDate(post.boardCreateDate),
-          likes: post.boardLikeCount,
-          views: post.boardViewCount,
-        };
-      });
-
-      setPosts(formattedPosts);
-      setTotalPages(data.totalPages);
-      setCurrentPage(data.currentPage);
+        setPosts(formattedPosts);
+        setTotalPages(data.totalPages);
+        setCurrentPage(data.currentPage);
+      }
     } catch (err) {
       console.error("게시글 로딩 실패:", err);
       setError(err.message);

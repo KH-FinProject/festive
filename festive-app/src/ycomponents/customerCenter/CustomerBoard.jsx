@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import axiosApi from "../../api/axiosAPI";
 
 const CustomerBoard = ({
   currentPage,
@@ -28,47 +29,42 @@ const CustomerBoard = ({
         params.append("searchKeyword", searchQuery);
       }
 
-      const response = await fetch(
-        `http://localhost:8080/api/customer/boards?${params}`
-      );
+      const response = await axiosApi.get(`/api/customer/boards?${params}`);
+      if (response.status >= 200 && response.status < 300) {
+        const data = response.data;
 
-      if (!response.ok) {
-        throw new Error("게시글을 불러오는데 실패했습니다.");
-      }
+        // 데이터 형식 변환 (inquiryList 사용)
+        const formattedPosts = (data.inquiryList || []).map((post) => {
+          return {
+            id: post.boardNo,
+            title: post.boardTitle,
+            author: post.memberNickname || "익명",
+            memberProfileImage: post.memberProfileImage,
+            date: post.boardCreateDate
+              ? new Date(post.boardCreateDate)
+                  .toLocaleDateString("ko-KR", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                  .replace(/\. /g, ".")
+                  .replace(".", ".")
+              : "날짜 없음",
+            likes: post.boardLikeCount || 0,
+            views: post.boardViewCount || 0,
+            status: post.inquiryStatus || "대기중", // 고객센터 전용 상태 정보
+            hasAnswer: post.hasAnswer || false, // 답변 여부
+          };
+        });
 
-      const data = await response.json();
+        setPosts(formattedPosts);
 
-      // 데이터 형식 변환 (inquiryList 사용)
-      const formattedPosts = (data.inquiryList || []).map((post) => {
-        return {
-          id: post.boardNo,
-          title: post.boardTitle,
-          author: post.memberNickname || "익명",
-          memberProfileImage: post.memberProfileImage,
-          date: post.boardCreateDate
-            ? new Date(post.boardCreateDate)
-                .toLocaleDateString("ko-KR", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-                .replace(/\. /g, ".")
-                .replace(".", ".")
-            : "날짜 없음",
-          likes: post.boardLikeCount || 0,
-          views: post.boardViewCount || 0,
-          status: post.inquiryStatus || "대기중", // 고객센터 전용 상태 정보
-          hasAnswer: post.hasAnswer || false, // 답변 여부
-        };
-      });
-
-      setPosts(formattedPosts);
-
-      // 총 페이지 수 업데이트
-      if (onTotalPagesChange) {
-        onTotalPagesChange(data.totalPages || 1);
+        // 총 페이지 수 업데이트
+        if (onTotalPagesChange) {
+          onTotalPagesChange(data.totalPages || 1);
+        }
       }
     } catch (err) {
       console.error("게시글 로딩 실패:", err);

@@ -14,6 +14,7 @@ import NoticeBoard from "./NoticeBoard";
 import useAuthStore from "../../store/useAuthStore";
 import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 import { Viewer } from "@toast-ui/react-editor";
+import axiosApi from "../../api/axiosAPI.js";
 
 function CommentItem({
   comment,
@@ -295,15 +296,9 @@ function ReportModal({ isOpen, onClose, onSubmit, reportData, currentUser }) {
         reportBoardNo: reportData.targetId,
       };
 
-      const response = await fetch("http://localhost:8080/api/reports", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reportPayload),
-      });
+      const response = await axiosApi.post("/api/reports", reportPayload);
 
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         alert("신고가 성공적으로 접수되었습니다.");
         onSubmit(reportPayload);
       } else {
@@ -391,42 +386,37 @@ function WagleDetail() {
   const fetchPostDetail = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards/${id}`
-      );
-
-      if (!response.ok) {
+      const response = await axiosApi.get(`/api/wagle/boards/${id}`);
+      if (response.status >= 200 && response.status < 300) {
+        const data = response.data;
+        // 데이터 형식 변환
+        const formattedPost = {
+          id: data.boardNo,
+          boardTypeNo: data.boardTypeNo,
+          title: data.boardTitle,
+          author: data.memberNickname,
+          date: new Date(data.boardCreateDate)
+            .toLocaleDateString("ko-KR", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+            .replace(/\. /g, ".")
+            .replace(".", "."),
+          content: data.boardContent,
+          views: data.boardViewCount,
+          likes: data.boardLikeCount,
+          commentCount: data.boardCommentCount,
+          images: data.boardImages || [],
+          memberNo: data.memberNo,
+          memberProfileImage: data.memberProfileImage,
+        };
+        setPost(formattedPost);
+      } else {
         throw new Error("게시글을 불러오는데 실패했습니다.");
       }
-
-      const data = await response.json();
-
-      // 데이터 형식 변환
-      const formattedPost = {
-        id: data.boardNo,
-        boardTypeNo: data.boardTypeNo,
-        title: data.boardTitle,
-        author: data.memberNickname,
-        date: new Date(data.boardCreateDate)
-          .toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-          .replace(/\. /g, ".")
-          .replace(".", "."),
-        content: data.boardContent,
-        views: data.boardViewCount,
-        likes: data.boardLikeCount,
-        commentCount: data.boardCommentCount,
-        images: data.boardImages || [],
-        memberNo: data.memberNo,
-        memberProfileImage: data.memberProfileImage,
-      };
-
-      setPost(formattedPost);
     } catch (err) {
       console.error("게시글 로딩 실패:", err);
       setError(err.message);
@@ -438,13 +428,9 @@ function WagleDetail() {
   // 댓글 목록 가져오기
   const fetchComments = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards/${id}/comments`
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setComments(data);
+      const response = await axiosApi.get(`/api/wagle/boards/${id}/comments`);
+      if (response.status >= 200 && response.status < 300) {
+        setComments(response.data);
       }
     } catch (err) {
       console.error("댓글 로딩 실패:", err);
@@ -454,18 +440,10 @@ function WagleDetail() {
   // 좋아요 상태 확인
   const checkLikeStatus = async () => {
     if (!member) return;
-
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards/${id}/like/check`,
-        {
-          credentials: "include",
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setLiked(data.liked);
+      const response = await axiosApi.get(`/api/wagle/boards/${id}/like/check`);
+      if (response.status >= 200 && response.status < 300) {
+        setLiked(response.data.liked);
       }
     } catch (err) {
       console.error("좋아요 상태 확인 실패:", err);
@@ -487,21 +465,10 @@ function WagleDetail() {
       navigate("/signin");
       return;
     }
-
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards/${id}/like`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
+      const response = await axiosApi.post(`/api/wagle/boards/${id}/like`);
+      if (response.status >= 200 && response.status < 300) {
+        const data = response.data;
         setLiked(data.action === "like");
         setPost((prev) => ({ ...prev, likes: data.likeCount }));
       } else {
@@ -526,21 +493,14 @@ function WagleDetail() {
     }
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards/${id}/comments`,
+      const response = await axiosApi.post(
+        `/api/wagle/boards/${id}/comments`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            commentContent: newComment,
-          }),
+            commentContent: newComment
         }
       );
 
-      if (response.ok) {
+      if (response.status >= 200 && response.status < 300) {
         setNewComment("");
         fetchComments(); // 댓글 목록 새로고침
         fetchPostDetail(); // 댓글 수 업데이트를 위해 게시글 정보도 새로고침
@@ -560,27 +520,15 @@ function WagleDetail() {
       navigate("/signin");
       return;
     }
-
     // 닉네임 체크
     const canProceed = await checkNicknameForSocialUser(navigate);
     if (!canProceed) return;
-
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards/${id}/comments`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            commentContent: replyContent,
-            commentParentNo: parentCommentNo,
-          }),
-        }
-      );
-      if (response.ok) {
+      const response = await axiosApi.post(`/api/wagle/boards/${id}/comments`, {
+        commentContent: replyContent,
+        commentParentNo: parentCommentNo,
+      });
+      if (response.status >= 200 && response.status < 300) {
         fetchComments();
         fetchPostDetail();
       } else {
@@ -600,20 +548,10 @@ function WagleDetail() {
       return;
     }
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/comments/${commentNo}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            commentContent: newContent,
-          }),
-        }
-      );
-      if (response.ok) {
+      const response = await axiosApi.put(`/api/wagle/comments/${commentNo}`, {
+        commentContent: newContent,
+      });
+      if (response.status >= 200 && response.status < 300) {
         fetchComments();
         fetchPostDetail();
       } else {
@@ -633,14 +571,8 @@ function WagleDetail() {
       return;
     }
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/comments/${commentNo}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-      if (response.ok) {
+      const response = await axiosApi.delete(`/api/wagle/comments/${commentNo}`);
+      if (response.status >= 200 && response.status < 300) {
         fetchComments();
         fetchPostDetail();
       } else {
@@ -668,14 +600,8 @@ function WagleDetail() {
       return;
     }
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/wagle/boards/${id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-      if (response.ok) {
+      const response = await axiosApi.delete(`/api/wagle/boards/${id}`);
+      if (response.status >= 200 && response.status < 300) {
         alert("게시글이 삭제되었습니다.");
         navigate("/wagle");
       } else {

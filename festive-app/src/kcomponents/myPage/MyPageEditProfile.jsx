@@ -181,17 +181,17 @@ const MyPageEditProfile = () => {
       if (newProfileImageFile) {
         formData.append("profileImage", newProfileImageFile);
       }
-      const response = await fetch(
-        "http://localhost:8080/mypage/edit-profile",
+      const response = await axiosApi.post(
+        "/mypage/edit-profile",
+        formData,
         {
-          method: "POST",
-          credentials: "include",
-          body: formData,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
-      const data = await response.json();
-
-      if (response.ok) {
+      const data = response.data;
+      if (response.status >= 200 && response.status < 300) {
         // 닉네임이 변경되었으면 스토어 업데이트
         if (profileData.nickname !== originalNicknameRef.current) {
           updateNickname(profileData.nickname);

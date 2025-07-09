@@ -3,6 +3,7 @@ import Title from "./Title";
 import "./CustomerDetail.css";
 import { useNavigate, useParams } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
+import axiosApi from "../../api/axiosAPI";
 
 function CustomerDetail() {
   const { id } = useParams();
@@ -16,41 +17,18 @@ function CustomerDetail() {
   const fetchPostDetail = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `http://localhost:8080/api/customer/boards/${id}`
-      );
+      const response = await axiosApi.get(`/api/customer/boards/${id}`);
+      if (response.status >= 200 && response.status < 300) {
+        const data = response.data;
 
-      if (!response.ok) {
-        throw new Error("게시글을 불러오는데 실패했습니다.");
-      }
-
-      const data = await response.json();
-
-      // 데이터 형식 변환 (CustomerInquiryDto 사용)
-      const formattedPost = {
-        id: data.boardNo,
-        memberNo: data.memberNo, // 작성자 회원번호 추가
-        title: data.boardTitle,
-        author: data.memberNickname || "익명",
-        memberProfileImage: data.memberProfileImage, // 프로필 이미지 추가
-        date: new Date(data.boardCreateDate)
-          .toLocaleDateString("ko-KR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
-          .replace(/\. /g, ".")
-          .replace(".", "."),
-        content: data.boardContent,
-        views: data.boardViewCount,
-        // 고객센터 전용 정보
-        status: data.inquiryStatus || "대기중",
-        hasAnswer: data.hasAnswer || false,
-        answerContent: data.answerContent,
-        answerDate: data.answerDate
-          ? new Date(data.answerDate)
+        // 데이터 형식 변환 (CustomerInquiryDto 사용)
+        const formattedPost = {
+          id: data.boardNo,
+          memberNo: data.memberNo, // 작성자 회원번호 추가
+          title: data.boardTitle,
+          author: data.memberNickname || "익명",
+          memberProfileImage: data.memberProfileImage, // 프로필 이미지 추가
+          date: new Date(data.boardCreateDate)
             .toLocaleDateString("ko-KR", {
               year: "numeric",
               month: "2-digit",
@@ -59,14 +37,34 @@ function CustomerDetail() {
               minute: "2-digit",
             })
             .replace(/\. /g, ".")
-            .replace(".", ".")
-            .slice(0, -1)
-          : null,
-        priority: data.priority || "일반",
-        category: data.category || "기타",
-      };
+            .replace(".", "."),
+          content: data.boardContent,
+          views: data.boardViewCount,
+          // 고객센터 전용 정보
+          status: data.inquiryStatus || "대기중",
+          hasAnswer: data.hasAnswer || false,
+          answerContent: data.answerContent,
+          answerDate: data.answerDate
+            ? new Date(data.answerDate)
+              .toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+              .replace(/\. /g, ".")
+              .replace(".", ".")
+              .slice(0, -1)
+            : null,
+          priority: data.priority || "일반",
+          category: data.category || "기타",
+        };
 
-      setPost(formattedPost);
+        setPost(formattedPost);
+      } else {
+        throw new Error("게시글을 불러오는데 실패했습니다.");
+      }
     } catch (err) {
       console.error("게시글 로딩 실패:", err);
       setError(err.message);
@@ -107,15 +105,8 @@ function CustomerDetail() {
     }
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/customer/boards/${id}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-
-      if (response.ok) {
+      const response = await axiosApi.delete(`/api/customer/boards/${id}`);
+      if (response.status >= 200 && response.status < 300) {
         alert("문의글이 삭제되었습니다.");
         navigate("/customer-center");
       } else {
