@@ -21,6 +21,7 @@ import AITravelCourse from "./ycomponents/aitravel/AITravelCourse.jsx";
 import AIChatbot from "./ycomponents/aitravel/AIChatbot.jsx";
 import TravelCourseDetail from "./ycomponents/aitravel/TravelCourseDetail.jsx";
 import AdminRoutes from "./mcomponents/Admin.jsx";
+import AdminRouteGuard from "./mcomponents/AdminRouteGuard.jsx";
 import Booth from "./scomponents/booth/Booth.jsx";
 import LocalFestive from "./jcomponents/LocalFestive/LocalFestive.jsx";
 import FestivalDetail from "./mcomponents/FestivalDetail";
@@ -58,7 +59,11 @@ const AppRoutes = () => {
         <Route path="/mypage/mycomment" element={<MyPageMyComment />} />
         <Route path="/mypage/withdrawal" element={<MyPageWithdrawal />} />
         <Route path="/booth" element={<Booth />} />
-        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="/admin/*" element={
+          <AdminRouteGuard>
+            <AdminRoutes />
+          </AdminRouteGuard>
+        } />
         <Route
           path="/festival/detail/:contentId"
           element={<FestivalDetail />}

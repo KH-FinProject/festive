@@ -201,6 +201,20 @@ public class AdminController {
 		
 	}
     
+    // 현재 인증된 관리자 정보 반환
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentAdmin(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("인증 필요");
+        }
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof CustomUserDetails)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 인증 정보");
+        }
+        CustomUserDetails userDetails = (CustomUserDetails) principal;
+        return ResponseEntity.ok(
+            java.util.Map.of("role", userDetails.getRole())
+        );
+    }
     
-	
 }
