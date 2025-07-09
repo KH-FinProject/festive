@@ -59,6 +59,13 @@
   width: 100%;
 }
 
+.headernav-link.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
 .headerheader-right {
   display: flex;
   flex-wrap: wrap;

@@ -1,5 +1,4 @@
 import axios from "axios";
-import useAuthStore from "../store/useAuthStore";
 
 const axiosApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
@@ -42,10 +41,6 @@ axiosApi.interceptors.response.use(
       // 토큰 갱신 요청 자체인 경우는 재시도하지 않고 바로 로그아웃
       if (originalRequest.url?.includes("/auth/refresh")) {
         console.error("토큰 갱신 실패:", error);
-
-        // useAuthStore 초기화 및 로그아웃
-        const { logout } = useAuthStore.getState();
-        logout();
 
         return Promise.reject(error);
       }
@@ -106,11 +101,10 @@ axiosApi.interceptors.response.use(
         console.error("토큰 갱신 실패:", refreshError);
         console.error("토큰 갱신 응답:", refreshError.response?.data);
 
-        // useAuthStore 초기화 및 로그아웃
-        const { logout } = useAuthStore.getState();
-        logout();
-
-        return Promise.reject(refreshError);
+        // useAuthStore 초기화 및 로그아웃 직접 호출하지 않음
+        // logout();
+        // 대신 특수 에러 throw
+        return Promise.reject({ ...refreshError, isAuthExpired: true });
       } finally {
         isRefreshing = false;
       }

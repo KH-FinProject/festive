@@ -18,11 +18,9 @@ const useAuth = () => {
       } catch (error) {
         // 401 오류는 정상적인 상황 (로그인되지 않은 상태)
         if (error.response?.status === 401) {
-          console.log("인증되지 않은 상태입니다.");
           // 서버에서 인증되지 않았다고 응답하면 로컬 상태도 초기화
           logout();
         } else {
-          console.error("앱 초기화 중 인증 확인 오류:", error);
           // 네트워크 오류 등으로 인해 서버에 접근할 수 없는 경우에는 
           // 기존 상태를 유지 (로그아웃하지 않음)
         }
@@ -30,10 +28,6 @@ const useAuth = () => {
     };
     initializeAuth();
   }, []);
-
-  useEffect(() => {
-    console.log("현재 인증 상태:", { isLoggedIn, member });
-  }, [isLoggedIn, member]);
 };
 
 export default useAuth;
