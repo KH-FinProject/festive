@@ -2,15 +2,11 @@ package com.project.festive.festiveserver.customer.controller;
 
 import com.project.festive.festiveserver.customer.dto.CustomerInquiryDto;
 import com.project.festive.festiveserver.customer.service.CustomerService;
-import com.project.festive.festiveserver.wagle.dto.BoardDto;
 import com.project.festive.festiveserver.wagle.dto.CommentDto;
-import com.project.festive.festiveserver.common.util.JwtUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.context.SecurityContextHolder;
 import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 
@@ -21,12 +17,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/customer")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @Slf4j
 public class CustomerController {
     
     private final CustomerService customerService;
-    private final JwtUtil jwtUtil;
     
     /**
      * 고객센터 게시글 목록 조회 (페이징)
@@ -67,10 +61,9 @@ public class CustomerController {
      * 고객센터 문의글 작성
      */
     @PostMapping("/boards")
-    public ResponseEntity<String> createCustomerBoard(@RequestBody CustomerInquiryDto inquiryDto) {
+    public ResponseEntity<String> createCustomerBoard(Authentication authentication, @RequestBody CustomerInquiryDto inquiryDto) {
         try {
             // 안전한 인증 정보 추출
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return ResponseEntity.status(401).body("인증 정보가 없습니다.");
             }
@@ -158,11 +151,10 @@ public class CustomerController {
      * 고객센터 답변 작성 (관리자용)
      */
     @PostMapping("/boards/{boardNo}/comments")
-    public ResponseEntity<String> createCustomerComment(@PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
+    public ResponseEntity<String> createCustomerComment(Authentication authentication, @PathVariable("boardNo") Long boardNo, @RequestBody CommentDto commentDto) {
         try {
             // 관리자 권한 확인 로직 추가 (생략)
             // 로그인 사용자 정보에서 memberNo 가져오기
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || authentication.getPrincipal() == null) {
                 return ResponseEntity.status(401).body("인증 정보가 없습니다.");
             }

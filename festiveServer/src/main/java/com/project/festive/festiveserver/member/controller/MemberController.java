@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,12 +31,10 @@ public class MemberController {
      * 소셜 계정 사용자의 닉네임 체크 (DB에서 최신 정보 조회, memberNo만 사용)
      */
     @GetMapping("/check-nickname")
-    public ResponseEntity<Map<String, Object>> checkNicknameForSocialUser() {
+    public ResponseEntity<Map<String, Object>> checkNicknameForSocialUser(Authentication authentication) {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
             if (authentication == null || authentication.getPrincipal() == null) {
                 response.put("success", false);
                 response.put("message", "인증 정보가 없습니다.");
