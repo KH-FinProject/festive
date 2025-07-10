@@ -37,21 +37,19 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class MyPageServiceImpl implements MyPageService {
-   
-   private final MyPageMapper mapper;
+
+    private final MyPageMapper mapper;
     private final PasswordEncoder passwordEncoder;
-    
-    @Autowired    
+
+    @Autowired
     private final RestTemplate restTemplate; // 외부 API 호출을 위한 RestTemplate
     private final ObjectMapper objectMapper; // JSON 파싱을 위한 ObjectMapper
 
     @Value("${tour.api.key}")
     private String serviceKey;
-    
-    
+
     @Value("${file.upload-dir}") // 설정 파일에서 경로를 주입받음
     private String uploadDir;
-
 
     // 회원 탈퇴
     @Override
@@ -62,14 +60,14 @@ public class MyPageServiceImpl implements MyPageService {
         if (encodedPw != null && passwordEncoder.matches(password, encodedPw)) {
             return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
         }
-        
-        if(password == null) {
-        	return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
+
+        if (password == null) {
+            return mapper.withdrawal(memberNo) > 0; // 탈퇴 처리
         }
 
         return false;
     }
-    
+
     // 비밀번호 변경
     @Override
     public boolean changePw(Long memberNo, String currentPw, String newPw) {
@@ -80,27 +78,28 @@ public class MyPageServiceImpl implements MyPageService {
         }
         return false;
     }
-    
+
     // 비밀번호 변경 시 현재 비밀번호 확인
     @Override
     public boolean checkPassword(Long memberNo, String rawPassword) {
         String encodedPassword = mapper.selectPw(memberNo);
-        if (encodedPassword == null) return false;
+        if (encodedPassword == null)
+            return false;
         return passwordEncoder.matches(rawPassword, encodedPassword);
     }
-    
+
     // 내가 작성한 게시글 조회
     @Override
     public List<BoardDto> getMyPosts(Long memberNo) {
         return mapper.selectMyPosts(memberNo);
     }
-    
+
     // 내가 작성한 댓글 조회
     @Override
     public List<CommentDto> getMyComments(Long memberNo) {
-       return mapper.selectMyComments(memberNo);
+        return mapper.selectMyComments(memberNo);
     }
-    
+
     // 회원 정보 조회
     @Override
     public MemberDto getMyInfo(Long memberNo) {
@@ -115,7 +114,7 @@ public class MyPageServiceImpl implements MyPageService {
         mapper.updateMyInfo(updatedInfo); // MemberDto 객체 전체를 전달
         return true;
     }
-    
+
     @Override
     public MemberDto getProfileInfo(Long memberNo) {
         return mapper.selectProfileInfo(memberNo);
@@ -160,13 +159,13 @@ public class MyPageServiceImpl implements MyPageService {
         int result = mapper.updateProfile(memberNo, nickname, profileImagePath);
         return result > 0;
     }
-    
+
     @Override
     public boolean resetProfileImage(Long memberNo) {
         int result = mapper.resetProfileImage(memberNo);
         return result > 0;
     }
-    
+
     @Override
     public List<MyCalendarDto> getFavoriteFestivals(long memberNo) {
         List<String> myFavoriteContentIds = mapper.selectContentIdsByMemberNo(memberNo);
@@ -186,10 +185,10 @@ public class MyPageServiceImpl implements MyPageService {
                     dto.setTitle(festivalData.path("title").asText());
                     dto.setStartDate(festivalData.path("eventstartdate").asText());
                     dto.setEndDate(festivalData.path("eventenddate").asText());
-                    
+
                     // 여기를 수정! 'addr1' 값을 place 필드에 설정합니다.
-                    dto.setPlace(festivalData.path("addr1").asText()); 
-                    
+                    dto.setPlace(festivalData.path("addr1").asText());
+
                     resultList.add(dto);
                 }
             }
@@ -201,9 +200,7 @@ public class MyPageServiceImpl implements MyPageService {
         }
     }
 
-    /**
-     * searchFestival2 API를 호출하여 모든 축제 정보를 Map<contentId, festivalData> 형태로 반환합니다.
-     */
+    // searchFestival2 API를 호출하여 모든 축제 정보를 Map<contentId, festivalData> 형태로 반환합니다.
     private Map<String, JsonNode> getAllFestivalsAsMap() throws Exception {
         String apiUrl = "https://apis.data.go.kr/B551011/KorService2/searchFestival2";
         URI uri = UriComponentsBuilder.fromHttpUrl(apiUrl)
@@ -233,5 +230,5 @@ public class MyPageServiceImpl implements MyPageService {
     public void removeFavorite(long memberNo, String contentId) {
         mapper.deleteFavorite(memberNo, contentId);
     }
-    
+
 }
