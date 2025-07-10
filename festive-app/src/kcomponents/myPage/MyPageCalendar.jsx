@@ -85,6 +85,7 @@ const MyPageCalendar = () => {
         return grouped;
     }, [festivals]);
 
+    // API로 축제 목록 가져오기
     const calendarEvents = useMemo(() => {
         let events = [];
         Object.entries(eventsByMonth).forEach(([month, festList]) => {
