@@ -12,7 +12,7 @@ import useAuthStore from "../../store/useAuthStore";
 import Pagination, { usePagination } from "./Pagination";
 import axiosApi from "../../api/axiosAPI";
 
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 2;
 
 const MONTHLY_PASTEL_PALETTES = {
     1: ["#ffe9ec", "#fff1f7", "#ffeef4", "#ffd6e9"],
