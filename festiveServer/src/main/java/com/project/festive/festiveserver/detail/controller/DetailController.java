@@ -136,7 +136,6 @@ public class DetailController {
 		try {
 
 			int result = service.selectLikes(contentId);
-			System.out.println("상태보기 : " + result);
 			return ResponseEntity.status(HttpStatus.OK).body(result);
 
 		} catch (Exception e) {
@@ -189,8 +188,6 @@ public class DetailController {
 		try {
 
 			List<BoothRequestDto> boothList = service.selectBoothList(contentId);
-			System.out.println("BoothList 사이즈 : " + boothList.size());
-			System.out.println("BoothList 상태보기 : " + boothList);
 			return ResponseEntity.status(HttpStatus.OK).body(boothList);
 
 		} catch (Exception e) {
