@@ -141,6 +141,7 @@
 		WHERE MEMBER_NO = #{memberNo}
 	</update>
 
+	<!-- 찜한 축제 목록 조회 -->
 	<select id="selectContentIdsByMemberNo">
 		SELECT
 		CONTENT_ID
@@ -150,6 +151,7 @@
 		MEMBER_NO = #{memberNo}
 	</select>
 
+	<!-- 찜한 축제 해제 -->
 	<delete id="deleteFavorite">
 		DELETE FROM
 		FAVORITES
