@@ -1,6 +1,6 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import MainPage from "./scomponents/mainPage/mainPage.jsx";
+import MainPage from "./scomponents/mainPage/MainPage.jsx";
 import Signin from "./jcomponents/Signin/Signin.jsx";
 import Signup from "./jcomponents/Signup/Signup.jsx";
 import WaglePage from "./ycomponents/wagle/WaglePage.jsx";
