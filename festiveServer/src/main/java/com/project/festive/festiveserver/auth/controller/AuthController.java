@@ -43,7 +43,6 @@ public class AuthController {
 
     @GetMapping("userInfo")
     public ResponseEntity<?> userInfo(HttpServletRequest request) {
-        log.info("userInfo API 호출");
 
         try {
             Cookie cookie = WebUtils.getCookie(request, "accessToken");
@@ -142,7 +141,6 @@ public class AuthController {
 
     @PostMapping("login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        log.info("login API 호출");
 
         Map<String, Object> result = authService.login(request);
 
@@ -168,8 +166,10 @@ public class AuthController {
                     .build();
 
             ResponseEntity<Object> response = ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-                    .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                    .headers(headers -> {
+                        headers.add(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+                        headers.add(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+                    })
                     .body(result.get("loginResponse"));
 
             return response;

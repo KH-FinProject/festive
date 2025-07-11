@@ -20,7 +20,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     private final MemberDto memberDto;
 
-    // UserDetails 구현
+    // UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + memberDto.getRole()));
@@ -36,7 +36,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
         return memberDto.getEmail();
     }
     
-    // OAuth2User 구현
+    // OAuth2User
     @Override
     public Map<String, Object> getAttributes() {
         return null; // OAuth2 속성은 사용하지 않음
@@ -44,10 +44,9 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return memberDto.getEmail(); // OAuth2User의 getName()은 식별자로 사용
+        return memberDto.getEmail();
     }
 
-    // 편의 메서드들
     public Long getMemberNo() {
         return memberDto.getMemberNo();
     }
@@ -57,7 +56,7 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     }
 
     public String getUserName() {
-        return memberDto.getName(); // 사용자 실제 이름
+        return memberDto.getName();
     }
 
     public String getNickname() {

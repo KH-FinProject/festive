@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -76,7 +75,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       String redirectUrl = System.getProperty("spring.profiles.active", "local").equals("prod") 
           ? "https://www.festivekorea.site/" 
           : "http://localhost:5173/";
-      response.sendRedirect(redirectUrl);
+      getRedirectStrategy().sendRedirect(request, response, redirectUrl);
 
     } catch (Exception e) {
       log.error("OAuth2 로그인 성공 처리 중 오류 발생: {}", e.getMessage(), e);
@@ -86,7 +85,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String errorRedirectUrl = System.getProperty("spring.profiles.active", "local").equals("prod") 
             ? "https://www.festivekorea.site/signin?error=oauth_failed" 
             : "http://localhost:5173/signin?error=oauth_failed";
-        response.sendRedirect(errorRedirectUrl);
+        getRedirectStrategy().sendRedirect(request, response, errorRedirectUrl);
       }
     }
   }
