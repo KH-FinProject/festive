@@ -81,7 +81,7 @@ public class SecurityConfig {
             .requestMatchers("/area/**").permitAll()
 
             // 축제 페이지
-            .requestMatchers("/festival/**").permitAll()
+            .requestMatchers("/api/festival/**").permitAll()
             
             // 관리자 페이지
             .requestMatchers("/admin/**").hasRole("ADMIN")

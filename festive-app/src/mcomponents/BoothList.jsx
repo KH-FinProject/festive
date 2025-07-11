@@ -7,7 +7,7 @@ export default function BoothList({ contentId }) {
 
   const fetchBoothList = async () => {
     try {
-      const resp = await axiosApi.get("/festival/detail/BoothList", {
+      const resp = await axiosApi.get("/api/festival/detail/BoothList", {
         params: {
           contentId: contentId,
         },
