@@ -78,7 +78,7 @@ export default defineConfig({
 
       /* 웹소켓 연결을 위한 설정 : 성원*/
       "/ws": {
-        target: "http://localhost:8080",
+        target: "http://api.festivekorea.site:8443",
         ws: true,
         changeOrigin: true,
       },
