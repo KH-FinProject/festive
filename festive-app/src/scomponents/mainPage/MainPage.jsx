@@ -26,7 +26,7 @@ function MainPage() {
           items.map(async (festival) => {
             let likeCount = 0;
             try {
-              const likeRes = await axiosApi.get("/festival/detail/likes", {
+              const likeRes = await axiosApi.get("/api/festival/detail/likes", {
                 params: { contentId: festival.contentid },
               });
               likeCount = likeRes.data;

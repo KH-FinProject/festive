@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.WebUtils;
 
 import com.project.festive.festiveserver.booth.dto.BoothRequestDto;
-import com.project.festive.festiveserver.common.handler.GlobalExceptionHandler;
 import com.project.festive.festiveserver.common.util.JwtUtil;
 import com.project.festive.festiveserver.detail.model.dto.FavoritesDto;
 import com.project.festive.festiveserver.detail.model.dto.LikesDto;
@@ -26,15 +25,12 @@ import com.project.festive.festiveserver.detail.model.service.DetailService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/festival/detail")
+@RequestMapping("/api/festival/detail")
 @CrossOrigin(origins = "http://localhost:5173")
 public class DetailController {
-
-	private final GlobalExceptionHandler globalExceptionHandler;
 
 	@Autowired
 	private DetailService service;
@@ -42,9 +38,6 @@ public class DetailController {
 	@Autowired
 	private JwtUtil jwtUtil;
 
-	DetailController(GlobalExceptionHandler globalExceptionHandler) {
-		this.globalExceptionHandler = globalExceptionHandler;
-	}
 
 	// 쿠키에서 accessToken 추출하는 헬퍼 메서드
 	private String getAccessTokenFromCookie(HttpServletRequest request) {

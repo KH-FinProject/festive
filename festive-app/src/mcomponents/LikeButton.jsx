@@ -13,7 +13,7 @@ const LikeButton = ({ contentId }) => {
   // 좋아요 수 DB에서 조회해오기
   const fetchLikes = async () => {
     try {
-      const resp = await axiosApi.get("/festival/detail/likes", {
+      const resp = await axiosApi.get("/api/festival/detail/likes", {
         params: {
           contentId: contentId,
         },
@@ -30,7 +30,7 @@ const LikeButton = ({ contentId }) => {
     try {
       // 로그인 상태일 경우에만 기존에 찜해두었던 축제인지 확인)
       if (member != null) {
-        const resp = await axiosApi.get("/festival/detail/favorites", {
+        const resp = await axiosApi.get("/api/festival/detail/favorites", {
           params: {
             contentId: contentId,
           },
@@ -63,7 +63,7 @@ const LikeButton = ({ contentId }) => {
       const storedLikes = JSON.parse(localStorage.getItem("likes")) || [];
 
       // 서버에 현재 상태 넘기고 성공 시에만 상태 변경 및 로컬스토리지 업데이트
-      const resp = await axiosApi.post("/festival/detail/likes", {
+      const resp = await axiosApi.post("/api/festival/detail/likes", {
         currLike: isLiked,
         contentId: contentId,
       });
@@ -96,7 +96,7 @@ const LikeButton = ({ contentId }) => {
   // 찜하기 눌렀을 때
   const handleClickFavorite = async () => {
     try {
-      const resp = await axiosApi.post("/festival/detail/favorites", {
+      const resp = await axiosApi.post("/api/festival/detail/favorites", {
         currFavorite: isfavorite,
         contentId: contentId,
       });
