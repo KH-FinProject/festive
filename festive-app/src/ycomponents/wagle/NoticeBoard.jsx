@@ -129,7 +129,7 @@ function NoticeBoard({ hideTitle }) {
                         ? notice.memberProfileImage.startsWith(
                           "/profile-images/"
                         )
-                          ? `http://localhost:8080${notice.memberProfileImage}`
+                          ? `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${notice.memberProfileImage}`
                           : notice.memberProfileImage
                         : "/logo.png"
                     }

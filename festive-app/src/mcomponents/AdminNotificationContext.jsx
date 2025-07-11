@@ -17,8 +17,13 @@ export function AdminNotificationProvider({ children }) {
 
     const connectWebSocket = () => {
       try {
+        // 환경변수에서 API URL 가져오기
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+        // HTTP/HTTPS를 WS/WSS로 변환
+        const wsUrl = apiUrl.replace(/^http/, 'ws');
+        
         // 직접 WebSocket 연결 (SockJS 우회)
-        ws = new WebSocket("ws://localhost:8080/ws/websocket");
+        ws = new WebSocket(`${wsUrl}/ws/websocket`);
 
         ws.onopen = function () {
           // STOMP CONNECT 프레임 수동 전송
