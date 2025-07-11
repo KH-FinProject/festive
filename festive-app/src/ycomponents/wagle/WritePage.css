@@ -1,0 +1,204 @@
+.wagle-write-outer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  min-height: 100vh;
+  background: #fff;
+}
+
+.wagle-header {
+  width: 1160px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-sizing: border-box;
+  margin-top: 30px;
+}
+
+.wagle-main-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 0;
+  line-height: 1.2;
+  letter-spacing: -1px;
+  border-bottom: 2px solid #222;
+  padding-bottom: 8px;
+  width: fit-content;
+  display: inline-block;
+}
+
+.wagle-sub-title {
+  font-size: 14px;
+  color: #999999;
+  font-weight: 400;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.wagle-location {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  color: #888;
+  gap: 4px;
+  margin-top: 33px;
+  margin-bottom: 0;
+}
+
+.wagle-location-home {
+  color: #888;
+  font-weight: 500;
+}
+
+.wagle-location-arrow {
+  font-size: 0.9em;
+  margin: 0 2px;
+}
+
+.wagle-location-current {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.wagle-write-form-container {
+  width: 1160px;
+  margin: 32px auto 0 auto;
+  background: #fafbfc;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 32px 24px 24px 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wagle-write-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+.wagle-write-input-title {
+  font-size: 1.15rem;
+  font-weight: 500;
+  padding: 12px 16px;
+  border: 1.5px solid #d0d0d0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: #fff;
+  color: #222;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.wagle-write-input-title:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.1);
+}
+
+.wagle-write-input-title:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.wagle-write-btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.wagle-write-cancel {
+  background: #e3e3e3;
+  color: #666;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 28px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.wagle-write-cancel:hover:not(:disabled) {
+  background: #cccccc;
+}
+
+.wagle-write-cancel:disabled {
+  background: #f0f0f0;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.wagle-write-submit {
+  background: #60a5fa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 28px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.wagle-write-submit:hover:not(:disabled) {
+  background: #4a86e8;
+}
+
+.wagle-write-submit:disabled {
+  background: #a0c4ff;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Toast UI Editor 커스텀 최소화 */
+.wagle-write-form .toastui-editor-defaultUI {
+  border-radius: 8px;
+  border: 1.5px solid #d0d0d0;
+  background: #fff;
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+.wagle-write-form .toastui-editor-defaultUI.toastui-editor-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 로딩 상태 스타일 */
+.wagle-write-submit:disabled::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

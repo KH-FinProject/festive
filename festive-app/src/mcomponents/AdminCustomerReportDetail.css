@@ -1,0 +1,295 @@
+/* 신고 상세 페이지 전용 스타일 */
+.report-info-section {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.report-info-section .section-title,
+.content-info-section .section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #007bff;
+  padding-left: 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #555;
+  min-width: 120px;
+  margin-right: 12px;
+}
+
+.info-value {
+  color: #333;
+  flex: 1;
+}
+
+.status-0 {
+  color: #ff6b35;
+  font-weight: 600;
+  background: #fff3e0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.status-1 {
+  color: #28a745;
+  font-weight: 600;
+  background: #e8f5e8;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* 콘텐츠 정보 섹션 스타일 */
+.content-info-section {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.content-card {
+  background: #f8f9fa;
+  border: 1px solid #60a5fa;
+  border-radius: 6px;
+  padding: 20px;
+}
+
+.content-details {
+  width: 100%;
+}
+
+.content-header {
+  margin-bottom: 16px;
+}
+
+.content-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.content-id {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.content-date {
+  background: #f3e5f5;
+  color: #7b1fa2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.content-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.content-body {
+  margin-top: 12px;
+}
+
+.content-text {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px;
+  color: #333;
+  line-height: 1.6;
+  min-height: 60px;
+  white-space: pre-wrap;
+}
+
+.comment-content h5,
+.parent-post-info h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  margin: 16px 0 8px 0;
+}
+
+.parent-post-info {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #60a5fa;
+}
+
+.parent-post-meta {
+  margin-bottom: 8px;
+}
+
+.parent-post-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin: 8px 0;
+}
+
+.parent-post-content {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px;
+  color: #666;
+  line-height: 1.6;
+  font-size: 14px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+/* 액션 버튼 스타일 개선 - 신고 상세 페이지 전용 */
+.report-detail-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.report-detail-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.report-detail-sanction-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.report-detail-sanction-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.report-detail-delete-btn {
+  background: #ffc107;
+  color: #212529;
+}
+
+.report-detail-delete-btn:hover {
+  background: #e0a800;
+  transform: translateY(-1px);
+}
+
+.report-detail-process-btn {
+  background: #28a745;
+  color: white;
+}
+
+.report-detail-process-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.report-detail-back-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.report-detail-back-btn:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .content-meta {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .report-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .report-action-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+/* 액션 버튼 컨테이너 스타일 */
+.report-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.report-action-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  text-align: center;
+}
+
+.report-action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.report-action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.report-reply-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.report-reply-btn:hover:not(:disabled) {
+  background: #c82333;
+}

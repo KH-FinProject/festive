@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.project.festive.festiveserver.travel.mapper.TravelCourseMapper">
+
+    <!-- 여행코스 ResultMap -->
+    <resultMap id="TravelCourseResultMap" type="com.project.festive.festiveserver.travel.entity.TravelCourse">
+        <id property="courseNo" column="COURSE_NO"/>
+        <result property="memberNo" column="MEMBER_NO"/>
+        <result property="courseTitle" column="COURSE_TITLE"/>
+        <result property="thumbnailImage" column="THUMBNAIL_IMAGE"/>
+        <result property="regionName" column="REGION_NAME"/>
+        <result property="areaCode" column="AREA_CODE"/>
+        <result property="sigunguCode" column="SIGUNGU_CODE"/>
+        <result property="totalDays" column="TOTAL_DAYS"/>
+        <result property="requestType" column="REQUEST_TYPE"/>
+        <result property="isShared" column="IS_SHARED"/>
+        <result property="courseDescription" column="COURSE_DESCRIPTION"/>
+        <result property="createdDate" column="CREATED_DATE"/>
+        <result property="memberNickname" column="MEMBER_NICKNAME"/>
+        <result property="memberName" column="MEMBER_NAME"/>
+        <result property="memberProfileImage" column="MEMBER_PROFILE_IMAGE"/>
+    </resultMap>
+
+    <!-- 여행코스 상세 ResultMap -->
+    <resultMap id="TravelCourseDetailResultMap" type="com.project.festive.festiveserver.travel.entity.TravelCourseDetail">
+        <id property="detailNo" column="DETAIL_NO"/>
+        <result property="courseNo" column="COURSE_NO"/>
+        <result property="dayNumber" column="DAY_NUMBER"/>
+        <result property="visitOrder" column="VISIT_ORDER"/>
+        <result property="placeName" column="PLACE_NAME"/>
+        <result property="latitude" column="LATITUDE"/>
+        <result property="longitude" column="LONGITUDE"/>
+        <result property="placeImage" column="PLACE_IMAGE"/>
+        <result property="placeTel" column="PLACE_TEL"/>
+        <result property="placeCategory" column="PLACE_CATEGORY"/>
+        <result property="contentId" column="CONTENT_ID"/>
+        <result property="contentTypeId" column="CONTENT_TYPE_ID"/>
+    </resultMap>
+
+    <!-- 여행코스 저장 -->
+    <insert id="insertTravelCourse" parameterType="com.project.festive.festiveserver.travel.entity.TravelCourse">
+        <selectKey keyProperty="courseNo" resultType="long" order="BEFORE">
+            SELECT SEQ_TRAVEL_COURSE_NO.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO TRAVEL_COURSE (
+            COURSE_NO, MEMBER_NO, COURSE_TITLE, THUMBNAIL_IMAGE, 
+            REGION_NAME, AREA_CODE, SIGUNGU_CODE, TOTAL_DAYS, REQUEST_TYPE, 
+            IS_SHARED, COURSE_DESCRIPTION, CREATED_DATE
+        ) VALUES (
+            #{courseNo}, #{memberNo}, #{courseTitle}, #{thumbnailImage},
+            #{regionName}, #{areaCode}, #{sigunguCode}, #{totalDays}, #{requestType},
+            #{isShared}, #{courseDescription}, SYSDATE
+        )
+    </insert>
+
+    <!-- 여행코스 상세 장소 저장 -->
+    <insert id="insertTravelCourseDetail" parameterType="com.project.festive.festiveserver.travel.entity.TravelCourseDetail">
+        INSERT INTO TRAVEL_COURSE_DETAIL (
+            DETAIL_NO, COURSE_NO, DAY_NUMBER, VISIT_ORDER, PLACE_NAME,
+            LATITUDE, LONGITUDE, PLACE_IMAGE, PLACE_TEL,
+            PLACE_CATEGORY, CONTENT_ID, CONTENT_TYPE_ID
+        ) VALUES (
+            SEQ_COURSE_DETAIL_NO.NEXTVAL, #{courseNo}, #{dayNumber}, #{visitOrder}, #{placeName},
+            #{latitude}, #{longitude}, #{placeImage}, #{placeTel},
+            #{placeCategory}, #{contentId}, #{contentTypeId}
+        )
+    </insert>
+
+    <!-- 회원별 여행코스 목록 조회 -->
+    <select id="selectTravelCoursesByMemberNo" resultMap="TravelCourseResultMap">
+        SELECT 
+            tc.COURSE_NO, tc.MEMBER_NO, tc.COURSE_TITLE, tc.THUMBNAIL_IMAGE,
+            tc.REGION_NAME, tc.AREA_CODE, tc.SIGUNGU_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
+            tc.IS_SHARED, tc.COURSE_DESCRIPTION, tc.CREATED_DATE,
+            m.NICKNAME as MEMBER_NICKNAME,
+            m.NAME as MEMBER_NAME,
+            m.PROFILE_IMAGE as MEMBER_PROFILE_IMAGE
+        FROM TRAVEL_COURSE tc
+        JOIN MEMBER m ON tc.MEMBER_NO = m.MEMBER_NO
+        WHERE tc.MEMBER_NO = #{memberNo}
+        ORDER BY tc.CREATED_DATE DESC
+    </select>
+
+    <!-- 공유된 여행코스 목록 조회 -->
+    <select id="selectSharedTravelCourses" resultMap="TravelCourseResultMap">
+        SELECT 
+            tc.COURSE_NO, tc.MEMBER_NO, tc.COURSE_TITLE, tc.THUMBNAIL_IMAGE,
+            tc.REGION_NAME, tc.AREA_CODE, tc.SIGUNGU_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
+            tc.IS_SHARED, tc.COURSE_DESCRIPTION, tc.CREATED_DATE,
+            m.NICKNAME as MEMBER_NICKNAME,
+            m.NAME as MEMBER_NAME,
+            m.PROFILE_IMAGE as MEMBER_PROFILE_IMAGE
+        FROM TRAVEL_COURSE tc
+        JOIN MEMBER m ON tc.MEMBER_NO = m.MEMBER_NO
+        WHERE tc.IS_SHARED = 'Y'
+        ORDER BY tc.CREATED_DATE DESC
+    </select>
+
+    <!-- 여행코스 상세 정보 조회 -->
+    <select id="selectTravelCourseWithDetails" resultMap="TravelCourseResultMap">
+        SELECT 
+            tc.COURSE_NO, tc.MEMBER_NO, tc.COURSE_TITLE, tc.THUMBNAIL_IMAGE,
+            tc.REGION_NAME, tc.AREA_CODE, tc.SIGUNGU_CODE, tc.TOTAL_DAYS, tc.REQUEST_TYPE,
+            tc.IS_SHARED, tc.COURSE_DESCRIPTION, tc.CREATED_DATE,
+            m.NICKNAME as MEMBER_NICKNAME,
+            m.NAME as MEMBER_NAME,
+            m.PROFILE_IMAGE as MEMBER_PROFILE_IMAGE
+        FROM TRAVEL_COURSE tc
+        JOIN MEMBER m ON tc.MEMBER_NO = m.MEMBER_NO
+        WHERE tc.COURSE_NO = #{courseNo}
+    </select>
+
+    <!-- 여행코스의 상세 장소 목록 조회 -->
+    <select id="selectTravelCourseDetails" resultMap="TravelCourseDetailResultMap">
+        SELECT 
+            DETAIL_NO, COURSE_NO, DAY_NUMBER, VISIT_ORDER, PLACE_NAME,
+            LATITUDE, LONGITUDE, PLACE_IMAGE, PLACE_TEL,
+            PLACE_CATEGORY, CONTENT_ID, CONTENT_TYPE_ID
+        FROM TRAVEL_COURSE_DETAIL 
+        WHERE COURSE_NO = #{courseNo}
+        ORDER BY DAY_NUMBER, VISIT_ORDER
+    </select>
+
+    <!-- 여행코스 삭제 (본인만 가능) -->
+    <delete id="deleteTravelCourse">
+        DELETE FROM TRAVEL_COURSE 
+        WHERE COURSE_NO = #{courseNo} AND MEMBER_NO = #{memberNo}
+    </delete>
+
+    <!-- 여행코스 공유 상태 변경 (본인만 가능) -->
+    <update id="updateShareStatus">
+        UPDATE TRAVEL_COURSE 
+        SET IS_SHARED = #{isShared}
+        WHERE COURSE_NO = #{courseNo} AND MEMBER_NO = #{memberNo}
+    </update>
+
+</mapper> 

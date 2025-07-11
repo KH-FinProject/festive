@@ -1,0 +1,784 @@
+.ai-chatbot-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  min-height: calc(100vh - 200px);
+}
+
+.ai-chatbot-chat-map-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  height: 600px;
+}
+
+.ai-chatbot-chat-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+.ai-chatbot-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-chatbot-message {
+  margin-bottom: 15px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  max-width: 70%;
+  font-size: 14px;
+  line-height: 1.5;
+  word-break: break-word;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.ai-chatbot-message.user {
+  background: #60a5fa;
+  color: #fff;
+  align-self: flex-end;
+  margin-left: auto;
+  border-radius: 16px 16px 0 16px;
+  text-align: right;
+}
+
+.ai-chatbot-message.assistant {
+  background: #f8f9fa;
+  color: #333;
+  align-self: flex-start;
+  margin-right: auto;
+  border-radius: 16px 16px 16px 0;
+}
+
+/* 🚀 AI 스트리밍 타이핑 애니메이션 */
+.ai-chatbot-message.assistant.streaming {
+  background: #f8f9fa;
+  color: #333;
+  animation: aiTyping 0.6s ease-in-out infinite;
+}
+
+.ai-chatbot-message.assistant.streaming::after {
+  content: "▋";
+  color: #60a5fa;
+  animation: blink 1s ease-in-out infinite;
+  margin-left: 2px;
+}
+
+@keyframes aiTyping {
+
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  50% {
+    box-shadow: 0 4px 16px rgba(96, 165, 250, 0.2);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes blink {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 🎯 텍스트 스트리밍 효과 최적화 */
+.ai-chatbot-streaming-text {
+  animation: fadeInText 0.1s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes fadeInText {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 🌊 부드러운 텍스트 흐름 효과 */
+.ai-chatbot-message.assistant p {
+  animation: textFlow 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes textFlow {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 🚀 AI 응답 로딩 애니메이션 (더 빠르고 생동감 있게) */
+.ai-chatbot-message-content.loading {
+  position: relative;
+  color: #666;
+  font-style: italic;
+  animation: pulseLoading 0.8s ease-in-out infinite;
+}
+
+.ai-chatbot-message-content.loading::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background: linear-gradient(45deg, #60a5fa, #60a5fa);
+  animation: typingCursor 0.5s ease-in-out infinite;
+  border-radius: 2px;
+}
+
+@keyframes pulseLoading {
+
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes typingCursor {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.ai-chatbot-message p {
+  margin: 0;
+  padding: 0;
+}
+
+.ai-chatbot-chat-input {
+  padding: 15px;
+  background-color: #fff;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 10px;
+}
+
+.ai-chatbot-chat-input textarea {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #60a5fa;
+  border-radius: 8px;
+  resize: none;
+  height: 45px;
+  font-size: 14px;
+}
+
+.ai-chatbot-chat-input button {
+  padding: 0 24px;
+  background-color: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.ai-chatbot-chat-input button:hover {
+  background-color: #60a5fa;
+}
+
+.ai-chatbot-map-section {
+  flex: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+  min-width: 400px;
+}
+
+.ai-chatbot-kakao-map {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background-color: #f5f5f5;
+}
+
+.ai-chatbot-panel-header {
+  background: #f8f9fa;
+  color: #333;
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-chatbot-panel-header::before {
+  content: "";
+  width: 4px;
+  height: 20px;
+  background: #0066cc;
+  border-radius: 2px;
+}
+
+.ai-chatbot-title {
+  font-size: 20px;
+  margin: 0;
+  color: #333;
+}
+
+.ai-chatbot-course-info {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 30px;
+}
+
+.ai-chatbot-course-info h3 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.ai-chatbot-course-notice {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.ai-chatbot-course-section {
+  margin-bottom: 30px;
+}
+
+.ai-chatbot-course-section h4 {
+  font-size: 18px;
+  color: #60a5fa;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-chatbot-course-section h4::before {
+  content: "";
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-color: #60a5fa;
+  border-radius: 50%;
+}
+
+.ai-chatbot-course-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.ai-chatbot-course-content li {
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+  color: #333;
+  font-size: 14px;
+}
+
+.ai-chatbot-course-content li:last-child {
+  border-bottom: none;
+}
+
+.ai-chatbot-button-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.ai-chatbot-action-btn {
+  padding: 0 24px;
+  background-color: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+}
+
+.ai-chatbot-action-btn.save-btn {
+  padding: 0 24px;
+  background-color: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  height: 45px;
+  /* 전송 버튼과 동일한 높이 */
+}
+
+.ai-chatbot-action-btn:hover {
+  background-color: #60a5fa;
+}
+
+.ai-chatbot-route-line {
+  stroke: #1a73e8;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  stroke-dasharray: 5, 5;
+  animation: dashedLine 1s linear infinite;
+}
+
+@keyframes dashedLine {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+.ai-chatbot-travel-summary {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  margin-top: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.6s ease-out forwards;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-chatbot-travel-summary h3 {
+  color: #333;
+  font-size: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  animation: fadeIn 0.4s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.ai-chatbot-travel-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.ai-chatbot-festival-info,
+.ai-chatbot-course-timeline,
+.ai-chatbot-transportation-info {
+  background-color: #fff;
+  padding: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-info h3,
+.ai-chatbot-course-timeline h3,
+.ai-chatbot-transportation-info h3 {
+  color: #333;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+}
+
+.ai-chatbot-festival-info {
+  animation-delay: 0.4s;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 축제 정보 대형 이미지 스타일 */
+.ai-chatbot-festival-container {
+  animation: fadeIn 0.5s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-image-large {
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.ai-chatbot-festival-image-large img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.ai-chatbot-festival-image-large:hover img {
+  transform: scale(1.02);
+}
+
+.ai-chatbot-festival-details {
+  padding: 15px 0;
+}
+
+.ai-chatbot-festival-details h4 {
+  font-size: 1.4rem;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-period {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.6s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-location {
+  color: #888;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.7s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-contact {
+  color: #60a5fa;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.8s;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-content {
+  position: relative;
+  z-index: 2;
+}
+
+.ai-chatbot-course-timeline {
+  animation-delay: 0.6s;
+}
+
+.ai-chatbot-transportation-info {
+  animation-delay: 0.8s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-chatbot-festival-info p {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.ai-chatbot-festival-info p:nth-child(1) {
+  animation-delay: 0.5s;
+}
+
+.ai-chatbot-festival-info p:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.ai-chatbot-festival-info p:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+.ai-chatbot-course-timeline {
+  margin-bottom: 0;
+}
+
+.ai-chatbot-day-section {
+  margin-bottom: 30px;
+}
+
+.ai-chatbot-day-title {
+  margin: 20px 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2563eb;
+  padding: 12px 20px;
+  border-radius: 8px;
+  animation: fadeIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.ai-chatbot-course-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  position: relative;
+  animation: slideIn 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.ai-chatbot-course-item:nth-child(1) {
+  animation-delay: 0.7s;
+}
+
+.ai-chatbot-course-item:nth-child(2) {
+  animation-delay: 0.8s;
+}
+
+.ai-chatbot-course-item:nth-child(3) {
+  animation-delay: 0.9s;
+}
+
+.ai-chatbot-course-item:nth-child(4) {
+  animation-delay: 1s;
+}
+
+.ai-chatbot-course-item:nth-child(5) {
+  animation-delay: 1.1s;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.ai-chatbot-course-item:last-child {
+  margin-bottom: 0;
+}
+
+.ai-chatbot-course-item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 30px;
+  bottom: -10px;
+  width: 2px;
+  background-color: #60a5fa;
+  animation: growLine 0.6s ease-out forwards;
+  transform-origin: top;
+  transform: scaleY(0);
+}
+
+@keyframes growLine {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.ai-chatbot-course-number {
+  width: 30px;
+  height: 30px;
+  background-color: #60a5fa;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-right: 15px;
+  position: relative;
+  z-index: 1;
+  animation: popIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  transform: scale(0);
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.ai-chatbot-course-content {
+  flex: 1;
+  padding: 0 15px;
+}
+
+.ai-chatbot-course-time {
+  font-weight: bold;
+  color: #60a5fa;
+  margin-bottom: 5px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.ai-chatbot-course-activity {
+  color: #333;
+  font-size: 16px;
+  animation: fadeIn 0.3s ease-out forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.ai-chatbot-transportation-info {
+  margin-bottom: 0;
+}
+
+.ai-chatbot-transportation-info p {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #333;
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.ai-chatbot-transportation-info p:nth-child(1) {
+  animation-delay: 0.9s;
+}
+
+.ai-chatbot-transportation-info p:nth-child(2) {
+  animation-delay: 1s;
+}
+
+.ai-chatbot-action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  justify-content: center;
+  animation: fadeIn 0.4s ease-out forwards;
+  animation-delay: 1.2s;
+  opacity: 0;
+}
+
+.ai-chatbot-action-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+  background-color: #60a5fa;
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+.ai-chatbot-action-btn:hover {
+  background-color: #60a5fa;
+  transform: translateY(-2px);
+}
+
+.ai-chatbot-share-btn {
+  animation-delay: 1.4s;
+}
+
+@media (max-width: 768px) {
+  .ai-chatbot-travel-info-grid {
+    gap: 20px;
+  }
+}
+
+.ai-chatbot-strong {
+  color: #60a5fa;
+  margin-right: 8px;
+}
+
+.ai-chatbot-course-number {
+  background-color: #60a5fa;
+}
+
+.ai-chatbot-course-time {
+  color: #60a5fa;
+}
+
+/* 취소/새로고침 버튼 스타일 */
+.ai-chatbot-action-btn.cancel-btn {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #60a5fa;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  height: 45px;
+}
+
+.ai-chatbot-action-btn.cancel-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}

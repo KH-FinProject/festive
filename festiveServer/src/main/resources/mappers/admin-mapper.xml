@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="com.project.festive.festiveserver.admin.model.mapper.AdminMapper">
+
+
+	<!-- 관리자 이메일 중복 검사 -->
+	<select id="checkEmail" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+		WHERE EMAIL = #{email}
+	</select>
+
+	<!-- 관리자 계정 발급 -->
+	<insert id="createAdminAccount">
+		INSERT INTO "MEMBER" (
+		MEMBER_NO,
+		ID,
+		NAME,
+		NICKNAME,
+		EMAIL,
+		PASSWORD,
+		ROLE,
+		ENROLL_DATE,
+		MEMBER_DEL_FL,
+		SANCTION_COUNT
+		) VALUES (
+		SEQ_MEMBER_NO.NEXTVAL,
+		#{email},
+		#{name},
+		#{name},
+		#{email},
+		#{password},
+		'ADMIN',
+		SYSDATE,
+		'N',
+		0
+		)
+	</insert>
+
+	<!-- 탈퇴 회원 조회 : 미애 -->
+	<select id="selectWithdrawMembers">
+		SELECT MEMBER_NO, ID, NAME, NICKNAME, WITHDRAW_DATE
+		FROM MEMBER
+		WHERE MEMBER_DEL_FL = 'Y'
+		ORDER BY WITHDRAW_DATE DESC
+	</select>
+
+	<!-- 회원 영구 삭제 : 미애 -->
+	<delete id="deleteWithdrawMember">
+		DELETE FROM MEMBER
+		WHERE MEMBER_NO = #{memberNo}
+		AND
+		MEMBER_DEL_FL = 'Y'
+	</delete>
+
+	
+	<!-- 통계 조회: 전체 회원 수 -->
+	<select id="getTotalMembers" resultType="int">
+		SELECT COUNT(*) FROM MEMBER
+	</select>
+	
+	<!-- 통계 조회: 활동 회원 수 (최근 일주일 내 게시글/댓글 활동이 있는 회원) -->
+	<select id="getActiveMembers" resultType="int">
+		SELECT COUNT(DISTINCT m.MEMBER_NO) 
+		FROM MEMBER m
+		WHERE m.MEMBER_DEL_FL = 'N'
+		AND (
+			m.MEMBER_NO IN (
+				SELECT DISTINCT b.MEMBER_NO 
+				FROM BOARD b 
+				WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+				AND b.BOARD_DEL_FL = 'N'
+			)
+			OR 
+			m.MEMBER_NO IN (
+				SELECT DISTINCT c.MEMBER_NO 
+				FROM "COMMENT" c 
+				WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+				AND c.COMMENT_DEL_FL = 'N'
+			)
+		)
+	</select>
+	
+	<!-- 통계 조회: 탈퇴 회원 수 -->
+	<select id="getWithdrawMembers" resultType="int">
+		SELECT COUNT(*) FROM MEMBER WHERE MEMBER_DEL_FL = 'Y'
+	</select>
+	
+	<!-- 통계 조회: 최근 일주일 신규 회원 수 -->
+	<select id="getWeeklyNewMembers" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+	</select>
+	
+	<!-- 통계 조회: 최근 일주일 탈퇴 회원 수 -->
+	<select id="getWeeklyWithdrawMembers" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		AND WITHDRAW_DATE IS NOT NULL
+	</select>
+	
+	<!-- 통계 조회: 일반 활성 회원 수 (탈퇴하지 않은 전체 회원) -->
+	<select id="getReturnMembers" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE MEMBER_DEL_FL = 'N'
+	</select>
+
+	<!-- 통계 조회: 일별 신규 회원 수 -->
+	<select id="getDailyNewMembers" resultType="java.util.Map">
+		SELECT TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD') as ENROLL_DATE_STR,
+			   COUNT(*) as NEW_MEMBERS
+		FROM MEMBER
+		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+		GROUP BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
+		ORDER BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
+	</select>
+	
+	<!-- 통계 조회: 일별 탈퇴 회원 수 -->
+	<select id="getDailyWithdrawMembers" resultType="java.util.Map">
+		SELECT TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD') as WITHDRAW_DATE_STR,
+			   COUNT(*) as WITHDRAW_MEMBERS
+		FROM MEMBER
+		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		AND WITHDRAW_DATE IS NOT NULL
+		GROUP BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
+		ORDER BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
+	</select>
+	
+	<!-- 통계 조회: 일별 활동 회원 수 (게시글/댓글 활동이 있는 회원) -->
+	<select id="getDailyActiveMembers" resultType="java.util.Map">
+		SELECT activity_date as ACTIVITY_DATE_STR,
+			   COUNT(DISTINCT member_no) as ACTIVE_MEMBERS
+		FROM (
+			SELECT TO_CHAR(b.BOARD_CREAT_DATE, 'YYYY-MM-DD') as activity_date,
+				   b.MEMBER_NO as member_no
+			FROM BOARD b
+			WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+			AND b.BOARD_DEL_FL = 'N'
+			
+			UNION
+			
+			SELECT TO_CHAR(c.COMMENT_WRITE_DATE, 'YYYY-MM-DD') as activity_date,
+				   c.MEMBER_NO as member_no
+			FROM "COMMENT" c
+			WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+			AND c.COMMENT_DEL_FL = 'N'
+		)
+		GROUP BY activity_date
+		ORDER BY activity_date
+	</select>
+
+
+  
+	<!-- 탈퇴 회원 복구 : 미애 -->
+	<update id="updateWithdrawMember">
+		UPDATE MEMBER
+		SET MEMBER_DEL_FL = 'N',
+		WITHDRAW_DATE =
+		NULL
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
+
+	<!-- 공지글 작성 : 지현 -->
+	<insert id="insertBoard">
+		INSERT INTO BOARD (
+		BOARD_NO, BOARD_CODE, MEMBER_NO, BOARD_TITLE, BOARD_CONTENT,
+		READ_COUNT, BOARD_DEL_FL, BOARD_CREAT_DATE
+		) VALUES (
+		SEQ_BOARD_NO.NEXTVAL, 2, #{memberNo}, #{boardTitle}, #{boardContent},
+		0, 'N',
+		SYSDATE
+		)
+	</insert>
+
+	<!-- 게시글 조회 -->
+	<select id="selectAllBoards"
+		resultType="com.project.festive.festiveserver.wagle.dto.BoardDto">
+		SELECT
+		B.BOARD_NO,
+		B.BOARD_TITLE,
+		B.BOARD_CONTENT,
+		B.READ_COUNT AS boardViewCount,
+		B.BOARD_DEL_FL AS boardDeleteYn,
+		CAST(B.BOARD_CREAT_DATE AS TIMESTAMP) AS boardCreateDate,
+		CAST(B.BOARD_UPDATE_DATE AS TIMESTAMP) AS boardUpdateDate,
+		B.MEMBER_NO,
+		B.BOARD_CODE AS boardTypeNo,
+		M.NICKNAME AS memberNickname,
+		NVL(L.LIKE_COUNT, 0) AS boardLikeCount,
+		NVL(C.COMMENT_COUNT, 0) AS boardCommentCount,
+		M.PROFILE_IMAGE AS memberProfileImage
+		FROM BOARD B
+		LEFT JOIN MEMBER M ON B.MEMBER_NO = M.MEMBER_NO
+		LEFT JOIN (
+		SELECT BOARD_NO, COUNT(*) AS LIKE_COUNT
+		FROM "LIKE"
+		GROUP BY BOARD_NO
+		) L ON B.BOARD_NO = L.BOARD_NO
+		LEFT JOIN (
+		SELECT BOARD_NO, COUNT(*) AS COMMENT_COUNT
+		FROM "COMMENT"
+		GROUP BY BOARD_NO
+		) C ON B.BOARD_NO = C.BOARD_NO
+		WHERE B.BOARD_DEL_FL = 'N'
+		AND B.BOARD_CODE IN (1, 2)
+		ORDER BY B.BOARD_CODE DESC, B.BOARD_CREAT_DATE DESC
+	</select>
+
+	<!-- 게시글 삭제 : 지현 -->
+	<delete id="deleteBoard">
+		DELETE FROM BOARD
+		WHERE BOARD_NO = #{boardNo}
+	</delete>
+
+
+
+</mapper>

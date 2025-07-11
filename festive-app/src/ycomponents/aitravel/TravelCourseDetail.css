@@ -1,0 +1,1190 @@
+.travel-detail-container {
+  display: flex;
+  height: 100vh;
+  position: relative;
+}
+
+/* 왼쪽 사이드바 */
+.travel-detail-sidebar {
+  width: 400px;
+  background-color: white;
+  border-right: 1px solid #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* transition: width 0.3s ease; - 제거하여 width 변경 방지 */
+}
+
+/* .travel-detail-sidebar.with-side-panel {
+  width: 330px; - 제거하여 width 고정
+} */
+
+/* 헤더 영역 */
+.travel-detail-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e5e5;
+  background-color: white;
+}
+
+.travel-detail-back-btn {
+  background: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 15px;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.travel-detail-back-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.travel-detail-course-info h1 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.travel-detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 15px;
+  margin-bottom: 8px;
+}
+
+.travel-detail-region {
+  color: #666;
+  font-size: 14px;
+  background-color: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.travel-detail-days {
+  color: #ff6b6b;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.travel-detail-date {
+  color: #888;
+  font-size: 13px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* 작성자 정보 */
+.travel-detail-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.travel-detail-author-profile {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e5e5;
+}
+
+.travel-detail-author-info h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.travel-detail-author-info p {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+/* 코스 상세 정보 */
+.travel-detail-description {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.travel-detail-description h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+.travel-detail-description p {
+  margin: 0;
+  font-size: 16px;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* AI가 생성한 코스 설명을 위한 스타일 */
+.travel-detail-ai-description {
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Day별 설명 탭 */
+.travel-detail-description-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.travel-detail-description-tab {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.travel-detail-description-tab:hover {
+  color: #60a5fa;
+  background: #f8fafc;
+}
+
+.travel-detail-description-tab.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+  font-weight: 600;
+}
+
+/* Day별 설명 내용 */
+.travel-detail-description-content {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.travel-detail-description-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.travel-detail-description-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.travel-detail-description-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.travel-detail-description-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.travel-detail-day-title {
+  color: #2563eb;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 20px 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #2563eb;
+  display: inline-block;
+}
+
+.travel-detail-day-title:first-child {
+  margin-top: 0;
+}
+
+.travel-detail-place-item {
+  display: none;
+  color: #4b5563;
+  margin: 8px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.travel-detail-place-item::before {
+  content: "📍";
+  position: absolute;
+  left: 0;
+  color: #2563eb;
+}
+
+.travel-detail-point {
+  border-radius: 8px;
+  color: #0c4a6e;
+  font-size: 18px;
+}
+
+.travel-detail-point strong {
+  font-weight: 600;
+}
+
+/* 여행 정보 */
+.travel-detail-info {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.travel-detail-info-item {
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.travel-detail-info-item .label {
+  font-size: 11px;
+  color: #888;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.travel-detail-info-item .value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* 일차별 탭 */
+.travel-detail-day-tabs {
+  display: flex;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e5e5e5;
+  overflow-x: auto;
+}
+
+.travel-detail-day-tab {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.travel-detail-day-tab:hover {
+  background-color: #e9ecef;
+}
+
+.travel-detail-day-tab.active {
+  color: #ff6b6b;
+  border-bottom-color: #ff6b6b;
+  background-color: white;
+}
+
+/* 장소 목록 */
+.travel-detail-places {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.travel-detail-place-card {
+  display: flex;
+  align-items: flex-start;
+  padding: 15px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+
+.travel-detail-place-card:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.travel-detail-place-card:hover .travel-detail-place-ai-hint {
+  opacity: 1;
+  margin: 5px;
+}
+
+.travel-detail-place-number {
+  width: 30px;
+  height: 30px;
+  background-color: #ff6b6b;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.travel-detail-place-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.travel-detail-place-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.travel-detail-place-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.travel-detail-place-info h3 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+.travel-detail-place-address {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+
+.travel-detail-place-tel {
+  color: #888;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.travel-detail-place-category {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.travel-detail-place-ai-hint {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(96, 165, 250, 0.9);
+  color: white;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.travel-detail-no-places {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+/* 오른쪽 지도 영역 */
+.travel-detail-map-container {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  /* transition: all 0.3s ease; - 제거하여 크기 변경 방지 */
+}
+
+/* .travel-detail-map-container.with-side-panel {
+  width: calc(100% - 300px - 400px); - 제거하여 크기 고정
+} */
+
+/* 로딩 및 에러 상태 */
+.travel-detail-loading,
+.travel-detail-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  flex-direction: column;
+  color: #666;
+}
+
+.travel-detail-loading div,
+.travel-detail-error div {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.travel-detail-error button {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.travel-detail-error button:hover {
+  background-color: #ff5252;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .travel-detail-place-panel {
+    width: 350px;
+  }
+
+  .travel-detail-sidebar.with-side-panel {
+    width: 280px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .travel-detail-place-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .travel-detail-place-info h3 {
+    font-size: 15px;
+  }
+
+  .travel-detail-info {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .travel-detail-author-profile {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 768px) {
+  .travel-detail-container {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 80px);
+  }
+
+  .travel-detail-sidebar {
+    width: 100%;
+    height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .travel-detail-map-container {
+    height: 50vh;
+  }
+
+  .travel-detail-day-tabs {
+    justify-content: flex-start;
+  }
+
+  .travel-detail-day-tab {
+    padding: 10px 15px;
+    font-size: 13px;
+  }
+
+  .travel-detail-place-card {
+    padding: 12px 15px;
+  }
+
+  .travel-detail-place-number {
+    width: 25px;
+    height: 25px;
+    font-size: 12px;
+    margin-right: 12px;
+  }
+
+  .travel-detail-place-image {
+    width: 45px;
+    height: 45px;
+    margin-right: 12px;
+  }
+
+  .travel-detail-author-profile {
+    width: 30px;
+    height: 30px;
+  }
+
+  .travel-detail-author-info h4 {
+    font-size: 13px;
+  }
+
+  .travel-detail-author-info p {
+    font-size: 11px;
+  }
+
+  .travel-detail-description h4 {
+    font-size: 13px;
+  }
+
+  .travel-detail-description p {
+    font-size: 12px;
+  }
+
+  .travel-detail-info {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .travel-detail-info-item {
+    padding: 8px;
+  }
+
+  .travel-detail-info-item .label {
+    font-size: 10px;
+  }
+
+  .travel-detail-info-item .value {
+    font-size: 12px;
+  }
+
+  .travel-detail-place-panel {
+    width: 100%;
+  }
+
+  .travel-detail-sidebar.with-side-panel {
+    display: none;
+  }
+
+  .travel-detail-map-container.with-side-panel {
+    display: none;
+  }
+}
+
+/* AI 모달 스타일 */
+.travel-detail-ai-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.travel-detail-ai-modal {
+  background-color: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+.travel-detail-ai-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.travel-detail-ai-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.travel-detail-ai-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.travel-detail-ai-modal-close:hover {
+  background-color: #f0f0f0;
+}
+
+.travel-detail-ai-modal-content {
+  padding: 24px;
+}
+
+.travel-detail-ai-place-info {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.travel-detail-ai-place-info img {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.travel-detail-ai-place-info div {
+  flex: 1;
+}
+
+.travel-detail-ai-place-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.travel-detail-ai-place-info p {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.travel-detail-ai-category {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.travel-detail-ai-description {
+  margin-bottom: 24px;
+}
+
+.travel-detail-ai-description-content {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.travel-detail-ai-description-content p {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: #333;
+  line-height: 1.6;
+}
+
+.travel-detail-ai-description-content p:last-child {
+  margin-bottom: 0;
+}
+
+.travel-detail-ai-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.travel-detail-ai-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.travel-detail-ai-btn.primary {
+  background-color: #60a5fa;
+  color: white;
+}
+
+.travel-detail-ai-btn.primary:hover {
+  background-color: #60a5fa;
+}
+
+.travel-detail-ai-btn.secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.travel-detail-ai-btn.secondary:hover {
+  background-color: #e5e7eb;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 모바일에서 AI 모달 */
+@media (max-width: 768px) {
+  .travel-detail-ai-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .travel-detail-ai-modal-header {
+    padding: 16px 20px 12px;
+  }
+
+  .travel-detail-ai-modal-header h3 {
+    font-size: 16px;
+  }
+
+  .travel-detail-ai-modal-content {
+    padding: 20px;
+  }
+
+  .travel-detail-ai-place-info {
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .travel-detail-ai-place-info img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .travel-detail-ai-place-info h4 {
+    font-size: 15px;
+  }
+
+  .travel-detail-ai-description-content {
+    padding: 16px;
+  }
+
+  .travel-detail-ai-description-content p {
+    font-size: 13px;
+  }
+
+  .travel-detail-ai-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .travel-detail-ai-btn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* 장소 상세 사이드 패널 */
+.travel-detail-place-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background: white;
+  border-left: 1px solid #e5e7eb;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: slideInFromRight 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.travel-detail-place-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+}
+
+.travel-detail-place-panel-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.travel-detail-place-panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  color: #6b7280;
+  font-size: 1.2rem;
+}
+
+.travel-detail-place-panel-close:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.travel-detail-place-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* 장소 기본 정보 섹션 */
+.travel-detail-place-info-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* 장소 이미지 슬라이더 */
+.travel-detail-place-slider {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.travel-detail-slider-container {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.travel-detail-slider-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.3s ease;
+}
+
+.travel-detail-slider-slide {
+  min-width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.travel-detail-slider-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 슬라이더 네비게이션 버튼 */
+.travel-detail-slider-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.travel-detail-slider-nav:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.travel-detail-slider-nav-prev {
+  left: 15px;
+}
+
+.travel-detail-slider-nav-next {
+  right: 15px;
+}
+
+/* 슬라이더 인디케이터 */
+.travel-detail-slider-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.travel-detail-slider-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.travel-detail-slider-indicator.active {
+  background: #ff6b6b;
+  transform: scale(1.2);
+}
+
+.travel-detail-slider-indicator:hover {
+  background: #ff6b6b;
+  opacity: 0.8;
+}
+
+/* 이미지 카운터 */
+.travel-detail-slider-counter {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 2;
+}
+
+/* 슬라이더 로딩 상태 */
+.travel-detail-slider-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 250px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px dashed #60a5fa;
+}
+
+.travel-detail-slider-loading img {
+  width: 60px;
+  height: 60px;
+  opacity: 0.6;
+  margin-bottom: 10px;
+}
+
+.travel-detail-slider-loading .loading-text {
+  color: #666;
+  font-size: 14px;
+}
+
+.travel-detail-place-basic-info h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.travel-detail-place-basic-info .place-address {
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.travel-detail-place-basic-info .place-tel {
+  color: #059669;
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.travel-detail-place-basic-info .place-category {
+  display: inline-block;
+  background: #ddd6fe;
+  color: #7c3aed;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* AI 설명 섹션 */
+.travel-detail-place-description-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.travel-detail-place-description-section h5 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.travel-detail-ai-description-content {
+  color: #374151;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.travel-detail-ai-description-content p {
+  margin: 0 0 1rem 0;
+}
+
+.travel-detail-ai-description-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* 액션 버튼 섹션 */
+.travel-detail-place-actions {
+  padding: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.travel-detail-action-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.travel-detail-action-btn.primary {
+  background: #60a5fa;
+  color: white;
+}
+
+.travel-detail-action-btn.primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.travel-detail-action-btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.travel-detail-action-btn.secondary:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* 슬라이더 모바일 반응형 */
+@media (max-width: 768px) {
+  .travel-detail-slider-container {
+    height: 200px;
+  }
+
+  .travel-detail-slider-nav {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  .travel-detail-slider-nav-prev {
+    left: 10px;
+  }
+
+  .travel-detail-slider-nav-next {
+    right: 10px;
+  }
+
+  .travel-detail-slider-counter {
+    bottom: 10px;
+    right: 10px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .travel-detail-slider-indicators {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .travel-detail-slider-indicator {
+    width: 8px;
+    height: 8px;
+  }
+
+  .travel-detail-slider-loading {
+    height: 200px;
+  }
+
+  .travel-detail-slider-loading img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .travel-detail-slider-loading .loading-text {
+    font-size: 13px;
+  }
+}

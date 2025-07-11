@@ -1,0 +1,419 @@
+/* 법적 페이지 공통 스타일 */
+.legal-pages-container {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 80px 20px 40px;
+  min-height: 100vh;
+  background-color: #ffffff;
+  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  line-height: 1.6;
+}
+
+/* 사이드 메뉴가 있을 때 컨텐츠 여백 조정 */
+@media (min-width: 1441px) {
+  .legal-pages-container {
+    margin-left: calc(280px + (100vw - 280px - 1160px) / 2 - 80px);
+    width: 1160px;
+    max-width: calc(100vw - 320px);
+    padding: 80px 20px 40px;
+  }
+
+  .legal-pages-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 60px 50px;
+  }
+}
+
+.legal-pages-content {
+  background: white;
+  padding: 60px 50px;
+  margin-bottom: 40px;
+  max-width: 1160px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.legal-pages-title {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.legal-pages-policy-date {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 15px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-policy-date p {
+  margin: 5px 0;
+  color: #666;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.legal-pages-policy-intro {
+  background: #f9f9f9;
+  color: #333;
+  padding: 25px;
+  margin-bottom: 40px;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-policy-intro p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* 섹션 스타일 */
+.legal-pages-policy-section {
+  margin-bottom: 40px;
+  padding: 25px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-policy-section h2 {
+  color: #333;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.legal-pages-policy-section h3 {
+  color: #333;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 25px 0 15px 0;
+}
+
+.legal-pages-policy-section p {
+  color: #555;
+  margin: 15px 0;
+  text-align: justify;
+  font-size: 1rem;
+}
+
+.legal-pages-policy-section ul,
+.legal-pages-policy-section ol {
+  color: #555;
+  margin: 15px 0;
+  padding-left: 30px;
+}
+
+.legal-pages-policy-section li {
+  margin: 10px 0;
+  line-height: 1.6;
+}
+
+.legal-pages-policy-section li strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* 테이블 스타일 */
+.legal-pages-table-wrapper {
+  overflow-x: auto;
+  margin: 20px 0;
+}
+
+.legal-pages-policy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  background: white;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-policy-table thead th {
+  background: #f9f9f9;
+  color: #333;
+  padding: 15px 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-policy-table tbody td {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #ddd;
+  vertical-align: middle;
+}
+
+.legal-pages-policy-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* 회사소개 페이지 전용 스타일 */
+.legal-pages-company-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.legal-pages-info-item {
+  padding: 15px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-info-item strong {
+  color: #333;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.legal-pages-vision-content {
+  background: #f9f9f9;
+  color: #333;
+  padding: 30px;
+  margin: 20px 0;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-vision-content h3 {
+  color: #333;
+  border: none;
+  padding: 0;
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  text-align: center;
+}
+
+.legal-pages-vision-content p {
+  color: #555;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.legal-pages-business-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.legal-pages-business-item {
+  background: #f9f9f9;
+  color: #333;
+  padding: 25px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-business-item h3 {
+  color: #333;
+  border: none;
+  padding: 0;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.legal-pages-business-item p {
+  color: #555;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.legal-pages-timeline {
+  position: relative;
+  padding: 20px 0;
+}
+
+.legal-pages-timeline::before {
+  content: "";
+  position: absolute;
+  left: 140px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ddd;
+}
+
+.legal-pages-timeline-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.legal-pages-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: 134px;
+  width: 12px;
+  height: 12px;
+  background: #333;
+  border-radius: 50%;
+  border: 2px solid white;
+  z-index: 1;
+}
+
+.legal-pages-timeline-date {
+  width: 120px;
+  font-weight: 700;
+  color: #000;
+  font-size: 1.2rem;
+  text-align: left;
+}
+
+.legal-pages-timeline-content {
+  margin-left: 160px;
+  padding: 15px 20px;
+  background: #f9f9f9;
+  flex: 1;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  margin: 20px 0;
+}
+
+.legal-pages-contact-item {
+  background: #f9f9f9;
+  color: #333;
+  padding: 25px;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-contact-item h3 {
+  color: #333;
+  border: none;
+  padding: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.legal-pages-contact-item p {
+  color: #555;
+  margin: 8px 0;
+}
+
+.legal-pages-contact-info {
+  background: #f9f9f9;
+  padding: 25px;
+  border: 1px solid #ddd;
+  margin: 20px 0;
+}
+
+.legal-pages-contact-info p {
+  margin: 10px 0;
+}
+
+.legal-pages-contact-info ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.legal-pages-contact-info li {
+  margin: 5px 0;
+}
+
+.legal-pages-policy-footer {
+  margin-top: 40px;
+  padding: 25px;
+  background: #f9f9f9;
+  color: #333;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.legal-pages-policy-footer p,
+.legal-pages-policy-footer ul,
+.legal-pages-policy-footer li {
+  color: #555;
+}
+
+.legal-pages-policy-footer strong {
+  color: #333;
+  font-size: 1.2rem;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .legal-pages-container {
+    padding: 60px 15px 20px;
+  }
+
+  .legal-pages-content {
+    padding: 30px 25px;
+  }
+
+  .legal-pages-title {
+    font-size: 2rem;
+  }
+
+  .legal-pages-policy-section {
+    padding: 20px 15px;
+  }
+
+  .legal-pages-company-info-grid,
+  .legal-pages-business-list,
+  .legal-pages-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .legal-pages-timeline-date {
+    width: 80px;
+    font-size: 0.9rem;
+  }
+
+  .legal-pages-timeline-content {
+    margin-left: 20px;
+  }
+
+  .legal-pages-policy-table {
+    font-size: 0.85rem;
+  }
+
+  .legal-pages-policy-table thead th,
+  .legal-pages-policy-table tbody td {
+    padding: 8px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .legal-pages-title {
+    font-size: 1.6rem;
+  }
+
+  .legal-pages-policy-section h2 {
+    font-size: 1.2rem;
+  }
+
+  .legal-pages-timeline::before {
+    left: 15px;
+  }
+
+  .legal-pages-timeline-item::before {
+    left: 10px;
+  }
+
+  .legal-pages-timeline-date {
+    width: 70px;
+  }
+
+  .legal-pages-timeline-content {
+    margin-left: 10px;
+  }
+}

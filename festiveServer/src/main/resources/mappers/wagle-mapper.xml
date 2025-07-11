@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.festive.festiveserver.wagle.mapper.WagleMapper">
+
+    <!-- 게시글 목록 조회 (페이징) -->
+    <select id="selectBoardList" resultType="com.project.festive.festiveserver.wagle.dto.BoardDto">
+        SELECT * FROM (
+            SELECT ROWNUM rn, t.* FROM (
+                SELECT 
+                    b.BOARD_NO as boardNo,
+                    b.BOARD_CODE as boardTypeNo,
+                    bt.BOARD_NAME as boardTypeName,
+                    b.MEMBER_NO as memberNo,
+                    m.NICKNAME as memberNickname,
+                    m.PROFILE_IMAGE as member_profile_image,
+                    b.BOARD_TITLE as boardTitle,
+                    b.BOARD_CONTENT as boardContent,
+                    b.READ_COUNT as boardViewCount,
+                    b.BOARD_CREAT_DATE as boardCreateDate,
+                    b.BOARD_UPDATE_DATE as boardUpdateDate,
+                    b.BOARD_DEL_FL as boardDeleteYn,
+                    (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
+                    (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
+                FROM BOARD b
+                JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+                JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
+                WHERE b.BOARD_DEL_FL = 'N'
+                <if test="boardTypeNo != null">
+                    AND b.BOARD_CODE = #{boardTypeNo}
+                </if>
+                <if test="searchType != null and searchKeyword != null and searchKeyword != ''">
+                    <choose>
+                        <when test="searchType == 'title'">
+                            AND b.BOARD_TITLE LIKE '%' || #{searchKeyword} || '%'
+                        </when>
+                        <when test="searchType == 'title_content'">
+                            AND (b.BOARD_TITLE LIKE '%' || #{searchKeyword} || '%' 
+                                 OR b.BOARD_CONTENT LIKE '%' || #{searchKeyword} || '%')
+                        </when>
+                        <when test="searchType == 'author'">
+                            AND m.NICKNAME LIKE '%' || #{searchKeyword} || '%'
+                        </when>
+                    </choose>
+                </if>
+                ORDER BY b.BOARD_CREAT_DATE DESC
+            ) t WHERE ROWNUM &lt;= #{offset} + #{limit}
+        ) WHERE rn &gt; #{offset}
+    </select>
+
+    <!-- 게시글 총 개수 조회 -->
+    <select id="selectBoardCount" resultType="int">
+        SELECT COUNT(*)
+        FROM BOARD b
+        JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+        WHERE b.BOARD_DEL_FL = 'N'
+        <if test="boardTypeNo != null">
+            AND b.BOARD_CODE = #{boardTypeNo}
+        </if>
+        <if test="searchType != null and searchKeyword != null and searchKeyword != ''">
+            <choose>
+                <when test="searchType == 'title'">
+                    AND b.BOARD_TITLE LIKE '%' || #{searchKeyword} || '%'
+                </when>
+                <when test="searchType == 'title_content'">
+                    AND (b.BOARD_TITLE LIKE '%' || #{searchKeyword} || '%' 
+                         OR b.BOARD_CONTENT LIKE '%' || #{searchKeyword} || '%')
+                </when>
+                <when test="searchType == 'author'">
+                    AND m.NICKNAME LIKE '%' || #{searchKeyword} || '%'
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <!-- 게시글 상세 조회 -->
+    <select id="selectBoardDetail" resultType="com.project.festive.festiveserver.wagle.dto.BoardDto">
+        SELECT 
+            b.BOARD_NO as boardNo,
+            b.BOARD_CODE as boardTypeNo,
+            bt.BOARD_NAME as boardTypeName,
+            b.MEMBER_NO as memberNo,
+            m.NICKNAME as memberNickname,
+            m.PROFILE_IMAGE as member_profile_image,
+            b.BOARD_TITLE as boardTitle,
+            b.BOARD_CONTENT as boardContent,
+            b.READ_COUNT as boardViewCount,
+            b.BOARD_CREAT_DATE as boardCreateDate,
+            b.BOARD_UPDATE_DATE as boardUpdateDate,
+            b.BOARD_DEL_FL as boardDeleteYn,
+            (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
+            (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
+        FROM BOARD b
+        JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+        JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
+        WHERE b.BOARD_NO = #{boardNo} AND b.BOARD_DEL_FL = 'N'
+    </select>
+
+    <!-- 게시글 조회수 증가 -->
+    <update id="updateBoardViewCount">
+        UPDATE BOARD 
+        SET READ_COUNT = READ_COUNT + 1 
+        WHERE BOARD_NO = #{boardNo}
+    </update>
+
+    <!-- 게시글 작성 -->
+    <insert id="insertBoard" parameterType="com.project.festive.festiveserver.wagle.dto.BoardDto">
+        <selectKey keyProperty="boardNo" resultType="Long" order="BEFORE">
+            SELECT SEQ_BOARD_NO.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO BOARD (
+            BOARD_NO, BOARD_CODE, MEMBER_NO, BOARD_TITLE, BOARD_CONTENT, 
+            READ_COUNT, BOARD_DEL_FL, BOARD_CREAT_DATE
+        ) VALUES (
+            #{boardNo}, #{boardTypeNo}, #{memberNo}, #{boardTitle}, #{boardContent}, 
+            0, 'N', 
+            SYSDATE
+        )
+    </insert>
+
+    <!-- 게시글 수정 -->
+    <update id="updateBoard" parameterType="com.project.festive.festiveserver.wagle.dto.BoardDto">
+        UPDATE BOARD 
+        SET BOARD_TITLE = #{boardTitle},
+            BOARD_CONTENT = #{boardContent},
+            BOARD_UPDATE_DATE = SYSDATE
+        WHERE BOARD_NO = #{boardNo}
+    </update>
+
+    <!-- 게시글 삭제 (논리삭제) -->
+    <update id="deleteBoardLogical">
+        UPDATE BOARD 
+        SET BOARD_DEL_FL = 'Y' 
+        WHERE BOARD_NO = #{boardNo}
+    </update>
+
+    <!-- 게시글 좋아요 추가 (LIKE 테이블 사용) -->
+    <insert id="insertBoardLike">
+        INSERT INTO "LIKE" (BOARD_NO, MEMBER_NO)
+        VALUES (#{boardNo}, #{memberNo})
+    </insert>
+
+    <!-- 게시글 좋아요 삭제 -->
+    <delete id="deleteBoardLike">
+        DELETE FROM "LIKE" 
+        WHERE BOARD_NO = #{boardNo} AND MEMBER_NO = #{memberNo}
+    </delete>
+
+    <!-- 게시글 좋아요 여부 확인 -->
+    <select id="selectBoardLikeCheck" resultType="int">
+        SELECT COUNT(*) 
+        FROM "LIKE" 
+        WHERE BOARD_NO = #{boardNo} AND MEMBER_NO = #{memberNo}
+    </select>
+
+    <!-- 댓글 목록 조회 -->
+    <select id="selectCommentList" resultType="com.project.festive.festiveserver.wagle.dto.CommentDto">
+        SELECT 
+            c.COMMENT_NO as commentNo,
+            c.BOARD_NO as boardNo,
+            c.MEMBER_NO as memberNo,
+            m.NICKNAME as memberNickname,
+            m.PROFILE_IMAGE as member_profile_image,
+            c.COMMENT_CONTENT as commentContent,
+            c.PARENT_COMMENT_NO as commentParentNo,
+            c.COMMENT_WRITE_DATE as commentCreateDate,
+            c.COMMENT_DEL_FL as commentDeleteYn
+        FROM "COMMENT" c
+        JOIN MEMBER m ON c.MEMBER_NO = m.MEMBER_NO
+        WHERE c.BOARD_NO = #{boardNo} AND c.COMMENT_DEL_FL = 'N'
+        ORDER BY c.PARENT_COMMENT_NO NULLS FIRST, c.COMMENT_WRITE_DATE ASC
+    </select>
+
+    <!-- 댓글 작성 -->
+    <insert id="insertComment" parameterType="com.project.festive.festiveserver.wagle.dto.CommentDto">
+        <selectKey keyProperty="commentNo" resultType="Long" order="BEFORE">
+            SELECT SEQ_COMMENT_NO.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO "COMMENT" (
+            COMMENT_NO, BOARD_NO, MEMBER_NO, COMMENT_CONTENT, 
+            PARENT_COMMENT_NO, COMMENT_WRITE_DATE, COMMENT_DEL_FL
+        ) VALUES (
+            #{commentNo}, #{boardNo}, #{memberNo}, #{commentContent}, 
+            <choose>
+                <when test="commentParentNo != null and commentParentNo != 0">#{commentParentNo}</when>
+                <otherwise>NULL</otherwise>
+            </choose>, 
+            SYSDATE, 'N'
+        )
+    </insert>
+
+    <!-- 댓글 수정 -->
+    <update id="updateComment" parameterType="com.project.festive.festiveserver.wagle.dto.CommentDto">
+        UPDATE "COMMENT" 
+        SET COMMENT_CONTENT = #{commentContent},
+            COMMENT_WRITE_DATE = SYSDATE
+        WHERE COMMENT_NO = #{commentNo}
+    </update>
+
+    <!-- 댓글 삭제 (논리삭제) -->
+    <update id="deleteCommentLogical">
+        UPDATE "COMMENT" 
+        SET COMMENT_DEL_FL = 'Y' 
+        WHERE COMMENT_NO = #{commentNo}
+    </update>
+
+    <!-- 게시글 이미지 저장 -->
+    <insert id="insertBoardImg">
+        INSERT INTO BOARD_IMG (
+            BOARD_IMG_NO, BOARD_NO, BOARD_IMG_ORIGINAL, 
+            BOARD_IMG_RENAME, BOARD_IMG_PATH, BOARD_IMG_LEVEL
+        ) VALUES (
+            SEQ_BOARD_IMG_NO.NEXTVAL, #{boardNo}, #{originalName}, 
+            #{renameName}, #{imagePath}, #{level}
+        )
+    </insert>
+
+    <!-- 게시글 이미지 조회 -->
+    <select id="selectBoardImages" resultType="string">
+        SELECT IMG_PATH
+        FROM BOARD_IMG
+        WHERE BOARD_NO = #{boardNo}
+        ORDER BY IMG_ORDER ASC
+    </select>
+
+</mapper> 

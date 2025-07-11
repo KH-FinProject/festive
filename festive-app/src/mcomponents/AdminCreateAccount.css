@@ -1,0 +1,118 @@
+/* AdminCreateAccount.css */
+
+.admin-form-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 60px;
+  max-width: 500px;
+  margin: 60px auto;
+  text-align: center;
+}
+
+.admin-form-header {
+  margin-bottom: 50px;
+}
+
+.admin-form-header h2 {
+  font-size: 32px;
+  font-weight: 600;
+  color: #666;
+  margin: 0;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.admin-form-group {
+  text-align: left;
+}
+
+.admin-form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.admin-form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: #f8f9fa;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.admin-form-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  background-color: white;
+}
+
+.admin-form-input::placeholder {
+  color: #999;
+}
+
+.admin-submit-button {
+  width: 100%;
+  padding: 16px;
+  background-color: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-top: 10px;
+}
+
+.admin-submit-button:hover {
+  background-color: #357abd;
+}
+
+.admin-submit-button:active {
+  background-color: #2a5d94;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .admin-create-container {
+    padding: 20px;
+  }
+
+  .admin-form-container {
+    padding: 40px 30px;
+    max-width: 100%;
+  }
+
+  .admin-page-title {
+    font-size: 20px;
+    margin-bottom: 30px;
+  }
+
+  .admin-form-header h2 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-form-container {
+    padding: 30px 20px;
+  }
+
+  .admin-form {
+    gap: 20px;
+  }
+
+  .admin-form-header {
+    margin-bottom: 30px;
+  }
+}
