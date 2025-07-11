@@ -101,9 +101,7 @@ axiosApi.interceptors.response.use(
         console.error("토큰 갱신 실패:", refreshError);
         console.error("토큰 갱신 응답:", refreshError.response?.data);
 
-        // useAuthStore 초기화 및 로그아웃 직접 호출하지 않음
-        // logout();
-        // 대신 특수 에러 throw
+        // 특수 에러 throw - isAuthExpired
         return Promise.reject({ ...refreshError, isAuthExpired: true });
       } finally {
         isRefreshing = false;

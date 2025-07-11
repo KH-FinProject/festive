@@ -2,7 +2,7 @@ import { faComment } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axiosAPI from "../../api/axiosAPI";
+import axiosApi from "../../api/axiosAPI";
 import useAuthStore from "../../store/useAuthStore";
 import "./Signin.css";
 
@@ -37,7 +37,7 @@ const LoginForm = () => {
     setLoading(true); // 로딩 상태 시작, 버튼이 비활성화됨
 
     try {
-      const response = await axiosAPI.post(`/auth/login`, {
+      const response = await axiosApi.post(`/auth/login`, {
         id: formData.id,
         password: formData.password
       });

@@ -35,8 +35,6 @@ public class JwtFilter extends OncePerRequestFilter {
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
     
-    log.info("JWT Filter 시작: {} {}", method, requestURI);
-    
     try {
       // accessToken 추출 (쿠키 우선, 없으면 Authorization 헤더)
       Cookie cookie = WebUtils.getCookie(request, "accessToken");
@@ -59,9 +57,6 @@ public class JwtFilter extends OncePerRequestFilter {
         String email = jwtUtil.getEmail(accessToken);
         String role = jwtUtil.getClaims(accessToken).get("role", String.class);
         String socialId = jwtUtil.getSocialId(accessToken);
-        
-        log.info("JWT 토큰에서 추출한 정보 - memberNo: {}, email: {}, role: {}, socialId: {}", 
-                memberNo, email, role, socialId);
 
         // SecurityContext에 인증 정보 저장
         createAuthenticationToken(memberNo, email, role, socialId);
