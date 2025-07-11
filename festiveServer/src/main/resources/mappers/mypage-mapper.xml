@@ -151,7 +151,7 @@
 		MEMBER_NO = #{memberNo}
 	</select>
 
-	<!-- 찜한 축제 해제 -->
+	<!-- 축제 찜 해제 -->
 	<delete id="deleteFavorite">
 		DELETE FROM
 		FAVORITES
