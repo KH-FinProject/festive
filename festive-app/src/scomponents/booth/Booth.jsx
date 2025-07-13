@@ -190,7 +190,7 @@ function FestivalSearchModal({ open, onClose, onSelect, areaOptions }) {
               value={region}
               onChange={(e) => setRegion(e.target.value)}
             >
-              <option value="">전체 지역</option>
+              <option value="">서울</option>
               {areaOptions.map((area) => (
                 <option key={area.areaCode} value={area.areaCode}>
                   {area.areaName}
