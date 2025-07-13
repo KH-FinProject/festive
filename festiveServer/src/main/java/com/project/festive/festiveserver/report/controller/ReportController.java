@@ -32,7 +32,7 @@ public class ReportController {
     public ResponseEntity<?> createReport(@RequestBody Report report) {
         try {
             int result = reportService.createReport(report);
-            if (result > 0) {
+            if (result > 0) {   
                 return ResponseEntity.ok().body("신고가 성공적으로 접수되었습니다.");
             } else {
                 return ResponseEntity.badRequest().body("신고 접수에 실패했습니다.");

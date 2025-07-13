@@ -5,6 +5,16 @@ import "./AdminCommon.css";
 import AdminSidebar from "./AdminSideBar";
 import axiosApi from "../api/axiosAPI";
 
+// 마크다운 이미지 태그를 <img>로 변환하는 함수
+function renderMarkdownImages(text) {
+  if (!text) return "";
+  // ![image](url) 패턴을 <img src="url" alt="image" style="max-width:100%;"/>로 변환
+  return text.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    '<img src="$2" alt="$1" style="max-width:100%;" />'
+  );
+}
+
 const AdminCustomerReportDetail = () => {
   const { reportNo } = useParams();
   const navigate = useNavigate();
@@ -181,7 +191,12 @@ const AdminCustomerReportDetail = () => {
                     <h4 className="content-title">{detail.boardTitle}</h4>
                   </div>
                   <div className="content-body">
-                    <div className="content-text">{detail.boardContent}</div>
+                    <div
+                      className="content-text"
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdownImages(detail.boardContent),
+                      }}
+                    />
                   </div>
                 </div>
               ) : (
@@ -200,9 +215,12 @@ const AdminCustomerReportDetail = () => {
                   <div className="content-body">
                     <div className="comment-content">
                       <h5>댓글 내용:</h5>
-                      <div className="content-text">
-                        {detail.commentContent}
-                      </div>
+                      <div
+                        className="content-text"
+                        dangerouslySetInnerHTML={{
+                          __html: renderMarkdownImages(detail.commentContent),
+                        }}
+                      />
                     </div>
                   </div>
                   <div className="parent-post-info">
@@ -213,9 +231,12 @@ const AdminCustomerReportDetail = () => {
                       </span>
                     </div>
                     <h6 className="parent-post-title">{detail.boardTitle}</h6>
-                    <div className="parent-post-content">
-                      {detail.boardContent}
-                    </div>
+                    <div
+                      className="parent-post-content"
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdownImages(detail.boardContent),
+                      }}
+                    />
                   </div>
                 </div>
               )}
