@@ -42,6 +42,8 @@ replay_pid*
 
 # Spring Boot properties
 *-local.properties
+*-prod.properties
+application-prod.properties
 
 # Spring Boot DevTools
 .reloadtrigger
