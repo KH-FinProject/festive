@@ -31,13 +31,6 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\/api/, ''), // 필요하다면 경로 재작성 (예: /api/users -> /users)
         // 이 경우엔 /profile-images 자체가 백엔드 경로이므로 필요 없음
       },
-      // OAuth2 경로 - 우선순위 높음
-      "/oauth2": {
-        target: "https://api.festivekorea.site", // 443 포트 - 표준 HTTPS
-        changeOrigin: true,
-        secure: true,
-      },
-
       // 백엔드 API 경로 - 우선순위 높음
       "/api": {
         target: "https://api.festivekorea.site", // 443 포트 - 표준 HTTPS

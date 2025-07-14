@@ -57,8 +57,8 @@ const LoginForm = () => {
   };
 
   const handleOAuth2Login = (provider) => {
-    // OAuth2 인증 URL 리다이렉트 (프록시를 통해 처리)
-    window.location.href = `/oauth2/authorization/${provider}`;
+    // OAuth2 인증 URL 리다이렉트 (백엔드 서버로 직접 요청)
+    window.location.href = `https://api.festivekorea.site/oauth2/authorization/${provider}`;
 
     // CustomSuccessHandler.java 참고
     // OAuth2 소셜 로그인 인증 이후 서버에서 자동으로 프론트엔드로 리다이렉트 됨
