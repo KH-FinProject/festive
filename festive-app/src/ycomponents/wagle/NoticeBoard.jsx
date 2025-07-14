@@ -126,11 +126,10 @@ function NoticeBoard({ hideTitle }) {
                   <img
                     src={
                       notice.memberProfileImage
-                        ? notice.memberProfileImage.startsWith(
-                          "/profile-images/"
-                        )
-                          ? `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${notice.memberProfileImage}`
-                          : notice.memberProfileImage
+                        ? `${
+                            import.meta.env.VITE_API_URL ||
+                            "http://localhost:8080"
+                          }${notice.memberProfileImage}`
                         : "/logo.png"
                     }
                     alt="관리자 프로필"

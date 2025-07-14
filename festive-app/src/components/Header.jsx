@@ -30,19 +30,6 @@ const Header = () => {
     }
   };
 
-  // 에러 메시지 생성 함수
-  const getLogoutErrorMessage = (error) => {
-    if (error.code === "NETWORK_ERROR") {
-      return "네트워크 연결을 확인해주세요.";
-    } else if (error.response?.status === 500) {
-      return "서버 오류가 발생했습니다.";
-    } else if (error.response?.status === 401) {
-      return "이미 로그아웃된 상태입니다.";
-    } else {
-      return "알 수 없는 오류가 발생했습니다.";
-    }
-  };
-
   // 현재 경로가 해당 링크와 일치하는지 확인하는 함수
   const isActiveLink = (path) => {
     if (path === "/") {
@@ -112,9 +99,9 @@ const Header = () => {
               <img
                 src={
                   member?.profileImage
-                    ? member.profileImage.startsWith("/profile-images/")
-                      ? member.profileImage + "?t=" + Date.now()
-                      : member.profileImage
+                    ? `${
+                        import.meta.env.VITE_API_URL || "http://localhost:8080"
+                      }${member.profileImage}`
                     : "/logo.png"
                 }
                 alt="프로필"
@@ -129,8 +116,12 @@ const Header = () => {
             </Link>
             <span
               onClick={isLoggingOut ? undefined : handleLogout}
-              className={`headernav-link hover-grow${isLoggingOut ? " disabled" : ""}`}
-              style={isLoggingOut ? { pointerEvents: "none", opacity: 0.5 } : {}}
+              className={`headernav-link hover-grow${
+                isLoggingOut ? " disabled" : ""
+              }`}
+              style={
+                isLoggingOut ? { pointerEvents: "none", opacity: 0.5 } : {}
+              }
             >
               Sign Out
             </span>
