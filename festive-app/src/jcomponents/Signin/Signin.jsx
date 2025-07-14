@@ -1,18 +1,28 @@
 import { faComment } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axiosApi from "../../api/axiosAPI";
 import useAuthStore from "../../store/useAuthStore";
 import "./Signin.css";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     id: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [oauthError, setOauthError] = useState("");
+
+  // OAuth 에러 확인
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error === "oauth_failed") {
+      setOauthError("소셜 로그인에 실패했습니다. 다시 시도해주세요.");
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -76,6 +86,24 @@ const LoginForm = () => {
 
           {/* 로그인 폼 */}
           <div className="login-form">
+            {/* OAuth 에러 메시지 */}
+            {oauthError && (
+              <div
+                className="oauth-error-message"
+                style={{
+                  color: "#ff6b6b",
+                  backgroundColor: "#fff5f5",
+                  padding: "10px",
+                  borderRadius: "4px",
+                  marginBottom: "20px",
+                  border: "1px solid #ffebee",
+                  fontSize: "14px",
+                }}
+              >
+                {oauthError}
+              </div>
+            )}
+
             {/* ID 입력 필드 */}
             <div className="info-input-group">
               <label htmlFor="id" className="login-input-label">

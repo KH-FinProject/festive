@@ -78,7 +78,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       String[] activeProfiles = environment.getActiveProfiles();
       String redirectUrl = (activeProfiles.length > 0 && "prod".equals(activeProfiles[0])) 
           ? "https://www.festivekorea.site/" 
-          : "http://localhost:5173/";
+          : "https://festive-git-main-youngmins-projects-ed25c656.vercel.app/";
       
       log.info("OAuth2 성공 리다이렉트 URL: {}", redirectUrl);
       getRedirectStrategy().sendRedirect(request, response, redirectUrl);
@@ -91,7 +91,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String[] activeProfiles = environment.getActiveProfiles();
         String errorRedirectUrl = (activeProfiles.length > 0 && "prod".equals(activeProfiles[0])) 
             ? "https://www.festivekorea.site/signin?error=oauth_failed" 
-            : "http://localhost:5173/signin?error=oauth_failed";
+            : "https://festive-git-main-youngmins-projects-ed25c656.vercel.app/signin?error=oauth_failed";
         
         log.info("OAuth2 에러 리다이렉트 URL: {}", errorRedirectUrl);
         getRedirectStrategy().sendRedirect(request, response, errorRedirectUrl);
