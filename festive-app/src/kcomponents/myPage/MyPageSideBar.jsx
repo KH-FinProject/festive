@@ -6,8 +6,10 @@ const MyPageSideBar = () => {
   const { member } = useAuthStore();
   const name = member?.name;
   let profileImageUrl = member?.profileImage;
-  if (profileImageUrl && profileImageUrl.startsWith("/profile-images/")) {
-    profileImageUrl = profileImageUrl + "?t=" + Date.now();
+  if (profileImageUrl) {
+    profileImageUrl = `${
+      import.meta.env.VITE_API_URL || "http://localhost:8080"
+    }${profileImageUrl}`;
   }
   const location = useLocation();
 

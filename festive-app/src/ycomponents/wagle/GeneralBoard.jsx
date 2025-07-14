@@ -190,9 +190,10 @@ function GeneralBoard({ hideWriteBtn }) {
                   <img
                     src={
                       post.memberProfileImage
-                        ? post.memberProfileImage.startsWith("/profile-images/")
-                          ? post.memberProfileImage + "?t=" + Date.now()
-                          : post.memberProfileImage
+                        ? `${
+                            import.meta.env.VITE_API_URL ||
+                            "http://localhost:8080"
+                          }${post.memberProfileImage}`
                         : "/logo.png"
                     }
                     alt="프로필"
