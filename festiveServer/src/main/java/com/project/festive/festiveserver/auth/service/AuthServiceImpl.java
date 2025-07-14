@@ -65,6 +65,12 @@ public class AuthServiceImpl implements AuthService {
 		}
 		
 		Member member = memberOpt.get();
+
+		if(member.getSanctionCount() >= 3) {
+			result.put("success", false);
+			result.put("message", "경고 3회 이상 누적으로 제재된 계정입니다.");
+			return result;
+		}
 		
 		// 2. 비밀번호 확인
 		if (!bcrypt.matches(request.getPassword(), member.getPassword())) {
