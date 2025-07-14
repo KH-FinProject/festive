@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 import "./VerticalSlider.css";
 import { useNavigate } from "react-router-dom";
+import calendarImg from "../../assets/calendar.png";
+import wagleImg from "../../assets/wagle.png";
+import aiTravelImg from "../../assets/AiTravel.png";
+import boothImg from "../../assets/boothImg.jpg";
 
 const VerticalSlider = () => {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -27,7 +31,7 @@ const VerticalSlider = () => {
       title: "축제달력",
       description: "한눈에 보는 전국 축제일정!",
       bgColor: "#E6B88A",
-      bgImage: "/src/assets/calendar.png",
+      bgImage: calendarImg,
       path: "/calendar",
     },
     {
@@ -42,21 +46,21 @@ const VerticalSlider = () => {
       title: "와글와글",
       description: "즐거운 사람들, 생생한 현장의 이야기와 사진들!",
       bgColor: "#9BC49B",
-      bgImage: "/src/assets/wagle.png",
+      bgImage: wagleImg,
       path: "/wagle",
     },
     {
       title: "AI 여행코스 추천",
       description: "당신만을 위한 맞춤형 축제 여행 코스를 AI가 추천해드려요",
       bgColor: "#8BB8E8",
-      bgImage: "/src/assets/AiTravel.png",
+      bgImage: aiTravelImg,
       path: "/ai-travel",
     },
     {
       title: "부스 참가신청",
       description: "축제를 함께할 플리마켓·푸드트럭 부스를 모집합니다!",
       bgColor: "#C08BE8",
-      bgImage: "/src/assets/boothImg.jpg",
+      bgImage: boothImg,
       path: "/booth",
     },
   ];

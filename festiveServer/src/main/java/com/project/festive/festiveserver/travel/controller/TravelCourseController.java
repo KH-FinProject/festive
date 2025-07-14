@@ -22,7 +22,6 @@ import java.util.Map;
 @RequestMapping("/api/travel-course")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:5173"})
 public class TravelCourseController {
     
     private final TravelCourseService travelCourseService;
