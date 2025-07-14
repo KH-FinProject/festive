@@ -23,13 +23,12 @@ const LoginForm = () => {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleLogin();
     }
   };
 
   const handleLogin = async (e) => {
-
     // 이미 로딩 중이면 아무것도 하지 않고 함수를 종료
     if (loading) {
       return;
@@ -39,7 +38,7 @@ const LoginForm = () => {
     try {
       const response = await axiosApi.post(`/auth/login`, {
         id: formData.id,
-        password: formData.password
+        password: formData.password,
       });
       const data = response.data;
 
@@ -49,10 +48,8 @@ const LoginForm = () => {
 
         navigate("/");
       }
-
     } catch (error) {
       alert(error.response.data);
-
     } finally {
       // 요청이 성공하든 실패하든 항상 로딩 상태를 해제
       setLoading(false);
@@ -60,9 +57,8 @@ const LoginForm = () => {
   };
 
   const handleOAuth2Login = (provider) => {
-
-    // OAuth2 인증 URL 리다이렉트
-    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/${provider}`;
+    // OAuth2 인증 URL 리다이렉트 (프록시를 통해 처리)
+    window.location.href = `/oauth2/authorization/${provider}`;
 
     // CustomSuccessHandler.java 참고
     // OAuth2 소셜 로그인 인증 이후 서버에서 자동으로 프론트엔드로 리다이렉트 됨
