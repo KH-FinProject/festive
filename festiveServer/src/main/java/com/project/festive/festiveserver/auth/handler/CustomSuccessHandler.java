@@ -77,7 +77,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       // 환경에 따라 다른 리다이렉트 URL 사용 - Environment 빈 사용
       String[] activeProfiles = environment.getActiveProfiles();
       String redirectUrl = (activeProfiles.length > 0 && "prod".equals(activeProfiles[0])) 
-          ? "https://www.festivekorea.site/" 
+          ? "https://festive-git-main-youngmins-projects-ed25c656.vercel.app/" 
           : "https://festive-git-main-youngmins-projects-ed25c656.vercel.app/";
       
       log.info("OAuth2 성공 리다이렉트 URL: {}", redirectUrl);
@@ -90,7 +90,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         // 환경에 따라 다른 에러 리다이렉트 URL 사용 - Environment 빈 사용
         String[] activeProfiles = environment.getActiveProfiles();
         String errorRedirectUrl = (activeProfiles.length > 0 && "prod".equals(activeProfiles[0])) 
-            ? "https://www.festivekorea.site/signin?error=oauth_failed" 
+            ? "https://festive-git-main-youngmins-projects-ed25c656.vercel.app/signin?error=oauth_failed" 
             : "https://festive-git-main-youngmins-projects-ed25c656.vercel.app/signin?error=oauth_failed";
         
         log.info("OAuth2 에러 리다이렉트 URL: {}", errorRedirectUrl);
