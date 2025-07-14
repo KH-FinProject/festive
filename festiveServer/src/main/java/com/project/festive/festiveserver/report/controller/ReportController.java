@@ -21,7 +21,6 @@ import com.project.festive.festiveserver.report.model.service.ReportService;
 
 @RestController
 @RequestMapping("/api/reports")
-@CrossOrigin(origins = "http://localhost:5173")
 public class ReportController {
 
     @Autowired

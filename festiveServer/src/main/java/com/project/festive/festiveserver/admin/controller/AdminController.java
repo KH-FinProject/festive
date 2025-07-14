@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController // 비동기 컨트롤러
-@CrossOrigin(origins="http://localhost:5173", allowCredentials = "true")
 @RequestMapping("admin")
 @Slf4j
 @RequiredArgsConstructor
