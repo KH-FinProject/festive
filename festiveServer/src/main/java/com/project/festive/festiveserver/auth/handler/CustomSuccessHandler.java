@@ -49,7 +49,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       log.info("JWT 토큰 발급 완료");
       ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
           .httpOnly(true)
-          .secure(false)
+          .secure(true)
           .sameSite("Lax")
           .maxAge(Duration.ofMinutes(30))
           .path("/")
@@ -57,7 +57,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
       ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
           .httpOnly(true)
-          .secure(false)
+          .secure(true)
           .sameSite("Lax")
           .maxAge(Duration.ofDays(7))
           .path("/auth")
