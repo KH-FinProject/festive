@@ -20,7 +20,7 @@ import java.io.File;
 public class ImageController {
     @GetMapping("/profile-images/{filename:.+}")
     public ResponseEntity<Resource> getImage(@PathVariable("filename") String filename) throws java.net.MalformedURLException {
-        Path path = Paths.get("C:/upload/festive/profile/" + filename);
+        Path path = Paths.get("/home/ec2-user/upload/profile/" + filename);
         Resource resource = new UrlResource(path.toUri());
         if (!resource.exists()) {
             return ResponseEntity.notFound().build();
@@ -32,7 +32,7 @@ public class ImageController {
 
     @GetMapping("/board-images/{filename:.+}")
     public ResponseEntity<Resource> getBoardImage(@PathVariable("filename") String filename) throws java.net.MalformedURLException {
-        Path path = Paths.get("C:/upload/festive/board/" + filename);
+        Path path = Paths.get("/home/ec2-user/upload/board/" + filename);
         Resource resource = new UrlResource(path.toUri());
         if (!resource.exists()) {
             return ResponseEntity.notFound().build();
@@ -45,7 +45,7 @@ public class ImageController {
     @PostMapping("/api/board/upload-image")
     public ResponseEntity<String> uploadBoardImage(@RequestParam("image") MultipartFile file) {
         try {
-            String uploadDir = "C:/upload/festive/board/";
+            String uploadDir = "/home/ec2-user/upload/board/";
             File dir = new File(uploadDir);
             if (!dir.exists()) dir.mkdirs();
 

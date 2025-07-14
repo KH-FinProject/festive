@@ -61,7 +61,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
                 String profileImageUrl = oAuth2Response.getProfileImage();
                 String profileImagePath = null;
                 if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
-                    String saveDir = "C:/upload/festive/profile";
+                    String saveDir = "/home/ec2-user/upload/profile";
                     try {
                         String savedPath = Utility.downloadImageToServer(profileImageUrl, saveDir);
                         profileImagePath = "/profile-images/" + new File(savedPath).getName();

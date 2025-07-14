@@ -34,12 +34,12 @@ public class WebConfig implements WebMvcConfigurer {
   // 회원 프로필 이미지 저장 - 지현이가 추가함
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-      // /profile-images/** 요청이 오면 C:/upload/festive/profile/ 경로에서 파일을 찾도록 매핑
+      // /profile-images/** 요청이 오면 실제 EC2 경로에서 파일을 찾도록 매핑
       registry.addResourceHandler("/profile-images/**")
-              .addResourceLocations("file:///C:/upload/festive/profile/"); // 실제 저장 경로와 일치
-      // /upload/festive/booth/** 요청이 오면 C:/upload/festive/booth/ 경로에서 파일을 찾도록 매핑
+              .addResourceLocations("file:///home/ec2-user/upload/profile/"); // 실제 EC2 저장 경로
+      // /upload/festive/booth/** 요청이 오면 실제 EC2 경로에서 파일을 찾도록 매핑
       registry.addResourceHandler("/upload/festive/booth/**")
-              .addResourceLocations("file:///C:/upload/festive/booth/");
+              .addResourceLocations("file:///home/ec2-user/upload/booth/");
   }
   
   // 찜달력(MypageServiceImpl) - 지현이가 추가함
