@@ -21,9 +21,9 @@ function CustomerEdit() {
   useEffect(() => {
     const fetchBoardData = async () => {
       try {
-        const response = await axiosApi.get(
-          `http://localhost:8080/api/customer/boards/${id}`
-        );
+            const response = await axiosApi.get(
+      `/api/customer/boards/${id}`
+    );
         const data = response.data;
 
         // 작성자 확인
@@ -81,7 +81,7 @@ function CustomerEdit() {
       };
 
       const response = await axiosApi.put(
-        `http://localhost:8080/api/customer/boards/${id}`,
+        `/api/customer/boards/${id}`,
         boardData
       );
 

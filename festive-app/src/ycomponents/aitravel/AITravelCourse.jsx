@@ -255,7 +255,7 @@ const AITravelCourse = () => {
   const handleShareToggle = async (courseId, currentIsShared) => {
     try {
       const baseUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+        import.meta.env.VITE_API_URL || "http://localhost:8080";
       const newIsShared = currentIsShared === "Y" ? "N" : "Y";
 
       const response = await axios.patch(
@@ -327,7 +327,7 @@ const AITravelCourse = () => {
 
     try {
       const baseUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+        import.meta.env.VITE_API_URL || "http://localhost:8080";
 
       const response = await axios.delete(
         `${baseUrl}/api/travel-course/${courseId}`,

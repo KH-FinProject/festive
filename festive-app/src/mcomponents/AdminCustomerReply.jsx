@@ -18,7 +18,7 @@ const AdminCustomerReply = () => {
     const fetchInquiryDetail = async (boardNo) => {
       try {
         const res = await axiosApi.get(
-          `http://localhost:8080/api/customer/boards/${boardNo}`
+          `/api/customer/boards/${boardNo}`
         );
         setInquiry(res.data);
       } catch {
@@ -71,7 +71,7 @@ const AdminCustomerReply = () => {
       } else {
         // 답변 등록
         response = await axiosApi.post(
-          `http://localhost:8080/api/customer/boards/${inquiry.boardNo}/comments`,
+          `/api/customer/boards/${inquiry.boardNo}/comments`,
           replyData
         );
       }
@@ -79,7 +79,7 @@ const AdminCustomerReply = () => {
         // 문의 상태를 "답변완료"로 업데이트
         try {
           await axiosApi.patch(
-            `http://localhost:8080/api/customer/boards/${inquiry.boardNo}/status`,
+            `/api/customer/boards/${inquiry.boardNo}/status`,
             null,
             {
               params: { status: "답변완료" },

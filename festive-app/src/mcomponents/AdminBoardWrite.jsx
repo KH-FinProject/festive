@@ -47,7 +47,7 @@ const AdminBoardWrite = () => {
       };
 
       const response = await axiosApi.post(
-        "http://localhost:8080/admin/write",
+        "/admin/write",
         inquiryData
       );
 

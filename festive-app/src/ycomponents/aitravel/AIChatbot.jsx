@@ -8,7 +8,7 @@ import ScrollToTop from "./ScrollToTop";
 import useAuthStore from "../../store/useAuthStore";
 
 // 백엔드 API 기본 URL
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api`;
 
 const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴트입니다.
 

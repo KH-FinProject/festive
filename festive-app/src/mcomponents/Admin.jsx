@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AdminMain from "./AdminMain";
 import AdminCreateAccount from "./AdminCreateAccount";
-import AdminDeleteMember from "./adminDeleteMember";
+import AdminDeleteMember from "./AdminDeleteMember";
 import AdminCustomerService from "./AdminCustomerService";
 import AdminBoardManagement from "./AdminBoardManagement";
 import AdminApplicationStatus from "./AdminApplicationStatus";

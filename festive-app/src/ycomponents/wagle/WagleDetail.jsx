@@ -75,7 +75,9 @@ function CommentItem({
           className="comment-avatar"
           src={
             comment.memberProfileImage
-              ? `http://localhost:8080${comment.memberProfileImage}`
+              ? `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${
+                  comment.memberProfileImage
+                }`
               : "/logo.png"
           }
           alt="프로필"
@@ -180,7 +182,7 @@ function CommentItem({
                   className="comment-avatar"
                   src={
                     reply.memberProfileImage
-                      ? `http://localhost:8080${reply.memberProfileImage}`
+                                                  ? `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${reply.memberProfileImage}`
                       : "/logo.png"
                   }
                   alt="프로필"
@@ -493,12 +495,9 @@ function WagleDetail() {
     }
 
     try {
-      const response = await axiosApi.post(
-        `/api/wagle/boards/${id}/comments`,
-        {
-            commentContent: newComment
-        }
-      );
+      const response = await axiosApi.post(`/api/wagle/boards/${id}/comments`, {
+        commentContent: newComment,
+      });
 
       if (response.status >= 200 && response.status < 300) {
         setNewComment("");
@@ -571,7 +570,9 @@ function WagleDetail() {
       return;
     }
     try {
-      const response = await axiosApi.delete(`/api/wagle/comments/${commentNo}`);
+      const response = await axiosApi.delete(
+        `/api/wagle/comments/${commentNo}`
+      );
       if (response.status >= 200 && response.status < 300) {
         fetchComments();
         fetchPostDetail();
@@ -710,7 +711,7 @@ function WagleDetail() {
               className="wagle-profile-img"
               src={
                 post.memberProfileImage
-                  ? `http://localhost:8080${post.memberProfileImage}`
+                                        ? `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${post.memberProfileImage}`
                   : "/logo.png"
               }
               alt="프로필"

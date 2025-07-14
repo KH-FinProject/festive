@@ -51,7 +51,7 @@ function CustomerWrite() {
       };
 
       const response = await axiosApi.post(
-        "http://localhost:8080/api/customer/boards",
+        "/api/customer/boards",
         inquiryData
       );
 

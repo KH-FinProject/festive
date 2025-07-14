@@ -39,7 +39,7 @@ const AdminCustomerService = () => {
       setError(null);
 
       const response = await axiosApi.get(
-        "http://localhost:8080/api/customer/boards",
+        "/api/customer/boards",
         {
           params: {
             page: 1,
@@ -120,9 +120,9 @@ const AdminCustomerService = () => {
 
     if (confirmDelete) {
       try {
-        const response = await axiosApi.delete(
-          `http://localhost:8080/api/customer/boards/${inquiry.boardNo}`
-        );
+              const response = await axiosApi.delete(
+        `/api/customer/boards/${inquiry.boardNo}`
+      );
         if (response.status === 200) {
           alert("문의글이 삭제되었습니다.");
           fetchInquiries(); // 목록 새로고침

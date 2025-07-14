@@ -22,7 +22,7 @@ public class BoothRequestServiceImpl implements BoothRequestService {
     private final TourAPIService tourAPIService;
     private final SimpMessagingTemplate messagingTemplate;
     // 실제 파일 저장 경로는 절대경로로 지정
-    private static final String UPLOAD_DIR = "C:/upload/festive/booth/";
+    private static final String UPLOAD_DIR = "/home/ec2-user/upload/booth/";
 
     private void sendBoothAlert(BoothRequest entity) {
         System.out.println("=== 부스 WebSocket 알림 전송 ===");
