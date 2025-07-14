@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -27,10 +28,12 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
   private final JwtUtil jwtUtil;
   private final AuthService authService;
+  private final Environment environment;
 
-  public CustomSuccessHandler(JwtUtil jwtUtil, AuthService authService) {
+  public CustomSuccessHandler(JwtUtil jwtUtil, AuthService authService, Environment environment) {
     this.jwtUtil = jwtUtil;
     this.authService = authService;
+    this.environment = environment;
   }
 
   @Override
@@ -71,20 +74,26 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
       
       authService.saveRefreshToken(customUserDetails.getMemberNo(), refreshToken, localExpirationDate);
       
-      // 환경에 따라 다른 리다이렉트 URL 사용
-      String redirectUrl = System.getProperty("spring.profiles.active", "local").equals("prod") 
+      // 환경에 따라 다른 리다이렉트 URL 사용 - Environment 빈 사용
+      String[] activeProfiles = environment.getActiveProfiles();
+      String redirectUrl = (activeProfiles.length > 0 && "prod".equals(activeProfiles[0])) 
           ? "https://www.festivekorea.site/" 
           : "http://localhost:5173/";
+      
+      log.info("OAuth2 성공 리다이렉트 URL: {}", redirectUrl);
       getRedirectStrategy().sendRedirect(request, response, redirectUrl);
 
     } catch (Exception e) {
       log.error("OAuth2 로그인 성공 처리 중 오류 발생: {}", e.getMessage(), e);
       
       if (!response.isCommitted()) {
-        // 환경에 따라 다른 에러 리다이렉트 URL 사용
-        String errorRedirectUrl = System.getProperty("spring.profiles.active", "local").equals("prod") 
+        // 환경에 따라 다른 에러 리다이렉트 URL 사용 - Environment 빈 사용
+        String[] activeProfiles = environment.getActiveProfiles();
+        String errorRedirectUrl = (activeProfiles.length > 0 && "prod".equals(activeProfiles[0])) 
             ? "https://www.festivekorea.site/signin?error=oauth_failed" 
             : "http://localhost:5173/signin?error=oauth_failed";
+        
+        log.info("OAuth2 에러 리다이렉트 URL: {}", errorRedirectUrl);
         getRedirectStrategy().sendRedirect(request, response, errorRedirectUrl);
       }
     }

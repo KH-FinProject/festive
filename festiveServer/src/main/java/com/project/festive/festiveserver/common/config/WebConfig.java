@@ -17,7 +17,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
   
-  @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000}")
+  @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000,https://festivekorea.site,https://www.festivekorea.site}")
   private String allowedOrigins;
   
   // 클라이언트에서 오는 Cross-Origin 요청(CORS)을 어떻게 처리할지 설정

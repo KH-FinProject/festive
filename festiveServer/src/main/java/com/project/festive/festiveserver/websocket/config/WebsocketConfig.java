@@ -1,5 +1,6 @@
 package com.project.festive.festiveserver.websocket.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -10,17 +11,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    @Value("${cors.allowed-origins:http://localhost:5173,http://localhost:3000,https://festivekorea.site,https://www.festivekorea.site}")
+    private String allowedOrigins;
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOrigins(
-                    "http://localhost:5173", 
-                    "http://localhost:3000",
-                    "http://127.0.0.1:5173",
-                    "https://www.festivekorea.site",
-                    "https://festivekorea.site",
-                    "https://api.festivekorea.site"
-                )
+                .setAllowedOrigins(allowedOrigins.split(","))
                 .withSockJS();
     }
 
