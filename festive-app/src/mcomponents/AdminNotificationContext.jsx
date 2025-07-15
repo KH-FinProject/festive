@@ -27,21 +27,9 @@ export function AdminNotificationProvider({ children }) {
       try {
         // 환경변수에서 API URL 가져오기
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
-        // HTTPS 환경에서 WSS 강제 사용
-        let wsUrl;
-        if (apiUrl.startsWith("https://")) {
-          wsUrl = apiUrl.replace(/^https/, "wss");
-        } else if (apiUrl.startsWith("http://")) {
-          wsUrl = apiUrl.replace(/^http/, "ws");
-        } else {
-          // 프로토콜이 없는 경우 현재 페이지의 프로토콜 사용
-          wsUrl =
-            window.location.protocol === "https:"
-              ? "wss://" + apiUrl
-              : "ws://" + apiUrl;
-        }
-
+        // 프로토콜 자동 선택
+        const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = apiUrl.replace(/^http(s?):/, wsProtocol + ":");
         // 직접 WebSocket 연결 (SockJS 우회)
         ws = new WebSocket(`${wsUrl}/ws/websocket`);
 
