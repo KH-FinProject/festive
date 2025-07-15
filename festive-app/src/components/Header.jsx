@@ -99,9 +99,7 @@ const Header = () => {
               <img
                 src={
                   member?.profileImage
-                    ? `${
-                        import.meta.env.VITE_API_URL || "http://localhost:8080"
-                      }${member.profileImage}`
+                    ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${member.profileImage.startsWith('/') ? member.profileImage : `/${member.profileImage}`}`
                     : "/logo.png"
                 }
                 alt="프로필"

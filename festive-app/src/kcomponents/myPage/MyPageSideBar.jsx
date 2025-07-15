@@ -1,15 +1,20 @@
 import { NavLink, useLocation } from "react-router-dom";
 import "./MyPageSideBar.css";
 import useAuthStore from "../../store/useAuthStore";
+import { getProfileImageSrc } from "../../utils/urlUtils";
 
 const MyPageSideBar = () => {
   const { member } = useAuthStore();
   const name = member?.name;
   let profileImageUrl = member?.profileImage;
   if (profileImageUrl) {
-    profileImageUrl = `${
+    const baseUrl = (
       import.meta.env.VITE_API_URL || "http://localhost:8080"
-    }${profileImageUrl}`;
+    ).replace(/\/+$/, "");
+    const imagePath = profileImageUrl.startsWith("/")
+      ? profileImageUrl
+      : `/${profileImageUrl}`;
+    profileImageUrl = `${baseUrl}${imagePath}`;
   }
   const location = useLocation();
 

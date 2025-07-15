@@ -120,17 +120,17 @@ const MyPageEditProfile = () => {
     if (!window.confirm("정말 기본 이미지로 변경하시겠습니까?")) return;
 
     try {
-      const res = await axiosApi.post('/mypage/profile/reset-image');
+      const res = await axiosApi.post("/mypage/profile/reset-image");
       if (res.data && res.data.success) {
-        alert('기본 이미지로 변경되었습니다.');
+        alert("기본 이미지로 변경되었습니다.");
         fetchProfileInfo(); // 최신 정보 갱신
         setNewProfileImageFile(null);
         setPreviewImageUrl(null);
       } else {
-        alert('기본 이미지 변경에 실패했습니다.');
+        alert("기본 이미지 변경에 실패했습니다.");
       }
     } catch (err) {
-      alert('기본 이미지 변경 중 오류가 발생했습니다.');
+      alert("기본 이미지 변경 중 오류가 발생했습니다.");
     }
   };
 
@@ -181,15 +181,11 @@ const MyPageEditProfile = () => {
       if (newProfileImageFile) {
         formData.append("profileImage", newProfileImageFile);
       }
-      const response = await axiosApi.post(
-        "/mypage/edit-profile",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await axiosApi.post("/mypage/edit-profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       const data = response.data;
       if (response.status >= 200 && response.status < 300) {
         // 닉네임이 변경되었으면 스토어 업데이트
@@ -269,13 +265,16 @@ const MyPageEditProfile = () => {
                 <button
                   type="button"
                   className="edit-btn"
-                  style={{ marginLeft: "8px", background: "#f0f0f0", color: "#666" }}
+                  style={{
+                    marginLeft: "8px",
+                    background: "#f0f0f0",
+                    color: "#666",
+                  }}
                   onClick={handleResetProfileImage}
                 >
                   기본 이미지로 변경
                 </button>
               </div>
-
 
               <div className="form-section">
                 <div className="mypage-form-row">
@@ -308,7 +307,7 @@ const MyPageEditProfile = () => {
                     )}
                   {isValidNickname(profileData.nickname?.trim() || "") &&
                     profileData.nickname?.trim() !==
-                    originalNicknameRef.current &&
+                      originalNicknameRef.current &&
                     (nicknameCheckLoading ? (
                       <p className="nickname-message info">중복 확인 중...</p>
                     ) : isNicknameAvailable === false ? (
