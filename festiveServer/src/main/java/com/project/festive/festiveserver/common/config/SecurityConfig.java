@@ -64,9 +64,9 @@ public class SecurityConfig {
         
         //oauth2
         .oauth2Login(oauth2 -> oauth2
-        .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
-        .userService(customOAuth2UserService))
-        .successHandler(customSuccessHandler))
+            .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+                .userService(customOAuth2UserService))
+            .successHandler(customSuccessHandler))
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth

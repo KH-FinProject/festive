@@ -1,8 +1,67 @@
 {
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build"
+    }
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://api.festivekorea.site/api/$1"
+    },
+    {
+      "source": "/oauth2/(.*)",
+      "destination": "https://api.festivekorea.site/oauth2/$1"
+    },
+    {
+      "source": "/auth/(.*)",
+      "destination": "https://api.festivekorea.site/auth/$1"
+    },
+    {
+      "source": "/profile-images/(.*)",
+      "destination": "https://api.festivekorea.site/profile-images/$1"
+    },
+    {
+      "source": "/board-images/(.*)",
+      "destination": "https://api.festivekorea.site/board-images/$1"
+    },
+    {
+      "source": "/upload/festive/booth/(.*)",
+      "destination": "https://api.festivekorea.site/upload/festive/booth/$1"
+    },
+    {
+      "source": "/tour-api/(.*)",
+      "destination": "https://apis.data.go.kr/$1"
+    },
+    {
+      "source": "/carpark-api/(.*)",
+      "destination": "https://api.odcloud.kr/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
     }
   ]
 }
