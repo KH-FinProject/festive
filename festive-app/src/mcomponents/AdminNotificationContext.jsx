@@ -19,9 +19,9 @@ export function AdminNotificationProvider({ children }) {
       try {
         // 환경변수에서 API URL 가져오기
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
-        // HTTP/HTTPS를 WS/WSS로 변환
-        const wsUrl = apiUrl.replace(/^http/, 'ws');
-        
+        // 프로토콜 자동 선택
+        const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsUrl = apiUrl.replace(/^http(s?):/, wsProtocol + ":");
         // 직접 WebSocket 연결 (SockJS 우회)
         ws = new WebSocket(`${wsUrl}/ws/websocket`);
 
