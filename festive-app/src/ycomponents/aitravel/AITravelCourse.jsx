@@ -236,13 +236,35 @@ const AITravelCourse = () => {
   };
 
   const handleCourseClick = (courseId) => {
-    console.log("🖱️ 여행코스 클릭됨!");
+    // 🚨 강력한 디버깅 - 알림과 콘솔 로그 모두 추가
+    alert(`🖱️ 여행코스 클릭됨! courseId: ${courseId}`);
+    console.log("🖱️ ===========================================");
+    console.log("🖱️ 여행코스 클릭 이벤트 발생!");
+    console.log("🖱️ ===========================================");
     console.log("🖱️ courseId:", courseId);
     console.log("🖱️ courseId 타입:", typeof courseId);
-    console.log("🖱️ 네비게이트 URL:", `/course/${courseId}`);
-    
-    navigate(`/course/${courseId}`);
-    console.log("🖱️ navigate 호출 완료");
+    console.log("🖱️ 현재 URL:", window.location.href);
+    console.log("🖱️ 네비게이트 대상 URL:", `/course/${courseId}`);
+
+    try {
+      console.log("🖱️ navigate 함수 호출 시도 중...");
+      navigate(`/course/${courseId}`);
+      console.log("🖱️ navigate 함수 호출 완료!");
+
+      // 0.5초 후 URL 변경 확인
+      setTimeout(() => {
+        console.log("🖱️ 0.5초 후 URL 체크:", window.location.href);
+        if (!window.location.href.includes(`/course/${courseId}`)) {
+          console.error("❌ URL 변경 실패!");
+          alert(`❌ URL 변경 실패! 현재 URL: ${window.location.href}`);
+        } else {
+          console.log("✅ URL 변경 성공!");
+        }
+      }, 500);
+    } catch (error) {
+      console.error("❌ navigate 함수 호출 중 오류:", error);
+      alert(`❌ navigate 오류: ${error.message}`);
+    }
   };
 
   // 🔐 AI 추천받으러 가기 버튼 클릭 핸들러
@@ -260,8 +282,7 @@ const AITravelCourse = () => {
   // 공유 상태 변경 함수
   const handleShareToggle = async (courseId, currentIsShared) => {
     try {
-      const baseUrl =
-        import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
       const newIsShared = currentIsShared === "Y" ? "N" : "Y";
 
       const response = await axios.patch(
@@ -332,8 +353,7 @@ const AITravelCourse = () => {
     }
 
     try {
-      const baseUrl =
-        import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
       const response = await axios.delete(
         `${baseUrl}/api/travel-course/${courseId}`,
@@ -377,6 +397,20 @@ const AITravelCourse = () => {
   const visibleCount =
     activeMenu === "share" ? shareVisibleCount : myTravelVisibleCount;
   const visibleCourses = currentCourses.slice(0, visibleCount);
+
+  // 🔍 데이터 상태 디버깅
+  console.log("🔍 ===========================================");
+  console.log("🔍 AITravelCourse 렌더링 상태");
+  console.log("🔍 ===========================================");
+  console.log("🔍 activeMenu:", activeMenu);
+  console.log("🔍 sharedCourses 개수:", sharedCourses.length);
+  console.log("🔍 myTravelCourses 개수:", myTravelCourses.length);
+  console.log("🔍 currentCourses 개수:", currentCourses.length);
+  console.log("🔍 visibleCourses 개수:", visibleCourses.length);
+  console.log("🔍 visibleCount:", visibleCount);
+  if (visibleCourses.length > 0) {
+    console.log("🔍 첫 번째 course:", visibleCourses[0]);
+  }
 
   return (
     <div className="ai-travel-container">
@@ -435,69 +469,87 @@ const AITravelCourse = () => {
               </div>
             ) : (
               <div className="ai-travel__course-grid">
-                {visibleCourses.map((course) => (
-                  <div key={course.id} className="ai-travel__course-card">
-                    <div
-                      className="ai-travel__course-image"
-                      onClick={() => handleCourseClick(course.id)}
-                    >
-                      <img src={course.image} alt={course.title} />
+                {visibleCourses.map((course) => {
+                  // 🔍 course 객체 디버깅
+                  console.log("🔍 렌더링 중인 course:", course);
+                  console.log(
+                    "🔍 course.id:",
+                    course.id,
+                    "타입:",
+                    typeof course.id
+                  );
 
-                      {/* 나만의 여행코스에서만 공유중 태그 표시 */}
-                      {activeMenu === "myTravel" && course.isShared === "Y" && (
-                        <div className="ai-travel__shared-tag">공유중</div>
+                  return (
+                    <div key={course.id} className="ai-travel__course-card">
+                      <div
+                        className="ai-travel__course-image"
+                        onClick={() => {
+                          console.log("🖱️ 이미지 클릭됨! course:", course);
+                          handleCourseClick(course.id);
+                        }}
+                      >
+                        <img src={course.image} alt={course.title} />
+
+                        {/* 나만의 여행코스에서만 공유중 태그 표시 */}
+                        {activeMenu === "myTravel" &&
+                          course.isShared === "Y" && (
+                            <div className="ai-travel__shared-tag">공유중</div>
+                          )}
+                      </div>
+
+                      <div
+                        className="ai-travel__course-info"
+                        onClick={() => {
+                          console.log("🖱️ 정보 영역 클릭됨! course:", course);
+                          handleCourseClick(course.id);
+                        }}
+                      >
+                        <h3>{course.title}</h3>
+                        <p className="ai-travel__course-date">{course.date}</p>
+                        {/* 공유 코스와 개인 코스 모두 작성자 정보 표시 */}
+                        <div className="ai-travel__course-author">
+                          <img
+                            src={course.memberProfileImage}
+                            alt={course.memberNickname}
+                            className="ai-travel__author-profile"
+                            onError={(e) => {
+                              e.target.src = logo; // 프로필 이미지 로드 실패시 로고 표시
+                            }}
+                          />
+                          <span className="ai-travel__author-nickname">
+                            {course.memberNickname}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 나만의 여행코스에서만 버튼들 표시 */}
+                      {activeMenu === "myTravel" && (
+                        <div className="ai-travel__course-actions">
+                          <button
+                            className={`ai-travel__action-btn ${
+                              course.isShared === "Y" ? "share-cancel" : "share"
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShareToggle(course.id, course.isShared);
+                            }}
+                          >
+                            {course.isShared === "Y" ? "공유취소" : "공유하기"}
+                          </button>
+                          <button
+                            className="ai-travel__action-btn delete"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCourse(course.id, course.title);
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </div>
                       )}
                     </div>
-
-                    <div
-                      className="ai-travel__course-info"
-                      onClick={() => handleCourseClick(course.id)}
-                    >
-                      <h3>{course.title}</h3>
-                      <p className="ai-travel__course-date">{course.date}</p>
-                      {/* 공유 코스와 개인 코스 모두 작성자 정보 표시 */}
-                      <div className="ai-travel__course-author">
-                        <img
-                          src={course.memberProfileImage}
-                          alt={course.memberNickname}
-                          className="ai-travel__author-profile"
-                          onError={(e) => {
-                            e.target.src = logo; // 프로필 이미지 로드 실패시 로고 표시
-                          }}
-                        />
-                        <span className="ai-travel__author-nickname">
-                          {course.memberNickname}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 나만의 여행코스에서만 버튼들 표시 */}
-                    {activeMenu === "myTravel" && (
-                      <div className="ai-travel__course-actions">
-                        <button
-                          className={`ai-travel__action-btn ${
-                            course.isShared === "Y" ? "share-cancel" : "share"
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleShareToggle(course.id, course.isShared);
-                          }}
-                        >
-                          {course.isShared === "Y" ? "공유취소" : "공유하기"}
-                        </button>
-                        <button
-                          className="ai-travel__action-btn delete"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCourse(course.id, course.title);
-                          }}
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
