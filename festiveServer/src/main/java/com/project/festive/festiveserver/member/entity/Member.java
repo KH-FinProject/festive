@@ -92,4 +92,7 @@ public class Member {
 	@Column(name = "WITHDRAW_DATE")
 	private LocalDateTime withdrawDate;
 
+	@Column(name = "SANCTION_COUNT")
+	private int sanctionCount;
+
 }
