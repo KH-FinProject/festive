@@ -195,7 +195,10 @@ const LocalFestive = () => {
 
       // contentTypeId가 15가 아니고 종료된 축제 제외
       const filtered = items.filter((item) => {
-        return item.contenttypeid === "15" && getFestivalStatus(item.eventstartdate, item.eventenddate) !== "종료";
+        return (
+          item.contenttypeid === "15" &&
+          getFestivalStatus(item.eventstartdate, item.eventenddate) !== "종료"
+        );
       });
 
       // 매핑
@@ -468,7 +471,7 @@ const LocalFestive = () => {
                   value={searchLocation}
                   onChange={(e) => setSearchLocation(e.target.value)}
                 >
-                  <option value="">서울</option>
+                  <option value="">전체</option>
                   {areaOptions.map((area) => (
                     <option key={area.areaCode} value={area.areaCode}>
                       {area.areaName}
