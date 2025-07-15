@@ -13,6 +13,7 @@ const LocalFestive = () => {
   );
   const [searchEndDate, setSearchEndDate] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [userLocation, setUserLocation] = useState(null); // 사용자 위치
   const [areaOptions, setAreaOptions] = useState([]);
   const navigate = useNavigate();
@@ -22,11 +23,12 @@ const LocalFestive = () => {
   const [hasMore, setHasMore] = useState(true); // 더 많은 데이터 존재 여부
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const [displayedFestivals, setDisplayedFestivals] = useState([]); // 화면에 표시할 축제
-  const [pageSize] = useState(25); // 한 번에 로드할 개수
+  const [pageSize] = useState(12); // 한 번에 로드할 개수
 
   // Intersection Observer 관련 ref
   const observerRef = useRef();
   const loadingRef = useRef();
+  const isMounted = useRef(false);
 
   // 사용자 위치 가져오기
   const getUserLocation = () => {
@@ -90,7 +92,14 @@ const LocalFestive = () => {
   // 초기 축제 데이터 로드
   useEffect(() => {
     fetchInitialFestivals();
+    isMounted.current = true;
   }, []);
+
+  // 축제 검색시(시작/끝 날짜, 지역 수정시) 데이터 로드
+  useEffect(() => {
+    if(!isMounted.current) return;
+    searchFestivals();
+  }, [searchStartDate, searchEndDate, searchLocation])
 
   // 축제 데이터 가져오기 함수
   const fetchFestivalData = async () => {
@@ -245,6 +254,72 @@ const LocalFestive = () => {
       setFestivals(mapped);
       setDisplayedFestivals(mapped.slice(0, pageSize));
       setHasMore(mapped.length > pageSize);
+
+    } catch (error) {
+      console.error("축제 검색 실패:", error);
+
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 키워드를 포함하는 축제 데이터 가져오기 함수
+  const keywordSearchFestivals = async (e) => {
+    setIsLoading(true);
+    setPage(1);
+    setHasMore(true);
+    setSortType("distance"); // 거리순으로 고정
+
+    try {
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+      const params = new URLSearchParams({
+        MobileOS: "WEB",
+        MobileApp: "Festive",
+        _type: "json",
+        arrange: "A",
+        numOfRows: "100",
+        pageNo: "1",
+        contentTypeId: "15",
+        keyword: searchKeyword
+      });
+
+      const url = `https://apis.data.go.kr/B551011/KorService2/searchKeyword2?serviceKey=${serviceKey}&${params.toString()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const items = data?.response?.body?.items?.item;
+
+      if (!items || !Array.isArray(items)) {
+        setFestivals([]);
+        setDisplayedFestivals([]);
+        setHasMore(false);
+        return;
+      }
+
+      // 매핑 (날짜 정보 없음)
+      let mapped = items.map((item) => ({
+        id: item.contentid,
+        title: item.title,
+        location: item.addr1 || "장소 미제공",
+        date: "날짜 정보 없음",
+        image: item.firstimage || "/logo.png",
+        startDate: null,
+        status: "미제공",
+        mapx: item.mapx,
+        mapy: item.mapy,
+      }));
+
+      // 거리순 정렬만 적용
+      const festivalsWithDistance = await addDistanceToFestivals(mapped);
+      mapped = festivalsWithDistance.sort((a, b) => {
+        if (a.distance == null && b.distance == null) return 0;
+        if (a.distance == null) return 1;
+        if (b.distance == null) return -1;
+        return a.distance - b.distance;
+      });
+
+      setFestivals(mapped);
+      setDisplayedFestivals(mapped.slice(0, pageSize));
+      setHasMore(mapped.length > pageSize);
     } catch (error) {
       console.error("축제 검색 실패:", error);
     } finally {
@@ -306,8 +381,15 @@ const LocalFestive = () => {
   };
 
   // 검색 핸들러
+  /*
   const handleSearch = () => {
     searchFestivals();
+  };
+  */
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      keywordSearchFestivals();
+    }
   };
 
   // 축제 클릭 핸들러
@@ -479,33 +561,33 @@ const LocalFestive = () => {
                   ))}
                 </select>
               </div>
+              {/*
               <button className="search-button" onClick={handleSearch}>
                 검색
               </button>
+              */}
+            </div>
+          </div>
+
+          <hr className="search-divider" />
+          <div className="search-container">
+            <div className="input-block">
+              <span className="input-label">키워드</span>
+              <input
+                type="text"
+                className="search-input keyword-input"
+                placeholder="축제명 키워드로 검색"
+                value={searchKeyword || ""}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e)}
+              />
             </div>
           </div>
         </div>
       </div>
 
       {/* 새로운 축제 갤러리 섹션 */}
-      <div className="festival-gallery-section">
-        {/* 정렬 옵션 */}
-        <div className="sort-options">
-          <span
-            className={`sort-option ${sortType === "date" ? "active" : ""}`}
-            onClick={() => handleSortChange("date")}
-          >
-            축제일순
-          </span>
-          <span className="divider">|</span>
-          <span
-            className={`sort-option ${sortType === "distance" ? "active" : ""}`}
-            onClick={() => handleSortChange("distance")}
-          >
-            거리순
-          </span>
-        </div>
-
+      {/* <div className="festival-gallery-section">
         <div className="gallery-grid">
           {displayedFestivals.slice(0, 9).map((festival, index) => (
             <div
@@ -550,14 +632,47 @@ const LocalFestive = () => {
             </div>
           ))}
         </div>
+      </div> */}
+
+      {/* 안내 메시지 영역: 항상 고정 */}
+      <div className="keyword-info-message-area">
+        {searchKeyword && (
+          <div className="keyword-info-message">
+            키워드 검색 결과는 날짜 정보가 제공되지 않습니다.
+          </div>
+        )}
       </div>
 
       <div className="festival-main">
         {/* 축제 목록 섹션 */}
         <section className="festivals-section">
+
+          {/* 정렬 옵션 */}
+          {searchKeyword ? (
+            <div className="sort-options">
+              <span className="sort-option active">거리순</span>
+            </div>
+          ) : (
+            <div className="sort-options">
+              <span
+                className={`sort-option ${sortType === "date" ? "active" : ""}`}
+                onClick={() => handleSortChange("date")}
+              >
+                축제일순
+              </span>
+              <span className="divider">|</span>
+              <span
+                className={`sort-option ${sortType === "distance" ? "active" : ""}`}
+                onClick={() => handleSortChange("distance")}
+              >
+                거리순
+              </span>
+            </div>
+          )}
+
           {/* 축제 그리드 */}
           <div className="festivals-grid">
-            {displayedFestivals.slice(9).map((festival) => (
+            {displayedFestivals.map((festival) => (
               <div
                 key={festival.id}
                 className="festival-card"
@@ -617,7 +732,9 @@ const LocalFestive = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    {festival.date}
+                    {festival.date && festival.date !== "날짜 미제공"
+                      ? festival.date
+                      : "날짜 정보 없음"}
                   </p>
                 </div>
               </div>
