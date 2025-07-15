@@ -1188,3 +1188,46 @@
     font-size: 13px;
   }
 }
+
+/* 지도 에러 및 로딩 스타일 */
+.travel-detail-map-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.travel-detail-map-error-content {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.travel-detail-map-error-content h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.travel-detail-map-error-content p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.travel-detail-map-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  color: #666;
+  font-size: 14px;
+}

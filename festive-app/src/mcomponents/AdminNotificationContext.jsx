@@ -12,6 +12,14 @@ export function AdminNotificationProvider({ children }) {
   const [hasNewInquiry, setHasNewInquiry] = useState(false);
 
   useEffect(() => {
+    // 임시로 WebSocket 비활성화 (문제 해결까지)
+    const WEBSOCKET_ENABLED = false;
+
+    if (!WEBSOCKET_ENABLED) {
+      console.log("WebSocket 기능이 임시로 비활성화되었습니다.");
+      return;
+    }
+
     // 네이티브 WebSocket 사용 (SockJS 없이)
     let ws = null;
 
@@ -19,13 +27,26 @@ export function AdminNotificationProvider({ children }) {
       try {
         // 환경변수에서 API URL 가져오기
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
-        // HTTP/HTTPS를 WS/WSS로 변환
-        const wsUrl = apiUrl.replace(/^http/, 'ws');
-        
+
+        // HTTPS 환경에서 WSS 강제 사용
+        let wsUrl;
+        if (apiUrl.startsWith("https://")) {
+          wsUrl = apiUrl.replace(/^https/, "wss");
+        } else if (apiUrl.startsWith("http://")) {
+          wsUrl = apiUrl.replace(/^http/, "ws");
+        } else {
+          // 프로토콜이 없는 경우 현재 페이지의 프로토콜 사용
+          wsUrl =
+            window.location.protocol === "https:"
+              ? "wss://" + apiUrl
+              : "ws://" + apiUrl;
+        }
+
         // 직접 WebSocket 연결 (SockJS 우회)
         ws = new WebSocket(`${wsUrl}/ws/websocket`);
 
         ws.onopen = function () {
+          console.log("WebSocket 연결 성공");
           // STOMP CONNECT 프레임 수동 전송
           const connectFrame = "CONNECT\naccept-version:1.0,1.1,2.0\n\n\x00";
           ws.send(connectFrame);
@@ -33,6 +54,7 @@ export function AdminNotificationProvider({ children }) {
 
         ws.onmessage = function (event) {
           if (event.data.includes("CONNECTED")) {
+            console.log("STOMP 연결 성공");
             // 구독 프레임 전송
             const subscribeFrame =
               "SUBSCRIBE\nid:sub-0\ndestination:/topic/admin-alerts\n\n\x00";
@@ -61,6 +83,7 @@ export function AdminNotificationProvider({ children }) {
         };
 
         ws.onclose = function () {
+          console.log("WebSocket 연결 종료, 5초 후 재연결 시도");
           // 5초 후 재연결 시도
           setTimeout(() => {
             connectWebSocket();
@@ -69,9 +92,14 @@ export function AdminNotificationProvider({ children }) {
 
         ws.onerror = function (error) {
           console.error("WebSocket 에러:", error);
+          console.log("WebSocket URL:", `${wsUrl}/ws/websocket`);
         };
       } catch (error) {
         console.error("WebSocket 생성 에러:", error);
+        // WebSocket 연결 실패 시 5초 후 재시도
+        setTimeout(() => {
+          connectWebSocket();
+        }, 5000);
       }
     };
 
