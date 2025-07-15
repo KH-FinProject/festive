@@ -37,10 +37,6 @@
       "destination": "https://apis.data.go.kr/$1"
     },
     {
-      "source": "/carpark-api/(.*)",
-      "destination": "https://api.odcloud.kr/$1"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -60,23 +56,6 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
-        }
-      ]
-    },
-    {
-      "source": "/carpark-api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
         }
       ]
     }

@@ -55,8 +55,15 @@ export default function PublicCarParkWithMap({
       const field = encodeURIComponent("지역코드::EQ");
       const serviceKey = import.meta.env.VITE_PUBLIC_CARPARK_API;
 
-      const url = `/carpark-api/api/15050093/v1/uddi:d19c8e21-4445-43fe-b2a6-865dff832e08?page=1&perPage=1000&returnType=json&cond[${field}]=${areaCode}&serviceKey=${serviceKey}`;
+      // areaCode 검증
+      if (!areaCode || areaCode.includes("undefined") || !serviceKey) {
+        setListCarPark([]);
+        setIsParkingLoading(false);
+        return;
+      }
 
+      // 모든 환경에서 직접 API 호출
+      const url = `https://api.odcloud.kr/api/15050093/v1/uddi:d19c8e21-4445-43fe-b2a6-865dff832e08?page=1&perPage=1000&returnType=json&cond[${field}]=${areaCode}&serviceKey=${serviceKey}`;
       const response = await fetch(url);
       const respData = await response.json();
       const items = respData?.data;
