@@ -10,6 +10,10 @@ const TravelCourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
 
+  // 🕐 배포 확인용 타임스탬프
+  const BUILD_TIMESTAMP = "2024-07-15-16:25:00";
+  console.log("🕐 TravelCourseDetail 빌드 타임스탬프:", BUILD_TIMESTAMP);
+
   // 🔍 강화된 디버깅: 컴포넌트 마운트 및 URL 검증
   console.log("🚀 ===========================================");
   console.log("🚀 TravelCourseDetail 컴포넌트 마운트 시작");
