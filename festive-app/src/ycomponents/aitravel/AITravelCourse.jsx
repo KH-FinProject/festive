@@ -236,7 +236,13 @@ const AITravelCourse = () => {
   };
 
   const handleCourseClick = (courseId) => {
+    console.log("🖱️ 여행코스 클릭됨!");
+    console.log("🖱️ courseId:", courseId);
+    console.log("🖱️ courseId 타입:", typeof courseId);
+    console.log("🖱️ 네비게이트 URL:", `/course/${courseId}`);
+    
     navigate(`/course/${courseId}`);
+    console.log("🖱️ navigate 호출 완료");
   };
 
   // 🔐 AI 추천받으러 가기 버튼 클릭 핸들러
