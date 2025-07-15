@@ -5,6 +5,7 @@ import com.project.festive.festiveserver.wagle.dto.CommentDto;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface WagleService {
     
@@ -40,4 +41,7 @@ public interface WagleService {
     
     // 댓글 삭제
     int deleteComment(Long commentNo);
+
+    // 이미지 경로 조회
+    Set<String> selectDbImageSet();
 } 

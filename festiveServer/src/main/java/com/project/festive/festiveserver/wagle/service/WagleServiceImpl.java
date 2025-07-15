@@ -1,18 +1,25 @@
 package com.project.festive.festiveserver.wagle.service;
 
-import com.project.festive.festiveserver.wagle.dto.BoardDto;
-import com.project.festive.festiveserver.wagle.dto.CommentDto;
-import com.project.festive.festiveserver.wagle.mapper.WagleMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.project.festive.festiveserver.wagle.dto.BoardDto;
+import com.project.festive.festiveserver.wagle.dto.CommentDto;
+import com.project.festive.festiveserver.wagle.mapper.WagleMapper;
+import com.project.festive.festiveserver.wagle.repository.WagleRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
@@ -21,6 +28,7 @@ import java.util.stream.Collectors;
 public class WagleServiceImpl implements WagleService {
     
     private final WagleMapper wagleMapper;
+    private final WagleRepository wagleRepository;
     
     @Override
     @Transactional(readOnly = true)
@@ -194,5 +202,31 @@ public class WagleServiceImpl implements WagleService {
             log.error("댓글 삭제 중 오류 발생", e);
             throw new RuntimeException("댓글 삭제에 실패했습니다.");
         }
+    }
+
+    @Override
+    public Set<String> selectDbImageSet() {
+        Set<String> fileNames = new HashSet<>();
+
+        // 게시글 내용 조회(MarkDown 형식 List)
+        List<String> boardContentList = wagleRepository.findAllBoardContent();
+
+        Pattern pattern = Pattern.compile("!\\[[^\\]]*\\]\\(([^)]+)\\)");
+        for (String boardContent : boardContentList) {
+            Matcher matcher = pattern.matcher(boardContent);
+            
+            while (matcher.find()) {
+                String url = matcher.group(1);
+                // base64 등 data:image로 시작하는 경우는 스킵
+                if (url.startsWith("data:")) continue;
+                // 파일명만 추출
+                String[] parts = url.split("/");
+                String fileName = parts[parts.length - 1];
+                
+                fileNames.add(fileName);
+            }
+        }
+        
+        return fileNames;
     }
 } 
