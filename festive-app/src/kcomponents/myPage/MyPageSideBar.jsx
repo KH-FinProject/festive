@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import "./MyPageSideBar.css";
 import useAuthStore from "../../store/useAuthStore";
-import { getProfileImageSrc } from "../../utils/urlUtils";
 
 const MyPageSideBar = () => {
   const { member } = useAuthStore();
