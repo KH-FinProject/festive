@@ -224,9 +224,20 @@ const MyPageEditProfile = () => {
   // 프로필 이미지 경로 보정 함수
   const getProfileImageSrc = (url) => {
     if (!url) return defaultProfileSvg;
+
+    // 소셜 로그인 프로필 이미지 (완전한 URL)
     if (url.startsWith("http")) return url;
-    if (url.startsWith("/profile-images/")) return url;
-    return `/profile-images/${url}`;
+
+    // 일반 로그인 프로필 이미지 (서버 파일) - API URL 구성 필요
+    const baseUrl = (
+      import.meta.env.VITE_API_URL || "http://localhost:8080"
+    ).replace(/\/+$/, "");
+
+    if (url.startsWith("/profile-images/")) {
+      return `${baseUrl}${url}`;
+    }
+
+    return `${baseUrl}/profile-images/${url}`;
   };
 
   return (

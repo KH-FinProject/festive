@@ -295,9 +295,9 @@ function CustomerDetail() {
             <img
               src={
                 post.memberProfileImage
-                  ? post.memberProfileImage.startsWith("/profile-images/")
-                    ? post.memberProfileImage + "?t=" + Date.now()
-                    : post.memberProfileImage
+                  ? post.memberProfileImage.startsWith("http")
+                    ? post.memberProfileImage
+                    : `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${post.memberProfileImage.startsWith('/') ? post.memberProfileImage : `/${post.memberProfileImage}`}?t=${Date.now()}`
                   : "/logo.png"
               }
               alt="프로필"

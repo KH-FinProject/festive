@@ -126,10 +126,7 @@ function NoticeBoard({ hideTitle }) {
                   <img
                     src={
                       notice.memberProfileImage
-                        ? `${
-                            import.meta.env.VITE_API_URL ||
-                            "http://localhost:8080"
-                          }${notice.memberProfileImage}`
+                        ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${notice.memberProfileImage.startsWith('/') ? notice.memberProfileImage : `/${notice.memberProfileImage}`}`
                         : "/logo.png"
                     }
                     alt="관리자 프로필"
