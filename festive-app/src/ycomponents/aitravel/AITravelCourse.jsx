@@ -236,35 +236,7 @@ const AITravelCourse = () => {
   };
 
   const handleCourseClick = (courseId) => {
-    // 🚨 강력한 디버깅 - 알림과 콘솔 로그 모두 추가
-    alert(`🖱️ 여행코스 클릭됨! courseId: ${courseId}`);
-    console.log("🖱️ ===========================================");
-    console.log("🖱️ 여행코스 클릭 이벤트 발생!");
-    console.log("🖱️ ===========================================");
-    console.log("🖱️ courseId:", courseId);
-    console.log("🖱️ courseId 타입:", typeof courseId);
-    console.log("🖱️ 현재 URL:", window.location.href);
-    console.log("🖱️ 네비게이트 대상 URL:", `/course/${courseId}`);
-
-    try {
-      console.log("🖱️ navigate 함수 호출 시도 중...");
-      navigate(`/course/${courseId}`);
-      console.log("🖱️ navigate 함수 호출 완료!");
-
-      // 0.5초 후 URL 변경 확인
-      setTimeout(() => {
-        console.log("🖱️ 0.5초 후 URL 체크:", window.location.href);
-        if (!window.location.href.includes(`/course/${courseId}`)) {
-          console.error("❌ URL 변경 실패!");
-          alert(`❌ URL 변경 실패! 현재 URL: ${window.location.href}`);
-        } else {
-          console.log("✅ URL 변경 성공!");
-        }
-      }, 500);
-    } catch (error) {
-      console.error("❌ navigate 함수 호출 중 오류:", error);
-      alert(`❌ navigate 오류: ${error.message}`);
-    }
+    navigate(`/course/${courseId}`);
   };
 
   // 🔐 AI 추천받으러 가기 버튼 클릭 핸들러
@@ -398,20 +370,6 @@ const AITravelCourse = () => {
     activeMenu === "share" ? shareVisibleCount : myTravelVisibleCount;
   const visibleCourses = currentCourses.slice(0, visibleCount);
 
-  // 🔍 데이터 상태 디버깅
-  console.log("🔍 ===========================================");
-  console.log("🔍 AITravelCourse 렌더링 상태");
-  console.log("🔍 ===========================================");
-  console.log("🔍 activeMenu:", activeMenu);
-  console.log("🔍 sharedCourses 개수:", sharedCourses.length);
-  console.log("🔍 myTravelCourses 개수:", myTravelCourses.length);
-  console.log("🔍 currentCourses 개수:", currentCourses.length);
-  console.log("🔍 visibleCourses 개수:", visibleCourses.length);
-  console.log("🔍 visibleCount:", visibleCount);
-  if (visibleCourses.length > 0) {
-    console.log("🔍 첫 번째 course:", visibleCourses[0]);
-  }
-
   return (
     <div className="ai-travel-container">
       <AItitle />
@@ -470,21 +428,11 @@ const AITravelCourse = () => {
             ) : (
               <div className="ai-travel__course-grid">
                 {visibleCourses.map((course) => {
-                  // 🔍 course 객체 디버깅
-                  console.log("🔍 렌더링 중인 course:", course);
-                  console.log(
-                    "🔍 course.id:",
-                    course.id,
-                    "타입:",
-                    typeof course.id
-                  );
-
                   return (
                     <div key={course.id} className="ai-travel__course-card">
                       <div
                         className="ai-travel__course-image"
                         onClick={() => {
-                          console.log("🖱️ 이미지 클릭됨! course:", course);
                           handleCourseClick(course.id);
                         }}
                       >
@@ -500,7 +448,6 @@ const AITravelCourse = () => {
                       <div
                         className="ai-travel__course-info"
                         onClick={() => {
-                          console.log("🖱️ 정보 영역 클릭됨! course:", course);
                           handleCourseClick(course.id);
                         }}
                       >

@@ -10,45 +10,22 @@ const TravelCourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
 
-  // 🕐 배포 확인용 타임스탬프
-  const BUILD_TIMESTAMP = "2024-07-15-16:25:00";
-  console.log("🕐 TravelCourseDetail 빌드 타임스탬프:", BUILD_TIMESTAMP);
-
-  // 🔍 강화된 디버깅: 컴포넌트 마운트 및 URL 검증
-  console.log("🚀 ===========================================");
-  console.log("🚀 TravelCourseDetail 컴포넌트 마운트 시작");
-  console.log("🚀 ===========================================");
-  console.log("🔍 받은 courseId:", courseId);
-  console.log("🔍 courseId 타입:", typeof courseId);
-  console.log("🔍 현재 전체 URL:", window.location.href);
-  console.log("🔍 pathname:", window.location.pathname);
-  console.log("🔍 search:", window.location.search);
-  console.log("🔍 hash:", window.location.hash);
-  console.log("🔍 origin:", window.location.origin);
-  console.log("🔍 useParams 결과:", useParams());
-
   // URL 검증 및 수정
   useEffect(() => {
     const currentPath = window.location.pathname;
-    console.log("🔍 URL 검증 시작 - currentPath:", currentPath);
 
     // 잘못된 API 경로로 접근한 경우 올바른 경로로 리다이렉트
     if (currentPath.includes("/api/travel-course/") && courseId) {
-      console.log("❌ 잘못된 API 경로 감지:", currentPath);
-      console.log("✅ 올바른 경로로 리다이렉트:", `/course/${courseId}`);
       navigate(`/course/${courseId}`, { replace: true });
       return;
     }
 
     // courseId가 없거나 유효하지 않은 경우
     if (!courseId || isNaN(Number(courseId))) {
-      console.log("❌ 유효하지 않은 courseId:", courseId);
       alert("유효하지 않은 여행코스 ID입니다.");
       navigate("/ai-travel", { replace: true });
       return;
     }
-
-    console.log("✅ URL 검증 완료 - 유효한 경로");
   }, [courseId, navigate]);
 
   const [courseData, setCourseData] = useState(null);
@@ -79,12 +56,6 @@ const TravelCourseDetail = () => {
   useEffect(() => {
     const fetchCourseData = async () => {
       try {
-        console.log("🔄 ===========================================");
-        console.log("🔄 여행코스 데이터 로드 시작");
-        console.log("🔄 ===========================================");
-        console.log("🔄 courseId:", courseId);
-        console.log("🔄 courseId 타입:", typeof courseId);
-
         if (!courseId) {
           throw new Error("courseId가 제공되지 않았습니다.");
         }
@@ -92,62 +63,22 @@ const TravelCourseDetail = () => {
         let response;
         let data;
 
-        // 🔐 1단계: 먼저 공유된 여행코스로 시도 (인증 불필요)
+        // 1단계: 먼저 공유된 여행코스로 시도 (인증 불필요)
         try {
           const requestUrl = `/api/travel-course/${courseId}`;
-          console.log("🔄 공유 여행코스 API 호출 시작");
-          console.log("🌐 요청 URL:", requestUrl);
-          console.log("🌐 현재 도메인:", window.location.origin);
-          console.log("🌐 최종 요청 URL:", window.location.origin + requestUrl);
-
           response = await axios.get(requestUrl, {
             headers: {
               "Content-Type": "application/json",
             },
-            // withCredentials 없이 요청
           });
           data = response.data;
-          console.log(
-            "✅ 공유 여행코스 API 성공 - 응답 상태:",
-            response.status
-          );
-          console.log("✅ 공유 여행코스 API 성공 - 데이터:", data);
         } catch (error) {
-          console.log(
-            "❌ 공유 여행코스 API 실패 - 상태:",
-            error.response?.status
-          );
-          console.log("❌ 공유 여행코스 API 실패 - 메시지:", error.message);
-          console.log("❌ 공유 여행코스 API 실패 - 전체 오류:", error);
-
-          // 🔐 2단계: 공유 접근 실패시 인증이 필요한 개인 여행코스로 시도
+          // 2단계: 공유 접근 실패시 인증이 필요한 개인 여행코스로 시도
           try {
             const apiUrl = `/api/travel-course/${courseId}`;
-            console.log("🔄 개인 여행코스 API 호출 시작");
-            console.log("🔑 axiosApi baseURL:", import.meta.env.VITE_API_URL);
-            console.log("🔑 요청 URL:", apiUrl);
-            console.log(
-              "🔑 최종 요청 URL:",
-              import.meta.env.VITE_API_URL + apiUrl
-            );
-
             response = await axiosApi.get(apiUrl);
             data = response.data;
-            console.log(
-              "✅ 개인 여행코스 API 성공 - 응답 상태:",
-              response.status
-            );
-            console.log("✅ 개인 여행코스 API 성공 - 데이터:", data);
           } catch (error) {
-            console.error(
-              "❌ 개인 여행코스 접근도 실패 - 상태:",
-              error.response?.status
-            );
-            console.error(
-              "❌ 개인 여행코스 접근도 실패 - 메시지:",
-              error.message
-            );
-            console.error("❌ 개인 여행코스 접근도 실패 - 전체 오류:", error);
             throw new Error("여행코스를 찾을 수 없거나 접근 권한이 없습니다.");
           }
         }
@@ -157,9 +88,6 @@ const TravelCourseDetail = () => {
         }
 
         if (data.success) {
-          console.log("✅ 여행코스 데이터 처리 성공:");
-          console.log("✅ 코스 데이터:", data.course);
-          console.log("✅ 상세 데이터:", data.details);
           setCourseData(data.course);
           setCourseDetails(data.details);
 
@@ -170,34 +98,22 @@ const TravelCourseDetail = () => {
               lat: parseFloat(firstPlace.latitude),
               lng: parseFloat(firstPlace.longitude),
             });
-            console.log("🗺️ 지도 중심 설정:", {
-              lat: parseFloat(firstPlace.latitude),
-              lng: parseFloat(firstPlace.longitude),
-            });
           }
         } else {
           throw new Error(data.message || "데이터를 불러올 수 없습니다.");
         }
       } catch (error) {
-        console.error("🚨 ==========================================");
-        console.error("🚨 여행코스 데이터 로드 실패");
-        console.error("🚨 ==========================================");
-        console.error("🚨 오류:", error);
-        console.error("🚨 오류 메시지:", error.message);
-        console.error("🚨 스택 트레이스:", error.stack);
+        console.error("🚨 여행코스 데이터 로드 실패:", error);
         alert("여행코스를 불러오는데 실패했습니다: " + error.message);
         navigate("/ai-travel");
       } finally {
-        console.log("🔄 데이터 로딩 완료 상태 설정");
         setLoading(false);
       }
     };
 
     if (courseId) {
-      console.log("🔄 fetchCourseData 실행 조건 충족 - courseId:", courseId);
       fetchCourseData();
     } else {
-      console.log("❌ fetchCourseData 실행 조건 불충족 - courseId가 없음");
       setLoading(false);
     }
   }, [courseId, navigate]);
@@ -949,98 +865,94 @@ const TravelCourseDetail = () => {
           showSidePanel ? "with-side-panel" : ""
         }`}
       >
-        {/* mapError || loadingMapError ? ( */}
-        <div className="travel-detail-map-error">
-          <div className="travel-detail-map-error-content">
-            <h3>🗺️ 지도를 불러올 수 없습니다</h3>
-            <p>
-              카카오맵 API 키가 설정되지 않았거나 지도 로딩 중 오류가
-              발생했습니다.
-            </p>
-            <p>여행코스 정보는 좌측에서 확인하실 수 있습니다.</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="travel-detail-retry-btn"
-              style={{
-                padding: "8px 16px",
-                background: "#FF6B6B",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                marginTop: "10px",
-              }}
-            >
-              새로고침
-            </button>
+        {loadingMap ? (
+          <div className="travel-detail-map-loading">
+            <div>지도를 불러오는 중입니다...</div>
           </div>
-        </div>
-        {/* ) : loadingMap ? ( */}
-        <div className="travel-detail-map-loading">
-          <div>지도를 불러오는 중입니다...</div>
-        </div>
-        {/* ) : ( */}
-        <Map
-          center={mapCenter}
-          style={{
-            width: "100%",
-            height: "100%",
-          }}
-          level={8}
-          onCreate={(mapInstance) => {
-            setMap(mapInstance);
-          }}
-        >
-          {/* 선택된 날짜의 마커들 */}
-          {dayPlaces.map((place, index) => {
-            if (!place.latitude || !place.longitude) return null;
+        ) : key ? (
+          <Map
+            center={mapCenter}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
+            level={8}
+            onCreate={(mapInstance) => {
+              setMap(mapInstance);
+            }}
+          >
+            {/* 선택된 날짜의 마커들 */}
+            {dayPlaces.map((place, index) => {
+              if (!place.latitude || !place.longitude) return null;
 
-            return (
-              <MapMarker
-                key={place.detailNo}
-                position={{
-                  lat: parseFloat(place.latitude),
-                  lng: parseFloat(place.longitude),
-                }}
-                image={{
-                  src: `data:image/svg+xml;base64,${btoa(`
-                    <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="#FF6B6B"/>
-                      <circle cx="15" cy="15" r="8" fill="white"/>
-                      <text x="15" y="20" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#FF6B6B">${
-                        index + 1
-                      }</text>
-                    </svg>
-                  `)}`,
-                  size: { width: 30, height: 40 },
-                }}
-                title={`${index + 1}. ${place.placeName}`}
-                onClick={() => {
-                  setMapCenter({
+              return (
+                <MapMarker
+                  key={place.detailNo}
+                  position={{
                     lat: parseFloat(place.latitude),
                     lng: parseFloat(place.longitude),
-                  });
-                }}
-              />
-            );
-          })}
+                  }}
+                  image={{
+                    src: `data:image/svg+xml;base64,${btoa(`
+                      <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="#FF6B6B"/>
+                        <circle cx="15" cy="15" r="8" fill="white"/>
+                        <text x="15" y="20" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#FF6B6B">${
+                          index + 1
+                        }</text>
+                      </svg>
+                    `)}`,
+                    size: { width: 30, height: 40 },
+                  }}
+                  title={`${index + 1}. ${place.placeName}`}
+                  onClick={() => {
+                    setMapCenter({
+                      lat: parseFloat(place.latitude),
+                      lng: parseFloat(place.longitude),
+                    });
+                  }}
+                />
+              );
+            })}
 
-          {/* 장소들을 연결하는 선 */}
-          {polylinePath.length > 1 && (
-            <Polyline
-              path={polylinePath}
-              strokeWeight={3}
-              strokeColor="#FF6B6B"
-              strokeOpacity={0.8}
-              strokeStyle="solid"
-            />
-          )}
-        </Map>
-        {/* ) : ( */}
-        {/* <div className="travel-detail-map-loading">
-            <div>지도를 불러오는 중입니다...</div>
-          </div> */}
-        {/* )} */}
+            {/* 장소들을 연결하는 선 */}
+            {polylinePath.length > 1 && (
+              <Polyline
+                path={polylinePath}
+                strokeWeight={3}
+                strokeColor="#FF6B6B"
+                strokeOpacity={0.8}
+                strokeStyle="solid"
+              />
+            )}
+          </Map>
+        ) : (
+          <div className="travel-detail-map-error">
+            <div className="travel-detail-map-error-content">
+              <h3>🗺️ 지도를 불러올 수 없습니다</h3>
+              <p>
+                카카오맵 API 키가 설정되지 않았거나 지도 로딩 중 오류가
+                발생했습니다.
+              </p>
+              <p>여행코스 정보는 좌측에서 확인하실 수 있습니다.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="travel-detail-retry-btn"
+                style={{
+                  padding: "8px 16px",
+                  background: "#FF6B6B",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  marginTop: "10px",
+                }}
+              >
+                새로고침
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 오른쪽 사이드 패널 (장소 상세 정보) */}
