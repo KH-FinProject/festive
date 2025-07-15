@@ -9,6 +9,13 @@ import logo from "../../assets/festiveLogo.png";
 const TravelCourseDetail = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+
+  // 🔍 디버깅: courseId 확인
+  console.log("🔍 TravelCourseDetail 컴포넌트 마운트");
+  console.log("🔍 받은 courseId:", courseId);
+  console.log("🔍 courseId 타입:", typeof courseId);
+  console.log("🔍 현재 URL:", window.location.href);
+
   const [courseData, setCourseData] = useState(null);
   const [courseDetails, setCourseDetails] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,8 +50,13 @@ const TravelCourseDetail = () => {
 
         // 🔐 1단계: 먼저 공유된 여행코스로 시도 (인증 불필요)
         try {
+          const requestUrl = `/api/travel-course/${courseId}`;
           console.log("🔄 공유 여행코스 API 호출 시작");
-          response = await axios.get(`/api/travel-course/${courseId}`, {
+          console.log("🌐 요청 URL:", requestUrl);
+          console.log("🌐 현재 도메인:", window.location.origin);
+          console.log("🌐 최종 요청 URL:", window.location.origin + requestUrl);
+
+          response = await axios.get(requestUrl, {
             headers: {
               "Content-Type": "application/json",
             },
@@ -60,8 +72,16 @@ const TravelCourseDetail = () => {
           );
           // 🔐 2단계: 공유 접근 실패시 인증이 필요한 개인 여행코스로 시도
           try {
+            const apiUrl = `/api/travel-course/${courseId}`;
             console.log("🔄 개인 여행코스 API 호출 시작");
-            response = await axiosApi.get(`/api/travel-course/${courseId}`);
+            console.log("🔑 axiosApi baseURL:", import.meta.env.VITE_API_URL);
+            console.log("🔑 요청 URL:", apiUrl);
+            console.log(
+              "🔑 최종 요청 URL:",
+              import.meta.env.VITE_API_URL + apiUrl
+            );
+
+            response = await axiosApi.get(apiUrl);
             data = response.data;
             console.log("✅ 개인 여행코스 API 성공:", data);
           } catch (error) {
@@ -861,12 +881,12 @@ const TravelCourseDetail = () => {
             <div className="travel-detail-map-error-content">
               <h3>🗺️ 지도를 불러올 수 없습니다</h3>
               <p>
-                {!hasKakaoMapKey 
-                  ? "카카오맵 API 키가 설정되지 않았습니다." 
+                {!hasKakaoMapKey
+                  ? "카카오맵 API 키가 설정되지 않았습니다."
                   : "지도 로딩 중 오류가 발생했습니다."}
               </p>
               <p>여행코스 정보는 좌측에서 확인하실 수 있습니다.</p>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="travel-detail-retry-btn"
                 style={{
@@ -876,7 +896,7 @@ const TravelCourseDetail = () => {
                   border: "none",
                   borderRadius: "4px",
                   cursor: "pointer",
-                  marginTop: "10px"
+                  marginTop: "10px",
                 }}
               >
                 새로고침
@@ -899,19 +919,19 @@ const TravelCourseDetail = () => {
               setMap(mapInstance);
             }}
           >
-          {/* 선택된 날짜의 마커들 */}
-          {dayPlaces.map((place, index) => {
-            if (!place.latitude || !place.longitude) return null;
+            {/* 선택된 날짜의 마커들 */}
+            {dayPlaces.map((place, index) => {
+              if (!place.latitude || !place.longitude) return null;
 
-            return (
-              <MapMarker
-                key={place.detailNo}
-                position={{
-                  lat: parseFloat(place.latitude),
-                  lng: parseFloat(place.longitude),
-                }}
-                image={{
-                  src: `data:image/svg+xml;base64,${btoa(`
+              return (
+                <MapMarker
+                  key={place.detailNo}
+                  position={{
+                    lat: parseFloat(place.latitude),
+                    lng: parseFloat(place.longitude),
+                  }}
+                  image={{
+                    src: `data:image/svg+xml;base64,${btoa(`
                     <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
                       <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="#FF6B6B"/>
                       <circle cx="15" cy="15" r="8" fill="white"/>
@@ -920,30 +940,30 @@ const TravelCourseDetail = () => {
                       }</text>
                     </svg>
                   `)}`,
-                  size: { width: 30, height: 40 },
-                }}
-                title={`${index + 1}. ${place.placeName}`}
-                onClick={() => {
-                  setMapCenter({
-                    lat: parseFloat(place.latitude),
-                    lng: parseFloat(place.longitude),
-                  });
-                }}
-              />
-            );
-          })}
+                    size: { width: 30, height: 40 },
+                  }}
+                  title={`${index + 1}. ${place.placeName}`}
+                  onClick={() => {
+                    setMapCenter({
+                      lat: parseFloat(place.latitude),
+                      lng: parseFloat(place.longitude),
+                    });
+                  }}
+                />
+              );
+            })}
 
-          {/* 장소들을 연결하는 선 */}
-          {polylinePath.length > 1 && (
-            <Polyline
-              path={polylinePath}
-              strokeWeight={3}
-              strokeColor="#FF6B6B"
-              strokeOpacity={0.8}
-              strokeStyle="solid"
-            />
-          )}
-        </Map>
+            {/* 장소들을 연결하는 선 */}
+            {polylinePath.length > 1 && (
+              <Polyline
+                path={polylinePath}
+                strokeWeight={3}
+                strokeColor="#FF6B6B"
+                strokeOpacity={0.8}
+                strokeStyle="solid"
+              />
+            )}
+          </Map>
         )}
       </div>
 

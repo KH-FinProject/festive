@@ -145,17 +145,26 @@ public class TravelCourseController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            log.info("🔍 여행코스 상세 조회 요청 - 코스번호: {}, 인증된 사용자: {}", 
+                    courseNo, userDetails != null ? userDetails.getMemberNo() : "없음");
+            
             TravelCourse course = travelCourseService.getTravelCourseWithDetails(courseNo);
             
             if (course == null) {
+                log.warn("❌ 존재하지 않는 여행코스 - 코스번호: {}", courseNo);
                 response.put("success", false);
                 response.put("message", "존재하지 않는 여행코스입니다.");
-                return ResponseEntity.notFound().build();
+                return ResponseEntity.status(404).body(response);
             }
+            
+            log.info("📋 여행코스 조회 성공 - 제목: {}, 공유여부: {}, 소유자: {}", 
+                    course.getCourseTitle(), course.getIsShared(), course.getMemberNo());
             
             // 공유된 코스가 아닌 경우 본인 확인 필요
             if (!"Y".equals(course.getIsShared())) {
+                log.info("🔒 비공유 여행코스 접근 권한 확인 중...");
                 if (userDetails == null) {
+                    log.warn("❌ 로그인 필요 - 비공유 코스에 미인증 접근");
                     response.put("success", false);
                     response.put("message", "로그인이 필요합니다.");
                     return ResponseEntity.status(401).body(response);
@@ -163,20 +172,25 @@ public class TravelCourseController {
                 
                 // 본인 코스가 아닌 경우 접근 거부
                 if (!course.getMemberNo().equals(userDetails.getMemberNo())) {
+                    log.warn("❌ 접근 권한 없음 - 코스 소유자: {}, 요청자: {}", 
+                            course.getMemberNo(), userDetails.getMemberNo());
                     response.put("success", false);
                     response.put("message", "접근 권한이 없습니다.");
                     return ResponseEntity.status(403).body(response);
                 }
+            } else {
+                log.info("🌐 공유된 여행코스 - 인증 없이 접근 허용");
             }
             
             List<TravelCourseDetail> details = travelCourseService.getTravelCourseDetails(courseNo);
+            log.info("📍 여행코스 상세 장소 {}개 조회 완료", details.size());
             
             response.put("success", true);
             response.put("course", course);
             response.put("details", details);
             
-            log.info("✅ 여행코스 상세 조회 성공 - 코스번호: {}, 공유여부: {}", 
-                    courseNo, course.getIsShared());
+            log.info("✅ 여행코스 상세 조회 성공 - 코스번호: {}, 공유여부: {}, 장소수: {}", 
+                    courseNo, course.getIsShared(), details.size());
             
             return ResponseEntity.ok(response);
             
