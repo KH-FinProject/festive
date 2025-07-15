@@ -1,9 +1,9 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import "./AdminCommon.css";
-import { useAdminNotification } from "./AdminNotificationContext.jsx";
+import { useAdminNotifications } from "./AdminNotificationContext.jsx";
 
 const AdminSidebar = () => {
-  const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotification();
+  const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotifications();
   const location = useLocation();
 
   // 신청 현황 active 처리

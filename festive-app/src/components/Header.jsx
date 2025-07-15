@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import mainLogo from "../assets/festiveLogo.png";
 import useAuthStore from "../store/useAuthStore";
-import { useAdminNotification } from "../mcomponents/AdminNotificationContext.jsx";
+import { useAdminNotifications } from "../mcomponents/AdminNotificationContext.jsx";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 import axiosApi from "../api/axiosAPI.js";
 import "./HeaderFooter.css";
 
 const Header = () => {
   const { member, logout, isLoggedIn } = useAuthStore();
-  const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotification();
+  const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotifications();
   const navigate = useNavigate();
   const location = useLocation();
 

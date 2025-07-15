@@ -4,7 +4,7 @@ import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSideBar";
 import Pagination, { usePagination } from "./Pagination";
-import { useAdminNotification } from "./AdminNotificationContext.jsx";
+import { useAdminNotifications } from "./AdminNotificationContext.jsx";
 import axiosApi from "../api/axiosAPI";
 
 const AdminCustomerService = () => {
@@ -15,8 +15,7 @@ const AdminCustomerService = () => {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
-  const { setHasNewReport } = useAdminNotification();
-  const { setHasNewInquiry } = useAdminNotification();
+  const { setHasNewReport, setHasNewInquiry } = useAdminNotifications();
 
   // 문의내역 페이지네이션 설정
   const inquiryPagination = usePagination({
