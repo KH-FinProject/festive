@@ -437,9 +437,8 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
                                       lowerMessage.contains("검색") || lowerMessage.contains("리스트") ||
                                       lowerMessage.contains("목록");
         
-        // 4. 키워드 추출하여 축제성 검사
-        String extractedKeyword = extractKeywordFromRequest(message);
-        boolean hasExtractedKeyword = extractedKeyword != null && !extractedKeyword.trim().isEmpty();
+        // 4. 간단한 키워드 감지 (extractKeywordFromRequest 호출 없이)
+        boolean hasSpecificKeyword = hasSimpleKeyword(message);
         
         String requestType;
         
@@ -456,9 +455,9 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             } else {
                 requestType = "festival_info";
             }
-        } else if (hasExtractedKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
-            // 🎪 키워드 + 정보 요청 = 축제 검색 (예: "서울 드론 알려줘", "부산 로봇 정보")
-            log.info("🎪 키워드 기반 축제 검색 감지: 키워드='{}', 메시지='{}'", extractedKeyword, message);
+        } else if (hasSpecificKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
+            // 🎪 특정 키워드 + 정보 요청 = 축제 검색 (예: "드론 알려줘", "로봇 정보")
+            log.info("🎪 키워드 기반 축제 검색 감지: 메시지='{}'", message);
             requestType = "festival_info";
         } else if (hasTravelPlanKeyword) {
             // 여행 계획 키워드만 있는 경우 = 일반 여행 계획
@@ -471,6 +470,38 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         log.info("🔍 요청 타입 결정: '{}' → requestType: {}", message, requestType);
         return requestType;
     }
+    
+    /**
+     * 간단한 키워드 감지 (순환 호출 방지)
+     */
+    private boolean hasSimpleKeyword(String message) {
+        String[] words = message.split("\\s+");
+        for (String word : words) {
+            word = word.replaceAll("[^가-힣a-zA-Z]", "").toLowerCase();
+            if (word.length() >= 2 && !isSimpleCommonWord(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 간단한 공통 단어 체크 (순환 호출 방지용)
+     */
+    private boolean isSimpleCommonWord(String word) {
+        String[] commonWords = {
+            "알려줘", "추천", "정보", "축제", "행사", "이벤트", "여행", "계획", "일정", "코스",
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원",
+            "충북", "충남", "전북", "전남", "경북", "경남", "제주"
+        };
+        
+        for (String common : commonWords) {
+            if (word.equals(common)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public String extractKeywordFromRequest(String message) {
@@ -478,7 +509,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "";
         }
         
-        log.info("🤖 AI 기반 키워드 추출 시작: {}", message);
+        log.info("🤖 AI 기반 키워드 추출 시작: '{}'", message);
         
         try {
             // 🤖 1단계: AI를 활용한 스마트 키워드 추출
@@ -486,42 +517,59 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             
             if (aiKeyword != null && !aiKeyword.trim().isEmpty()) {
                 log.info("✅ AI 키워드 추출 성공: '{}' → '{}'", message, aiKeyword);
-                return aiKeyword.trim();
+                
+                // AI 결과도 검증 (불필요한 단어가 추출되었는지 확인)
+                if (isCommonWord(aiKeyword.trim())) {
+                    log.warn("⚠️ AI가 추출한 키워드가 공통 단어임: '{}' - 폴백 사용", aiKeyword);
+                } else {
+                    return aiKeyword.trim();
+                }
+            } else {
+                log.info("⚠️ AI 키워드 추출 결과 없음: '{}'", message);
             }
-            
-            log.info("⚠️ AI 키워드 추출 결과 없음, 폴백 방식 사용");
             
         } catch (Exception e) {
             log.warn("❌ AI 키워드 추출 실패, 폴백 방식 사용: {}", e.getMessage());
         }
         
-        // 🛡️ 2단계: 폴백 - 간단한 단어 추출 (제한 없음)
+        // 🛡️ 2단계: 폴백 - 간단한 단어 추출 (우선순위 기반)
         log.info("🔄 AI 실패, 기본 단어 추출 방식 사용");
         
         String[] words = message.split("\\s+");
-        for (String word : words) {
+        
+        // 먼저 모든 단어를 정리하고 로깅
+        String[] cleanWords = new String[words.length];
+        for (int i = 0; i < words.length; i++) {
+            cleanWords[i] = words[i].replaceAll("[^가-힣a-zA-Z]", "").toLowerCase();
+            log.debug("단어 정리: '{}' → '{}'", words[i], cleanWords[i]);
+        }
+        
+        // 유효한 키워드 후보들을 찾아서 우선순위대로 선택
+        for (String word : cleanWords) {
             if (word.length() >= 2 && !word.matches("\\d+")) {
-                word = word.replaceAll("[^가-힣a-zA-Z]", "");
-                if (word.length() >= 2) {
-                    // 지역명, 기간, 일반 동사는 제외하되, 모든 명사형 키워드는 허용
-                    if (!isCommonWord(word)) {
-                        log.info("📝 폴백 키워드 추출: '{}'", word);
-                        return word;
-                    }
+                log.debug("키워드 후보 검사: '{}'", word);
+                if (!isCommonWord(word)) {
+                    log.info("📝 폴백 키워드 추출 성공: '{}'", word);
+                    return word;
+                } else {
+                    log.debug("❌ 공통 단어로 제외: '{}'", word);
                 }
+            } else {
+                log.debug("❌ 너무 짧거나 숫자: '{}'", word);
             }
         }
         
         // 3단계: 마지막 시도 - 더 유연한 추출
+        log.info("🔄 3단계: 정제된 키워드 추출 시도");
         String cleanMessage = message.toLowerCase()
             .replaceAll("[^가-힣a-zA-Z\\s]", " ") // 특수문자를 공백으로
             .replaceAll("\\s+", " ") // 여러 공백을 하나로
             .trim();
             
-        String[] cleanWords = cleanMessage.split(" ");
-        for (String word : cleanWords) {
+        String[] cleanMessageWords = cleanMessage.split(" ");
+        for (String word : cleanMessageWords) {
             if (word.length() >= 2 && !isCommonWord(word)) {
-                log.info("🔍 정제된 키워드 추출: '{}'", word);
+                log.info("🔍 정제된 키워드 추출 성공: '{}'", word);
                 return word;
             }
         }

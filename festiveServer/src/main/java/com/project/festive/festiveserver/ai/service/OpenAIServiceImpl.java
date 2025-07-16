@@ -434,40 +434,41 @@ public class OpenAIServiceImpl implements OpenAIService {
     public String extractKeywordWithAI(String userMessage) {
         try {
             StringBuilder prompt = new StringBuilder();
-            prompt.append("사용자의 메시지에서 검색하고 싶은 핵심 키워드를 추출해주세요.\n\n");
+            prompt.append("사용자가 찾고 싶어하는 **핵심 주제 키워드**를 추출해주세요.\n\n");
             prompt.append("**사용자 메시지**: \"").append(userMessage).append("\"\n\n");
             
-            prompt.append("**키워드 추출 규칙**:\n");
-            prompt.append("1. 사용자가 찾고 싶어하는 구체적인 명사형 키워드만 추출\n");
-            prompt.append("2. 모든 종류의 키워드 허용 (제한 없음)\n");
-            prompt.append("   - 전통적인 축제: 벚꽃, 불꽃, 음식, 문화, 전통 등\n");
-            prompt.append("   - 현대적인 축제: 드론, 로봇, IT, 게임, K-POP, 애니메이션 등\n");
-            prompt.append("   - 특별한 키워드: 핸드폰, 컴퓨터, 자동차, 패션, 뷰티 등\n");
-            prompt.append("   - 모든 가능한 축제/이벤트 주제 포함\n");
+            prompt.append("**키워드 추출 원칙**:\n");
+            prompt.append("1. **핵심 주제어만 추출** - 사용자가 실제로 찾고 싶어하는 구체적인 대상\n");
+            prompt.append("2. **우선순위 규칙**:\n");
+            prompt.append("   • 구체적인 대상 > 일반적인 분류\n");
+            prompt.append("   • 예: '드론 축제' → '드론' (축제는 일반 분류)\n");
+            prompt.append("   • 예: '벚꽃축제' → '벚꽃' (축제는 접미사)\n");
+            prompt.append("   • 예: '로봇대회' → '로봇' (대회는 접미사)\n");
             prompt.append("3. **반드시 제외할 것들**:\n");
-            prompt.append("   - 지역명: 서울, 부산, 경기도 등\n");
-            prompt.append("   - 기간: 2박3일, 하루, 주말 등\n");
-            prompt.append("   - 일반 동사: 알려줘, 추천, 가자, 보여줘 등\n");
-            prompt.append("   - 수식어/접미사: 관련, 축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 쇼, 전시회, 컨벤션 등\n");
-            prompt.append("   - 일반 명사: 정보, 여행, 계획, 코스 등\n");
-            prompt.append("4. 순수한 주제어만 추출 (수식어 제거)\n");
-            prompt.append("   - '드론관련' → '드론'\n");
-            prompt.append("   - '벚꽃축제' → '벚꽃'\n");
-            prompt.append("   - '로봇페스티벌' → '로봇'\n");
-            prompt.append("5. 키워드가 명확하지 않으면 빈 문자열 반환\n\n");
+            prompt.append("   • 접미사: 축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 쇼, 전시회\n");
+            prompt.append("   • 지역명: 서울, 부산, 경기도 등\n");
+            prompt.append("   • 동사: 알려줘, 추천, 가자, 보여줘 등\n");
+            prompt.append("   • 일반명사: 정보, 여행, 계획, 코스 등\n");
+            prompt.append("4. **추출 대상**:\n");
+            prompt.append("   • 모든 종류의 주제어 허용 (제한 없음)\n");
+            prompt.append("   • 전통: 벚꽃, 불꽃, 음식, 문화, 전통\n");
+            prompt.append("   • 현대: 드론, 로봇, IT, 게임, K-POP, 애니메이션\n");
+            prompt.append("   • 특수: 핸드폰, 컴퓨터, 자동차, 패션, 뷰티\n");
+            prompt.append("5. 명확한 주제어가 없으면 빈 문자열 반환\n\n");
             
-            prompt.append("**응답 형식**: 순수한 키워드 하나만 반환 (설명 없이)\n\n");
+            prompt.append("**응답 형식**: 핵심 주제어 하나만 반환 (설명 없이)\n\n");
             
-            prompt.append("**예시**:\n");
-            prompt.append("- '서울 벚꽃축제 알려줘' → 벚꽃\n");
-            prompt.append("- '부산 드론관련 축제 정보' → 드론\n");
-            prompt.append("- '대구 로봇페스티벌 언제야?' → 로봇\n");
-            prompt.append("- '인천 게임대회 가고싶어' → 게임\n");
-            prompt.append("- '경기도 핸드폰 관련 행사' → 핸드폰\n");
-            prompt.append("- '제주도 자동차쇼 정보' → 자동차\n");
-            prompt.append("- '강원도 애니메이션축제' → 애니메이션\n");
+            prompt.append("**정확한 예시**:\n");
+            prompt.append("- '서울 드론 축제 알려줘' → 드론\n");
+            prompt.append("- '부산 벚꽃축제 정보' → 벚꽃\n");
+            prompt.append("- '대구 로봇대회 언제야?' → 로봇\n");
+            prompt.append("- '인천 게임페스티벌' → 게임\n");
+            prompt.append("- '경기도 핸드폰 박람회' → 핸드폰\n");
+            prompt.append("- '제주도 자동차쇼' → 자동차\n");
+            prompt.append("- '강원도 K-POP 축제' → K-POP\n");
             prompt.append("- '충남 2박3일 여행계획' → \n");
             prompt.append("- '전북 가볼만한 곳 추천' → \n");
+            prompt.append("- '서울 축제 리스트' → \n");
             
             String response = callOpenAI(prompt.toString());
             
@@ -476,7 +477,7 @@ public class OpenAIServiceImpl implements OpenAIService {
                 response = response.trim()
                     .replaceAll("\\n+", "")
                     .replaceAll("\\s+", " ")
-                    .replaceAll("[^가-힣a-zA-Z0-9\\s]", "")
+                    .replaceAll("[^가-힣a-zA-Z0-9\\s-]", "") // 하이픈 허용 (K-POP 등)
                     .trim();
                 
                 // 불필요한 접미사 제거 (추가 보안)
