@@ -412,63 +412,101 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
 
     @Override
     public String determineRequestType(String message) {
-        String lowerMessage = message.toLowerCase();
+        String lowerMessage = message.toLowerCase().replace(" ", "");
+        
+        log.info("🔍 요청 타입 분석 시작: '{}'", message);
         
         // 0. 먼저 여행/축제 관련성 체크
         if (!isTravelOrFestivalRelated(message)) {
+            log.info("❌ 여행/축제 관련 없음 → unclear_request");
             return "unclear_request";
         }
         
-        // 1. 축제 관련 키워드 확인
-        boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("행사") || 
-                                   lowerMessage.contains("이벤트") || lowerMessage.contains("페스티벌");
+        // 🎯 3가지 기능 명확 구분
         
-        // 2. 여행 계획 관련 키워드 확인
-        boolean hasTravelPlanKeyword = lowerMessage.contains("계획") || lowerMessage.contains("일정") || 
-                                     lowerMessage.contains("코스") || lowerMessage.contains("여행") || 
+        // 1️⃣ 축제 기반 여행코스 추천 (festival_travel)
+        // - "축제" + ("여행코스", "일정", "계획", "추천", "박", "일")
+        boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("페스티벌") || 
+                                   lowerMessage.contains("행사") || lowerMessage.contains("이벤트");
+        
+        boolean hasTravelPlanKeyword = lowerMessage.contains("여행코스") || lowerMessage.contains("여행계획") || 
+                                     lowerMessage.contains("일정") || lowerMessage.contains("코스") || 
                                      lowerMessage.contains("루트") || lowerMessage.contains("동선") ||
-                                     lowerMessage.contains("짜") || lowerMessage.contains("추천") ||
-                                     lowerMessage.contains("박") || lowerMessage.contains("일");
-        
-        // 3. 단순 정보 요청 키워드 확인
-        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("소개") || 
-                                      lowerMessage.contains("정보") || lowerMessage.contains("뭐가") ||
-                                      lowerMessage.contains("어떤") || lowerMessage.contains("찾아줘") ||
-                                      lowerMessage.contains("검색") || lowerMessage.contains("리스트") ||
-                                      lowerMessage.contains("목록");
-        
-        // 4. 간단한 키워드 감지 (extractKeywordFromRequest 호출 없이)
-        boolean hasSpecificKeyword = hasSimpleKeyword(message);
-        
-        String requestType;
+                                     lowerMessage.contains("박") || 
+                                     (lowerMessage.contains("추천") && (lowerMessage.contains("여행") || lowerMessage.contains("계획")));
         
         if (hasFestivalKeyword && hasTravelPlanKeyword) {
-            // 축제 + 여행 계획 키워드 = 축제 기반 여행 계획
-            requestType = "festival_travel";
-        } else if (hasFestivalKeyword && hasInfoRequestKeyword) {
-            // 축제 + 정보 요청 키워드 = 단순 축제 정보 요청
-            requestType = "festival_info";
-        } else if (hasFestivalKeyword) {
-            // 축제 키워드만 있는 경우 - 문맥에 따라 판단
-            if (lowerMessage.contains("위주") || lowerMessage.contains("중심") || lowerMessage.contains("기반")) {
-                requestType = "festival_travel";
-            } else {
-                requestType = "festival_info";
-            }
-        } else if (hasSpecificKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
-            // 🎪 특정 키워드 + 정보 요청 = 축제 검색 (예: "드론 알려줘", "로봇 정보")
-            log.info("🎪 키워드 기반 축제 검색 감지: 메시지='{}'", message);
-            requestType = "festival_info";
-        } else if (hasTravelPlanKeyword) {
-            // 여행 계획 키워드만 있는 경우 = 일반 여행 계획
-            requestType = "travel_only";
-        } else {
-            // 기본값
-            requestType = "travel_only";
+            log.info("🎪✈️ 축제 기반 여행코스 추천 감지 → festival_travel");
+            return "festival_travel";
         }
         
-        log.info("🔍 요청 타입 결정: '{}' → requestType: {}", message, requestType);
-        return requestType;
+        // 2️⃣ 순수 축제 검색 (festival_info)
+        // - "축제" + ("알려줘", "정보", "찾아줘", "검색", "뭐있어", "목록") 
+        // - 또는 특정 키워드 + ("알려줘", "정보") (예: "드론 알려줘")
+        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("정보") || 
+                                      lowerMessage.contains("찾아줘") || lowerMessage.contains("검색") || 
+                                      lowerMessage.contains("뭐있어") || lowerMessage.contains("목록") ||
+                                      lowerMessage.contains("리스트") || lowerMessage.contains("소개");
+        
+        // 특정 키워드 감지 (드론, 벚꽃 등)
+        boolean hasSpecificKeyword = hasSpecificFestivalKeyword(message);
+        
+        if (hasFestivalKeyword && hasInfoRequestKeyword) {
+            log.info("🎪📋 축제 정보 검색 감지 → festival_info");
+            return "festival_info";
+        }
+        
+        if (hasSpecificKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
+            log.info("🎯📋 키워드 기반 축제 검색 감지 → festival_info");
+            return "festival_info";
+        }
+        
+        // 축제 키워드만 있고 명확한 지시어가 없는 경우 → 기본적으로 축제 정보 검색
+        if (hasFestivalKeyword && !hasTravelPlanKeyword) {
+            log.info("🎪❓ 축제 키워드만 있음 → festival_info (기본값)");
+            return "festival_info";
+        }
+        
+        // 3️⃣ 일반 여행코스 추천 (travel_only)
+        // - 축제 키워드 없이 여행 관련 키워드만 있는 경우
+        if (hasTravelPlanKeyword && !hasFestivalKeyword) {
+            log.info("✈️ 일반 여행코스 추천 감지 → travel_only");
+            return "travel_only";
+        }
+        
+        // 🏠 기본값: 일반 여행 추천
+        log.info("🔄 기본값 적용 → travel_only");
+        return "travel_only";
+    }
+    
+    /**
+     * 구체적인 축제 키워드 감지 (드론, 벚꽃, K-POP 등)
+     */
+    private boolean hasSpecificFestivalKeyword(String message) {
+        String lowerMessage = message.toLowerCase();
+        
+        // 🎯 구체적인 축제 관련 키워드들
+        String[] specificKeywords = {
+            // 자연/식물
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "AI", "VR", "게임", "IT", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술
+            "K-POP", "KPOP", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
+        };
+        
+        for (String keyword : specificKeywords) {
+            if (lowerMessage.contains(keyword)) {
+                log.debug("🎯 구체적 키워드 발견: '{}'", keyword);
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**

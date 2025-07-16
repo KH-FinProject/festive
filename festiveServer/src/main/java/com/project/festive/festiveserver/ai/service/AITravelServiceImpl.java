@@ -563,71 +563,45 @@ public class AITravelServiceImpl implements AITravelService {
         }
         
         try {
-            // 🎪 축제 요청인 경우 - 축제 데이터만 수집
-            if ("festival_info".equals(requestType) || "festival_travel".equals(requestType)) {
-                log.info("🎪 축제 전용 모드 - 축제 데이터 수집 (타입: {})", requestType);
+            // 🎪 순수 축제 검색 요청인 경우 - 축제 데이터만 수집 (좌표 보완 포함)
+            if ("festival_info".equals(requestType)) {
+                log.info("🎪 순수 축제 검색 모드 - 축제 데이터 전용 수집");
+                return collectFestivalOnlyData(areaCode, sigunguCode, keyword);
+            }
+            
+            // 🎪 축제 기반 여행코스 요청인 경우 - 축제 + 여행 관련 데이터 수집
+            if ("festival_travel".equals(requestType)) {
+                log.info("🎪 축제 위주 여행 계획 모드 - 축제 우선 + 여행 데이터 수집");
                 
-                // 🎯 축제 위주 여행 계획인 경우 areaBasedList2 API 사용 (더 많은 데이터)
-                if (keyword != null && !keyword.isEmpty() && 
-                    (keyword.contains("여행") || keyword.contains("계획") || keyword.contains("코스"))) {
-                    log.info("🎪 축제 위주 여행 계획 - areaBasedList2 API로 축제 데이터 수집");
+                // 축제 데이터 우선 수집 (좌표 보완 포함)
+                List<TourAPIResponse.Item> festivalItems = collectFestivalOnlyData(areaCode, sigunguCode, keyword);
+                allItems.addAll(festivalItems);
+                log.info("🎭 축제 데이터 수집 완료: {}개", festivalItems.size());
+                
+                // 🎯 축제 위주 여행 계획에서 축제 데이터가 부족하면 다른 타입으로 적극 보완
+                int festivalCount = festivalItems.size();
+                if (festivalCount < 8) {  // 2박3일 기준 12개 필요하므로 8개 미만이면 부족
+                    log.info("⚠️ 축제 위주 여행 계획 - 축제 데이터 부족 감지! 다른 타입으로 보완합니다. (축제: {}개 < 8개)", festivalCount);
                     
-                    // areaBasedList2 API로 축제 데이터 수집 (contentTypeId=15)
-                    List<TourAPIResponse.Item> festivalItems = fetchTourismDataSecurely(areaCode, sigunguCode, "15");
-                    allItems.addAll(festivalItems);
-                    log.info("🎭 areaBasedList2 축제 데이터 수집 완료: {}개", festivalItems.size());
+                    // 관광지, 문화시설, 음식점을 추가로 수집 (축제와 어울리는 타입들)
+                    String[] supplementTypes = {"12", "14", "39", "25", "38"}; // 관광지, 문화시설, 음식점, 여행코스, 쇼핑
                     
-                    // 축제 데이터 부족 시 searchFestival2로 보완
-                    if (festivalItems.size() < 3) {
-                        log.info("⚠️ 축제 데이터 부족 - searchFestival2로 보완");
-                        List<TourAPIResponse.Item> additionalFestivals = searchFestivals(areaCode, sigunguCode);
-                        addUniqueItems(allItems, additionalFestivals);
-                        log.info("🎪 searchFestival2 보완 완료: {}개 (총: {}개)", additionalFestivals.size(), allItems.size());
-                    }
-                    
-                    // 🎯 축제 위주 여행 계획에서 축제 데이터가 부족하면 다른 타입으로 적극 보완
-                    int festivalCount = allItems.size();
-                    if (festivalCount < 8) {  // 2박3일 기준 12개 필요하므로 8개 미만이면 부족
-                        log.info("⚠️ 축제 위주 여행 계획 - 축제 데이터 부족 감지! 다른 타입으로 보완합니다. (축제: {}개 < 8개)", festivalCount);
+                    for (String supplementType : supplementTypes) {
+                        log.info("🔄 보완 타입 {} ({}) 수집 시작", supplementType, getContentTypeNameByCode(supplementType));
+                        List<TourAPIResponse.Item> supplementItems = fetchTourismDataSecurely(areaCode, sigunguCode, supplementType);
+                        addUniqueItems(allItems, supplementItems);
+                        log.info("✅ 보완 타입 {} 수집 완료: {}개 (총: {}개)", 
+                            getContentTypeNameByCode(supplementType), supplementItems.size(), allItems.size());
                         
-                        // 관광지, 문화시설, 음식점을 추가로 수집 (축제와 어울리는 타입들)
-                        String[] supplementTypes = {"12", "14", "39", "25", "38"}; // 관광지, 문화시설, 음식점, 여행코스, 쇼핑
-                        
-                        for (String supplementType : supplementTypes) {
-                            log.info("🔄 보완 타입 {} ({}) 수집 시작", supplementType, getContentTypeNameByCode(supplementType));
-                            List<TourAPIResponse.Item> supplementItems = fetchTourismDataSecurely(areaCode, sigunguCode, supplementType);
-                            addUniqueItems(allItems, supplementItems);
-                            log.info("✅ 보완 타입 {} 수집 완료: {}개 (총: {}개)", 
-                                getContentTypeNameByCode(supplementType), supplementItems.size(), allItems.size());
-                            
-                            // 충분한 데이터가 모였으면 중단
-                            if (allItems.size() >= 20) {
-                                log.info("🎯 충분한 보완 데이터 수집 완료: {}개", allItems.size());
-                                break;
-                            }
+                        // 충분한 데이터가 모였으면 중단
+                        if (allItems.size() >= 20) {
+                            log.info("🎯 충분한 보완 데이터 수집 완료: {}개", allItems.size());
+                            break;
                         }
-                        
-                        log.info("✅ 축제 위주 여행 계획 데이터 보완 완료: {}개 (축제: {}개, 보완: {}개)", 
-                            allItems.size(), festivalCount, allItems.size() - festivalCount);
                     }
-                }
-                // 키워드가 있으면 키워드 검색 (순수 축제 검색)
-                else if (keyword != null && !keyword.isEmpty()) {
-                    log.info("🔍 키워드 축제 검색: {}", keyword);
-                    List<TourAPIResponse.Item> keywordResults = searchTourismByKeyword(keyword, areaCode, sigunguCode);
-                    // 축제 데이터만 필터링
-                    List<TourAPIResponse.Item> festivalKeywordResults = keywordResults.stream()
-                        .filter(item -> "15".equals(item.getContentTypeId()))
-                        .collect(Collectors.toList());
-                    allItems.addAll(festivalKeywordResults);
-                    log.info("🎭 키워드 축제 검색 결과: {}개", festivalKeywordResults.size());
-                } 
-                // 키워드가 없을 때 일반 축제 검색
-                else {
-                    log.info("🎪 일반 축제 검색 (키워드 없음)");
-                    List<TourAPIResponse.Item> festivalResults = searchFestivals(areaCode, sigunguCode);
-                    addUniqueItems(allItems, festivalResults);
-                    log.info("🎭 일반 축제 검색 결과: {}개", festivalResults.size());
+                    
+                    log.info("✅ 축제 위주 여행 계획 데이터 보완 완료: {}개 (축제: {}개, 보완: {}개)", 
+                        allItems.size(), festivalCount, allItems.size() - festivalCount);
                 }
                 
                 // 최대 40개로 제한
@@ -635,7 +609,7 @@ public class AITravelServiceImpl implements AITravelService {
                     allItems = allItems.subList(0, 40);
                 }
                 
-                log.info("🎪 축제 전용 데이터 수집 완료: {}개", allItems.size());
+                log.info("🎪 축제 위주 여행 계획 데이터 수집 완료: {}개", allItems.size());
                 return allItems;
             }
             
@@ -3362,6 +3336,167 @@ public class AITravelServiceImpl implements AITravelService {
         
         // 기본 로고 이미지 반환
         return "/logo.png";
+    }
+
+    /**
+     * 🎪 축제 전용 데이터 수집 (festival_info, festival_only 요청용)
+     */
+    private List<TourAPIResponse.Item> collectFestivalOnlyData(String areaCode, String sigunguCode, String keyword) {
+        List<TourAPIResponse.Item> allItems = new ArrayList<>();
+        
+        try {
+            // 키워드가 있으면 키워드 축제 검색
+            if (keyword != null && !keyword.isEmpty()) {
+                log.info("🔍 키워드 축제 검색: {}", keyword);
+                List<TourAPIResponse.Item> keywordResults = searchTourismByKeyword(keyword, areaCode, sigunguCode);
+                // 축제 데이터만 필터링
+                List<TourAPIResponse.Item> festivalKeywordResults = keywordResults.stream()
+                    .filter(item -> "15".equals(item.getContentTypeId()))
+                    .collect(Collectors.toList());
+                allItems.addAll(festivalKeywordResults);
+                log.info("🎭 키워드 축제 검색 결과: {}개", festivalKeywordResults.size());
+            } 
+            // 키워드가 없을 때 일반 축제 검색
+            else {
+                log.info("🎪 일반 축제 검색 (키워드 없음)");
+                List<TourAPIResponse.Item> festivalResults = searchFestivals(areaCode, sigunguCode);
+                addUniqueItems(allItems, festivalResults);
+                log.info("🎭 일반 축제 검색 결과: {}개", festivalResults.size());
+            }
+            
+            // 🗺️ 좌표 정보 보완 (마커 표시 개선을 위해)
+            allItems = enhanceFestivalWithCoordinates(allItems);
+            
+            // 최대 40개로 제한
+            if (allItems.size() > 40) {
+                allItems = allItems.subList(0, 40);
+            }
+            
+            log.info("🎪 축제 전용 데이터 수집 완료: {}개", allItems.size());
+            return allItems;
+            
+        } catch (Exception e) {
+            log.error("❌ 축제 전용 데이터 수집 실패", e);
+            return new ArrayList<>();
+        }
+    }
+    
+    /**
+     * 🗺️ 축제 데이터의 좌표 정보 보완
+     */
+    private List<TourAPIResponse.Item> enhanceFestivalWithCoordinates(List<TourAPIResponse.Item> festivals) {
+        if (festivals == null || festivals.isEmpty()) {
+            return festivals;
+        }
+        
+        log.info("🗺️ 축제 좌표 정보 보완 시작: {}개 축제", festivals.size());
+        
+        int enhanced = 0;
+        int failed = 0;
+        
+        for (TourAPIResponse.Item festival : festivals) {
+            // 이미 좌표가 있는 경우 스킵
+            if (hasValidCoordinates(festival)) {
+                continue;
+            }
+            
+            // contentId가 있는 경우에만 상세 정보 조회
+            if (festival.getContentId() != null && !festival.getContentId().isEmpty()) {
+                try {
+                    // detailCommon API로 좌표 정보 가져오기
+                    Map<String, String> coordinates = fetchCoordinatesFromDetailCommon(festival.getContentId());
+                    
+                    if (coordinates != null && coordinates.get("mapx") != null && coordinates.get("mapy") != null) {
+                        festival.setMapX(coordinates.get("mapx"));
+                        festival.setMapY(coordinates.get("mapy"));
+                        enhanced++;
+                        log.debug("✅ 좌표 보완 성공: {} → ({}, {})", 
+                            festival.getTitle(), festival.getMapX(), festival.getMapY());
+                    } else {
+                        failed++;
+                        log.debug("❌ 좌표 정보 없음: {}", festival.getTitle());
+                    }
+                    
+                    // API 호출 제한을 위한 약간의 지연
+                    Thread.sleep(50);
+                    
+                } catch (Exception e) {
+                    failed++;
+                    log.warn("❌ 좌표 보완 실패: {} - {}", festival.getTitle(), e.getMessage());
+                }
+            } else {
+                failed++;
+                log.debug("❌ contentId 없음: {}", festival.getTitle());
+            }
+        }
+        
+        log.info("🗺️ 좌표 보완 완료: 성공 {}개, 실패 {}개", enhanced, failed);
+        return festivals;
+    }
+    
+    /**
+     * 유효한 좌표 정보가 있는지 확인
+     */
+    private boolean hasValidCoordinates(TourAPIResponse.Item item) {
+        if (item.getMapX() == null || item.getMapY() == null) {
+            return false;
+        }
+        
+        try {
+            double x = Double.parseDouble(item.getMapX());
+            double y = Double.parseDouble(item.getMapY());
+            
+            // 유효한 한국 좌표 범위 체크
+            return x >= 124.0 && x <= 132.0 && y >= 33.0 && y <= 43.0;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 🗺️ TourAPI detailCommon에서 좌표 정보 가져오기
+     */
+    private Map<String, String> fetchCoordinatesFromDetailCommon(String contentId) {
+        try {
+            String baseUrl = "https://apis.data.go.kr/B551011/KorService2/detailCommon2";
+            
+            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .queryParam("numOfRows", "1")
+                .queryParam("MobileOS", "ETC")
+                .queryParam("MobileApp", "festive")
+                .queryParam("_type", "json")
+                .queryParam("contentId", contentId)
+                .queryParam("defaultYN", "Y")
+                .queryParam("addrinfoYN", "Y")
+                .queryParam("mapinfoYN", "Y")
+                .queryParam("overviewYN", "N");
+            
+            String urlWithoutServiceKey = builder.toUriString();
+            String finalUrl = urlWithoutServiceKey + "&serviceKey=" + tourApiServiceKey;
+            
+            log.debug("🗺️ 좌표 조회 API 호출: contentId={}", contentId);
+            
+            ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(finalUrl), String.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                List<TourAPIResponse.Item> items = parseTourAPIResponse(response.getBody());
+                
+                if (!items.isEmpty()) {
+                    TourAPIResponse.Item item = items.get(0);
+                    if (hasValidCoordinates(item)) {
+                        Map<String, String> coordinates = new HashMap<>();
+                        coordinates.put("mapx", item.getMapX());
+                        coordinates.put("mapy", item.getMapY());
+                        return coordinates;
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            log.debug("❌ 좌표 조회 실패: contentId={}, error={}", contentId, e.getMessage());
+        }
+        
+        return null;
     }
 
 } 

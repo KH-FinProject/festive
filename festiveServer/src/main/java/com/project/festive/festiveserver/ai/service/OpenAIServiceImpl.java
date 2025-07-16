@@ -434,41 +434,43 @@ public class OpenAIServiceImpl implements OpenAIService {
     public String extractKeywordWithAI(String userMessage) {
         try {
             StringBuilder prompt = new StringBuilder();
-            prompt.append("사용자가 찾고 싶어하는 **핵심 주제 키워드**를 추출해주세요.\n\n");
+            prompt.append("사용자가 찾고 싶어하는 **구체적인 핵심 주제 키워드**를 추출해주세요.\n\n");
             prompt.append("**사용자 메시지**: \"").append(userMessage).append("\"\n\n");
             
             prompt.append("**키워드 추출 원칙**:\n");
-            prompt.append("1. **핵심 주제어만 추출** - 사용자가 실제로 찾고 싶어하는 구체적인 대상\n");
-            prompt.append("2. **우선순위 규칙**:\n");
-            prompt.append("   • 구체적인 대상 > 일반적인 분류\n");
-            prompt.append("   • 예: '드론 축제' → '드론' (축제는 일반 분류)\n");
-            prompt.append("   • 예: '벚꽃축제' → '벚꽃' (축제는 접미사)\n");
-            prompt.append("   • 예: '로봇대회' → '로봇' (대회는 접미사)\n");
-            prompt.append("3. **반드시 제외할 것들**:\n");
-            prompt.append("   • 접미사: 축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 쇼, 전시회\n");
-            prompt.append("   • 지역명: 서울, 부산, 경기도 등\n");
-            prompt.append("   • 동사: 알려줘, 추천, 가자, 보여줘 등\n");
-            prompt.append("   • 일반명사: 정보, 여행, 계획, 코스 등\n");
-            prompt.append("4. **추출 대상**:\n");
-            prompt.append("   • 모든 종류의 주제어 허용 (제한 없음)\n");
-            prompt.append("   • 전통: 벚꽃, 불꽃, 음식, 문화, 전통\n");
-            prompt.append("   • 현대: 드론, 로봇, IT, 게임, K-POP, 애니메이션\n");
-            prompt.append("   • 특수: 핸드폰, 컴퓨터, 자동차, 패션, 뷰티\n");
-            prompt.append("5. 명확한 주제어가 없으면 빈 문자열 반환\n\n");
+            prompt.append("1. **구체적인 대상만 추출** - 사용자가 실제로 찾고 싶어하는 명확한 주제\n");
+            prompt.append("2. **절대 추출하면 안 되는 것들 (반드시 제외)**:\n");
+            prompt.append("   • 일반 접미사: 축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 쇼, 전시회, 컨벤션\n");
+            prompt.append("   • 지역명: 서울, 부산, 경기도, 강원도 등 모든 지역명\n");
+            prompt.append("   • 동사: 알려줘, 추천, 가자, 보여줘, 찾아줘 등\n");
+            prompt.append("   • 일반명사: 정보, 여행, 계획, 코스, 리스트, 목록 등\n");
+            prompt.append("3. **추출 대상 (구체적 주제어만)**:\n");
+            prompt.append("   • 자연/식물: 벚꽃, 장미, 튤립, 유채, 해바라기, 코스모스, 단풍\n");
+            prompt.append("   • 기술/현대: 드론, 로봇, AI, VR, 게임, IT, 핸드폰, 컴퓨터\n");
+            prompt.append("   • 문화/예술: K-POP, 재즈, 클래식, 미술, 사진, 영화\n");
+            prompt.append("   • 음식: 김치, 치킨, 맥주, 와인, 커피, 디저트\n");
+            prompt.append("   • 기타: 자동차, 패션, 뷰티, 스포츠 등\n\n");
             
-            prompt.append("**응답 형식**: 핵심 주제어 하나만 반환 (설명 없이)\n\n");
+            prompt.append("**중요**: '축제', '행사', '이벤트' 등이 포함된 경우 이를 제거하고 핵심 주제만 추출\n");
+            prompt.append("예: '벚꽃축제' → '벚꽃', '드론행사' → '드론', '로봇대회' → '로봇'\n\n");
+            
+            prompt.append("**응답 규칙**:\n");
+            prompt.append("- 핵심 주제어 하나만 반환 (설명이나 추가 텍스트 없이)\n");
+            prompt.append("- 구체적인 주제어가 없으면 반드시 빈 문자열 반환\n");
+            prompt.append("- 일반적인 단어나 접미사는 절대 반환 금지\n\n");
             
             prompt.append("**정확한 예시**:\n");
             prompt.append("- '서울 드론 축제 알려줘' → 드론\n");
             prompt.append("- '부산 벚꽃축제 정보' → 벚꽃\n");
             prompt.append("- '대구 로봇대회 언제야?' → 로봇\n");
             prompt.append("- '인천 게임페스티벌' → 게임\n");
-            prompt.append("- '경기도 핸드폰 박람회' → 핸드폰\n");
-            prompt.append("- '제주도 자동차쇼' → 자동차\n");
-            prompt.append("- '강원도 K-POP 축제' → K-POP\n");
+            prompt.append("- '경기도 K-POP 축제' → K-POP\n");
+            prompt.append("- '제주도 커피축제' → 커피\n");
+            prompt.append("- '강원도 맥주페스티벌' → 맥주\n");
             prompt.append("- '충남 2박3일 여행계획' → \n");
             prompt.append("- '전북 가볼만한 곳 추천' → \n");
             prompt.append("- '서울 축제 리스트' → \n");
+            prompt.append("- '부산 행사 정보' → \n");
             
             String response = callOpenAI(prompt.toString());
             
@@ -480,14 +482,21 @@ public class OpenAIServiceImpl implements OpenAIService {
                     .replaceAll("[^가-힣a-zA-Z0-9\\s-]", "") // 하이픈 허용 (K-POP 등)
                     .trim();
                 
-                // 불필요한 접미사 제거 (추가 보안)
-                response = removeUnnecessarySuffixes(response);
+                // 🚫 엄격한 접미사 제거 및 검증
+                response = removeUnnecessarySuffixesStrict(response);
+                
+                // AI가 여전히 일반적인 단어를 반환한 경우 빈 문자열 처리
+                if (isStrictCommonWord(response)) {
+                    log.warn("⚠️ AI가 여전히 일반 단어 반환: '{}' - 빈 문자열로 처리", response);
+                    return "";
+                }
                     
                 // 너무 길거나 짧으면 빈 문자열 반환
                 if (response.length() > 10 || response.length() < 2) {
                     return "";
                 }
                 
+                log.info("✅ AI 키워드 추출 성공: '{}' → '{}'", userMessage, response);
                 return response;
             }
             
@@ -500,26 +509,65 @@ public class OpenAIServiceImpl implements OpenAIService {
     }
     
     /**
-     * 키워드에서 불필요한 접미사 제거
+     * 엄격한 접미사 제거
      */
-    private String removeUnnecessarySuffixes(String keyword) {
+    private String removeUnnecessarySuffixesStrict(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return "";
         }
         
         String[] suffixes = {
-            "관련", "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션"
+            "관련", "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션",
+            "정보", "리스트", "목록", "검색", "추천", "여행", "계획", "일정", "코스", "루트"
         };
         
-        for (String suffix : suffixes) {
-            if (keyword.endsWith(suffix)) {
-                String base = keyword.substring(0, keyword.length() - suffix.length()).trim();
-                if (base.length() >= 2) { // 최소 2글자 이상이어야 의미있는 키워드
-                    return base;
+        String result = keyword;
+        
+        // 여러 접미사가 붙은 경우를 처리하기 위해 반복 제거
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (String suffix : suffixes) {
+                if (result.endsWith(suffix)) {
+                    String base = result.substring(0, result.length() - suffix.length()).trim();
+                    if (base.length() >= 2) { // 최소 2글자 이상이어야 의미있는 키워드
+                        result = base;
+                        changed = true;
+                        break;
+                    }
                 }
             }
         }
         
-        return keyword;
+        return result;
+    }
+    
+    /**
+     * 엄격한 일반 단어 체크 (AI 결과 검증용)
+     */
+    private boolean isStrictCommonWord(String word) {
+        if (word == null || word.trim().isEmpty()) {
+            return true;
+        }
+        
+        String lowerWord = word.toLowerCase().trim();
+        
+        // 🚫 절대 허용하지 않을 단어들
+        String[] strictlyForbidden = {
+            "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션",
+            "여행", "계획", "일정", "코스", "루트", "추천", "정보", "리스트", "목록",
+            "알려줘", "찾아줘", "보여줘", "검색", "소개", "설명", "말해줘",
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+            "관련", "위한", "같은", "느낌", "스타일", "테마", "컨셉"
+        };
+        
+        for (String forbidden : strictlyForbidden) {
+            if (lowerWord.equals(forbidden.toLowerCase())) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 } 
