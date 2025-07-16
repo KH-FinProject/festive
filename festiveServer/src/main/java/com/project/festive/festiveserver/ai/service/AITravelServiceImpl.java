@@ -3719,8 +3719,18 @@ public class AITravelServiceImpl implements AITravelService {
                     log.info("🔍 detailIntro2 API 호출 시도 - contentId: {}, 축제명: {}", 
                         festival.getContentId(), festival.getTitle());
                     
-                    // detailIntro2 API로 축제 날짜 정보 가져오기
-                    TourAPIResponse.Item detailIntroInfo = fetchDetailIntro2(festival.getContentId());
+                    // detailIntro2 API로 축제 날짜 정보 가져오기 (다중 contentTypeId 시도)
+                    TourAPIResponse.Item detailIntroInfo = null;
+                    
+                    // 1차 시도: contentTypeId=15 (일반적인 축제 타입)
+                    detailIntroInfo = tourAPIService.fetchDetailIntro2(festival.getContentId(), "15");
+                    
+                    // 2차 시도: contentTypeId=25 (사용자 제안 타입)
+                    if (detailIntroInfo == null || 
+                        (detailIntroInfo.getEventStartDate() == null && detailIntroInfo.getEventEndDate() == null)) {
+                        log.info("🔄 contentTypeId=15로 날짜 정보 없음, contentTypeId=25로 재시도: {}", festival.getTitle());
+                        detailIntroInfo = tourAPIService.fetchDetailIntro2(festival.getContentId(), "25");
+                    }
                     
                     if (detailIntroInfo != null) {
                         if (detailIntroInfo.getEventStartDate() != null && !detailIntroInfo.getEventStartDate().isEmpty()) {
@@ -3772,118 +3782,7 @@ public class AITravelServiceImpl implements AITravelService {
         return hasValidStart;
     }
     
-    /**
-     * detailIntro2 API 호출하여 축제 상세 정보 가져오기
-     */
-    private TourAPIResponse.Item fetchDetailIntro2(String contentId) {
-        try {
-            log.info("🔍 detailIntro2 API 호출 시작 - contentId: {}", contentId);
-            
-            String url = UriComponentsBuilder.fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/detailIntro2")
-                    .queryParam("MobileOS", "ETC")
-                    .queryParam("MobileApp", "festive")
-                    .queryParam("_type", "json")
-                    .queryParam("contentTypeId", "15")  // 축제 타입
-                    .queryParam("contentId", contentId)
-                    .build(false)
-                    .toUriString() + "&serviceKey=" + tourApiServiceKey;
-            
-            log.info("📡 detailIntro2 요청 URL: {}", url);
-            
-            ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(url), String.class);
-            
-            log.info("📥 detailIntro2 응답 상태: {}", response.getStatusCode());
-            
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                String responseBody = response.getBody();
-                log.info("📄 detailIntro2 응답 데이터 길이: {}", responseBody.length());
-                log.info("📄 detailIntro2 응답 내용 (처음 500자): {}", 
-                    responseBody.length() > 500 ? responseBody.substring(0, 500) + "..." : responseBody);
-                
-                // JSON 응답 파싱
-                List<TourAPIResponse.Item> items = parseDetailIntro2Response(responseBody);
-                
-                if (!items.isEmpty()) {
-                    TourAPIResponse.Item item = items.get(0);
-                    log.info("✅ detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
-                            contentId, item.getEventStartDate(), item.getEventEndDate());
-                    return item;
-                } else {
-                    log.warn("⚠️ detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
-                }
-            } else {
-                log.warn("⚠️ detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
-                        contentId, response.getStatusCode());
-            }
-            
-        } catch (Exception e) {
-            log.error("❌ detailIntro2 API 호출 중 오류 발생 - contentId: {}: {}", contentId, e.getMessage(), e);
-        }
-        
-        return null;
-    }
-    
-    /**
-     * detailIntro2 JSON 응답 파싱
-     */
-    private List<TourAPIResponse.Item> parseDetailIntro2Response(String response) {
-        List<TourAPIResponse.Item> items = new ArrayList<>();
-        
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response);
-            JsonNode body = root.path("response").path("body");
-            JsonNode itemsNode = body.path("items");
-            
-            if (itemsNode.isArray() && itemsNode.size() > 0) {
-                for (JsonNode itemNode : itemsNode.path("item")) {
-                    TourAPIResponse.Item item = parseDetailIntro2Item(itemNode);
-                    if (item != null) {
-                        items.add(item);
-                    }
-                }
-            } else if (itemsNode.path("item").isObject()) {
-                TourAPIResponse.Item item = parseDetailIntro2Item(itemsNode.path("item"));
-                if (item != null) {
-                    items.add(item);
-                }
-            }
-            
-        } catch (Exception e) {
-            log.error("detailIntro2 JSON 응답 파싱 실패", e);
-        }
-        
-        return items;
-    }
-    
-    /**
-     * detailIntro2 개별 JSON 아이템 파싱
-     */
-    private TourAPIResponse.Item parseDetailIntro2Item(JsonNode itemNode) {
-        try {
-            TourAPIResponse.Item item = new TourAPIResponse.Item();
-            
-            // 축제 날짜 정보 추출
-            String eventStartDate = getJsonNodeValue(itemNode, "eventstartdate");
-            String eventEndDate = getJsonNodeValue(itemNode, "eventenddate");
-            
-            item.setEventStartDate(eventStartDate);
-            item.setEventEndDate(eventEndDate);
-            
-            // contentId 추출
-            String contentId = getJsonNodeValue(itemNode, "contentid");
-            item.setContentId(contentId);
-            
-            log.debug("✅ detailIntro2 JSON 아이템 파싱 완료 - contentId: {}, 시작:{}, 종료:{}", 
-                    contentId, eventStartDate, eventEndDate);
-            
-            return item;
-            
-        } catch (Exception e) {
-            log.error("detailIntro2 JSON 아이템 파싱 실패", e);
-            return null;
-        }
-    }
+
     
     /**
      * 🗺️ TourAPI detailCommon에서 좌표 정보 가져오기

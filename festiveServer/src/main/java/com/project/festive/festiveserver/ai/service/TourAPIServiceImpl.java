@@ -177,6 +177,55 @@ public class TourAPIServiceImpl implements TourAPIService {
     }
 
     @Override
+    public AITravelServiceImpl.TourAPIResponse.Item fetchDetailIntro2(String contentId, String contentTypeId) {
+        try {
+            log.info("🔍 detailIntro2 API 호출 시작 - contentId: {}, contentTypeId: {}", contentId, contentTypeId);
+            
+            String url = UriComponentsBuilder.fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/detailIntro2")
+                    .queryParam("MobileOS", "ETC")
+                    .queryParam("MobileApp", "festive")
+                    .queryParam("_type", "json")
+                    .queryParam("contentTypeId", contentTypeId)
+                    .queryParam("contentId", contentId)
+                    .build(false)
+                    .toUriString() + "&serviceKey=" + tourApiServiceKey;
+            
+            log.info("📡 detailIntro2 요청 URL: {}", url);
+            
+            ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(url), String.class);
+            
+            log.info("📥 detailIntro2 응답 상태: {}", response.getStatusCode());
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String responseBody = response.getBody();
+                log.info("📄 detailIntro2 응답 데이터 길이: {}", responseBody.length());
+                log.debug("📄 detailIntro2 응답 내용 (처음 500자): {}", 
+                    responseBody.length() > 500 ? responseBody.substring(0, 500) + "..." : responseBody);
+                
+                // JSON 응답 파싱
+                List<AITravelServiceImpl.TourAPIResponse.Item> items = parseDetailIntro2Response(responseBody);
+                
+                if (!items.isEmpty()) {
+                    AITravelServiceImpl.TourAPIResponse.Item item = items.get(0);
+                    log.info("✅ detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
+                            contentId, item.getEventStartDate(), item.getEventEndDate());
+                    return item;
+                } else {
+                    log.warn("⚠️ detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
+                }
+            } else {
+                log.warn("⚠️ detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
+                        contentId, response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            log.error("❌ detailIntro2 API 호출 중 오류 발생 - contentId: {}: {}", contentId, e.getMessage(), e);
+        }
+        
+        return null;
+    }
+
+    @Override
     public List<Map<String, Object>> getPlaceImages(String contentId) {
         
         List<Map<String, Object>> images = new ArrayList<>();
@@ -437,6 +486,68 @@ public class TourAPIServiceImpl implements TourAPIService {
             case "38": return "쇼핑";
             case "39": return "음식점";
             default: return "기타";
+        }
+    }
+    
+    /**
+     * detailIntro2 JSON 응답 파싱
+     */
+    private List<AITravelServiceImpl.TourAPIResponse.Item> parseDetailIntro2Response(String response) {
+        List<AITravelServiceImpl.TourAPIResponse.Item> items = new ArrayList<>();
+        
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response);
+            JsonNode body = root.path("response").path("body");
+            JsonNode itemsNode = body.path("items");
+            
+            if (itemsNode.isArray() && itemsNode.size() > 0) {
+                for (JsonNode itemNode : itemsNode.path("item")) {
+                    AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(itemNode);
+                    if (item != null) {
+                        items.add(item);
+                    }
+                }
+            } else if (itemsNode.path("item").isObject()) {
+                AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(itemsNode.path("item"));
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("detailIntro2 JSON 응답 파싱 실패", e);
+        }
+        
+        return items;
+    }
+    
+    /**
+     * detailIntro2 개별 JSON 아이템 파싱
+     */
+    private AITravelServiceImpl.TourAPIResponse.Item parseDetailIntro2Item(JsonNode itemNode) {
+        try {
+            AITravelServiceImpl.TourAPIResponse.Item item = new AITravelServiceImpl.TourAPIResponse.Item();
+            
+            // 축제 날짜 정보 추출
+            String eventStartDate = getJsonNodeValue(itemNode, "eventstartdate");
+            String eventEndDate = getJsonNodeValue(itemNode, "eventenddate");
+            
+            item.setEventStartDate(eventStartDate);
+            item.setEventEndDate(eventEndDate);
+            
+            // contentId 추출
+            String contentId = getJsonNodeValue(itemNode, "contentid");
+            item.setContentId(contentId);
+            
+            log.debug("✅ detailIntro2 JSON 아이템 파싱 완료 - contentId: {}, 시작:{}, 종료:{}", 
+                    contentId, eventStartDate, eventEndDate);
+            
+            return item;
+            
+        } catch (Exception e) {
+            log.error("detailIntro2 JSON 아이템 파싱 실패", e);
+            return null;
         }
     }
 
