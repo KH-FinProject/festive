@@ -547,7 +547,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "";
         }
         
-        log.info("🤖 AI 기반 키워드 추출 시작: '{}'", message);
+        log.info("🤖 키워드 추출 시작: '{}'", message);
         
         try {
             // 🤖 1단계: AI를 활용한 스마트 키워드 추출
@@ -555,64 +555,68 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             
             if (aiKeyword != null && !aiKeyword.trim().isEmpty()) {
                 log.info("✅ AI 키워드 추출 성공: '{}' → '{}'", message, aiKeyword);
-                
-                // AI 결과도 검증 (불필요한 단어가 추출되었는지 확인)
-                if (isCommonWord(aiKeyword.trim())) {
-                    log.warn("⚠️ AI가 추출한 키워드가 공통 단어임: '{}' - 폴백 사용", aiKeyword);
-                } else {
-                    return aiKeyword.trim();
-                }
+                return aiKeyword.trim();
             } else {
-                log.info("⚠️ AI 키워드 추출 결과 없음: '{}'", message);
+                log.info("⚠️ AI 키워드 추출 실패, 폴백 방식 사용");
             }
             
         } catch (Exception e) {
-            log.warn("❌ AI 키워드 추출 실패, 폴백 방식 사용: {}", e.getMessage());
+            log.warn("❌ AI 키워드 추출 오류, 폴백 방식 사용: {}", e.getMessage());
         }
         
-        // 🛡️ 2단계: 폴백 - 간단한 단어 추출 (우선순위 기반)
-        log.info("🔄 AI 실패, 기본 단어 추출 방식 사용");
+        // 🛡️ 2단계: 강화된 폴백 - 구체적인 키워드 직접 매칭
+        log.info("🔄 강화된 폴백 키워드 추출 시작");
         
+        String lowerMessage = message.toLowerCase();
+        
+        // 🎯 구체적인 키워드들을 직접 매칭 (우선순위 순)
+        String[] specificKeywords = {
+            // 자연/꽃
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "AI", "VR", "게임", "IT", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술  
+            "K-POP", "KPOP", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
+        };
+        
+        for (String keyword : specificKeywords) {
+            if (lowerMessage.contains(keyword.toLowerCase())) {
+                log.info("🎯 직접 매칭 성공: '{}' → '{}'", message, keyword);
+                return keyword;
+            }
+        }
+        
+        // 🔍 3단계: 단어 분해 후 키워드 검색
         String[] words = message.split("\\s+");
         
-        // 먼저 모든 단어를 정리하고 로깅
-        String[] cleanWords = new String[words.length];
-        for (int i = 0; i < words.length; i++) {
-            cleanWords[i] = words[i].replaceAll("[^가-힣a-zA-Z]", "").toLowerCase();
-            log.debug("단어 정리: '{}' → '{}'", words[i], cleanWords[i]);
-        }
-        
-        // 유효한 키워드 후보들을 찾아서 우선순위대로 선택
-        for (String word : cleanWords) {
-            if (word.length() >= 2 && !word.matches("\\d+")) {
-                log.debug("키워드 후보 검사: '{}'", word);
-                if (!isCommonWord(word)) {
-                    log.info("📝 폴백 키워드 추출 성공: '{}'", word);
-                    return word;
-                } else {
-                    log.debug("❌ 공통 단어로 제외: '{}'", word);
-                }
-            } else {
-                log.debug("❌ 너무 짧거나 숫자: '{}'", word);
-            }
-        }
-        
-        // 3단계: 마지막 시도 - 더 유연한 추출
-        log.info("🔄 3단계: 정제된 키워드 추출 시도");
-        String cleanMessage = message.toLowerCase()
-            .replaceAll("[^가-힣a-zA-Z\\s]", " ") // 특수문자를 공백으로
-            .replaceAll("\\s+", " ") // 여러 공백을 하나로
-            .trim();
+        for (String word : words) {
+            // 특수문자 제거하고 정리
+            String cleanWord = word.replaceAll("[^가-힣a-zA-Z0-9]", "").toLowerCase();
             
-        String[] cleanMessageWords = cleanMessage.split(" ");
-        for (String word : cleanMessageWords) {
-            if (word.length() >= 2 && !isCommonWord(word)) {
-                log.info("🔍 정제된 키워드 추출 성공: '{}'", word);
-                return word;
+            if (cleanWord.length() >= 2) {
+                // 구체적인 키워드인지 체크
+                for (String keyword : specificKeywords) {
+                    if (cleanWord.equals(keyword.toLowerCase()) || 
+                        cleanWord.contains(keyword.toLowerCase()) ||
+                        keyword.toLowerCase().contains(cleanWord)) {
+                        log.info("🔍 단어 분해 매칭 성공: '{}' → '{}'", message, keyword);
+                        return keyword;
+                    }
+                }
+                
+                // 일반 단어가 아닌 경우 키워드로 사용
+                if (!isCommonWord(cleanWord)) {
+                    log.info("📝 일반 키워드 추출: '{}' → '{}'", message, cleanWord);
+                    return cleanWord;
+                }
             }
         }
         
-        log.info("ℹ️ 키워드 추출 결과 없음: '{}' - TourAPI가 모든 검색을 처리합니다", message);
+        log.info("ℹ️ 키워드 추출 결과 없음: '{}' - TourAPI가 전체 검색을 처리합니다", message);
         return "";
     }
     

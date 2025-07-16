@@ -433,66 +433,44 @@ public class OpenAIServiceImpl implements OpenAIService {
     @Override
     public String extractKeywordWithAI(String userMessage) {
         try {
+            // 🎯 간단하고 직관적인 프롬프트로 변경
             StringBuilder prompt = new StringBuilder();
-            prompt.append("사용자가 찾고 싶어하는 **구체적인 핵심 주제 키워드**를 추출해주세요.\n\n");
-            prompt.append("**사용자 메시지**: \"").append(userMessage).append("\"\n\n");
+            prompt.append("다음 문장에서 핵심 키워드 하나만 찾아주세요.\n\n");
+            prompt.append("문장: \"").append(userMessage).append("\"\n\n");
             
-            prompt.append("**키워드 추출 원칙**:\n");
-            prompt.append("1. **구체적인 대상만 추출** - 사용자가 실제로 찾고 싶어하는 명확한 주제\n");
-            prompt.append("2. **절대 추출하면 안 되는 것들 (반드시 제외)**:\n");
-            prompt.append("   • 일반 접미사: 축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 쇼, 전시회, 컨벤션\n");
-            prompt.append("   • 지역명: 서울, 부산, 경기도, 강원도 등 모든 지역명\n");
-            prompt.append("   • 동사: 알려줘, 추천, 가자, 보여줘, 찾아줘 등\n");
-            prompt.append("   • 일반명사: 정보, 여행, 계획, 코스, 리스트, 목록 등\n");
-            prompt.append("3. **추출 대상 (구체적 주제어만)**:\n");
-            prompt.append("   • 자연/식물: 벚꽃, 장미, 튤립, 유채, 해바라기, 코스모스, 단풍\n");
-            prompt.append("   • 기술/현대: 드론, 로봇, AI, VR, 게임, IT, 핸드폰, 컴퓨터\n");
-            prompt.append("   • 문화/예술: K-POP, 재즈, 클래식, 미술, 사진, 영화\n");
-            prompt.append("   • 음식: 김치, 치킨, 맥주, 와인, 커피, 디저트\n");
-            prompt.append("   • 기타: 자동차, 패션, 뷰티, 스포츠 등\n\n");
+            prompt.append("규칙:\n");
+            prompt.append("1. 구체적인 것만 선택 (예: 벚꽃, 드론, 로봇, 음식, K-POP)\n");
+            prompt.append("2. 일반적인 단어는 제외 (축제, 행사, 여행, 정보, 알려줘, 지역명)\n");
+            prompt.append("3. 핵심 키워드가 없으면 빈 답변\n\n");
             
-            prompt.append("**중요**: '축제', '행사', '이벤트' 등이 포함된 경우 이를 제거하고 핵심 주제만 추출\n");
-            prompt.append("예: '벚꽃축제' → '벚꽃', '드론행사' → '드론', '로봇대회' → '로봇'\n\n");
+            prompt.append("예시:\n");
+            prompt.append("\"서울 벚꽃축제 알려줘\" → 벚꽃\n");
+            prompt.append("\"부산 드론 행사 정보\" → 드론\n");
+            prompt.append("\"대구 로봇대회\" → 로봇\n");
+            prompt.append("\"인천 K-POP 축제\" → K-POP\n");
+            prompt.append("\"서울 여행 추천\" → \n");
+            prompt.append("\"부산 축제 리스트\" → \n\n");
             
-            prompt.append("**응답 규칙**:\n");
-            prompt.append("- 핵심 주제어 하나만 반환 (설명이나 추가 텍스트 없이)\n");
-            prompt.append("- 구체적인 주제어가 없으면 반드시 빈 문자열 반환\n");
-            prompt.append("- 일반적인 단어나 접미사는 절대 반환 금지\n\n");
-            
-            prompt.append("**정확한 예시**:\n");
-            prompt.append("- '서울 드론 축제 알려줘' → 드론\n");
-            prompt.append("- '부산 벚꽃축제 정보' → 벚꽃\n");
-            prompt.append("- '대구 로봇대회 언제야?' → 로봇\n");
-            prompt.append("- '인천 게임페스티벌' → 게임\n");
-            prompt.append("- '경기도 K-POP 축제' → K-POP\n");
-            prompt.append("- '제주도 커피축제' → 커피\n");
-            prompt.append("- '강원도 맥주페스티벌' → 맥주\n");
-            prompt.append("- '충남 2박3일 여행계획' → \n");
-            prompt.append("- '전북 가볼만한 곳 추천' → \n");
-            prompt.append("- '서울 축제 리스트' → \n");
-            prompt.append("- '부산 행사 정보' → \n");
+            prompt.append("답변 (키워드만):");
             
             String response = callOpenAI(prompt.toString());
             
-            // AI 응답 정리 및 후처리
             if (response != null) {
                 response = response.trim()
                     .replaceAll("\\n+", "")
                     .replaceAll("\\s+", " ")
-                    .replaceAll("[^가-힣a-zA-Z0-9\\s-]", "") // 하이픈 허용 (K-POP 등)
+                    .replaceAll("[^가-힣a-zA-Z0-9\\s-]", "")
                     .trim();
                 
-                // 🚫 엄격한 접미사 제거 및 검증
-                response = removeUnnecessarySuffixesStrict(response);
-                
-                // AI가 여전히 일반적인 단어를 반환한 경우 빈 문자열 처리
-                if (isStrictCommonWord(response)) {
-                    log.warn("⚠️ AI가 여전히 일반 단어 반환: '{}' - 빈 문자열로 처리", response);
+                // 간단한 후처리
+                if (response.length() > 15 || response.length() < 2) {
+                    log.warn("⚠️ AI 응답 길이 문제: '{}' ({}글자) - 무시", response, response.length());
                     return "";
                 }
-                    
-                // 너무 길거나 짧으면 빈 문자열 반환
-                if (response.length() > 10 || response.length() < 2) {
+                
+                // 금지 단어 체크
+                if (isStrictCommonWord(response)) {
+                    log.warn("⚠️ AI가 금지 단어 반환: '{}' - 무시", response);
                     return "";
                 }
                 
@@ -500,10 +478,11 @@ public class OpenAIServiceImpl implements OpenAIService {
                 return response;
             }
             
+            log.warn("⚠️ AI 응답 없음");
             return "";
             
         } catch (Exception e) {
-            log.error("❌ AI 키워드 추출 실패: {}", e.getMessage(), e);
+            log.error("❌ AI 키워드 추출 실패: {}", e.getMessage());
             return "";
         }
     }
