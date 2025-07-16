@@ -446,23 +446,33 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("정보") || 
                                       lowerMessage.contains("찾아줘") || lowerMessage.contains("검색") || 
                                       lowerMessage.contains("뭐있어") || lowerMessage.contains("목록") ||
-                                      lowerMessage.contains("리스트") || lowerMessage.contains("소개");
+                                      lowerMessage.contains("리스트") || lowerMessage.contains("소개") ||
+                                      lowerMessage.contains("있나") || lowerMessage.contains("있어");
         
         // 특정 키워드 감지 (드론, 벚꽃 등)
         boolean hasSpecificKeyword = hasSpecificFestivalKeyword(message);
         
-        if (hasFestivalKeyword && hasInfoRequestKeyword) {
-            log.info("🎪📋 축제 정보 검색 감지 → festival_info");
+        // 🎯 축제 정보 검색 우선 판별
+        if (hasFestivalKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
+            log.info("🎪📋 축제 정보 검색 감지 (축제+정보요청) → festival_info");
             return "festival_info";
         }
         
+        // 🎯 특정 키워드 기반 축제 검색
         if (hasSpecificKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
             log.info("🎯📋 키워드 기반 축제 검색 감지 → festival_info");
             return "festival_info";
         }
         
-        // 축제 키워드만 있고 명확한 지시어가 없는 경우 → 기본적으로 축제 정보 검색
-        if (hasFestivalKeyword && !hasTravelPlanKeyword) {
+        // 🎯 특정 키워드만 있는 경우도 축제 검색으로 처리 (예: "서울 벚꽃축제")
+        if (hasSpecificKeyword && !hasTravelPlanKeyword) {
+            log.info("🌸 특정 키워드 기반 축제 검색 → festival_info");
+            return "festival_info";
+        }
+        
+        // 🎯 축제 키워드만 있고 명확한 지시어가 없는 경우도 축제 정보 검색
+        if (hasFestivalKeyword && !hasTravelPlanKeyword && !hasInfoRequestKeyword) {
+            // 단순히 "서울 축제" 같은 요청도 축제 정보 검색으로 처리
             log.info("🎪❓ 축제 키워드만 있음 → festival_info (기본값)");
             return "festival_info";
         }

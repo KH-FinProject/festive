@@ -3399,7 +3399,7 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 🗺️ 축제 데이터의 좌표 정보 보완
+     * 🗺️ 축제 데이터의 좌표 정보 보완 (강화된 다중 API 시스템)
      */
     private List<TourAPIResponse.Item> enhanceFestivalWithCoordinates(List<TourAPIResponse.Item> festivals) {
         if (festivals == null || festivals.isEmpty()) {
@@ -3410,45 +3410,175 @@ public class AITravelServiceImpl implements AITravelService {
         
         int enhanced = 0;
         int failed = 0;
+        int alreadyHasCoordinates = 0;
         
         for (TourAPIResponse.Item festival : festivals) {
-            // 이미 좌표가 있는 경우 스킵
+            log.info("🔍 축제 좌표 검사: {} - 기존 mapX: {}, mapY: {}", 
+                festival.getTitle(), festival.getMapX(), festival.getMapY());
+            
+            // 이미 유효한 좌표가 있는 경우 스킵
             if (hasValidCoordinates(festival)) {
+                alreadyHasCoordinates++;
+                log.info("✅ 이미 유효한 좌표 보유: {} - ({}, {})", 
+                    festival.getTitle(), festival.getMapX(), festival.getMapY());
                 continue;
             }
             
             // contentId가 있는 경우에만 상세 정보 조회
             if (festival.getContentId() != null && !festival.getContentId().isEmpty()) {
                 try {
-                    // detailCommon API로 좌표 정보 가져오기
+                    log.info("🔍 좌표 보완 시도: contentId={}, 축제명={}", 
+                        festival.getContentId(), festival.getTitle());
+                    
+                    // 1단계: detailCommon2 API로 좌표 정보 가져오기
                     Map<String, String> coordinates = fetchCoordinatesFromDetailCommon(festival.getContentId());
                     
                     if (coordinates != null && coordinates.get("mapx") != null && coordinates.get("mapy") != null) {
-                        festival.setMapX(coordinates.get("mapx"));
-                        festival.setMapY(coordinates.get("mapy"));
-                        enhanced++;
-                        log.debug("✅ 좌표 보완 성공: {} → ({}, {})", 
-                            festival.getTitle(), festival.getMapX(), festival.getMapY());
+                        String mapX = coordinates.get("mapx");
+                        String mapY = coordinates.get("mapy");
+                        
+                        // 좌표 유효성 검증
+                        if (isValidKoreanCoordinateString(mapX, mapY)) {
+                            festival.setMapX(mapX);
+                            festival.setMapY(mapY);
+                            enhanced++;
+                            log.info("✅ detailCommon2로 좌표 보완 성공: {} → ({}, {})", 
+                                festival.getTitle(), mapX, mapY);
+                        } else {
+                            log.warn("❌ detailCommon2에서 잘못된 좌표: {} → ({}, {}) - 한국 범위 밖", 
+                                festival.getTitle(), mapX, mapY);
+                            failed++;
+                        }
                     } else {
-                        failed++;
-                        log.debug("❌ 좌표 정보 없음: {}", festival.getTitle());
+                        // 2단계: 좌표 정보가 없는 경우 주소 기반 좌표 추정 시도
+                        log.info("⚠️ detailCommon2에서 좌표 없음, 주소 기반 추정 시도: {}", festival.getTitle());
+                        
+                        String address = festival.getAddr1();
+                        if (address != null && !address.trim().isEmpty() && !"null".equals(address)) {
+                            Map<String, String> estimatedCoords = estimateCoordinatesFromAddress(address);
+                            if (estimatedCoords != null) {
+                                festival.setMapX(estimatedCoords.get("mapx"));
+                                festival.setMapY(estimatedCoords.get("mapy"));
+                                enhanced++;
+                                log.info("✅ 주소 기반 좌표 추정 성공: {} → ({}, {})", 
+                                    festival.getTitle(), festival.getMapX(), festival.getMapY());
+                            } else {
+                                log.warn("❌ 주소 기반 좌표 추정 실패: {} - 주소: {}", 
+                                    festival.getTitle(), address);
+                                failed++;
+                            }
+                        } else {
+                            log.warn("❌ 주소 정보도 없음: {}", festival.getTitle());
+                            failed++;
+                        }
                     }
                     
-                    // API 호출 제한을 위한 약간의 지연
-                    Thread.sleep(50);
+                    // API 호출 제한을 위한 지연
+                    Thread.sleep(100);
                     
                 } catch (Exception e) {
                     failed++;
-                    log.warn("❌ 좌표 보완 실패: {} - {}", festival.getTitle(), e.getMessage());
+                    log.error("❌ 좌표 보완 중 오류 발생: {} - {}", festival.getTitle(), e.getMessage(), e);
                 }
             } else {
                 failed++;
-                log.debug("❌ contentId 없음: {}", festival.getTitle());
+                log.info("❌ contentId 없음: {}", festival.getTitle());
             }
         }
         
-        log.info("🗺️ 좌표 보완 완료: 성공 {}개, 실패 {}개", enhanced, failed);
+        log.info("🗺️ 좌표 보완 완료 - 기존 좌표: {}개, 보완 성공: {}개, 실패: {}개", 
+            alreadyHasCoordinates, enhanced, failed);
         return festivals;
+    }
+    
+    /**
+     * 문자열 좌표의 한국 유효성 검사
+     */
+    private boolean isValidKoreanCoordinateString(String mapX, String mapY) {
+        if (mapX == null || mapY == null || "null".equals(mapX) || "null".equals(mapY) ||
+            mapX.trim().isEmpty() || mapY.trim().isEmpty()) {
+            return false;
+        }
+        
+        try {
+            double x = Double.parseDouble(mapX);
+            double y = Double.parseDouble(mapY);
+            return isValidKoreanCoordinate(y, x); // latitude, longitude 순서
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 주소 기반 좌표 추정 (지역별 대표 좌표)
+     */
+    private Map<String, String> estimateCoordinatesFromAddress(String address) {
+        if (address == null || address.trim().isEmpty()) {
+            return null;
+        }
+        
+        String lowerAddress = address.toLowerCase();
+        Map<String, String> coordinates = new HashMap<>();
+        
+        // 주요 지역별 대표 좌표 (시청 또는 중심지 기준)
+        if (lowerAddress.contains("서울")) {
+            coordinates.put("mapx", "126.9784"); // 서울시청
+            coordinates.put("mapy", "37.5666");
+        } else if (lowerAddress.contains("부산")) {
+            coordinates.put("mapx", "129.0756"); // 부산시청
+            coordinates.put("mapy", "35.1798");
+        } else if (lowerAddress.contains("대구")) {
+            coordinates.put("mapx", "128.6014"); // 대구시청
+            coordinates.put("mapy", "35.8714");
+        } else if (lowerAddress.contains("인천")) {
+            coordinates.put("mapx", "126.7052"); // 인천시청
+            coordinates.put("mapy", "37.4563");
+        } else if (lowerAddress.contains("광주")) {
+            coordinates.put("mapx", "126.8526"); // 광주시청
+            coordinates.put("mapy", "35.1595");
+        } else if (lowerAddress.contains("대전")) {
+            coordinates.put("mapx", "127.3845"); // 대전시청
+            coordinates.put("mapy", "36.3504");
+        } else if (lowerAddress.contains("울산")) {
+            coordinates.put("mapx", "129.3114"); // 울산시청
+            coordinates.put("mapy", "35.5384");
+        } else if (lowerAddress.contains("제주")) {
+            coordinates.put("mapx", "126.5312"); // 제주시청
+            coordinates.put("mapy", "33.4996");
+        } else if (lowerAddress.contains("강원")) {
+            coordinates.put("mapx", "127.7669"); // 춘천시청
+            coordinates.put("mapy", "37.8813");
+        } else if (lowerAddress.contains("경기")) {
+            coordinates.put("mapx", "127.2084"); // 수원시청
+            coordinates.put("mapy", "37.2636");
+        } else if (lowerAddress.contains("충북")) {
+            coordinates.put("mapx", "127.4889"); // 청주시청
+            coordinates.put("mapy", "36.6424");
+        } else if (lowerAddress.contains("충남")) {
+            coordinates.put("mapx", "126.8000"); // 천안시청
+            coordinates.put("mapy", "36.8151");
+        } else if (lowerAddress.contains("전북")) {
+            coordinates.put("mapx", "127.1530"); // 전주시청
+            coordinates.put("mapy", "35.8242");
+        } else if (lowerAddress.contains("전남")) {
+            coordinates.put("mapx", "126.4628"); // 목포시청
+            coordinates.put("mapy", "34.8118");
+        } else if (lowerAddress.contains("경북")) {
+            coordinates.put("mapx", "128.5055"); // 포항시청
+            coordinates.put("mapy", "36.0190");
+        } else if (lowerAddress.contains("경남")) {
+            coordinates.put("mapx", "128.6890"); // 창원시청
+            coordinates.put("mapy", "35.2284");
+        } else {
+            // 알 수 없는 지역의 경우 서울 중심으로 설정
+            log.info("🌍 알 수 없는 지역, 서울 기본 좌표 적용: {}", address);
+            coordinates.put("mapx", "126.9784");
+            coordinates.put("mapy", "37.5666");
+        }
+        
+        log.info("📍 주소 기반 좌표 추정: {} → ({}, {})", 
+            address, coordinates.get("mapx"), coordinates.get("mapy"));
+        return coordinates;
     }
     
     /**

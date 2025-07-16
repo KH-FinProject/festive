@@ -433,58 +433,186 @@ public class OpenAIServiceImpl implements OpenAIService {
     @Override
     public String extractKeywordWithAI(String userMessage) {
         try {
-            // 🎯 간단하고 직관적인 프롬프트로 변경
-            StringBuilder prompt = new StringBuilder();
-            prompt.append("다음 문장에서 핵심 키워드 하나만 찾아주세요.\n\n");
-            prompt.append("문장: \"").append(userMessage).append("\"\n\n");
-            
-            prompt.append("규칙:\n");
-            prompt.append("1. 구체적인 것만 선택 (예: 벚꽃, 드론, 로봇, 음식, K-POP)\n");
-            prompt.append("2. 일반적인 단어는 제외 (축제, 행사, 여행, 정보, 알려줘, 지역명)\n");
-            prompt.append("3. 핵심 키워드가 없으면 빈 답변\n\n");
-            
-            prompt.append("예시:\n");
-            prompt.append("\"서울 벚꽃축제 알려줘\" → 벚꽃\n");
-            prompt.append("\"부산 드론 행사 정보\" → 드론\n");
-            prompt.append("\"대구 로봇대회\" → 로봇\n");
-            prompt.append("\"인천 K-POP 축제\" → K-POP\n");
-            prompt.append("\"서울 여행 추천\" → \n");
-            prompt.append("\"부산 축제 리스트\" → \n\n");
-            
-            prompt.append("답변 (키워드만):");
-            
-            String response = callOpenAI(prompt.toString());
-            
-            if (response != null) {
-                response = response.trim()
-                    .replaceAll("\\n+", "")
-                    .replaceAll("\\s+", " ")
-                    .replaceAll("[^가-힣a-zA-Z0-9\\s-]", "")
-                    .trim();
-                
-                // 간단한 후처리
-                if (response.length() > 15 || response.length() < 2) {
-                    log.warn("⚠️ AI 응답 길이 문제: '{}' ({}글자) - 무시", response, response.length());
-                    return "";
-                }
-                
-                // 금지 단어 체크
-                if (isStrictCommonWord(response)) {
-                    log.warn("⚠️ AI가 금지 단어 반환: '{}' - 무시", response);
-                    return "";
-                }
-                
-                log.info("✅ AI 키워드 추출 성공: '{}' → '{}'", userMessage, response);
-                return response;
+            // 🎯 1단계: 매우 엄격한 AI 프롬프트
+            String firstResponse = callStrictKeywordExtractionAI(userMessage);
+            if (isValidSpecificKeyword(firstResponse)) {
+                log.info("✅ 1단계 AI 키워드 추출 성공: '{}' → '{}'", userMessage, firstResponse);
+                return firstResponse;
             }
             
-            log.warn("⚠️ AI 응답 없음");
+            // 🎯 2단계: 더 엄격한 경고 포함 프롬프트
+            log.info("⚠️ 1단계 실패, 2단계 시도");
+            String secondResponse = callUltraStrictKeywordExtractionAI(userMessage);
+            if (isValidSpecificKeyword(secondResponse)) {
+                log.info("✅ 2단계 AI 키워드 추출 성공: '{}' → '{}'", userMessage, secondResponse);
+                return secondResponse;
+            }
+            
+            // 🎯 3단계: 완전 실패 시 빈 문자열 반환
+            log.info("❌ AI 키워드 추출 완전 실패 - 구체적 키워드 없음: '{}'", userMessage);
             return "";
             
         } catch (Exception e) {
-            log.error("❌ AI 키워드 추출 실패: {}", e.getMessage());
+            log.error("❌ AI 키워드 추출 오류: {}", e.getMessage());
             return "";
         }
+    }
+    
+    /**
+     * 🎯 1단계: 엄격한 AI 키워드 추출
+     */
+    private String callStrictKeywordExtractionAI(String userMessage) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("다음 문장에서 구체적인 키워드만 찾아주세요.\n\n");
+        prompt.append("문장: \"").append(userMessage).append("\"\n\n");
+        
+        prompt.append("⚠️ 절대 반환하면 안 되는 단어들:\n");
+        prompt.append("축제, 행사, 이벤트, 페스티벌, 여행, 정보, 알려줘, 추천, 계획, 코스, 일정\n");
+        prompt.append("서울, 부산, 대구, 인천, 광주, 대전, 울산, 강원, 경기, 충북, 전남 등 지역명\n\n");
+        
+        prompt.append("✅ 반환해야 할 구체적 키워드 예시:\n");
+        prompt.append("벚꽃, 드론, 로봇, K-POP, 음식, 맥주, 와인, 자동차, 게임, AI, VR\n\n");
+        
+        prompt.append("예시:\n");
+        prompt.append("\"서울 벚꽃축제 알려줘\" → 벚꽃\n");
+        prompt.append("\"부산 드론 행사 정보\" → 드론\n");
+        prompt.append("\"대구 K-POP 페스티벌\" → K-POP\n");
+        prompt.append("\"인천 축제 리스트\" → (빈 답변)\n");
+        prompt.append("\"서울 여행 추천\" → (빈 답변)\n\n");
+        
+        prompt.append("답변 (구체적 키워드만, 없으면 빈 답변):");
+        
+        String response = callOpenAI(prompt.toString());
+        return cleanAndValidateResponse(response);
+    }
+    
+    /**
+     * 🎯 2단계: 매우 엄격한 AI 키워드 추출
+     */
+    private String callUltraStrictKeywordExtractionAI(String userMessage) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("🚨 경고: 이전 시도가 실패했습니다. 매우 구체적인 키워드만 찾아주세요!\n\n");
+        prompt.append("문장: \"").append(userMessage).append("\"\n\n");
+        
+        prompt.append("🚫 절대 금지 단어 (반환하면 실패):\n");
+        prompt.append("축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 컨벤션, 쇼\n");
+        prompt.append("여행, 정보, 알려줘, 추천, 계획, 코스, 일정, 루트\n");
+        prompt.append("서울, 부산, 대구, 인천, 광주, 대전, 울산, 세종\n");
+        prompt.append("경기, 강원, 충북, 충남, 전북, 전남, 경북, 경남, 제주\n\n");
+        
+        prompt.append("✅ 허용되는 구체적 키워드만:\n");
+        prompt.append("- 꽃/식물: 벚꽃, 장미, 튤립, 유채, 해바라기, 코스모스\n");
+        prompt.append("- 기술: 드론, 로봇, AI, VR, 게임, IT\n");
+        prompt.append("- 문화: K-POP, 재즈, 클래식, 미술, 사진, 영화\n");
+        prompt.append("- 음식: 김치, 치킨, 맥주, 와인, 커피\n");
+        prompt.append("- 기타: 자동차, 패션, 스포츠\n\n");
+        
+        prompt.append("구체적 키워드가 없으면 반드시 빈 답변하세요!\n\n");
+        prompt.append("답변:");
+        
+        String response = callOpenAI(prompt.toString());
+        return cleanAndValidateResponse(response);
+    }
+    
+    /**
+     * 응답 정리 및 검증
+     */
+    private String cleanAndValidateResponse(String response) {
+        if (response == null) return "";
+        
+        response = response.trim()
+            .replaceAll("\\n+", "")
+            .replaceAll("\\s+", " ")
+            .replaceAll("[^가-힣a-zA-Z0-9\\s-]", "")
+            .trim();
+        
+        // 길이 체크
+        if (response.length() > 15 || response.length() < 2) {
+            return "";
+        }
+        
+        return response;
+    }
+    
+    /**
+     * 구체적이고 유효한 키워드인지 검증
+     */
+    private boolean isValidSpecificKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+        
+        keyword = keyword.toLowerCase().trim();
+        
+        // 금지 단어 체크 (더 엄격)
+        if (isStrictCommonWord(keyword)) {
+            return false;
+        }
+        
+        // 구체적인 키워드 화이트리스트 체크
+        String[] allowedKeywords = {
+            // 자연/식물
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "ai", "vr", "게임", "it", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술
+            "k-pop", "kpop", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
+        };
+        
+        for (String allowed : allowedKeywords) {
+            if (keyword.equals(allowed.toLowerCase()) || 
+                keyword.contains(allowed.toLowerCase()) ||
+                allowed.toLowerCase().contains(keyword)) {
+                log.info("✅ 유효한 구체적 키워드 발견: '{}'", keyword);
+                return true;
+            }
+        }
+        
+        // 화이트리스트에 없는 경우 추가 검증
+        // 2글자 이상이고 일반적이지 않은 단어면 허용
+        if (keyword.length() >= 2 && !isCommonWord(keyword)) {
+            log.info("✅ 일반적이지 않은 키워드로 허용: '{}'", keyword);
+            return true;
+        }
+        
+        log.warn("❌ 구체적이지 않은 키워드 거부: '{}'", keyword);
+        return false;
+    }
+    
+    /**
+     * 일반적인 단어인지 체크 (키워드로 부적절한 단어들)
+     */
+    private boolean isCommonWord(String word) {
+        if (word == null || word.trim().isEmpty()) {
+            return true;
+        }
+        
+        String lowerWord = word.toLowerCase().trim();
+        
+        // 일반적인 단어들 (키워드로 부적절)
+        String[] commonWords = {
+            "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "컨벤션", "쇼",
+            "여행", "계획", "일정", "코스", "루트", "추천", "정보", "리스트", "목록",
+            "알려줘", "찾아줘", "보여줘", "검색", "소개", "설명", "말해줘",
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+            "관련", "위한", "같은", "느낌", "스타일", "테마", "컨셉", "좋은", "괜찮은",
+            "추천", "정보", "알려", "찾아", "보여", "말해", "하는", "있는", "되는"
+        };
+        
+        for (String common : commonWords) {
+            if (lowerWord.equals(common.toLowerCase()) || 
+                lowerWord.contains(common.toLowerCase()) ||
+                common.toLowerCase().contains(lowerWord)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
