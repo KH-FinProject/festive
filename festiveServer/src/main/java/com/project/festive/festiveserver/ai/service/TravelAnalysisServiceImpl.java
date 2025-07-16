@@ -412,55 +412,133 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
 
     @Override
     public String determineRequestType(String message) {
-        String lowerMessage = message.toLowerCase();
+        String lowerMessage = message.toLowerCase().replace(" ", "");
+        
+        log.info("🔍 요청 타입 분석 시작: '{}'", message);
         
         // 0. 먼저 여행/축제 관련성 체크
         if (!isTravelOrFestivalRelated(message)) {
+            log.info("❌ 여행/축제 관련 없음 → unclear_request");
             return "unclear_request";
         }
         
-        // 1. 축제 관련 키워드 확인
-        boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("행사") || 
-                                   lowerMessage.contains("이벤트") || lowerMessage.contains("페스티벌");
+        // 🎯 3가지 기능 명확 구분
         
-        // 2. 여행 계획 관련 키워드 확인
-        boolean hasTravelPlanKeyword = lowerMessage.contains("계획") || lowerMessage.contains("일정") || 
-                                     lowerMessage.contains("코스") || lowerMessage.contains("여행") || 
+        // 1️⃣ 축제 기반 여행코스 추천 (festival_travel)
+        // - "축제" + ("여행코스", "일정", "계획", "추천", "박", "일")
+        boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("페스티벌") || 
+                                   lowerMessage.contains("행사") || lowerMessage.contains("이벤트");
+        
+        boolean hasTravelPlanKeyword = lowerMessage.contains("여행코스") || lowerMessage.contains("여행계획") || 
+                                     lowerMessage.contains("일정") || lowerMessage.contains("코스") || 
                                      lowerMessage.contains("루트") || lowerMessage.contains("동선") ||
-                                     lowerMessage.contains("짜") || lowerMessage.contains("추천") ||
-                                     lowerMessage.contains("박") || lowerMessage.contains("일");
-        
-        // 3. 단순 정보 요청 키워드 확인
-        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("소개") || 
-                                      lowerMessage.contains("정보") || lowerMessage.contains("뭐가") ||
-                                      lowerMessage.contains("어떤") || lowerMessage.contains("찾아줘") ||
-                                      lowerMessage.contains("검색") || lowerMessage.contains("리스트") ||
-                                      lowerMessage.contains("목록");
-        
-        String requestType;
+                                     lowerMessage.contains("박") || 
+                                     (lowerMessage.contains("추천") && (lowerMessage.contains("여행") || lowerMessage.contains("계획")));
         
         if (hasFestivalKeyword && hasTravelPlanKeyword) {
-            // 축제 + 여행 계획 키워드 = 축제 기반 여행 계획
-            requestType = "festival_travel";
-        } else if (hasFestivalKeyword && hasInfoRequestKeyword) {
-            // 축제 + 정보 요청 키워드 = 단순 축제 정보 요청
-            requestType = "festival_info";
-        } else if (hasFestivalKeyword) {
-            // 축제 키워드만 있는 경우 - 문맥에 따라 판단
-            if (lowerMessage.contains("위주") || lowerMessage.contains("중심") || lowerMessage.contains("기반")) {
-                requestType = "festival_travel";
-            } else {
-                requestType = "festival_info";
-            }
-        } else if (hasTravelPlanKeyword) {
-            // 여행 계획 키워드만 있는 경우 = 일반 여행 계획
-            requestType = "travel_only";
-        } else {
-            // 기본값
-            requestType = "travel_only";
+            log.info("🎪✈️ 축제 기반 여행코스 추천 감지 → festival_travel");
+            return "festival_travel";
         }
         
-        return requestType;
+        // 2️⃣ 순수 축제 검색 (festival_info)
+        // - "축제" + ("알려줘", "정보", "찾아줘", "검색", "뭐있어", "목록") 
+        // - 또는 특정 키워드 + ("알려줘", "정보") (예: "드론 알려줘")
+        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("정보") || 
+                                      lowerMessage.contains("찾아줘") || lowerMessage.contains("검색") || 
+                                      lowerMessage.contains("뭐있어") || lowerMessage.contains("목록") ||
+                                      lowerMessage.contains("리스트") || lowerMessage.contains("소개");
+        
+        // 특정 키워드 감지 (드론, 벚꽃 등)
+        boolean hasSpecificKeyword = hasSpecificFestivalKeyword(message);
+        
+        if (hasFestivalKeyword && hasInfoRequestKeyword) {
+            log.info("🎪📋 축제 정보 검색 감지 → festival_info");
+            return "festival_info";
+        }
+        
+        if (hasSpecificKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
+            log.info("🎯📋 키워드 기반 축제 검색 감지 → festival_info");
+            return "festival_info";
+        }
+        
+        // 축제 키워드만 있고 명확한 지시어가 없는 경우 → 기본적으로 축제 정보 검색
+        if (hasFestivalKeyword && !hasTravelPlanKeyword) {
+            log.info("🎪❓ 축제 키워드만 있음 → festival_info (기본값)");
+            return "festival_info";
+        }
+        
+        // 3️⃣ 일반 여행코스 추천 (travel_only)
+        // - 축제 키워드 없이 여행 관련 키워드만 있는 경우
+        if (hasTravelPlanKeyword && !hasFestivalKeyword) {
+            log.info("✈️ 일반 여행코스 추천 감지 → travel_only");
+            return "travel_only";
+        }
+        
+        // 🏠 기본값: 일반 여행 추천
+        log.info("🔄 기본값 적용 → travel_only");
+        return "travel_only";
+    }
+    
+    /**
+     * 구체적인 축제 키워드 감지 (드론, 벚꽃, K-POP 등)
+     */
+    private boolean hasSpecificFestivalKeyword(String message) {
+        String lowerMessage = message.toLowerCase();
+        
+        // 🎯 구체적인 축제 관련 키워드들
+        String[] specificKeywords = {
+            // 자연/식물
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "AI", "VR", "게임", "IT", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술
+            "K-POP", "KPOP", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
+        };
+        
+        for (String keyword : specificKeywords) {
+            if (lowerMessage.contains(keyword)) {
+                log.debug("🎯 구체적 키워드 발견: '{}'", keyword);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 간단한 키워드 감지 (순환 호출 방지)
+     */
+    private boolean hasSimpleKeyword(String message) {
+        String[] words = message.split("\\s+");
+        for (String word : words) {
+            word = word.replaceAll("[^가-힣a-zA-Z]", "").toLowerCase();
+            if (word.length() >= 2 && !isSimpleCommonWord(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 간단한 공통 단어 체크 (순환 호출 방지용)
+     */
+    private boolean isSimpleCommonWord(String word) {
+        String[] commonWords = {
+            "알려줘", "추천", "정보", "축제", "행사", "이벤트", "여행", "계획", "일정", "코스",
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원",
+            "충북", "충남", "전북", "전남", "경북", "경남", "제주"
+        };
+        
+        for (String common : commonWords) {
+            if (word.equals(common)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -469,40 +547,140 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "";
         }
         
+        log.info("🤖 키워드 추출 시작: '{}'", message);
+        
+        try {
+            // 🤖 1단계: AI를 활용한 스마트 키워드 추출
+            String aiKeyword = openAIService.extractKeywordWithAI(message);
+            
+            if (aiKeyword != null && !aiKeyword.trim().isEmpty()) {
+                log.info("✅ AI 키워드 추출 성공: '{}' → '{}'", message, aiKeyword);
+                return aiKeyword.trim();
+            } else {
+                log.info("⚠️ AI 키워드 추출 실패, 폴백 방식 사용");
+            }
+            
+        } catch (Exception e) {
+            log.warn("❌ AI 키워드 추출 오류, 폴백 방식 사용: {}", e.getMessage());
+        }
+        
+        // 🛡️ 2단계: 강화된 폴백 - 구체적인 키워드 직접 매칭
+        log.info("🔄 강화된 폴백 키워드 추출 시작");
+        
         String lowerMessage = message.toLowerCase();
         
-        // 특정 키워드 패턴 추출
-        String[] keywordPatterns = {
-            "맛집", "음식", "카페", "디저트",
-            "박물관", "미술관", "전시", "문화",
-            "해변", "바다", "산", "강", "호수",
-            "온천", "스파", "휴양",
-            "쇼핑", "시장", "백화점",
-            "체험", "액티비티", "레저",
-            "역사", "유적", "문화재",
-            "자연", "경치", "풍경",
-            "여행", "계획", "코스", "일정", "루트", "축제", "페스티벌", "행사"
+        // 🎯 구체적인 키워드들을 직접 매칭 (우선순위 순)
+        String[] specificKeywords = {
+            // 자연/꽃
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "AI", "VR", "게임", "IT", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술  
+            "K-POP", "KPOP", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
         };
         
-        for (String pattern : keywordPatterns) {
-            if (lowerMessage.contains(pattern)) {
-                return pattern;
+        for (String keyword : specificKeywords) {
+            if (lowerMessage.contains(keyword.toLowerCase())) {
+                log.info("🎯 직접 매칭 성공: '{}' → '{}'", message, keyword);
+                return keyword;
             }
         }
         
-        // 간단한 키워드 추출 (공백으로 분리해서 의미있는 단어 찾기)
+        // 🔍 3단계: 단어 분해 후 키워드 검색
         String[] words = message.split("\\s+");
+        
         for (String word : words) {
-            if (word.length() >= 2 && !word.matches("\\d+")) {
-                // 특수문자 제거
-                word = word.replaceAll("[^가-힣a-zA-Z]", "");
-                if (word.length() >= 2) {
-                    return word;
+            // 특수문자 제거하고 정리
+            String cleanWord = word.replaceAll("[^가-힣a-zA-Z0-9]", "").toLowerCase();
+            
+            if (cleanWord.length() >= 2) {
+                // 구체적인 키워드인지 체크
+                for (String keyword : specificKeywords) {
+                    if (cleanWord.equals(keyword.toLowerCase()) || 
+                        cleanWord.contains(keyword.toLowerCase()) ||
+                        keyword.toLowerCase().contains(cleanWord)) {
+                        log.info("🔍 단어 분해 매칭 성공: '{}' → '{}'", message, keyword);
+                        return keyword;
+                    }
+                }
+                
+                // 일반 단어가 아닌 경우 키워드로 사용
+                if (!isCommonWord(cleanWord)) {
+                    log.info("📝 일반 키워드 추출: '{}' → '{}'", message, cleanWord);
+                    return cleanWord;
                 }
             }
         }
         
+        log.info("ℹ️ 키워드 추출 결과 없음: '{}' - TourAPI가 전체 검색을 처리합니다", message);
         return "";
+    }
+    
+    /**
+     * 일반적인 단어인지 체크 (키워드로 부적절한 단어들)
+     */
+    private boolean isCommonWord(String word) {
+        if (word == null || word.trim().isEmpty()) {
+            return true;
+        }
+        
+        String lowerWord = word.toLowerCase().trim();
+        
+        // 🚫 일반적인 동사/형용사/부사 (키워드가 될 수 없는 것들)
+        String[] verbs = {
+            "알려줘", "추천", "가자", "가고", "보자", "좋은", "괜찮은", "예쁜", "멋진", "재미있는",
+            "찾아줘", "검색", "보여줘", "설명", "소개", "말해줘", "하자", "해줘", "주세요"
+        };
+        
+        // 🗺️ 주요 지역명 (키워드가 아닌 지역 정보)
+        String[] regions = {
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", 
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+            "경기도", "강원도", "충청북도", "충청남도", "전라북도", "전라남도", 
+            "경상북도", "경상남도", "제주도"
+        };
+        
+        // ⏰ 시간/기간 관련 (키워드가 아닌 일정 정보)
+        String[] timeWords = {
+            "당일", "박", "일", "하루", "이틀", "사흘", "나흘", "일주일", "주말", 
+            "오전", "오후", "저녁", "아침", "점심", "밤", "새벽", "시간", "분"
+        };
+        
+        // 🎯 일반적인 여행 용어 (너무 포괄적이어서 키워드로 부적절)
+        String[] genericTerms = {
+            "여행", "계획", "일정", "코스", "루트", "추천", "정보", "리스트", "목록"
+        };
+        
+        // 🏷️ 수식어/접미사 (키워드에서 제외해야 할 불필요한 단어들)
+        String[] modifiers = {
+            "관련", "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션",
+            "관련된", "위한", "같은", "느낌", "스타일", "테마", "컨셉"
+        };
+        
+        // 🔍 모든 카테고리 체크
+        String[][] allCommonWords = {verbs, regions, timeWords, genericTerms, modifiers};
+        
+        for (String[] category : allCommonWords) {
+            for (String common : category) {
+                if (lowerWord.equals(common.toLowerCase()) || 
+                    lowerWord.contains(common.toLowerCase()) || 
+                    common.toLowerCase().contains(lowerWord)) {
+                    return true;
+                }
+            }
+        }
+        
+        // 📏 너무 짧은 단어 (의미가 애매함)
+        if (lowerWord.length() <= 1) {
+            return true;
+        }
+        
+        // ✅ 나머지는 모두 유효한 키워드로 허용
+        return false;
     }
     
     /**

@@ -55,6 +55,11 @@ export default function PublicCarParkWithMap({
       const field = encodeURIComponent("지역코드::EQ");
       const serviceKey = import.meta.env.VITE_PUBLIC_CARPARK_API;
 
+      // 디버깅: serviceKey 값 확인
+      console.log("🔍 VITE_PUBLIC_CARPARK_API:", serviceKey);
+      console.log("🔍 serviceKey length:", serviceKey?.length);
+      console.log("🔍 All env vars:", import.meta.env);
+
       // areaCode 검증
       if (!areaCode || areaCode.includes("undefined") || !serviceKey) {
         setListCarPark([]);
