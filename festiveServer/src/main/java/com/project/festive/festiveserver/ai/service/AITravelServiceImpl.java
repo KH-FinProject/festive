@@ -2009,8 +2009,12 @@ public class AITravelServiceImpl implements AITravelService {
                         location.setLongitude(longitude);
                         location.setDay(1); // 축제는 모두 1일차로 설정
                         location.setTime("종일");
-                        location.setDescription(String.valueOf(data.get("addr1")));
-                        location.setImage(String.valueOf(data.get("firstimage")));
+                        
+                        // 🎪 축제는 간단하게 축제명만 표시
+                        location.setDescription(title + " - 축제");
+                        
+                        String firstImage = String.valueOf(data.get("firstimage"));
+                        location.setImage(processImageUrl(firstImage));
                         location.setCategory("축제");
                         
                         locations.add(location);
@@ -2547,18 +2551,22 @@ public class AITravelServiceImpl implements AITravelService {
                     }
                 }
                 
-                // 📍 주소 정보를 description에 설정
+                // 📍 주소 정보를 description에 설정 (undefined 방지)
                 String finalDescription;
                 
                 if ("25".equals(contentTypeId)) {
                     // 여행코스는 지역 정보 표시
-                    finalDescription = cityDistrict;
+                    finalDescription = (cityDistrict != null && !cityDistrict.trim().isEmpty()) ? 
+                        cityDistrict : title + " 코스";
                 } else {
                     // 그 외 타입들은 실제 주소 표시
                     if (addr1 != null && !"null".equals(addr1) && !addr1.trim().isEmpty()) {
                         finalDescription = addr1.trim();
-                    } else {
+                    } else if (cityDistrict != null && !cityDistrict.trim().isEmpty()) {
                         finalDescription = cityDistrict;
+                    } else {
+                        // 모든 정보가 없을 때는 장소명 기반으로 설정
+                        finalDescription = title;
                     }
                 }
                 
@@ -2853,7 +2861,7 @@ public class AITravelServiceImpl implements AITravelService {
                 ChatResponse.FestivalInfo festival = new ChatResponse.FestivalInfo();
                 festival.setName(String.valueOf(data.get("title")));
                 
-                // 🏠 주소 정보 개선
+                // 🏠 주소 정보 개선 - 간단하게 축제명 기반으로 표시
                 String addr1 = String.valueOf(data.get("addr1"));
                 if (addr1 != null && 
                     !"null".equals(addr1) && 
@@ -2862,7 +2870,8 @@ public class AITravelServiceImpl implements AITravelService {
                     !addr1.equals("")) {
                     festival.setLocation(addr1.trim());
                 } else {
-                    festival.setLocation("장소 정보 확인 중");
+                    // undefined 방지를 위해 축제명 기반으로 설정
+                    festival.setLocation(festival.getName() + " 개최지");
                 }
                 
                 // 🖼️ 이미지 정보 개선 (없는 경우 기본 로고 사용)
@@ -2912,7 +2921,8 @@ public class AITravelServiceImpl implements AITravelService {
                     festival.setPeriod("기간 미정");
                 }
                 
-                festival.setDescription("한국관광공사에서 제공하는 축제 정보입니다.");
+                // 🎪 축제 설명은 간단하게 축제명으로 설정 (undefined 방지)
+                festival.setDescription(festival.getName());
                 return festival;
             })
             .collect(Collectors.toList());
@@ -3367,6 +3377,9 @@ public class AITravelServiceImpl implements AITravelService {
             // 🗺️ 좌표 정보 보완 (마커 표시 개선을 위해)
             allItems = enhanceFestivalWithCoordinates(allItems);
             
+            // 📅 날짜 정보 보완 (기간미정 문제 해결을 위해)
+            allItems = enhanceFestivalWithDateInfo(allItems);
+            
             // 최대 40개로 제한
             if (allItems.size() > 40) {
                 allItems = allItems.subList(0, 40);
@@ -3450,6 +3463,178 @@ public class AITravelServiceImpl implements AITravelService {
             return x >= 124.0 && x <= 132.0 && y >= 33.0 && y <= 43.0;
         } catch (NumberFormatException e) {
             return false;
+        }
+    }
+    
+    /**
+     * 📅 축제 데이터의 날짜 정보 보완 (detailIntro2 API 활용)
+     */
+    private List<TourAPIResponse.Item> enhanceFestivalWithDateInfo(List<TourAPIResponse.Item> festivals) {
+        if (festivals == null || festivals.isEmpty()) {
+            return festivals;
+        }
+        
+        log.info("📅 축제 날짜 정보 보완 시작: {}개 축제", festivals.size());
+        
+        int enhanced = 0;
+        int failed = 0;
+        
+        for (TourAPIResponse.Item festival : festivals) {
+            // 이미 날짜 정보가 있는 경우 스킵
+            if (hasValidDateInfo(festival)) {
+                continue;
+            }
+            
+            // contentId가 있는 경우에만 상세 정보 조회
+            if (festival.getContentId() != null && !festival.getContentId().isEmpty()) {
+                try {
+                    // detailIntro2 API로 축제 날짜 정보 가져오기
+                    TourAPIResponse.Item detailIntroInfo = fetchDetailIntro2(festival.getContentId());
+                    
+                    if (detailIntroInfo != null) {
+                        if (detailIntroInfo.getEventStartDate() != null && !detailIntroInfo.getEventStartDate().isEmpty()) {
+                            festival.setEventStartDate(detailIntroInfo.getEventStartDate());
+                        }
+                        if (detailIntroInfo.getEventEndDate() != null && !detailIntroInfo.getEventEndDate().isEmpty()) {
+                            festival.setEventEndDate(detailIntroInfo.getEventEndDate());
+                        }
+                        enhanced++;
+                        log.debug("✅ 날짜 정보 보완 성공: {} → 시작:{}, 종료:{}", 
+                            festival.getTitle(), festival.getEventStartDate(), festival.getEventEndDate());
+                    } else {
+                        failed++;
+                        log.debug("❌ 날짜 정보 없음: {}", festival.getTitle());
+                    }
+                    
+                    // API 호출 제한을 위한 약간의 지연
+                    Thread.sleep(50);
+                    
+                } catch (Exception e) {
+                    failed++;
+                    log.debug("❌ 날짜 정보 조회 실패: {} - {}", festival.getTitle(), e.getMessage());
+                }
+            } else {
+                failed++;
+                log.debug("❌ contentId 없음: {}", festival.getTitle());
+            }
+        }
+        
+        log.info("📅 축제 날짜 정보 보완 완료 - 성공: {}개, 실패: {}개", enhanced, failed);
+        return festivals;
+    }
+    
+    /**
+     * 축제에 유효한 날짜 정보가 있는지 확인
+     */
+    private boolean hasValidDateInfo(TourAPIResponse.Item festival) {
+        return festival.getEventStartDate() != null && !festival.getEventStartDate().trim().isEmpty() &&
+               !"null".equals(festival.getEventStartDate()) && !"undefined".equals(festival.getEventStartDate());
+    }
+    
+    /**
+     * detailIntro2 API 호출하여 축제 상세 정보 가져오기
+     */
+    private TourAPIResponse.Item fetchDetailIntro2(String contentId) {
+        try {
+            log.debug("🔍 detailIntro2 API 호출 - contentId: {}", contentId);
+            
+            String url = UriComponentsBuilder.fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/detailIntro2")
+                    .queryParam("MobileOS", "ETC")
+                    .queryParam("MobileApp", "festive")
+                    .queryParam("_type", "json")
+                    .queryParam("contentTypeId", "15")  // 축제 타입
+                    .queryParam("contentId", contentId)
+                    .build(false)
+                    .toUriString() + "&serviceKey=" + tourApiServiceKey;
+            
+            ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(url), String.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String responseBody = response.getBody();
+                log.debug("detailIntro2 응답 데이터 길이: {}", responseBody.length());
+                
+                // JSON 응답 파싱
+                List<TourAPIResponse.Item> items = parseDetailIntro2Response(responseBody);
+                
+                if (!items.isEmpty()) {
+                    TourAPIResponse.Item item = items.get(0);
+                    log.debug("✅ detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
+                            contentId, item.getEventStartDate(), item.getEventEndDate());
+                    return item;
+                } else {
+                    log.debug("⚠️ detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
+                }
+            } else {
+                log.debug("⚠️ detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
+                        contentId, response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            log.debug("detailIntro2 API 호출 중 오류 발생 - contentId: {}: {}", contentId, e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * detailIntro2 JSON 응답 파싱
+     */
+    private List<TourAPIResponse.Item> parseDetailIntro2Response(String response) {
+        List<TourAPIResponse.Item> items = new ArrayList<>();
+        
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response);
+            JsonNode body = root.path("response").path("body");
+            JsonNode itemsNode = body.path("items");
+            
+            if (itemsNode.isArray() && itemsNode.size() > 0) {
+                for (JsonNode itemNode : itemsNode.path("item")) {
+                    TourAPIResponse.Item item = parseDetailIntro2Item(itemNode);
+                    if (item != null) {
+                        items.add(item);
+                    }
+                }
+            } else if (itemsNode.path("item").isObject()) {
+                TourAPIResponse.Item item = parseDetailIntro2Item(itemsNode.path("item"));
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("detailIntro2 JSON 응답 파싱 실패", e);
+        }
+        
+        return items;
+    }
+    
+    /**
+     * detailIntro2 개별 JSON 아이템 파싱
+     */
+    private TourAPIResponse.Item parseDetailIntro2Item(JsonNode itemNode) {
+        try {
+            TourAPIResponse.Item item = new TourAPIResponse.Item();
+            
+            // 축제 날짜 정보 추출
+            String eventStartDate = getJsonNodeValue(itemNode, "eventstartdate");
+            String eventEndDate = getJsonNodeValue(itemNode, "eventenddate");
+            
+            item.setEventStartDate(eventStartDate);
+            item.setEventEndDate(eventEndDate);
+            
+            // contentId 추출
+            String contentId = getJsonNodeValue(itemNode, "contentid");
+            item.setContentId(contentId);
+            
+            log.debug("✅ detailIntro2 JSON 아이템 파싱 완료 - contentId: {}, 시작:{}, 종료:{}", 
+                    contentId, eventStartDate, eventEndDate);
+            
+            return item;
+            
+        } catch (Exception e) {
+            log.error("detailIntro2 JSON 아이템 파싱 실패", e);
+            return null;
         }
     }
     
