@@ -8,7 +8,6 @@ import axiosApi from "../../api/axiosAPI";
 
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,20}$/;
 
-
 const MyPageEditPw = () => {
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -30,7 +29,12 @@ const MyPageEditPw = () => {
   const navigate = useNavigate();
   const { member } = useAuthStore();
 
-  // 현재 비밀번호 일치 확인
+  // Prevent copy, paste, and cut on password input fields
+  const handlePreventClipboard = (e) => {
+    e.preventDefault();
+  };
+
+  // Check if current password matches
   useEffect(() => {
     const currentPassword = passwordData.currentPassword;
     setSubmitMessage("");
@@ -41,11 +45,8 @@ const MyPageEditPw = () => {
       return;
     }
 
-    if (submitMessage) {
-      alert(submitMessage);
-    }
-
-
+    // Removed alert(submitMessage) here as it causes multiple alerts on state change.
+    // The submitMessage is now handled in the submit function and displayed below the form.
 
     setCurrentPwStatus("checking");
     if (currentPwTimeout.current) clearTimeout(currentPwTimeout.current);
@@ -69,9 +70,9 @@ const MyPageEditPw = () => {
     return () => {
       if (currentPwTimeout.current) clearTimeout(currentPwTimeout.current);
     };
-  }, [passwordData.currentPassword, submitMessage]);
+  }, [passwordData.currentPassword]); // Removed submitMessage from dependency array
 
-  // 새 비밀번호 유효성 체크
+  // Validate new password
   useEffect(() => {
     setSubmitMessage("");
     setSubmitStatus("");
@@ -84,7 +85,7 @@ const MyPageEditPw = () => {
     }
   }, [passwordData.newPassword]);
 
-  // 새 비밀번호 확인 일치 여부 체크
+  // Check if new password and confirm password match
   useEffect(() => {
     setSubmitMessage("");
     setSubmitStatus("");
@@ -97,7 +98,7 @@ const MyPageEditPw = () => {
     }
   }, [passwordData.newPassword, passwordData.confirmPassword]);
 
-  // 입력 핸들러
+  // Input change handler
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData((prev) => ({
@@ -120,28 +121,28 @@ const MyPageEditPw = () => {
       return;
     }
 
-    // 필수 입력 체크
+    // Check for required fields
     if (!currentPassword || !newPassword || !confirmPassword) {
       setSubmitMessage("모든 필드를 입력해주세요.");
       setSubmitStatus("error");
       return;
     }
 
-    // 현재 비밀번호 일치
+    // Check current password match status
     if (currentPwStatus !== "matched") {
       setSubmitMessage("현재 비밀번호가 일치하지 않습니다.");
       setSubmitStatus("error");
       return;
     }
 
-    // 새 비밀번호 유효성
+    // Check new password validity
     if (newPwStatus !== "valid") {
       setSubmitMessage("비밀번호는 영문자+숫자 조합 6~20자로 입력하세요.");
       setSubmitStatus("error");
       return;
     }
 
-    // 새 비밀번호 일치
+    // Check new password and confirm password match
     if (confirmPwStatus !== "matched") {
       setSubmitMessage("비밀번호 확인이 일치하지 않습니다.");
       setSubmitStatus("error");
@@ -168,12 +169,12 @@ const MyPageEditPw = () => {
           navigate("/");
         }, 1500);
       } else {
-        alert(data.message || "비밀번호 변경 실패");
+        // Replaced alert with setting submit message
         setSubmitMessage(data.message || "비밀번호 변경 실패");
         setSubmitStatus("error");
       }
     } catch (error) {
-      alert("네트워크 오류 또는 서버 오류가 발생했습니다.");
+      // Replaced alert with setting submit message
       setSubmitMessage("네트워크 오류 또는 서버 오류가 발생했습니다.");
       setSubmitStatus("error");
     }
@@ -205,6 +206,9 @@ const MyPageEditPw = () => {
                   onChange={handlePasswordChange}
                   placeholder="현재 비밀번호를 입력하세요"
                   autoComplete="off"
+                  onCopy={handlePreventClipboard}    // 복사 방지
+                  onPaste={handlePreventClipboard}   // 붙여넣기 방지
+                  onCut={handlePreventClipboard}     // 잘라내기 방지
                 />
                 {currentPwStatus === "matched" && (
                   <p className="nickname-message success">현재 비밀번호가 일치합니다.</p>
@@ -226,6 +230,9 @@ const MyPageEditPw = () => {
                   onChange={handlePasswordChange}
                   placeholder="새 비밀번호를 입력하세요"
                   autoComplete="off"
+                  onCopy={handlePreventClipboard}    // 복사 방지
+                  onPaste={handlePreventClipboard}   // 붙여넣기 방지
+                  onCut={handlePreventClipboard}     // 잘라내기 방지
                 />
                 {newPwStatus === "valid" && (
                   <p className="nickname-message success">사용 가능한 비밀번호입니다.</p>
@@ -244,6 +251,9 @@ const MyPageEditPw = () => {
                   onChange={handlePasswordChange}
                   placeholder="새 비밀번호를 다시 입력하세요"
                   autoComplete="off"
+                  onCopy={handlePreventClipboard}    // 복사 방지
+                  onPaste={handlePreventClipboard}   // 붙여넣기 방지
+                  onCut={handlePreventClipboard}     // 잘라내기 방지
                 />
                 {confirmPwStatus === "matched" && passwordData.confirmPassword && (
                   <p className="nickname-message success">비밀번호가 일치합니다.</p>
@@ -252,6 +262,12 @@ const MyPageEditPw = () => {
                   <p className="nickname-message error">비밀번호가 일치하지 않습니다.</p>
                 )}
               </div>
+
+              {submitMessage && (
+                <p className={`submit-message ${submitStatus === "success" ? "success" : "error"}`}>
+                  {submitMessage}
+                </p>
+              )}
 
               <div className="password-form-buttons">
                 <button type="submit" className="submit-btn">
