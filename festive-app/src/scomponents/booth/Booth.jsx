@@ -414,6 +414,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             />
             <button
               type="button"
+              className="festival-search-btn"
               onClick={() => setShowFestivalModal(true)}
               style={{ padding: "0 12px" }}
             >
@@ -693,6 +694,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
             />
             <button
               type="button"
+              className="festival-search-btn"
               onClick={() => setShowFestivalModal(true)}
               style={{ padding: "0 12px" }}
             >
