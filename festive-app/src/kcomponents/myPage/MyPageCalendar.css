@@ -1,21 +1,28 @@
+/* 초기화 */
 * {
     margin: 0;
-    /* padding: 0; */
     padding-bottom: 10px;
     box-sizing: border-box;
 }
 
-/* Main Content */
+/* 메인 콘텐츠 */
 .main-content {
-    flex: 1;
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     max-width: 1200px;
     margin: 0 auto;
-    gap: 20px;
     padding: 20px;
+    gap: 20px;
 }
 
-/* Content Area */
+/* 캘린더 섹션 */
+.withdrawal-section {
+    flex: 1;
+    min-width: 0;
+}
+
+/* 콘텐츠 박스 */
 .content-area {
     flex: 1;
     background: white;
@@ -40,74 +47,108 @@
     font-size: 14px;
 }
 
+/* 캘린더 */
 .mycalendar-wrapper {
-    width: 700px;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.mycalendar-wrapper .fc {
+    font-size: 14px;
+}
+
+.mycalendar-wrapper .fc-header-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.mycalendar-wrapper .fc-toolbar-chunk {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.mycalendar-wrapper .fc-button {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+
+.mycalendar-wrapper .fc-button-group {
+    display: flex;
+    gap: 2px;
+}
+
+.mycalendar-wrapper .fc-daygrid-day {
+    min-height: 80px;
+}
+
+.mycalendar-wrapper .fc-daygrid-day-number {
+    font-size: 13px;
+    padding: 4px;
+}
+
+.mycalendar-wrapper .fc-col-header-cell {
+    padding: 8px 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mycalendar-wrapper .fc-event {
+    font-weight: 500;
+    padding: 2px 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2px;
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.mycalendar-wrapper .fc-event:hover {
+    cursor: pointer;
+}
+
+.mycalendar-wrapper .fc-event-title {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .calendar-wrapper .fc {
     height: 100% !important;
 }
 
-/* Calendar Section */
-.calendar-section {
-    flex: 2;
+/* 검색창 */
+.myfestival-search-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
 }
 
-#calendar-container {
+.myfestival-search-bar input {
     width: 100%;
-    height: 500px;
-    border: 1px solid #e9ecef;
+    max-width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 20px;
+    font-size: 16px;
+    outline: none;
     background: #fafafa;
 }
 
-.calendar-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #666;
-    font-size: 16px;
-}
-
-/* Festival List Section - 전체적으로 개선 */
-.festival-list-section {
-    flex: 1;
-    min-width: 300px;
-    margin-top: 20px;
-}
-
-.festival-list-section h2 {
-    font-size: 24px;
-    font-weight: 700;
-    color: #2d3748;
-    margin-bottom: 24px;
-}
-
-/* Festival List Container */
-.festival-list {
-    margin-bottom: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.myfestival-fixedBox {
-    min-height: 320px;
-}
-
-/* Festival Item Card - 완전히 새로운 디자인 */
+/* 축제 카드 */
 .festival-item-card {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid #e2e8f0;
     border-radius: 16px;
-    padding: 15px 20px;
-    padding-bottom: 5px;
+    padding: 15px 20px 5px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
@@ -116,7 +157,6 @@
     border-color: #c7d2fe;
 }
 
-/* Festival Info */
 .myfestival-info {
     flex: 1;
     display: flex;
@@ -129,8 +169,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
 }
-
 
 .myfestival-name {
     color: #1a202c;
@@ -140,8 +180,6 @@
     text-decoration: none;
     transition: all 0.2s ease;
     line-height: 1.4;
-    margin-bottom: 0;
-    flex-shrink: 0;
 }
 
 .myfestival-name:hover {
@@ -155,7 +193,6 @@
     line-height: 1.5;
 }
 
-/* Festival Button - 새로운 스타일 */
 .festival-btn {
     background: linear-gradient(135deg, #60a5fa 0%, #60a5fa 100%);
     border: none;
@@ -165,33 +202,26 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
     min-width: 80px;
-    height: fit-content;
-    justify-content: center;
-    align-items: center;
 }
 
 .festival-btn:hover {
     background: linear-gradient(135deg, #8abfff 0%, #8abfff 100%);
 }
 
-.festival-btn:active {
-    transform: translateY(0);
+/* 고정 박스 */
+.myfestival-fixedBox {
+    min-height: 320px;
 }
 
-/* Empty State */
+/* 빈 상태 */
 .festival-list p {
-    /* text-align: center; */
     color: rgb(78, 77, 77);
     font-size: 13px;
     padding: 10px;
-    position: relative;
 }
 
-/* Pagination - 개선된 스타일 */
+/* 페이지네이션 */
 .pagination {
     display: flex;
     justify-content: center;
@@ -212,7 +242,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 600;
     font-size: 14px;
 }
@@ -229,42 +258,252 @@
     border-color: #667eea;
 }
 
-.page-btn.active:hover {
-    transform: translateY(-2px);
-}
+/* 🎯 반응형 디자인 */
 
-/* Responsive Design */
+/* 태블릿 이하 */
 @media (max-width: 768px) {
-    .festival-item-card {
+    .main-content {
         flex-direction: column;
-        gap: 16px;
-        padding: 20px;
+        padding: 16px;
+    }
+
+    .content-header h1 {
+        font-size: 22px;
+    }
+
+    .mycalendar-wrapper .fc {
+        font-size: 12px;
+    }
+
+    .mycalendar-wrapper .fc-header-toolbar {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .festival-item-card,
+    .myfestival-info {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
     }
 
     .festival-btn {
-        align-self: flex-end;
-        min-width: 100px;
+        width: 100%;
     }
 
     .myfestival-name {
         font-size: 16px;
     }
 
-    .festival-list-section h2 {
-        font-size: 20px;
+    .myfestival-details {
+        font-size: 12px;
     }
 }
 
-/* 풀캘린더 꾸미기 */
-.mycalendar-wrapper .fc-event {
-    /* color: white !important;     → JSX에서 textColor로 지정 */
-    /* background-color: #60a5fa !important;   → 제거 */
-    font-weight: 500;
-    padding: 2px 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    /* border, background, color 모두 JS에서 지정됨 */
+/* 모바일 이하 */
+@media (max-width: 480px) {
+    .main-content {
+        padding: 10px;
+    }
+
+    .content-header h1 {
+        font-size: 20px;
+    }
+
+    .mycalendar-wrapper .fc-toolbar-title {
+        font-size: 16px;
+    }
+
+    .mycalendar-wrapper .fc-daygrid-day {
+        min-height: 45px;
+    }
+
+    .mycalendar-wrapper .fc-event-title,
+    .mycalendar-wrapper .fc-daygrid-day-number,
+    .mycalendar-wrapper .fc-col-header-cell {
+        font-size: 10px;
+    }
+
+    .festival-item-card {
+        padding: 12px;
+    }
+
+    .festival-btn {
+        padding: 10px 16px;
+        font-size: 12px;
+    }
 }
 
-.mycalendar-wrapper .fc-event:hover {
-    cursor: pointer;
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+        padding: 12px;
+    }
+
+    /* 사이드바와 본문 각각 100% 너비 사용 */
+    .main-content>* {
+        width: 100%;
+    }
+
+    .withdrawal-section {
+        padding: 0;
+    }
+
+    .mycalendar-wrapper {
+        width: 100%;
+    }
+
+    .myfestival-search-bar input {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .festival-item-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .myfestival-info {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .festival-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* 사이드바와 콘텐츠를 세로 정렬 */
+    .main-content>* {
+        width: 100%;
+    }
+
+    /* FullCalendar 헤더 버튼 줄바꿈 허용 */
+    .mycalendar-wrapper .fc-header-toolbar {
+        flex-direction: column !important;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .mycalendar-wrapper .fc-toolbar-chunk {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .mycalendar-wrapper .fc-button {
+        min-width: 60px;
+        font-size: 12px;
+    }
+
+    .mycalendar-wrapper .fc-toolbar-title {
+        font-size: 16px;
+        text-align: center;
+        margin: 4px 0;
+    }
+
+    .myfestival-search-bar input {
+        width: 100% !important;
+    }
+
+    .festival-item-card,
+    .myfestival-info {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .festival-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+        padding: 12px;
+        gap: 16px;
+    }
+
+    .main-content>* {
+        width: 100%;
+    }
+
+    .withdrawal-section {
+        width: 100%;
+        padding: 0;
+    }
+
+    .mycalendar-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .mycalendar-wrapper .fc {
+        font-size: 12px;
+    }
+
+    .mycalendar-wrapper .fc-header-toolbar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mycalendar-wrapper .fc-toolbar-chunk {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .mycalendar-wrapper .fc-button {
+        font-size: 11px;
+        padding: 4px 8px;
+        min-width: 60px;
+    }
+
+    .mycalendar-wrapper .fc-toolbar-title {
+        font-size: 16px;
+        margin: 0;
+        text-align: center;
+    }
+
+    .myfestival-search-bar input {
+        width: 100% !important;
+    }
+
+    .festival-item-card,
+    .myfestival-info {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .festival-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .fc-col-header-cell {
+        font-size: 11px;
+    }
+
+    .fc-daygrid-day-number {
+        font-size: 11px;
+    }
+
+    .fc-event-title {
+        font-size: 10px;
+    }
 }
