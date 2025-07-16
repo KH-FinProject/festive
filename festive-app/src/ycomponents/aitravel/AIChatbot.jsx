@@ -8,7 +8,9 @@ import ScrollToTop from "./ScrollToTop";
 import useAuthStore from "../../store/useAuthStore";
 
 // 백엔드 API 기본 URL
-const API_BASE_URL = `${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api`;
+const API_BASE_URL = `${
+  import.meta.env.VITE_API_URL || "http://localhost:8080"
+}/api`;
 
 const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴트입니다.
 
@@ -330,7 +332,13 @@ const AIChatbot = () => {
 
   // 마커 표시
   useEffect(() => {
-    if (!mapRef.current || locations.length === 0) return;
+    if (!mapRef.current) return;
+
+    // 축제 데이터와 여행지 데이터 모두 없으면 return
+    const hasFestivals =
+      travelInfo.festivals && travelInfo.festivals.length > 0;
+    const hasLocations = locations.length > 0;
+    if (!hasFestivals && !hasLocations) return;
 
     const map = mapRef.current;
 
@@ -351,7 +359,20 @@ const AIChatbot = () => {
 
     if (isFestivalOnly) {
       // 🎪 축제 검색: 단순한 마커만 표시 (연결선 없음, 거리 표시 없음)
-      locations.forEach((location, index) => {
+      // 축제 데이터를 locations 형태로 변환
+      const festivalLocations = travelInfo.festivals.map((festival) => ({
+        name: festival.title,
+        latitude: parseFloat(festival.mapY),
+        longitude: parseFloat(festival.mapX),
+        image: festival.image,
+        category: "축제",
+        description: festival.tel || festival.addr,
+      }));
+
+      const allFestivalData =
+        locations.length > 0 ? locations : festivalLocations;
+
+      allFestivalData.forEach((location, index) => {
         const lat = location.latitude || location.lat;
         const lng = location.longitude || location.lng;
 
@@ -573,7 +594,7 @@ const AIChatbot = () => {
     if (locations.length > 0) {
       map.setBounds(bounds);
     }
-  }, [locations, travelInfo.requestType]);
+  }, [locations, travelInfo.requestType, travelInfo.festivals]);
 
   // 스크롤 자동 조정
   useEffect(() => {

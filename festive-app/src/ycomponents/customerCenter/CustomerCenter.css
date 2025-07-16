@@ -145,7 +145,6 @@
   font-weight: 500;
   margin-bottom: 8px;
   color: #25272b;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
