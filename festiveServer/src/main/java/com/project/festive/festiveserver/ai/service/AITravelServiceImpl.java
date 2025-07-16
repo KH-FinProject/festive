@@ -3375,10 +3375,14 @@ public class AITravelServiceImpl implements AITravelService {
             }
             
             // 🗺️ 좌표 정보 보완 (마커 표시 개선을 위해)
+            log.info("🗺️ 좌표 정보 보완 시작 - 축제 {}개", allItems.size());
             allItems = enhanceFestivalWithCoordinates(allItems);
+            log.info("🗺️ 좌표 정보 보완 완료 - 축제 {}개", allItems.size());
             
             // 📅 날짜 정보 보완 (기간미정 문제 해결을 위해)
+            log.info("📅 날짜 정보 보완 시작 전 - 축제 {}개", allItems.size());
             allItems = enhanceFestivalWithDateInfo(allItems);
+            log.info("📅 날짜 정보 보완 완료 후 - 축제 {}개", allItems.size());
             
             // 최대 40개로 제한
             if (allItems.size() > 40) {
@@ -3480,14 +3484,22 @@ public class AITravelServiceImpl implements AITravelService {
         int failed = 0;
         
         for (TourAPIResponse.Item festival : festivals) {
+            log.info("🔍 축제 검사: {} - 기존 시작일: {}, 종료일: {}", 
+                festival.getTitle(), festival.getEventStartDate(), festival.getEventEndDate());
+            
             // 이미 날짜 정보가 있는 경우 스킵
             if (hasValidDateInfo(festival)) {
+                log.info("⏭️ 이미 유효한 날짜 정보 있음: {} - 시작일: {}", 
+                    festival.getTitle(), festival.getEventStartDate());
                 continue;
             }
             
             // contentId가 있는 경우에만 상세 정보 조회
             if (festival.getContentId() != null && !festival.getContentId().isEmpty()) {
                 try {
+                    log.info("🔍 detailIntro2 API 호출 시도 - contentId: {}, 축제명: {}", 
+                        festival.getContentId(), festival.getTitle());
+                    
                     // detailIntro2 API로 축제 날짜 정보 가져오기
                     TourAPIResponse.Item detailIntroInfo = fetchDetailIntro2(festival.getContentId());
                     
@@ -3499,11 +3511,11 @@ public class AITravelServiceImpl implements AITravelService {
                             festival.setEventEndDate(detailIntroInfo.getEventEndDate());
                         }
                         enhanced++;
-                        log.debug("✅ 날짜 정보 보완 성공: {} → 시작:{}, 종료:{}", 
+                        log.info("✅ 날짜 정보 보완 성공: {} → 시작:{}, 종료:{}", 
                             festival.getTitle(), festival.getEventStartDate(), festival.getEventEndDate());
                     } else {
                         failed++;
-                        log.debug("❌ 날짜 정보 없음: {}", festival.getTitle());
+                        log.info("❌ detailIntro2에서 날짜 정보 없음: {}", festival.getTitle());
                     }
                     
                     // API 호출 제한을 위한 약간의 지연
@@ -3511,11 +3523,11 @@ public class AITravelServiceImpl implements AITravelService {
                     
                 } catch (Exception e) {
                     failed++;
-                    log.debug("❌ 날짜 정보 조회 실패: {} - {}", festival.getTitle(), e.getMessage());
+                    log.error("❌ 날짜 정보 조회 실패: {} - {}", festival.getTitle(), e.getMessage(), e);
                 }
             } else {
                 failed++;
-                log.debug("❌ contentId 없음: {}", festival.getTitle());
+                log.info("❌ contentId 없음: {}", festival.getTitle());
             }
         }
         
@@ -3536,7 +3548,7 @@ public class AITravelServiceImpl implements AITravelService {
      */
     private TourAPIResponse.Item fetchDetailIntro2(String contentId) {
         try {
-            log.debug("🔍 detailIntro2 API 호출 - contentId: {}", contentId);
+            log.info("🔍 detailIntro2 API 호출 시작 - contentId: {}", contentId);
             
             String url = UriComponentsBuilder.fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/detailIntro2")
                     .queryParam("MobileOS", "ETC")
@@ -3547,30 +3559,36 @@ public class AITravelServiceImpl implements AITravelService {
                     .build(false)
                     .toUriString() + "&serviceKey=" + tourApiServiceKey;
             
+            log.info("📡 detailIntro2 요청 URL: {}", url);
+            
             ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(url), String.class);
+            
+            log.info("📥 detailIntro2 응답 상태: {}", response.getStatusCode());
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
-                log.debug("detailIntro2 응답 데이터 길이: {}", responseBody.length());
+                log.info("📄 detailIntro2 응답 데이터 길이: {}", responseBody.length());
+                log.info("📄 detailIntro2 응답 내용 (처음 500자): {}", 
+                    responseBody.length() > 500 ? responseBody.substring(0, 500) + "..." : responseBody);
                 
                 // JSON 응답 파싱
                 List<TourAPIResponse.Item> items = parseDetailIntro2Response(responseBody);
                 
                 if (!items.isEmpty()) {
                     TourAPIResponse.Item item = items.get(0);
-                    log.debug("✅ detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
+                    log.info("✅ detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
                             contentId, item.getEventStartDate(), item.getEventEndDate());
                     return item;
                 } else {
-                    log.debug("⚠️ detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
+                    log.warn("⚠️ detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
                 }
             } else {
-                log.debug("⚠️ detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
+                log.warn("⚠️ detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
                         contentId, response.getStatusCode());
             }
             
         } catch (Exception e) {
-            log.debug("detailIntro2 API 호출 중 오류 발생 - contentId: {}: {}", contentId, e.getMessage());
+            log.error("❌ detailIntro2 API 호출 중 오류 발생 - contentId: {}: {}", contentId, e.getMessage(), e);
         }
         
         return null;
