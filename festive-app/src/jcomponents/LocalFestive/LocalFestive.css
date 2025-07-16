@@ -150,7 +150,6 @@
 }
 
 /* 새로운 축제 갤러리 섹션 */
-/*
 .festival-gallery-section {
   width: 1160px;
   margin: 0 auto;
@@ -308,7 +307,6 @@
 .gallery-status.upcoming {
   background: rgba(107, 114, 128, 0.9);
 }
-*/
 
 /* 핵심 입력 영역 스타일만 남기고 정리 */
 .input-block {
