@@ -1079,7 +1079,7 @@ const AIChatbot = () => {
                               transition: "transform 0.2s ease",
                             }}
                             onClick={() => {
-                              // 🎪 축제 클릭 시 해당 마커로 이동
+                              // 🎪 축제 클릭 시 해당 마커로 이동 및 인포윈도우 열기
                               if (
                                 mapRef.current &&
                                 festival.mapY &&
@@ -1091,6 +1091,60 @@ const AIChatbot = () => {
                                 );
                                 mapRef.current.setCenter(moveLatLon);
                                 mapRef.current.setLevel(3);
+
+                                // 해당 축제의 마커를 찾아서 인포윈도우 열기
+                                if (mapRef.current._markers) {
+                                  const map = mapRef.current;
+
+                                  // 기존 인포윈도우 닫기
+                                  if (map._currentInfoWindow) {
+                                    map._currentInfoWindow.close();
+                                  }
+
+                                  // 축제 데이터를 locations 형태로 변환하여 해당 축제 찾기
+                                  const festivalLocations =
+                                    travelInfo.festivals.map((f) => ({
+                                      name: f.title,
+                                      latitude: parseFloat(f.mapY),
+                                      longitude: parseFloat(f.mapX),
+                                      image: f.image,
+                                      category: "축제",
+                                      description: f.tel || f.addr,
+                                    }));
+
+                                  const targetFestival =
+                                    festivalLocations[index];
+
+                                  // 축제 인포윈도우 생성 및 열기
+                                  const imageContent = targetFestival.image
+                                    ? `<img src="${targetFestival.image}" alt="${targetFestival.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
+                                    : "";
+
+                                  const infowindow =
+                                    new window.kakao.maps.InfoWindow({
+                                      content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
+                                      ${imageContent}
+                                      <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 ${
+                                        targetFestival.category || "축제"
+                                      }</div>
+                                      <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
+                                        targetFestival.name
+                                      }</div>
+                                      <div style="color:#666;font-size:11px;">${
+                                        targetFestival.description || ""
+                                      }</div>
+                                    </div>`,
+                                    });
+
+                                  // 해당 위치에 임시 마커 생성하여 인포윈도우 열기
+                                  const tempMarker =
+                                    new window.kakao.maps.Marker({
+                                      position: moveLatLon,
+                                    });
+
+                                  infowindow.open(map, tempMarker);
+                                  map._currentInfoWindow = infowindow;
+                                }
                               }
                             }}
                             onMouseEnter={(e) => {
