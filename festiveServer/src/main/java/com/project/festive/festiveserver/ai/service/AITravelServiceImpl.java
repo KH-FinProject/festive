@@ -235,8 +235,11 @@ public class AITravelServiceImpl implements AITravelService {
                 List<ChatResponse.FestivalInfo> festivals = createFestivalInfoFromTourAPI(festivalDataMaps);
                 response.setFestivals(festivals);
                 
-                // 축제 검색에서는 위치 정보와 여행코스 제외
-                response.setLocations(new ArrayList<>());
+                // 🗺️ 축제 검색에서도 카카오맵 마커 표시를 위한 LocationInfo 생성
+                List<ChatResponse.LocationInfo> festivalLocations = createFestivalLocationsForMap(festivals);
+                response.setLocations(festivalLocations);
+                log.info("🗺️ 축제 마커용 LocationInfo 생성: {}개", festivalLocations.size());
+                
                 response.setTravelCourse(null);
                 
                 log.info("🎪 축제 검색 전용 응답 완료: {}개 축제", festivals.size());
@@ -1780,8 +1783,14 @@ public class AITravelServiceImpl implements AITravelService {
             
             // 축제 데이터에 필요한 추가 필드들 파싱
             if ("15".equals(item.getContentTypeId())) {
-                item.setEventStartDate(getJsonNodeValue(itemNode, "eventstartdate"));
-                item.setEventEndDate(getJsonNodeValue(itemNode, "eventenddate"));
+                String startDate = getJsonNodeValue(itemNode, "eventstartdate");
+                String endDate = getJsonNodeValue(itemNode, "eventenddate");
+                
+                item.setEventStartDate(startDate);
+                item.setEventEndDate(endDate);
+                
+                log.debug("🎪 축제 날짜 파싱: {} - 시작일: {}, 종료일: {}", 
+                    item.getTitle(), startDate, endDate);
             }
             
             // 필수 정보가 있는지 확인 - 축제는 좌표 없어도 허용
@@ -2911,14 +2920,28 @@ public class AITravelServiceImpl implements AITravelService {
                 festival.setAddr1(String.valueOf(data.get("addr1")));
                 festival.setTel(cleanedTel);
                 
-                // 축제 기간 설정
+                // 축제 기간 설정 - 더 엄격한 검증
                 String startDate = String.valueOf(data.get("eventstartdate"));
                 String endDate = String.valueOf(data.get("eventenddate"));
-                if (!"null".equals(startDate) && !"null".equals(endDate) && 
-                    !startDate.isEmpty() && !endDate.isEmpty()) {
-                    festival.setPeriod(formatDatePeriod(startDate, endDate));
+                
+                log.info("🗓️ 축제 날짜 확인: {} - 시작일: {}, 종료일: {}", 
+                    festival.getName(), startDate, endDate);
+                
+                if (hasValidDateString(startDate) && hasValidDateString(endDate)) {
+                    String formattedPeriod = formatDatePeriod(startDate, endDate);
+                    festival.setPeriod(formattedPeriod);
+                    log.info("✅ 축제 날짜 포맷팅 성공: {} → {}", festival.getName(), formattedPeriod);
+                } else if (hasValidDateString(startDate)) {
+                    // 시작일만 있는 경우
+                    String formattedStart = formatDatePeriod(startDate, startDate);
+                    festival.setPeriod(formattedStart);
+                    log.info("✅ 축제 시작일만 설정: {} → {}", festival.getName(), formattedStart);
                 } else {
-                    festival.setPeriod("기간 미정");
+                    // 날짜 정보가 없는 경우 현재 날짜 기준 설정
+                    String currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"));
+                    String fallbackPeriod = "진행 중 (정확한 날짜 미정)";
+                    festival.setPeriod(fallbackPeriod);
+                    log.warn("⚠️ 축제 날짜 정보 없음, 폴백 사용: {} → {}", festival.getName(), fallbackPeriod);
                 }
                 
                 // 🎪 축제 설명은 간단하게 축제명으로 설정 (undefined 방지)
@@ -2946,12 +2969,78 @@ public class AITravelServiceImpl implements AITravelService {
                 String formattedEnd = endDate.substring(0, 4) + "." + 
                                      endDate.substring(4, 6) + "." + 
                                      endDate.substring(6, 8);
+                
+                // 같은 날짜인 경우 하나만 표시
+                if (startDate.equals(endDate)) {
+                    return formattedStart;
+                }
                 return formattedStart + " ~ " + formattedEnd;
             }
         } catch (Exception e) {
             log.debug("날짜 포맷팅 실패: {} ~ {}", startDate, endDate, e);
         }
         return startDate + " ~ " + endDate;
+    }
+    
+    /**
+     * 유효한 날짜 문자열인지 확인
+     */
+    private boolean hasValidDateString(String dateString) {
+        if (dateString == null || "null".equals(dateString) || dateString.trim().isEmpty()) {
+            return false;
+        }
+        
+        // YYYYMMDD 형식인지 확인
+        if (dateString.length() == 8) {
+            try {
+                Integer.parseInt(dateString);
+                return true;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 축제 정보를 카카오맵 마커용 LocationInfo로 변환
+     */
+    private List<ChatResponse.LocationInfo> createFestivalLocationsForMap(List<ChatResponse.FestivalInfo> festivals) {
+        if (festivals == null || festivals.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<ChatResponse.LocationInfo> locations = new ArrayList<>();
+        
+        for (ChatResponse.FestivalInfo festival : festivals) {
+            // 좌표가 있는 축제만 LocationInfo로 변환
+            if (festival.getLatitude() != null && festival.getLongitude() != null) {
+                ChatResponse.LocationInfo location = new ChatResponse.LocationInfo();
+                location.setName(festival.getName());
+                location.setLatitude(festival.getLatitude());
+                location.setLongitude(festival.getLongitude());
+                location.setDay(1); // 축제는 모두 1일차로 설정
+                location.setTime("종일");
+                location.setDescription(festival.getDescription());
+                location.setImage(festival.getImage());
+                location.setCategory("축제공연행사");
+                location.setContentId(festival.getContentId());
+                location.setContentTypeId(festival.getContentTypeId());
+                
+                locations.add(location);
+                log.info("🎪 축제 마커 생성: {} - 위도: {}, 경도: {}", 
+                    location.getName(), location.getLatitude(), location.getLongitude());
+            } else {
+                log.warn("⚠️ 좌표 없는 축제, 마커 생성 불가: {} - 위도: {}, 경도: {}", 
+                    festival.getName(), festival.getLatitude(), festival.getLongitude());
+            }
+        }
+        
+        log.info("🗺️ 축제 마커 생성 완료: 총 {}개 축제 중 {}개 마커 생성", 
+            festivals.size(), locations.size());
+        
+        return locations;
     }
     
     /**
@@ -3666,11 +3755,21 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 축제에 유효한 날짜 정보가 있는지 확인
+     * 축제에 유효한 날짜 정보가 있는지 확인 (더 엄격한 검증)
      */
     private boolean hasValidDateInfo(TourAPIResponse.Item festival) {
-        return festival.getEventStartDate() != null && !festival.getEventStartDate().trim().isEmpty() &&
-               !"null".equals(festival.getEventStartDate()) && !"undefined".equals(festival.getEventStartDate());
+        String startDate = festival.getEventStartDate();
+        String endDate = festival.getEventEndDate();
+        
+        // 시작일과 종료일 모두 유효해야 함
+        boolean hasValidStart = hasValidDateString(startDate);
+        boolean hasValidEnd = hasValidDateString(endDate);
+        
+        log.debug("🗓️ 날짜 정보 검증: {} - 시작일: {} (유효: {}), 종료일: {} (유효: {})", 
+            festival.getTitle(), startDate, hasValidStart, endDate, hasValidEnd);
+        
+        // 최소한 시작일은 있어야 함
+        return hasValidStart;
     }
     
     /**
