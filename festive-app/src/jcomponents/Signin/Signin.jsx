@@ -38,6 +38,10 @@ const LoginForm = () => {
     }
   };
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+  }
+
   const handleLogin = async (e) => {
     // 이미 로딩 중이면 아무것도 하지 않고 함수를 종료
     if (loading) {
@@ -137,6 +141,7 @@ const LoginForm = () => {
                 placeholder="비밀번호"
                 className="input-field"
                 onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
               />
             </div>
 
