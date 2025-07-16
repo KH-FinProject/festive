@@ -437,6 +437,10 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
                                       lowerMessage.contains("검색") || lowerMessage.contains("리스트") ||
                                       lowerMessage.contains("목록");
         
+        // 4. 키워드 추출하여 축제성 검사
+        String extractedKeyword = extractKeywordFromRequest(message);
+        boolean hasExtractedKeyword = extractedKeyword != null && !extractedKeyword.trim().isEmpty();
+        
         String requestType;
         
         if (hasFestivalKeyword && hasTravelPlanKeyword) {
@@ -452,6 +456,10 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             } else {
                 requestType = "festival_info";
             }
+        } else if (hasExtractedKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
+            // 🎪 키워드 + 정보 요청 = 축제 검색 (예: "서울 드론 알려줘", "부산 로봇 정보")
+            log.info("🎪 키워드 기반 축제 검색 감지: 키워드='{}', 메시지='{}'", extractedKeyword, message);
+            requestType = "festival_info";
         } else if (hasTravelPlanKeyword) {
             // 여행 계획 키워드만 있는 경우 = 일반 여행 계획
             requestType = "travel_only";
@@ -460,6 +468,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             requestType = "travel_only";
         }
         
+        log.info("🔍 요청 타입 결정: '{}' → requestType: {}", message, requestType);
         return requestType;
     }
 
@@ -469,40 +478,119 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "";
         }
         
-        String lowerMessage = message.toLowerCase();
+        log.info("🤖 AI 기반 키워드 추출 시작: {}", message);
         
-        // 특정 키워드 패턴 추출
-        String[] keywordPatterns = {
-            "맛집", "음식", "카페", "디저트",
-            "박물관", "미술관", "전시", "문화",
-            "해변", "바다", "산", "강", "호수",
-            "온천", "스파", "휴양",
-            "쇼핑", "시장", "백화점",
-            "체험", "액티비티", "레저",
-            "역사", "유적", "문화재",
-            "자연", "경치", "풍경",
-            "여행", "계획", "코스", "일정", "루트", "축제", "페스티벌", "행사"
-        };
-        
-        for (String pattern : keywordPatterns) {
-            if (lowerMessage.contains(pattern)) {
-                return pattern;
+        try {
+            // 🤖 1단계: AI를 활용한 스마트 키워드 추출
+            String aiKeyword = openAIService.extractKeywordWithAI(message);
+            
+            if (aiKeyword != null && !aiKeyword.trim().isEmpty()) {
+                log.info("✅ AI 키워드 추출 성공: '{}' → '{}'", message, aiKeyword);
+                return aiKeyword.trim();
             }
+            
+            log.info("⚠️ AI 키워드 추출 결과 없음, 폴백 방식 사용");
+            
+        } catch (Exception e) {
+            log.warn("❌ AI 키워드 추출 실패, 폴백 방식 사용: {}", e.getMessage());
         }
         
-        // 간단한 키워드 추출 (공백으로 분리해서 의미있는 단어 찾기)
+        // 🛡️ 2단계: 폴백 - 간단한 단어 추출 (제한 없음)
+        log.info("🔄 AI 실패, 기본 단어 추출 방식 사용");
+        
         String[] words = message.split("\\s+");
         for (String word : words) {
             if (word.length() >= 2 && !word.matches("\\d+")) {
-                // 특수문자 제거
                 word = word.replaceAll("[^가-힣a-zA-Z]", "");
                 if (word.length() >= 2) {
-                    return word;
+                    // 지역명, 기간, 일반 동사는 제외하되, 모든 명사형 키워드는 허용
+                    if (!isCommonWord(word)) {
+                        log.info("📝 폴백 키워드 추출: '{}'", word);
+                        return word;
+                    }
                 }
             }
         }
         
+        // 3단계: 마지막 시도 - 더 유연한 추출
+        String cleanMessage = message.toLowerCase()
+            .replaceAll("[^가-힣a-zA-Z\\s]", " ") // 특수문자를 공백으로
+            .replaceAll("\\s+", " ") // 여러 공백을 하나로
+            .trim();
+            
+        String[] cleanWords = cleanMessage.split(" ");
+        for (String word : cleanWords) {
+            if (word.length() >= 2 && !isCommonWord(word)) {
+                log.info("🔍 정제된 키워드 추출: '{}'", word);
+                return word;
+            }
+        }
+        
+        log.info("ℹ️ 키워드 추출 결과 없음: '{}' - TourAPI가 모든 검색을 처리합니다", message);
         return "";
+    }
+    
+    /**
+     * 일반적인 단어인지 체크 (키워드로 부적절한 단어들)
+     */
+    private boolean isCommonWord(String word) {
+        if (word == null || word.trim().isEmpty()) {
+            return true;
+        }
+        
+        String lowerWord = word.toLowerCase().trim();
+        
+        // 🚫 일반적인 동사/형용사/부사 (키워드가 될 수 없는 것들)
+        String[] verbs = {
+            "알려줘", "추천", "가자", "가고", "보자", "좋은", "괜찮은", "예쁜", "멋진", "재미있는",
+            "찾아줘", "검색", "보여줘", "설명", "소개", "말해줘", "하자", "해줘", "주세요"
+        };
+        
+        // 🗺️ 주요 지역명 (키워드가 아닌 지역 정보)
+        String[] regions = {
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", 
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+            "경기도", "강원도", "충청북도", "충청남도", "전라북도", "전라남도", 
+            "경상북도", "경상남도", "제주도"
+        };
+        
+        // ⏰ 시간/기간 관련 (키워드가 아닌 일정 정보)
+        String[] timeWords = {
+            "당일", "박", "일", "하루", "이틀", "사흘", "나흘", "일주일", "주말", 
+            "오전", "오후", "저녁", "아침", "점심", "밤", "새벽", "시간", "분"
+        };
+        
+        // 🎯 일반적인 여행 용어 (너무 포괄적이어서 키워드로 부적절)
+        String[] genericTerms = {
+            "여행", "계획", "일정", "코스", "루트", "추천", "정보", "리스트", "목록"
+        };
+        
+        // 🏷️ 수식어/접미사 (키워드에서 제외해야 할 불필요한 단어들)
+        String[] modifiers = {
+            "관련", "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션",
+            "관련된", "위한", "같은", "느낌", "스타일", "테마", "컨셉"
+        };
+        
+        // 🔍 모든 카테고리 체크
+        String[][] allCommonWords = {verbs, regions, timeWords, genericTerms, modifiers};
+        
+        for (String[] category : allCommonWords) {
+            for (String common : category) {
+                if (lowerWord.equals(common.toLowerCase()) || 
+                    lowerWord.contains(common.toLowerCase()) || 
+                    common.toLowerCase().contains(lowerWord)) {
+                    return true;
+                }
+            }
+        }
+        
+        // 📏 너무 짧은 단어 (의미가 애매함)
+        if (lowerWord.length() <= 1) {
+            return true;
+        }
+        
+        // ✅ 나머지는 모두 유효한 키워드로 허용
+        return false;
     }
     
     /**

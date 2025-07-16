@@ -205,6 +205,47 @@ public class AITravelServiceImpl implements AITravelService {
             
             ChatResponse response = new ChatResponse();
             
+            // 🎪 축제 검색 요청인 경우 축제 전용 응답 생성
+            if ("festival_only".equals(requestType) || "festival_info".equals(requestType)) {
+                log.info("🎪 축제 검색 전용 응답 생성 시작");
+                
+                // 축제 데이터만 필터링
+                List<Map<String, Object>> festivalDataMaps = tourApiDataMaps.stream()
+                    .filter(data -> "15".equals(String.valueOf(data.get("contenttypeid"))))
+                    .collect(Collectors.toList());
+                
+                log.info("🎭 축제 데이터 필터링 완료: {}개", festivalDataMaps.size());
+                
+                // 축제 전용 응답 생성
+                String festivalContent = openAIService.createFestivalSearchResponse(
+                    festivalDataMaps, 
+                    originalMessage, 
+                    analysis.getKeyword(), 
+                    analysis.getRegion()
+                );
+                
+                response.setContent(festivalContent);
+                response.setCourseDescription(festivalContent);
+                response.setRequestType(requestType);
+                response.setStreaming(false);
+                response.setRegionName(analysis.getRegion());
+                response.setAreaCode(analysis.getAreaCode());
+                
+                // 축제 정보 생성
+                List<ChatResponse.FestivalInfo> festivals = createFestivalInfoFromTourAPI(festivalDataMaps);
+                response.setFestivals(festivals);
+                
+                // 축제 검색에서는 위치 정보와 여행코스 제외
+                response.setLocations(new ArrayList<>());
+                response.setTravelCourse(null);
+                
+                log.info("🎪 축제 검색 전용 응답 완료: {}개 축제", festivals.size());
+                return response;
+            }
+            
+            // 🗺️ 여행 코스 요청인 경우 기존 로직 사용
+            log.info("🗺️ 여행 코스 요청 - 기존 응답 방식 사용");
+            
             // 요청 분석
             String duration = analysis.getDuration();
             int requiredPlaces = calculateRequiredPlaces(duration);
@@ -217,10 +258,10 @@ public class AITravelServiceImpl implements AITravelService {
             // 🎯 생성된 locations를 바탕으로 구조화된 메시지 생성
             String structuredContent = createStructuredResponseMessageFromLocations(analysis, locations);
             
-            //  AI가 생성한 day별 코스 설명 저장 (프론트엔드 표시용)
+            // AI가 생성한 day별 코스 설명 저장 (프론트엔드 표시용)
             response.setCourseDescription(structuredContent);
             
-            //  응답 기본 정보 설정
+            // 응답 기본 정보 설정
             response.setContent(structuredContent);
             response.setRequestType(analysis.getRequestType());
             response.setStreaming(false);
@@ -228,16 +269,9 @@ public class AITravelServiceImpl implements AITravelService {
             response.setAreaCode(analysis.getAreaCode());
             response.setLocations(locations);
             
-            // 축제 정보는 festival_info 요청일 때만 생성
-            if ("festival_info".equals(requestType)) {
-                List<ChatResponse.FestivalInfo> festivals = createFestivalInfoFromTourAPI(tourApiDataMaps);
-                response.setFestivals(festivals);
-                log.info("🎪 축제 정보 생성 완료: {}개", festivals.size());
-            } else {
-                // 여행 코스 요청인 경우 축제 정보 제외
-                response.setFestivals(new ArrayList<>());
-                log.info("🗺️ 여행 코스 요청 - 축제 정보 생성 제외");
-            }
+            // 여행 코스 요청인 경우 축제 정보 제외
+            response.setFestivals(new ArrayList<>());
+            log.info("🗺️ 여행 코스 요청 - 축제 정보 생성 제외");
             
             // 여행 코스 정보 생성
             ChatResponse.TravelCourse travelCourse = createTravelCourseFromTourAPI(locations, tourApiDataMaps);
@@ -341,40 +375,77 @@ public class AITravelServiceImpl implements AITravelService {
         ChatResponse response = new ChatResponse();
         
         String region = analysis.getRegion() != null ? analysis.getRegion() : "해당 지역";
-        String keyword = analysis.getKeyword() != null ? analysis.getKeyword() : "";
+        String keyword = analysis.getKeyword() != null && !analysis.getKeyword().trim().isEmpty() ? analysis.getKeyword() : "";
         String requestType = analysis.getRequestType();
         
-        // 🎯 요청 타입에 따른 응답 메시지 생성
+        // 🎯 키워드 유무와 요청 타입에 따른 정확한 메시지 생성
         StringBuilder content = new StringBuilder();
         
-        if ("festival_info".equals(requestType)) {
-            // 축제 정보 요청인 경우
-            content.append("네! ").append(region);
-            if (!keyword.isEmpty()) {
-                content.append(" ").append(keyword).append("축제");
+        if (!keyword.isEmpty()) {
+            // 🔍 키워드 검색인 경우 - 명확한 키워드 검색 실패 메시지
+            if ("festival_info".equals(requestType) || "festival_travel".equals(requestType)) {
+                content.append("죄송합니다. **").append(keyword).append("**으로 ");
+                if (!region.equals("해당 지역") && !region.equals("한국")) {
+                    content.append(region).append(" 지역에서 ");
+                }
+                content.append("검색해봤지만, 관련 축제는 현재 존재하지 않네요. 😔\n\n");
+                
+                content.append("🔍 **다른 검색어로 시도해보세요:**\n");
+                content.append("• \"").append(region).append(" 벚꽃축제 알려줘\"\n");
+                content.append("• \"").append(region).append(" 불꽃축제 정보\"\n");
+                content.append("• \"").append(region).append(" 음식축제 언제야?\"\n");
+                content.append("• \"").append(region).append(" 문화축제 추천\"\n\n");
+                
+                content.append("📅 시기를 바꿔서 검색해보시거나, 다른 지역의 축제도 확인해보세요!");
             } else {
-                content.append(" 축제");
+                // 일반 여행에서 키워드 검색 실패
+                content.append("죄송합니다. **").append(keyword).append("**와 관련된 ");
+                if (!region.equals("해당 지역") && !region.equals("한국")) {
+                    content.append(region).append(" ");
+                }
+                content.append("여행지나 관광지를 찾을 수 없습니다. 😔\n\n");
+                
+                content.append("🔍 **다른 키워드로 시도해보세요:**\n");
+                content.append("• \"").append(region).append(" 관광지 추천\"\n");
+                content.append("• \"").append(region).append(" 맛집 위주 여행\"\n");
+                content.append("• \"").append(region).append(" 문화시설 추천\"\n");
+                content.append("• \"").append(region).append(" 자연경관 여행\"\n\n");
+                
+                content.append("🌟 특정 키워드 대신 여행 테마나 관심사로 검색해보세요!");
             }
-            content.append(" 정보를 찾아드리겠습니다.\n\n");
-            content.append("찾아봤지만, 현재는 없는것같아요 ㅠ 다시 검색을 해주세요");
-        } else if ("festival_travel".equals(requestType)) {
-            // 축제 기반 여행 계획 요청인 경우
-            content.append("네! ").append(region).append(" 축제 위주 여행 계획을 세워드리겠습니다.\n\n");
-            content.append("찾아봤지만, 현재는 없는것같아요 ㅠ 다시 검색을 해주세요");
         } else {
-            // 일반 여행 요청인 경우  
-            content.append("네! ").append(region).append(" 여행 정보를 찾아드리겠습니다.\n\n");
-            content.append("찾아봤지만, 현재는 없는것같아요 ㅠ 다시 검색을 해주세요");
+            // 🗺️ 일반 지역 검색인데 데이터가 없는 경우
+            if ("festival_info".equals(requestType)) {
+                content.append("죄송합니다. ").append(region).append(" 지역의 축제 정보를 찾을 수 없습니다. 😔\n\n");
+                content.append("🎪 **다른 방법으로 시도해보세요:**\n");
+                content.append("• 구체적인 축제명으로 검색 (예: \"벚꽃축제\")\n");
+                content.append("• 인근 지역의 축제 확인\n");
+                content.append("• 다른 시기의 축제 정보 검색\n\n");
+            } else if ("festival_travel".equals(requestType)) {
+                content.append("죄송합니다. ").append(region).append(" 지역의 축제 기반 여행 정보를 찾을 수 없습니다. 😔\n\n");
+                content.append("🚀 **다른 방법으로 시도해보세요:**\n");
+                content.append("• 일반 여행코스로 검색\n");
+                content.append("• 인근 지역의 축제 여행\n");
+                content.append("• 특정 축제명으로 검색\n\n");
+            } else {
+                content.append("죄송합니다. ").append(region).append(" 지역의 여행 정보를 찾을 수 없습니다. 😔\n\n");
+                content.append("🌍 **다른 방법으로 시도해보세요:**\n");
+                content.append("• 더 구체적인 지역명 사용\n");
+                content.append("• 여행 테마 추가 (예: \"관광지 위주\")\n");
+                content.append("• 인근 도시나 광역시 검색\n\n");
+            }
+            
+            content.append("💡 **도움말**: \"경기도 2박3일 여행계획\" 처럼 지역과 기간을 함께 입력하시면 더 좋은 결과를 얻으실 수 있어요!");
         }
         
         response.setContent(content.toString());
-        response.setRequestType("no_data"); //  특별한 타입 설정으로 교통안내 숨김 처리
+        response.setRequestType("no_data"); // 특별한 타입 설정으로 교통안내 숨김 처리
         response.setStreaming(false);
         response.setLocations(new ArrayList<>());
         response.setFestivals(new ArrayList<>());
         response.setTravelCourse(null);
         
-        log.info(" 데이터 없음 응답 생성 완료 - 지역: {}, 키워드: {}", region, keyword);
+        log.info("💭 검색 결과 없음 응답 생성 - 지역: {}, 키워드: {}, 타입: {}", region, keyword, requestType);
         return response;
     }
     

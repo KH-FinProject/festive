@@ -248,10 +248,115 @@ public class OpenAIServiceImpl implements OpenAIService {
         }
         
         // 마무리 멘트
-        recommendation.append("\n 각 장소를 클릭하면 더 자세한 정보를 확인할 수 있어요!");
-        recommendation.append("\n 지도에서 위치도 함께 확인해보세요!");
+        recommendation.append("\n즐거운 여행 되세요! 🎉");
         
         return recommendation.toString();
+    }
+
+    @Override
+    public String createFestivalSearchResponse(List<Map<String, Object>> festivalData, 
+                                             String originalMessage, 
+                                             String keyword, 
+                                             String region) {
+        StringBuilder response = new StringBuilder();
+        
+        // 🎪 축제 검색 전용 인사말
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            response.append(String.format("🎪 **%s** 관련 축제 정보를 찾아드렸어요!\n\n", keyword));
+        } else {
+            String regionText = (region != null && !region.equals("한국")) ? region + " " : "";
+            response.append(String.format("🎪 %s축제 정보를 찾아드렸어요!\n\n", regionText));
+        }
+        
+        if (festivalData.isEmpty()) {
+            // 축제 데이터가 없는 경우
+            response.append("죄송합니다. 현재 진행 중이거나 예정된 축제가 없습니다. 😔\n\n");
+            response.append("💡 **다른 검색 키워드를 시도해보세요:**\n");
+            response.append("• 벚꽃축제, 불꽃축제, 음식축제, 문화축제\n");
+            response.append("• 드론축제, 로봇축제, K-POP 페스티벌\n");
+            response.append("• 다른 지역의 축제도 검색해보세요!\n");
+        } else {
+            // 축제 데이터가 있는 경우 - 축제별 상세 정보 제공
+            response.append(String.format("총 **%d개**의 축제를 찾았습니다! 🎉\n\n", festivalData.size()));
+            
+            // 축제 목록 표시 (최대 10개)
+            for (int i = 0; i < Math.min(10, festivalData.size()); i++) {
+                Map<String, Object> festival = festivalData.get(i);
+                
+                String title = getString(festival, "title");
+                String addr = getString(festival, "addr1");
+                String eventStartDate = getString(festival, "eventstartdate");
+                String eventEndDate = getString(festival, "eventenddate");
+                String tel = getString(festival, "tel");
+                
+                response.append(String.format("🎭 **%s**\n", title));
+                
+                // 축제 일정
+                if (eventStartDate != null && !eventStartDate.isEmpty()) {
+                    if (eventEndDate != null && !eventEndDate.isEmpty() && !eventStartDate.equals(eventEndDate)) {
+                        response.append(String.format("📅 **일정**: %s ~ %s\n", 
+                            formatDate(eventStartDate), formatDate(eventEndDate)));
+                    } else {
+                        response.append(String.format("📅 **일정**: %s\n", formatDate(eventStartDate)));
+                    }
+                }
+                
+                // 축제 장소
+                if (addr != null && !addr.isEmpty()) {
+                    String shortAddr = addr.length() > 40 ? addr.substring(0, 40) + "..." : addr;
+                    response.append(String.format("📍 **장소**: %s\n", shortAddr));
+                }
+                
+                // 문의전화
+                if (tel != null && !tel.isEmpty() && !tel.equals("null")) {
+                    response.append(String.format("📞 **문의**: %s\n", tel));
+                }
+                
+                response.append("\n");
+            }
+            
+            // 축제 팁 및 안내
+            response.append("💡 **축제 관람 팁**:\n");
+            response.append("• 축제 일정은 변경될 수 있으니 사전에 확인해주세요\n");
+            response.append("• 주차 공간이 부족할 수 있으니 대중교통을 이용하세요\n");
+            response.append("• 날씨에 따라 행사가 변경될 수 있습니다\n\n");
+            
+            if (festivalData.size() > 10) {
+                response.append(String.format("✨ 더 많은 축제(%d개)는 갤러리에서 확인하실 수 있습니다!", 
+                    festivalData.size() - 10));
+            }
+        }
+        
+        return response.toString();
+    }
+    
+    /**
+     * 안전한 문자열 추출
+     */
+    private String getString(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        if (value == null || "null".equals(String.valueOf(value))) {
+            return null;
+        }
+        return String.valueOf(value).trim();
+    }
+    
+    /**
+     * 날짜 포맷팅 (YYYYMMDD → YYYY.MM.DD)
+     */
+    private String formatDate(String dateString) {
+        if (dateString == null || dateString.length() != 8) {
+            return dateString;
+        }
+        
+        try {
+            String year = dateString.substring(0, 4);
+            String month = dateString.substring(4, 6);
+            String day = dateString.substring(6, 8);
+            return String.format("%s.%s.%s", year, month, day);
+        } catch (Exception e) {
+            return dateString;
+        }
     }
 
     @Override
@@ -323,5 +428,97 @@ public class OpenAIServiceImpl implements OpenAIService {
         prompt.append("- '맛집 추천해줘' → {\"region\": \"NONE\", \"areaCode\": null, \"sigunguCode\": null, \"confidence\": \"LOW\"}\n");
         
         return callOpenAI(prompt.toString());
+    }
+    
+    @Override
+    public String extractKeywordWithAI(String userMessage) {
+        try {
+            StringBuilder prompt = new StringBuilder();
+            prompt.append("사용자의 메시지에서 검색하고 싶은 핵심 키워드를 추출해주세요.\n\n");
+            prompt.append("**사용자 메시지**: \"").append(userMessage).append("\"\n\n");
+            
+            prompt.append("**키워드 추출 규칙**:\n");
+            prompt.append("1. 사용자가 찾고 싶어하는 구체적인 명사형 키워드만 추출\n");
+            prompt.append("2. 모든 종류의 키워드 허용 (제한 없음)\n");
+            prompt.append("   - 전통적인 축제: 벚꽃, 불꽃, 음식, 문화, 전통 등\n");
+            prompt.append("   - 현대적인 축제: 드론, 로봇, IT, 게임, K-POP, 애니메이션 등\n");
+            prompt.append("   - 특별한 키워드: 핸드폰, 컴퓨터, 자동차, 패션, 뷰티 등\n");
+            prompt.append("   - 모든 가능한 축제/이벤트 주제 포함\n");
+            prompt.append("3. **반드시 제외할 것들**:\n");
+            prompt.append("   - 지역명: 서울, 부산, 경기도 등\n");
+            prompt.append("   - 기간: 2박3일, 하루, 주말 등\n");
+            prompt.append("   - 일반 동사: 알려줘, 추천, 가자, 보여줘 등\n");
+            prompt.append("   - 수식어/접미사: 관련, 축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 쇼, 전시회, 컨벤션 등\n");
+            prompt.append("   - 일반 명사: 정보, 여행, 계획, 코스 등\n");
+            prompt.append("4. 순수한 주제어만 추출 (수식어 제거)\n");
+            prompt.append("   - '드론관련' → '드론'\n");
+            prompt.append("   - '벚꽃축제' → '벚꽃'\n");
+            prompt.append("   - '로봇페스티벌' → '로봇'\n");
+            prompt.append("5. 키워드가 명확하지 않으면 빈 문자열 반환\n\n");
+            
+            prompt.append("**응답 형식**: 순수한 키워드 하나만 반환 (설명 없이)\n\n");
+            
+            prompt.append("**예시**:\n");
+            prompt.append("- '서울 벚꽃축제 알려줘' → 벚꽃\n");
+            prompt.append("- '부산 드론관련 축제 정보' → 드론\n");
+            prompt.append("- '대구 로봇페스티벌 언제야?' → 로봇\n");
+            prompt.append("- '인천 게임대회 가고싶어' → 게임\n");
+            prompt.append("- '경기도 핸드폰 관련 행사' → 핸드폰\n");
+            prompt.append("- '제주도 자동차쇼 정보' → 자동차\n");
+            prompt.append("- '강원도 애니메이션축제' → 애니메이션\n");
+            prompt.append("- '충남 2박3일 여행계획' → \n");
+            prompt.append("- '전북 가볼만한 곳 추천' → \n");
+            
+            String response = callOpenAI(prompt.toString());
+            
+            // AI 응답 정리 및 후처리
+            if (response != null) {
+                response = response.trim()
+                    .replaceAll("\\n+", "")
+                    .replaceAll("\\s+", " ")
+                    .replaceAll("[^가-힣a-zA-Z0-9\\s]", "")
+                    .trim();
+                
+                // 불필요한 접미사 제거 (추가 보안)
+                response = removeUnnecessarySuffixes(response);
+                    
+                // 너무 길거나 짧으면 빈 문자열 반환
+                if (response.length() > 10 || response.length() < 2) {
+                    return "";
+                }
+                
+                return response;
+            }
+            
+            return "";
+            
+        } catch (Exception e) {
+            log.error("❌ AI 키워드 추출 실패: {}", e.getMessage(), e);
+            return "";
+        }
+    }
+    
+    /**
+     * 키워드에서 불필요한 접미사 제거
+     */
+    private String removeUnnecessarySuffixes(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return "";
+        }
+        
+        String[] suffixes = {
+            "관련", "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션"
+        };
+        
+        for (String suffix : suffixes) {
+            if (keyword.endsWith(suffix)) {
+                String base = keyword.substring(0, keyword.length() - suffix.length()).trim();
+                if (base.length() >= 2) { // 최소 2글자 이상이어야 의미있는 키워드
+                    return base;
+                }
+            }
+        }
+        
+        return keyword;
     }
 } 
