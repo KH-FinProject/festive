@@ -85,5 +85,5 @@ export default defineConfig({
       },
     },
   },
-  define: {},
+  define: { global: 'window' },
 });

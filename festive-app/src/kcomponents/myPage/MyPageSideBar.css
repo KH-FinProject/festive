@@ -129,3 +129,48 @@
   background-color: #60a5fa;
   color: 25272B;
 }
+
+/* ✅ 반응형: 태블릿 이하에서는 사이드바를 세로로 이동시키기 */
+@media (max-width: 768px) {
+  .mypage-container {
+    flex-direction: column;
+  }
+
+  .mypage-content {
+    flex-direction: column;
+    padding: 0 16px;
+  }
+
+  .mypage-sidebar {
+    width: 100% !important;
+    min-height: auto;
+    border: none;
+    border-radius: 0;
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .mypage-sidebar-section {
+    width: 100%;
+    padding: 0;
+  }
+
+  .mypage-sidebar-item {
+    flex: 1 1 40%;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+
+  .management-main {
+    min-width: 100% !important;
+    padding: 16px;
+    margin: 0;
+    border: none;
+  }
+}

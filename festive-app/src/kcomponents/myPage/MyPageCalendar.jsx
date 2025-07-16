@@ -224,8 +224,7 @@ const MyPageCalendar = () => {
                                 value={searchKeyword}
                                 onChange={e => setSearchKeyword(e.target.value)}
                                 style={{
-                                    // width: "100%",
-                                    width: "750px",
+
                                     padding: "10px 14px",
                                     border: "1px solid #e2e8f0",
                                     borderRadius: 8,
