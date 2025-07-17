@@ -68,14 +68,14 @@
 			m.MEMBER_NO IN (
 				SELECT DISTINCT b.MEMBER_NO 
 				FROM BOARD b 
-				WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+				WHERE TRUNC(b.BOARD_CREAT_DATE) &gt;= TRUNC(SYSDATE) - 6
 				AND b.BOARD_DEL_FL = 'N'
 			)
 			OR 
 			m.MEMBER_NO IN (
 				SELECT DISTINCT c.MEMBER_NO 
 				FROM "COMMENT" c 
-				WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+				WHERE TRUNC(c.COMMENT_WRITE_DATE) &gt;= TRUNC(SYSDATE) - 6
 				AND c.COMMENT_DEL_FL = 'N'
 			)
 		)
@@ -90,14 +90,14 @@
 	<select id="getWeeklyNewMembers" resultType="int">
 		SELECT COUNT(*) 
 		FROM MEMBER 
-		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+		WHERE TRUNC(ENROLL_DATE) &gt;= TRUNC(SYSDATE) - 6
 	</select>
 	
 	<!-- 통계 조회: 최근 일주일 탈퇴 회원 수 -->
 	<select id="getWeeklyWithdrawMembers" resultType="int">
 		SELECT COUNT(*) 
 		FROM MEMBER 
-		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		WHERE TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6 
 		AND WITHDRAW_DATE IS NOT NULL
 	</select>
 	
@@ -107,13 +107,21 @@
 		FROM MEMBER 
 		WHERE MEMBER_DEL_FL = 'N'
 	</select>
+	
+	<!-- 통계 조회: 7일 전까지의 기준 회원 수 (누적 계산용) -->
+	<select id="getBaseMembersCount" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE TRUNC(ENROLL_DATE) &lt; TRUNC(SYSDATE) - 6
+		AND (MEMBER_DEL_FL = 'N' OR TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6)
+	</select>
 
 	<!-- 통계 조회: 일별 신규 회원 수 -->
 	<select id="getDailyNewMembers" resultType="java.util.Map">
 		SELECT TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD') as ENROLL_DATE_STR,
 			   COUNT(*) as NEW_MEMBERS
 		FROM MEMBER
-		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+		WHERE TRUNC(ENROLL_DATE) &gt;= TRUNC(SYSDATE) - 6
 		GROUP BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
 		ORDER BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
 	</select>
@@ -123,7 +131,7 @@
 		SELECT TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD') as WITHDRAW_DATE_STR,
 			   COUNT(*) as WITHDRAW_MEMBERS
 		FROM MEMBER
-		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		WHERE TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6 
 		AND WITHDRAW_DATE IS NOT NULL
 		GROUP BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
 		ORDER BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
@@ -137,7 +145,7 @@
 			SELECT TO_CHAR(b.BOARD_CREAT_DATE, 'YYYY-MM-DD') as activity_date,
 				   b.MEMBER_NO as member_no
 			FROM BOARD b
-			WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+			WHERE TRUNC(b.BOARD_CREAT_DATE) &gt;= TRUNC(SYSDATE) - 6
 			AND b.BOARD_DEL_FL = 'N'
 			
 			UNION
@@ -145,7 +153,7 @@
 			SELECT TO_CHAR(c.COMMENT_WRITE_DATE, 'YYYY-MM-DD') as activity_date,
 				   c.MEMBER_NO as member_no
 			FROM "COMMENT" c
-			WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+			WHERE TRUNC(c.COMMENT_WRITE_DATE) &gt;= TRUNC(SYSDATE) - 6
 			AND c.COMMENT_DEL_FL = 'N'
 		)
 		GROUP BY activity_date

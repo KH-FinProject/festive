@@ -73,5 +73,8 @@ public interface AdminMapper {
 	
 	/** 재방문 회원 수 조회 (가입 후 7일 이상 된 활성 회원) */
 	int getReturnMembers();
+	
+	/** 7일 전까지의 기준 회원 수 조회 (누적 계산용) */
+	int getBaseMembersCount();
 
 }

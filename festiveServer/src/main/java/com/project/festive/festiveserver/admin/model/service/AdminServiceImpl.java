@@ -158,10 +158,17 @@ public class AdminServiceImpl implements AdminService{
 			List<Map<String, Object>> dailyActiveMembersData = mapper.getDailyActiveMembers();
 			log.info("일별 활동 회원 데이터: {}", dailyActiveMembersData);
 			
+			// 7일 전까지의 기준 회원 수 조회 (누적 계산용)
+			int baseMembersCount = mapper.getBaseMembersCount();
+			log.info("7일 전까지의 기준 회원 수: {}", baseMembersCount);
+			
 			log.info("실제 DB 통계 조회 완료");
 			
 			// 일별 통계 데이터 변환
 			List<AdminStatisticsDto.DailyStatistics> dailyStatistics = new ArrayList<>();
+			
+			// 누적 회원 수 계산을 위한 변수
+			int cumulativeMembersCount = baseMembersCount;
 			
 			// 최근 7일간의 데이터를 생성
 			for (int i = 6; i >= 0; i--) {
@@ -195,6 +202,9 @@ public class AdminServiceImpl implements AdminService{
 					}
 				}
 				
+				// 해당 날짜의 누적 회원 수 계산 (신규 가입자 +, 탈퇴자 -)
+				cumulativeMembersCount += newMembers - withdrawMembersCount;
+				
 				// 실제 날짜 표시 (yyyy-MM-dd 형식)
 				String dayName = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 				
@@ -204,7 +214,7 @@ public class AdminServiceImpl implements AdminService{
 					.newMembers(newMembers)
 					.withdrawMembers(withdrawMembersCount)
 					.activeMembers(activeMembersCount)
-					.returnMembers(returnMembers)
+					.returnMembers(cumulativeMembersCount)  // 누적 회원 수 사용
 					.build();
 				
 				dailyStatistics.add(dailyStat);
