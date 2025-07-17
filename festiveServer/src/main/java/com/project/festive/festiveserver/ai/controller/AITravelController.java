@@ -39,17 +39,7 @@ public class AITravelController {
         }
     }
     
-    /**
-     * AI 여행 추천 채팅 (스트리밍 응답) - 임시 비활성화
-     */
-    /*
-    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> generateTravelRecommendationStream(@RequestBody ChatRequest request) {
-        
-        return aiTravelService.generateTravelRecommendationStream(request)
-                .onErrorReturn("죄송합니다. 서비스에 일시적인 문제가 발생했습니다.");
-    }
-    */
+    // SSE 스트리밍 기능은 제거됨
     
     // TourAPI 관련 엔드포인트 제거 - 프론트엔드에서 직접 처리
     
