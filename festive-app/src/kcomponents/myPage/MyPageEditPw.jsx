@@ -27,7 +27,7 @@ const MyPageEditPw = () => {
   const { name, profileImageUrl } = location.state || {};
 
   const navigate = useNavigate();
-  const { member } = useAuthStore();
+  const { member, logout } = useAuthStore();
 
   // Prevent copy, paste, and cut on password input fields
   const handlePreventClipboard = (e) => {
@@ -164,8 +164,9 @@ const MyPageEditPw = () => {
       if (response.status >= 200 && response.status < 300) {
         setSubmitMessage("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
         setSubmitStatus("success");
-        setTimeout(() => {
-          localStorage.clear();
+        setTimeout(async () => {
+          await axiosApi.post("/auth/logout");
+          logout();
           navigate("/");
         }, 1500);
       } else {

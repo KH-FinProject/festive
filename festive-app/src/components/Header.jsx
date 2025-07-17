@@ -20,11 +20,9 @@ const Header = () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
-      const res = await axiosApi.post("/auth/logout");
+      await axiosApi.post("/auth/logout");
       logout();
       navigate("/");
-    } catch (error) {
-      // 에러 핸들링 필요시 추가
     } finally {
       setIsLoggingOut(false);
     }
