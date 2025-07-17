@@ -120,10 +120,16 @@ const TravelCourseDetail = () => {
 
   // 장소의 상세 이미지들을 가져오는 함수
   const fetchPlaceImages = async (contentId) => {
-    if (!contentId) return [];
+    console.log("🖼️ fetchPlaceImages 호출 시작 - contentId:", contentId);
+    if (!contentId) {
+      console.log("❌ contentId 없음, 빈 배열 반환");
+      return [];
+    }
 
     setLoadingImages(true);
     try {
+      console.log("📡 API 요청 시작:", `/api/ai/place-images/${contentId}`);
+
       // 🖼️ 장소 이미지는 공개 API이므로 인증 없이 요청
       const response = await axios.get(`/api/ai/place-images/${contentId}`, {
         headers: {
@@ -131,12 +137,18 @@ const TravelCourseDetail = () => {
         },
       });
 
+      console.log("📡 API 응답 상태:", response.status);
+      console.log("📡 API 응답 데이터:", response.data);
+
       if (response.status === 200) {
         const data = response.data;
-        return data.images || [];
+        const images = data.images || [];
+        console.log("✅ 이미지 데이터 파싱 완료:", images.length, "개");
+        return images;
       }
     } catch (error) {
-      console.error("장소 이미지 로드 실패:", error);
+      console.error("❌ 장소 이미지 로드 실패:", error);
+      console.error("❌ 에러 응답:", error.response?.data);
     } finally {
       setLoadingImages(false);
     }
@@ -457,6 +469,10 @@ const TravelCourseDetail = () => {
 
   // 장소 클릭 핸들러 수정
   const handlePlaceClick = async (place) => {
+    console.log("🔍 장소 클릭됨:", place);
+    console.log("📋 place.contentId:", place.contentId);
+    console.log("📋 place 전체 데이터:", JSON.stringify(place, null, 2));
+
     setSelectedPlace(place);
     setMapCenter({
       lat: parseFloat(place.latitude),
@@ -469,13 +485,21 @@ const TravelCourseDetail = () => {
 
     // 병렬로 장소 이미지와 상세 정보 가져오기
     if (place.contentId) {
-      const [images] = await Promise.all([
-        fetchPlaceImages(place.contentId),
-        fetchPlaceOverview(place.contentId, place),
-      ]);
-      setPlaceImages(images);
-      // fetchPlaceOverview는 내부에서 setPlaceOverview를 호출하므로 추가 처리 불필요
+      console.log("✅ contentId 존재, API 호출 시작:", place.contentId);
+      try {
+        const [images] = await Promise.all([
+          fetchPlaceImages(place.contentId),
+          fetchPlaceOverview(place.contentId, place),
+        ]);
+        setPlaceImages(images);
+        console.log("🖼️ 가져온 이미지 수:", images.length);
+      } catch (error) {
+        console.error("❌ API 호출 실패:", error);
+        setPlaceImages([]);
+        setPlaceOverview("");
+      }
     } else {
+      console.log("❌ contentId 없음, API 호출 스킵");
       setPlaceImages([]);
       setPlaceOverview("");
     }
