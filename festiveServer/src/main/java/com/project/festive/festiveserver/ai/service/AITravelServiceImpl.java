@@ -2100,7 +2100,13 @@ public class AITravelServiceImpl implements AITravelService {
                         location.setContentId(String.valueOf(place.get("contentid"))); // ✅ contentId 설정 추가!
                         location.setContentTypeId(String.valueOf(place.get("contenttypeid")));
                         location.setImage(String.valueOf(place.get("firstimage")));
-                        location.setDescription(String.valueOf(place.get("addr1")));
+                        // ✅ addr1이 null인 경우 "코스"로 표시
+                        String addr1 = String.valueOf(place.get("addr1"));
+                        if (addr1 == null || "null".equals(addr1) || addr1.trim().isEmpty()) {
+                            location.setDescription("코스");
+                        } else {
+                            location.setDescription(addr1);
+                        }
                         location.setDay(1); // ✅ 기본값으로 1일차 설정 (나중에 재배정됨)
                         
                         if (!usedPlaces.contains(location.getName())) {
@@ -3308,7 +3314,13 @@ public class AITravelServiceImpl implements AITravelService {
                         ChatResponse.PlaceInfo place = new ChatResponse.PlaceInfo();
                         place.setName(String.valueOf(data.get("title")));
                         place.setType("attraction");
-                        place.setAddress(String.valueOf(data.get("addr1")));
+                        // ✅ addr1이 null인 경우 "코스"로 표시
+                        String addr1 = String.valueOf(data.get("addr1"));
+                        if (addr1 == null || "null".equals(addr1) || addr1.trim().isEmpty()) {
+                            place.setAddress("코스");
+                        } else {
+                            place.setAddress(addr1);
+                        }
                         place.setDescription(getContentTypeNameByCode(String.valueOf(data.get("contenttypeid"))));
                         
                         // 좌표 설정 (있는 경우)

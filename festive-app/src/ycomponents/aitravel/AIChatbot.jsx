@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import axiosApi from "../../api/axiosAPI";
 import "./AIChatbot.css";
@@ -6,6 +7,7 @@ import AItitle from "./AItitle";
 import TravelCourseSaveModal from "./TravelCourseSaveModal";
 import ScrollToTop from "./ScrollToTop";
 import useAuthStore from "../../store/useAuthStore";
+import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 
 // 백엔드 API 기본 URL
 const API_BASE_URL = `${
@@ -255,6 +257,7 @@ const createMarkerContent = (day, index) => {
 
 // React 컴포넌트
 const AIChatbot = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -734,6 +737,8 @@ const AIChatbot = () => {
           } 여행코스가 성공적으로 저장되었습니다!`
         );
         setIsSaveModalOpen(false);
+        // ✅ 저장 성공 시 AI 여행코스 페이지로 이동
+        navigate("/ai-travel");
       } else {
         throw new Error(result.message || "저장에 실패했습니다.");
       }

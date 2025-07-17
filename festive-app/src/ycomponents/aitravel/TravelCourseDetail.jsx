@@ -120,16 +120,10 @@ const TravelCourseDetail = () => {
 
   // 장소의 상세 이미지들을 가져오는 함수
   const fetchPlaceImages = async (contentId) => {
-    console.log("🖼️ fetchPlaceImages 호출 시작 - contentId:", contentId);
-    if (!contentId) {
-      console.log("❌ contentId 없음, 빈 배열 반환");
-      return [];
-    }
+    if (!contentId) return [];
 
     setLoadingImages(true);
     try {
-      console.log("📡 API 요청 시작:", `/api/ai/place-images/${contentId}`);
-
       // 🖼️ 장소 이미지는 공개 API이므로 인증 없이 요청
       const response = await axios.get(`/api/ai/place-images/${contentId}`, {
         headers: {
@@ -137,18 +131,12 @@ const TravelCourseDetail = () => {
         },
       });
 
-      console.log("📡 API 응답 상태:", response.status);
-      console.log("📡 API 응답 데이터:", response.data);
-
       if (response.status === 200) {
         const data = response.data;
-        const images = data.images || [];
-        console.log("✅ 이미지 데이터 파싱 완료:", images.length, "개");
-        return images;
+        return data.images || [];
       }
     } catch (error) {
-      console.error("❌ 장소 이미지 로드 실패:", error);
-      console.error("❌ 에러 응답:", error.response?.data);
+      console.error("장소 이미지 로드 실패:", error);
     } finally {
       setLoadingImages(false);
     }
@@ -158,12 +146,10 @@ const TravelCourseDetail = () => {
   // 장소의 상세 정보(overview)를 가져오는 함수
   const fetchPlaceOverview = async (contentId, place) => {
     if (!contentId) {
-      console.log("📝 contentId 없음, overview 스킵");
       setPlaceOverview("");
       return;
     }
 
-    console.log("📝 장소 상세 정보 요청 시작:", contentId);
     setLoadingOverview(true);
     try {
       // 📝 장소 상세 정보도 공개 API이므로 인증 없이 요청
@@ -173,35 +159,22 @@ const TravelCourseDetail = () => {
         },
       });
 
-      console.log("📝 API 응답 상태:", response.status);
-      console.log("📝 API 응답 데이터:", response.data);
-
       if (response.status === 200) {
         const data = response.data;
-        console.log("📝 응답 분석:", {
-          success: data.success,
-          overview: data.overview,
-          overviewLength: data.overview ? data.overview.length : 0,
-          overviewTrimmed: data.overview ? data.overview.trim().length : 0,
-        });
 
         // overview가 존재하고 실제 내용이 있는지 확인
         if (data.success && data.overview && data.overview.trim().length > 0) {
-          console.log("✅ TourAPI Overview 설정:", data.overview.trim());
           setPlaceOverview(data.overview.trim());
         } else {
-          console.log("❌ TourAPI Overview 없음, AI 설명 사용");
           // TourAPI에서 overview를 가져오지 못했을 때 AI 설명 생성
           const aiDescription = generateAIDescription(place);
           setPlaceOverview(aiDescription);
         }
       } else {
-        console.log("❌ 응답 상태 오류:", response.status);
         setPlaceOverview("");
       }
     } catch (error) {
-      console.error("❌ 장소 상세 정보 로드 실패:", error);
-      console.error("❌ 에러 응답:", error.response?.data);
+      console.error("장소 상세 정보 로드 실패:", error);
       setPlaceOverview("");
     } finally {
       setLoadingOverview(false);
@@ -469,10 +442,6 @@ const TravelCourseDetail = () => {
 
   // 장소 클릭 핸들러 수정
   const handlePlaceClick = async (place) => {
-    console.log("🔍 장소 클릭됨:", place);
-    console.log("📋 place.contentId:", place.contentId);
-    console.log("📋 place 전체 데이터:", JSON.stringify(place, null, 2));
-
     setSelectedPlace(place);
     setMapCenter({
       lat: parseFloat(place.latitude),
@@ -485,21 +454,18 @@ const TravelCourseDetail = () => {
 
     // 병렬로 장소 이미지와 상세 정보 가져오기
     if (place.contentId) {
-      console.log("✅ contentId 존재, API 호출 시작:", place.contentId);
       try {
         const [images] = await Promise.all([
           fetchPlaceImages(place.contentId),
           fetchPlaceOverview(place.contentId, place),
         ]);
         setPlaceImages(images);
-        console.log("🖼️ 가져온 이미지 수:", images.length);
       } catch (error) {
-        console.error("❌ API 호출 실패:", error);
+        console.error("API 호출 실패:", error);
         setPlaceImages([]);
         setPlaceOverview("");
       }
     } else {
-      console.log("❌ contentId 없음, API 호출 스킵");
       setPlaceImages([]);
       setPlaceOverview("");
     }
