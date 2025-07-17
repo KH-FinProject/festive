@@ -23,7 +23,6 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import java.nio.charset.StandardCharsets;
 import jakarta.annotation.PostConstruct;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import com.project.festive.festiveserver.ai.dto.ChatRequest;
 import com.project.festive.festiveserver.ai.dto.ChatResponse;
 import lombok.RequiredArgsConstructor;
@@ -54,13 +53,7 @@ public class AITravelServiceImpl implements AITravelService {
     
     @PostConstruct
     private void initRestTemplate() {
-        // ⚡ 성능 최적화: 타임아웃 설정
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);    // 연결 타임아웃: 5초
-        factory.setReadTimeout(15000);      // 읽기 타임아웃: 15초 (AI API용)
-        
-        restTemplate = new RestTemplate(factory);
-        
+        restTemplate = new RestTemplate();
         // UTF-8 인코딩을 위한 StringHttpMessageConverter 설정
         StringHttpMessageConverter stringConverter = new StringHttpMessageConverter(StandardCharsets.UTF_8);
         stringConverter.setWriteAcceptCharset(false); // Accept-Charset 헤더 생성 방지
@@ -74,8 +67,11 @@ public class AITravelServiceImpl implements AITravelService {
     @Override
     public ChatResponse generateTravelRecommendation(ChatRequest request) {
         try {
+            log.info(" 여행/축제 전용 AI 추천 시작: {}", request.getMessage());
+            
             // TourAPI 데이터 기반 재생성 요청인지 확인 (레거시 지원)
             if (request.getTourApiData() != null && !request.getTourApiData().isEmpty()) {
+                log.info("🌐 레거시 TourAPI 데이터 기반 AI 응답 재생성: {}개 관광지", request.getTourApiData().size());
                 return regenerateWithTourAPIData(request);
             }
             
@@ -100,14 +96,19 @@ public class AITravelServiceImpl implements AITravelService {
                     response.setFestivals(new ArrayList<>());
                     response.setTravelCourse(null);
                     
+                    log.info("❌ 일반 대화 요청 거부됨: {}", request.getMessage());
                     return response;
                 }
                 throw e;
             }
+            
+            log.info("⚡ 빠른 분석 완료 - 타입: {}, 지역: {}, 기간: {}", 
+                    analysis.getRequestType(), analysis.getRegion(), analysis.getDuration());
 
             // 🌐 2단계: 백엔드에서 모든 처리 완료 (TourAPI 데이터 기반으로만 응답)
             ChatResponse response = generateDataBasedResponseOnly(request.getMessage(), analysis);
             
+            log.info("여행/축제 전용 AI 추천 완료");
             return response;
 
         } catch (Exception e) {
@@ -176,11 +177,17 @@ public class AITravelServiceImpl implements AITravelService {
      */
     private ChatResponse generateDataBasedResponseOnly(String originalMessage, TravelAnalysis analysis) {
         try {
+            log.info("🎯 데이터 기반 응답 생성 시작 - 지역: {}, 타입: {}", analysis.getRegion(), analysis.getRequestType());
+            
             // 🎪 축제 위주 여행 코스인 경우 preferredContentType 설정
             String requestType = analysis.getRequestType();
+            log.info("🔍 PreferredContentType 설정 확인 - requestType: {}, 원본메시지: {}", requestType, originalMessage);
             
             if ("festival_travel".equals(requestType)) {
                 analysis.setPreferredContentType("15"); // 축제공연행사 우선
+                log.info("🎪 축제 기반 여행 계획 - 축제공연행사 위주 설정 (contentType: 15)");
+            } else {
+                log.info("ℹ️ 일반 여행 계획 - 기본 설정 유지");
             }
             
             // TourAPI 데이터 수집
@@ -200,16 +207,21 @@ public class AITravelServiceImpl implements AITravelService {
             
             // 🎪 축제 검색 요청인 경우 축제 전용 응답 생성
             if ("festival_only".equals(requestType) || "festival_info".equals(requestType)) {
+                log.info("🎪 축제 검색 전용 응답 생성 시작");
+                
                 // 축제 데이터만 필터링
                 List<Map<String, Object>> festivalDataMaps = tourApiDataMaps.stream()
                     .filter(data -> "15".equals(String.valueOf(data.get("contenttypeid"))))
                     .collect(Collectors.toList());
                 
-                // 🚀 빠른 모드: 템플릿 기반 축제 응답 생성 (AI 호출 없음)
-                String festivalContent = createFastFestivalResponse(
+                log.info("🎭 축제 데이터 필터링 완료: {}개", festivalDataMaps.size());
+                
+                // 축제 전용 응답 생성
+                String festivalContent = openAIService.createFestivalSearchResponse(
                     festivalDataMaps, 
-                    analysis.getRegion(),
-                    analysis.getKeyword()
+                    originalMessage, 
+                    analysis.getKeyword(), 
+                    analysis.getRegion()
                 );
                 
                 response.setContent(festivalContent);
@@ -226,13 +238,16 @@ public class AITravelServiceImpl implements AITravelService {
                 // 🗺️ 축제 검색에서도 카카오맵 마커 표시를 위한 LocationInfo 생성
                 List<ChatResponse.LocationInfo> festivalLocations = createFestivalLocationsForMap(festivals);
                 response.setLocations(festivalLocations);
+                log.info("🗺️ 축제 마커용 LocationInfo 생성: {}개", festivalLocations.size());
                 
                 response.setTravelCourse(null);
                 
+                log.info("🎪 축제 검색 전용 응답 완료: {}개 축제", festivals.size());
                 return response;
             }
             
             // 🗺️ 여행 코스 요청인 경우 기존 로직 사용
+            log.info("🗺️ 여행 코스 요청 - 기존 응답 방식 사용");
             
             // 요청 분석
             String duration = analysis.getDuration();
@@ -243,8 +258,8 @@ public class AITravelServiceImpl implements AITravelService {
             List<ChatResponse.LocationInfo> locations = createLocationsFromTourAPIDataWithPreference(
                     tourApiDataMaps, requiredPlaces, totalDays, analysis.getPreferredContentType());
             
-            // 🚀 빠른 모드: 템플릿 기반 여행 응답 생성 (AI 호출 최소화) + Day별 포인트 추가
-            String structuredContent = createFastTravelResponse(analysis, locations);
+            // 🎯 생성된 locations를 바탕으로 구조화된 메시지 생성
+            String structuredContent = createStructuredResponseMessageFromLocations(analysis, locations);
             
             // AI가 생성한 day별 코스 설명 저장 (프론트엔드 표시용)
             response.setCourseDescription(structuredContent);
@@ -259,141 +274,20 @@ public class AITravelServiceImpl implements AITravelService {
             
             // 여행 코스 요청인 경우 축제 정보 제외
             response.setFestivals(new ArrayList<>());
+            log.info("🗺️ 여행 코스 요청 - 축제 정보 생성 제외");
             
             // 여행 코스 정보 생성
             ChatResponse.TravelCourse travelCourse = createTravelCourseFromTourAPI(locations, tourApiDataMaps);
             response.setTravelCourse(travelCourse);
             
+            log.info("데이터 기반 응답 생성 완료 - 지역: {}, 타입: {}, 위치: {}개", 
+                    analysis.getRegion(), analysis.getRequestType(), locations.size());
             return response;
             
         } catch (Exception e) {
             log.error("데이터 기반 응답 생성 실패", e);
             throw new RuntimeException("여행 정보 처리 중 오류가 발생했습니다.", e);
         }
-    }
-    
-    /**
-     * 🚀 빠른 모드: 템플릿 기반 축제 응답 생성 (AI 호출 없음)
-     */
-    private String createFastFestivalResponse(List<Map<String, Object>> festivalData, String region, String keyword) {
-        StringBuilder response = new StringBuilder();
-        
-        // 기본 인사
-        response.append("네! ").append(region).append(" 축제 정보를 찾아드렸습니다.\n\n");
-        
-        if (festivalData.isEmpty()) {
-            response.append("죄송합니다. 현재 ").append(region).append(" 지역에서 진행중인 축제를 찾을 수 없습니다.\n");
-            response.append("다른 지역이나 기간을 선택해보시기 바랍니다.");
-        } else {
-            response.append("🎪 **").append(region).append(" 축제 목록** (총 ").append(festivalData.size()).append("개)\n\n");
-            
-            // 축제 목록 생성 (최대 10개)
-            int count = 0;
-            for (Map<String, Object> festival : festivalData) {
-                if (count >= 10) break;
-                
-                String title = String.valueOf(festival.get("title"));
-                String addr = String.valueOf(festival.get("addr1"));
-                String startDate = String.valueOf(festival.get("eventstartdate"));
-                String endDate = String.valueOf(festival.get("eventenddate"));
-                
-                response.append("**").append(count + 1).append(". ").append(title).append("**\n");
-                if (addr != null && !addr.equals("null") && !addr.trim().isEmpty()) {
-                    response.append("📍 위치: ").append(addr).append("\n");
-                }
-                
-                // 날짜 형식 변환
-                if (startDate != null && !startDate.equals("null") && startDate.length() >= 8) {
-                    String formattedStart = formatDate(startDate);
-                    String formattedEnd = (endDate != null && !endDate.equals("null") && endDate.length() >= 8) 
-                        ? formatDate(endDate) : formattedStart;
-                    response.append("📅 기간: ").append(formattedStart);
-                    if (!formattedStart.equals(formattedEnd)) {
-                        response.append(" ~ ").append(formattedEnd);
-                    }
-                    response.append("\n");
-                }
-                
-                response.append("\n");
-                count++;
-            }
-            
-            response.append("위 축제들은 실제 관광공사 데이터를 기반으로 제공됩니다.\n");
-            response.append("자세한 정보는 각 축제의 공식 홈페이지나 문의처를 통해 확인해보세요!");
-        }
-        
-        return response.toString();
-    }
-    
-    /**
-     * 날짜 형식 변환 (YYYYMMDD → YYYY.MM.DD)
-     */
-    private String formatDate(String dateStr) {
-        if (dateStr == null || dateStr.length() < 8) return dateStr;
-        return dateStr.substring(0, 4) + "." + dateStr.substring(4, 6) + "." + dateStr.substring(6, 8);
-    }
-    
-    /**
-     * 🚀 빠른 모드: 템플릿 기반 여행 응답 생성 (AI 호출 최소화) + Day별 포인트 추가
-     */
-    private String createFastTravelResponse(TravelAnalysis analysis, List<ChatResponse.LocationInfo> locations) {
-        StringBuilder response = new StringBuilder();
-        
-        String region = analysis.getRegion() != null ? analysis.getRegion() : "선택하신 지역";
-        String duration = analysis.getDuration() != null ? analysis.getDuration() : "2박3일";
-        
-        // 기본 인사
-        response.append("네! ").append(region).append(" ").append(duration).append(" 여행코스를 추천해드리겠습니다.\n\n");
-        
-        if (locations.isEmpty()) {
-            response.append("죄송합니다. 해당 지역의 여행지 정보를 찾을 수 없습니다.\n");
-            response.append("다른 지역이나 조건으로 다시 시도해보세요.");
-            return response.toString();
-        }
-        
-        // Day별로 그룹화 (null 값 필터링)
-        Map<Integer, List<ChatResponse.LocationInfo>> dayGroups = locations.stream()
-            .filter(location -> location.getDay() != null)
-            .collect(Collectors.groupingBy(ChatResponse.LocationInfo::getDay));
-        
-        // Day별로 정렬하여 일정 생성 (AI 포인트 포함)
-        for (int day = 1; day <= dayGroups.size(); day++) {
-            List<ChatResponse.LocationInfo> dayLocations = dayGroups.get(day);
-            if (dayLocations == null || dayLocations.isEmpty()) continue;
-            
-            response.append("## 📅 Day ").append(day).append("\n\n");
-            
-            // 장소 목록
-            for (int i = 0; i < dayLocations.size(); i++) {
-                ChatResponse.LocationInfo location = dayLocations.get(i);
-                
-                response.append("**").append(i + 1).append(". ").append(location.getName()).append("**\n");
-                
-                if (location.getCategory() != null && !location.getCategory().trim().isEmpty()) {
-                    response.append("🏷️ ").append(location.getCategory()).append("\n");
-                }
-                
-                if (location.getDescription() != null && !location.getDescription().trim().isEmpty()) {
-                    response.append("ℹ️ ").append(location.getDescription()).append("\n");
-                }
-                
-                response.append("\n");
-            }
-            
-            // ✨ Day별 AI 포인트 생성 추가
-            String dayPoint = generateDayPointFromLocations(dayLocations, day, region);
-            if (dayPoint != null && !dayPoint.trim().isEmpty()) {
-                response.append("**포인트:** ").append(dayPoint).append("\n\n");
-            }
-            
-            response.append("---\n\n");
-        }
-        
-        response.append("🗺️ 위 여행코스는 실제 관광공사 데이터를 기반으로 구성되었습니다.\n");
-        response.append("각 장소의 운영시간과 휴무일을 미리 확인하시고 방문해주세요!\n\n");
-        response.append("✨ 즐거운 여행 되세요!");
-        
-        return response.toString();
     }
     
     /**
@@ -443,7 +337,7 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 생성된 locations를 바탕으로 Day별 포인트 생성 (이모지 제거 포함)
+     * 생성된 locations를 바탕으로 Day별 포인트 생성
      */
     private String generateDayPointFromLocations(List<ChatResponse.LocationInfo> dayLocations, int day, String region) {
         if (dayLocations.isEmpty()) {
@@ -463,15 +357,12 @@ public class AITravelServiceImpl implements AITravelService {
         }
         
         prompt.append("\n이 일정의 특징과 포인트를 한 문장으로 요약해주세요. ");
-        prompt.append("이동 동선, 테마, 또는 특별한 매력 등을 언급하며 여행자에게 도움이 되는 간단한 팁을 포함해주세요. ");
-        prompt.append("이모지나 특수기호는 사용하지 말고 자연스러운 한국어로 작성해주세요.");
+        prompt.append("이동 동선, 테마, 또는 특별한 매력 등을 언급하며 여행자에게 도움이 되는 간단한 팁을 포함해주세요.");
         
         try {
             String aiResponse = callOpenAI(prompt.toString());
             if (aiResponse != null && !aiResponse.trim().isEmpty()) {
-                // ✅ 이모지 제거 적용
-                String cleanedResponse = removeEmojis(aiResponse.trim());
-                return cleanedResponse;
+                return aiResponse.trim();
             }
         } catch (Exception e) {
             log.debug("OpenAI 호출 실패, 기본 메시지 사용", e);
@@ -1502,8 +1393,8 @@ public class AITravelServiceImpl implements AITravelService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-4o-mini");
             requestBody.put("messages", List.of(message));
-            requestBody.put("max_tokens", 1500);  // 3000 → 1500 (응답 길이 단축)
-            requestBody.put("temperature", 0.3);  // 0.7 → 0.3 (일관성 높이고 속도 향상)
+            requestBody.put("max_tokens", 3000);
+            requestBody.put("temperature", 0.7);
             
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
             
