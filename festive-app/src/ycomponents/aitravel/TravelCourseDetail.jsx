@@ -885,6 +885,16 @@ const TravelCourseDetail = () => {
             {dayPlaces.map((place, index) => {
               if (!place.latitude || !place.longitude) return null;
 
+              // 🎪 축제공연행사 타입인지 확인
+              const isFestival =
+                place.placeCategory === "축제공연행사" ||
+                place.placeCategory === "축제" ||
+                (place.placeCategory && place.placeCategory.includes("축제"));
+
+              // 축제인 경우 특별한 마커 색상과 아이콘 사용
+              const markerColor = isFestival ? "#FF1493" : "#FF6B6B"; // 축제는 진분홍, 일반은 빨강
+              const markerIcon = isFestival ? "F" : (index + 1).toString(); // 축제는 F, 일반은 숫자
+
               return (
                 <MapMarker
                   key={place.detailNo}
@@ -895,16 +905,18 @@ const TravelCourseDetail = () => {
                   image={{
                     src: `data:image/svg+xml;base64,${btoa(`
                       <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="#FF6B6B"/>
+                        <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="${markerColor}"/>
                         <circle cx="15" cy="15" r="8" fill="white"/>
-                        <text x="15" y="20" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#FF6B6B">${
-                          index + 1
-                        }</text>
+                        <text x="15" y="20" text-anchor="middle" font-family="Arial" font-size="${
+                          isFestival ? "14" : "12"
+                        }" font-weight="bold" fill="${markerColor}">${markerIcon}</text>
                       </svg>
                     `)}`,
                     size: { width: 30, height: 40 },
                   }}
-                  title={`${index + 1}. ${place.placeName}`}
+                  title={`${isFestival ? "🎪 " : ""}${index + 1}. ${
+                    place.placeName
+                  }`}
                   onClick={() => {
                     setMapCenter({
                       lat: parseFloat(place.latitude),
