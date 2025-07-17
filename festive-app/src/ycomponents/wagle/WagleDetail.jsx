@@ -91,7 +91,7 @@ function CommentItem({
             e.target.src = "/logo.png";
           }}
         />
-        <span className="comment-author">{comment.memberNickname}</span>
+        <span className="comment-author">{comment.memberNickname ? comment.memberNickname : "알 수 없음"}</span>
         <span className="comment-date">
           {formatDate(comment.commentCreateDate)}
         </span>
@@ -203,7 +203,7 @@ function CommentItem({
                     e.target.src = "/logo.png";
                   }}
                 />
-                <span className="comment-author">{reply.memberNickname}</span>
+                <span className="comment-author">{reply.memberNickname ? reply.memberNickname : "알 수 없음"}</span>
                 <span className="comment-date">
                   {formatDate(reply.commentCreateDate)}
                 </span>
@@ -742,7 +742,7 @@ function WagleDetail() {
                 e.target.src = "/logo.png";
               }}
             />
-            <span className="author">{post.author}</span>
+            <span className="author">{post.author ? post.author : "알 수 없음"}</span>
             <span className="date">{post.date}</span>
             <span className="views">{post.views}</span>
             {!isNotice && (

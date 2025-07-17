@@ -149,7 +149,13 @@ const CustomerBoard = ({
             <img
               src={
                 post.memberProfileImage
-                                          ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${post.memberProfileImage.startsWith('/') ? post.memberProfileImage : `/${post.memberProfileImage}`}`
+                  ? `${(
+                      import.meta.env.VITE_API_URL || "http://localhost:8080"
+                    ).replace(/\/+$/, "")}${
+                      post.memberProfileImage.startsWith("/")
+                        ? post.memberProfileImage
+                        : `/${post.memberProfileImage}`
+                    }`
                   : "/logo.png"
               }
               alt="프로필"
