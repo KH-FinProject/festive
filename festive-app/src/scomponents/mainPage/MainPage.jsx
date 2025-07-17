@@ -16,7 +16,7 @@ function MainPage() {
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
         const today = new Date();
         const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
-        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=WEB&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=50&pageNo=1`;
+        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=WEB&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=10000&pageNo=1`;
         const res = await fetch(url);
         const data = await res.json();
         const items = data?.response?.body?.items?.item || [];
@@ -114,9 +114,8 @@ function MainPage() {
                       <p className="gallery-location">{festival.location}</p>
                     </div>
                     <div
-                      className={`gallery-status ${
-                        festival.status === "진행중" ? "active" : "upcoming"
-                      }`}
+                      className={`gallery-status ${festival.status === "진행중" ? "active" : "upcoming"
+                        }`}
                     >
                       {festival.status}
                     </div>

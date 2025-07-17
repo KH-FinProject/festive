@@ -85,9 +85,9 @@ const FestivalMainPage = () => {
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.cos((lat1 * Math.PI) / 180) *
-            Math.cos((lat2 * Math.PI) / 180) *
-            Math.sin(dLon / 2) *
-            Math.sin(dLon / 2);
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         const distance = R * c; // km 단위
         return distance;
@@ -132,7 +132,7 @@ const FestivalMainPage = () => {
         const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
 
-        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=100&pageNo=1`;
+        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=1000&pageNo=1`;
 
         const response = await fetch(url);
         const data = await response.json();
@@ -262,9 +262,8 @@ const FestivalMainPage = () => {
             </span>
             <span className="divider">|</span>
             <span
-              className={`sort-option ${
-                sortType === "distance" ? "active" : ""
-              }`}
+              className={`sort-option ${sortType === "distance" ? "active" : ""
+                }`}
               onClick={() => handleSortChange("distance")}
             >
               거리순
@@ -286,9 +285,8 @@ const FestivalMainPage = () => {
                     className="festival-image"
                   />
                   <div
-                    className={`festival-status ${
-                      festival.status === "진행중" ? "active" : "upcoming"
-                    }`}
+                    className={`festival-status ${festival.status === "진행중" ? "active" : "upcoming"
+                      }`}
                   >
                     {festival.status}
                   </div>
