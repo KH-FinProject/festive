@@ -220,7 +220,9 @@ function GeneralBoard({ hideWriteBtn }) {
                       e.target.src = "/logo.png";
                     }}
                   /> */}
-                  <span className="general-board-author">{post.author}</span>
+                  <span className="general-board-author">
+                    {post.author ? post.author : "알 수 없음"}
+                  </span>
                   <span className="general-board-date">{post.date}</span>
                   <span className="general-board-likes">
                     <FontAwesomeIcon icon={faThumbsUp} /> {post.likes}

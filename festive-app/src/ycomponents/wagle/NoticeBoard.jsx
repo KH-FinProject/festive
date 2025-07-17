@@ -126,7 +126,14 @@ function NoticeBoard({ hideTitle }) {
                   <img
                     src={
                       notice.memberProfileImage
-                        ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${notice.memberProfileImage.startsWith('/') ? notice.memberProfileImage : `/${notice.memberProfileImage}`}`
+                        ? `${(
+                            import.meta.env.VITE_API_URL ||
+                            "http://localhost:8080"
+                          ).replace(/\/+$/, "")}${
+                            notice.memberProfileImage.startsWith("/")
+                              ? notice.memberProfileImage
+                              : `/${notice.memberProfileImage}`
+                          }`
                         : "/logo.png"
                     }
                     alt="관리자 프로필"
@@ -143,7 +150,9 @@ function NoticeBoard({ hideTitle }) {
                       e.target.src = "/logo.png";
                     }}
                   />
-                  <span className="notice-author">{notice.author}</span>
+                  <span className="notice-author">
+                    {notice.author ? notice.author : "알 수 없음"}
+                  </span>
                   <span className="notice-date">{notice.date}</span>
                 </div>
               </div>
