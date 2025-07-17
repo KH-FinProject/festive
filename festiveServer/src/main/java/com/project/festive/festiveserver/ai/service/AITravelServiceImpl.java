@@ -1962,7 +1962,7 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 선호하는 contentType을 고려한 위치 생성
+     * 선호하는 contentType을 고려한 위치 생성 (지리적 클러스터링 적용)
      */
     private List<ChatResponse.LocationInfo> createLocationsFromTourAPIDataWithPreference(
             List<Map<String, Object>> tourApiData, int requiredPlaces, int totalDays, String preferredContentType) {
@@ -1970,8 +1970,12 @@ public class AITravelServiceImpl implements AITravelService {
         List<ChatResponse.LocationInfo> locations = new ArrayList<>();
         Set<String> usedPlaces = new HashSet<>(); // 중복 방지용
         
-        log.info("🎯 위치 생성 시작 - 총 {}개 데이터, 필요 {}개, {}일 일정, 선호타입: {}", 
-            tourApiData.size(), requiredPlaces, totalDays, 
+        // 🌍 현실적인 일정 조정: 하루 최대 4-5개 장소로 제한
+        int maxPlacesPerDay = 4;
+        int adjustedRequiredPlaces = Math.min(requiredPlaces, maxPlacesPerDay * totalDays);
+        
+        log.info("🎯 현실적인 위치 생성 시작 - 총 {}개 데이터, 요청 {}개 → 조정 {}개, {}일 일정 (하루 최대 {}개), 선호타입: {}", 
+            tourApiData.size(), requiredPlaces, adjustedRequiredPlaces, totalDays, maxPlacesPerDay,
             preferredContentType != null ? getContentTypeNameByCode(preferredContentType) : "다양한 추천");
             
         // 🔍 축제 위주 여행 계획인지 더 강력하게 확인
@@ -2063,29 +2067,208 @@ public class AITravelServiceImpl implements AITravelService {
         }
         
         // 🎯 선호 타입별 처리 분기
-        if (preferredContentType != null) {
-            log.info("🎯 {} 위주 추천 모드 시작", getContentTypeNameByCode(preferredContentType));
-            
-            if ("25".equals(preferredContentType)) {
-                // 🚀 여행코스 위주 모드
-                return createTravelCoursePreferredSchedule(placesByType, requiredPlaces, totalDays, usedPlaces);
-            } else if ("12".equals(preferredContentType)) {
-                // 🏛️ 관광지 위주 모드
-                return createAttractionPreferredSchedule(placesByType, requiredPlaces, totalDays, usedPlaces);
-            } else if ("15".equals(preferredContentType)) {
-                // 🎪 축제공연행사 위주 모드
-                return createFestivalPreferredSchedule(placesByType, requiredPlaces, totalDays, usedPlaces);
-            } else if ("39".equals(preferredContentType)) {
-                // 🍽️ 맛집 위주 모드
-                return createFoodPreferredSchedule(placesByType, requiredPlaces, totalDays, usedPlaces);
-            } else {
-                // 🎨 기타 특정 타입 위주 모드
-                return createSpecificTypePreferredSchedule(placesByType, preferredContentType, requiredPlaces, totalDays, usedPlaces);
+        // 🌍 지리적 클러스터링 적용하여 현실적인 일정 생성
+        List<ChatResponse.LocationInfo> clusteredLocations = createGeographicallyClusteredSchedule(
+            placesByType, adjustedRequiredPlaces, totalDays, usedPlaces, preferredContentType);
+        
+        log.info("🗺️ 지리적 클러스터링 완료 - 생성된 위치: {}개", clusteredLocations.size());
+        return clusteredLocations;
+    }
+    
+    /**
+     * 🌍 지리적 클러스터링을 적용한 현실적인 일정 생성
+     */
+    private List<ChatResponse.LocationInfo> createGeographicallyClusteredSchedule(
+            Map<String, List<Map<String, Object>>> placesByType, int requiredPlaces, int totalDays, 
+            Set<String> usedPlaces, String preferredContentType) {
+        
+        List<ChatResponse.LocationInfo> allCandidates = new ArrayList<>();
+        
+        // 모든 타입의 장소를 후보군으로 수집 (좌표가 있는 것만)
+        for (List<Map<String, Object>> typeList : placesByType.values()) {
+            for (Map<String, Object> place : typeList) {
+                if (hasValidCoordinates(place)) {
+                    try {
+                        ChatResponse.LocationInfo location = new ChatResponse.LocationInfo();
+                        location.setName(String.valueOf(place.get("title")));
+                        location.setLatitude(Double.parseDouble(String.valueOf(place.get("mapy"))));
+                        location.setLongitude(Double.parseDouble(String.valueOf(place.get("mapx"))));
+                        location.setCategory(getContentTypeNameByCode(String.valueOf(place.get("contenttypeid"))));
+                        location.setContentTypeId(String.valueOf(place.get("contenttypeid")));
+                        location.setImage(String.valueOf(place.get("firstimage")));
+                        location.setDescription(String.valueOf(place.get("addr1")));
+                        
+                        if (!usedPlaces.contains(location.getName())) {
+                            allCandidates.add(location);
+                        }
+                    } catch (Exception e) {
+                        log.debug("장소 정보 생성 실패: {}", place.get("title"));
+                    }
+                }
             }
-        } else {
-            // 🌈 다양한 추천 모드
-            return createDiverseSchedule(placesByType, requiredPlaces, totalDays, usedPlaces);
         }
+        
+        log.info("🌍 좌표가 있는 후보 장소: {}개", allCandidates.size());
+        
+        if (allCandidates.isEmpty()) {
+            log.warn("⚠️ 좌표가 있는 후보 장소가 없습니다.");
+            return new ArrayList<>();
+        }
+        
+        // 일별 장소 수 계산 (하루 최대 4개)
+        int placesPerDay = Math.min(4, requiredPlaces / totalDays);
+        int extraPlaces = requiredPlaces % totalDays;
+        
+        List<ChatResponse.LocationInfo> result = new ArrayList<>();
+        
+        // 첫 번째 장소는 선호 타입에서 선택
+        ChatResponse.LocationInfo firstPlace = selectFirstPlace(allCandidates, preferredContentType);
+        if (firstPlace != null) {
+            result.add(firstPlace);
+            usedPlaces.add(firstPlace.getName());
+            allCandidates.remove(firstPlace);
+        }
+        
+        // 일별로 지리적으로 가까운 장소들을 클러스터링하여 배치
+        for (int day = 1; day <= totalDays; day++) {
+            int placesForThisDay = placesPerDay + (day <= extraPlaces ? 1 : 0);
+            
+            // 이미 첫 번째 장소가 있다면 하나 적게 추가
+            if (day == 1 && firstPlace != null) {
+                placesForThisDay--;
+            }
+            
+            List<ChatResponse.LocationInfo> dayPlaces = selectDayPlaces(
+                allCandidates, day == 1 ? firstPlace : getLastPlaceFromPreviousDay(result), 
+                placesForThisDay, usedPlaces);
+            
+            // day 번호 설정
+            for (ChatResponse.LocationInfo place : dayPlaces) {
+                place.setDay(day);
+            }
+            
+            result.addAll(dayPlaces);
+            
+            log.info("📍 Day {} 장소 선정: {}개", day, dayPlaces.size());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 좌표 유효성 검사
+     */
+    private boolean hasValidCoordinates(Map<String, Object> place) {
+        try {
+            String mapX = String.valueOf(place.get("mapx"));
+            String mapY = String.valueOf(place.get("mapy"));
+            
+            if ("null".equals(mapX) || "null".equals(mapY) || mapX.isEmpty() || mapY.isEmpty()) {
+                return false;
+            }
+            
+            double x = Double.parseDouble(mapX);
+            double y = Double.parseDouble(mapY);
+            
+            // 한국 좌표 범위 확인
+            return x >= 124.0 && x <= 132.0 && y >= 33.0 && y <= 43.0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 선호 타입을 고려한 첫 번째 장소 선택
+     */
+    private ChatResponse.LocationInfo selectFirstPlace(List<ChatResponse.LocationInfo> candidates, String preferredContentType) {
+        if (preferredContentType != null) {
+            // 선호 타입 우선 선택
+            for (ChatResponse.LocationInfo candidate : candidates) {
+                if (preferredContentType.equals(candidate.getContentTypeId())) {
+                    log.info("🎯 선호 타입 첫 장소 선택: {} ({})", candidate.getName(), getContentTypeNameByCode(preferredContentType));
+                    return candidate;
+                }
+            }
+        }
+        
+        // 선호 타입이 없거나 찾지 못한 경우 첫 번째 반환
+        if (!candidates.isEmpty()) {
+            log.info("🏁 기본 첫 장소 선택: {}", candidates.get(0).getName());
+            return candidates.get(0);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * 하루 일정에 맞는 장소들을 지리적 거리 기준으로 선택
+     */
+    private List<ChatResponse.LocationInfo> selectDayPlaces(List<ChatResponse.LocationInfo> candidates, 
+            ChatResponse.LocationInfo referencePlace, int needed, Set<String> usedPlaces) {
+        
+        List<ChatResponse.LocationInfo> dayPlaces = new ArrayList<>();
+        
+        if (needed <= 0 || candidates.isEmpty()) {
+            return dayPlaces;
+        }
+        
+        // 기준점 좌표 (첫 번째 장소나 이전 일의 마지막 장소)
+        double refLat = referencePlace != null ? referencePlace.getLatitude() : 37.5665; // 서울 시청 기본값
+        double refLng = referencePlace != null ? referencePlace.getLongitude() : 126.9780;
+        
+        // 거리별로 후보 장소들을 정렬
+        candidates.sort((a, b) -> {
+            double distA = calculateDistance(refLat, refLng, a.getLatitude(), a.getLongitude());
+            double distB = calculateDistance(refLat, refLng, b.getLatitude(), b.getLongitude());
+            return Double.compare(distA, distB);
+        });
+        
+        // 가까운 순서대로 필요한 만큼 선택 (최대 30km 이내)
+        double maxDistance = 30.0; // 30km
+        for (ChatResponse.LocationInfo candidate : candidates) {
+            if (dayPlaces.size() >= needed) break;
+            
+            if (!usedPlaces.contains(candidate.getName())) {
+                double distance = calculateDistance(refLat, refLng, candidate.getLatitude(), candidate.getLongitude());
+                
+                if (distance <= maxDistance) {
+                    dayPlaces.add(candidate);
+                    usedPlaces.add(candidate.getName());
+                    log.info("📍 선택된 장소: {} (거리: {:.1f}km)", candidate.getName(), distance);
+                }
+            }
+        }
+        
+        // 선택된 장소들을 candidates에서 제거
+        candidates.removeAll(dayPlaces);
+        
+        return dayPlaces;
+    }
+    
+    /**
+     * 이전 일의 마지막 장소 가져오기
+     */
+    private ChatResponse.LocationInfo getLastPlaceFromPreviousDay(List<ChatResponse.LocationInfo> result) {
+        if (result.isEmpty()) return null;
+        return result.get(result.size() - 1);
+    }
+    
+    /**
+     * 하버사인 공식을 사용한 두 지점 간 거리 계산 (km)
+     */
+    private double calculateDistance(double lat1, double lng1, double lat2, double lng2) {
+        final double R = 6371; // 지구 반지름 (km)
+        
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                   Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                   Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        
+        return R * c;
     }
     
     /**
@@ -2669,23 +2852,30 @@ public class AITravelServiceImpl implements AITravelService {
             prompt.append("\n");
         }
         
-        prompt.append("📋 **Day별 여행 일정 생성 규칙**:\n");
+        prompt.append("📋 **현실적인 Day별 여행 일정 생성 규칙**:\n");
         prompt.append("1. ").append(duration).append("(총 ").append(totalDays).append("일)에 맞춰 Day별로 명확히 구분해주세요\n");
         
-        // Day별 배치 계획 상세 명시
+        // Day별 배치 계획 상세 명시 (현실적인 장소 수로 조정)
         for (int day = 1; day <= totalDays; day++) {
-            int placesForThisDay = placesPerDay + (day <= extraPlaces ? 1 : 0);
-            prompt.append("   - **Day ").append(day).append("**: 정확히 ")
-                  .append(placesForThisDay).append("개 장소 추천 (여행코스 1개 + 다양한 종류의 장소들)\n");
+            int placesForThisDay = Math.min(4, placesPerDay + (day <= extraPlaces ? 1 : 0)); // 최대 4개로 제한
+            prompt.append("   - **Day ").append(day).append("**: 최대 ")
+                  .append(placesForThisDay).append("개 장소 (현실적인 이동시간 고려)\n");
         }
         
-        prompt.append("2. **각 Day별 구성 원칙**: 여행코스(25) 1개 + 다양한 종류의 장소들 (관광지, 문화시설, 레포츠, 쇼핑, 음식점 등)\n");
-        prompt.append("3. **시간대별 최적화**: 점심/저녁시간-음식점, 오후-쇼핑/문화시설, 오전-관광지/레포츠, 저녁-축제공연\n");
-        prompt.append("4. 같은 Day 내 장소들은 서로 30km 이내에 위치하도록 배치\n");
-        prompt.append("5. 위의 TourAPI 실제 데이터를 **최대한 우선적으로** 사용해주세요\n");
-        prompt.append("6. 데이터가 부족하면 해당 시간대에 적합한 장소로 보완하되, 반드시 Day별 개수를 맞춰주세요\n");
-        prompt.append("7. 각 장소마다 '@location:[위도,경도] @day:숫자' 형식 필수 포함\n");
-        prompt.append("8. Day별로 시간순 배치하되 시간대별 특성 고려 (오전-관광지, 점심-음식점, 오후-쇼핑/문화, 저녁-축제)\n");
+        prompt.append("2. **🚗 이동 효율성 우선**: 같은 Day 내 장소들은 차량으로 30분 이내 (약 20km) 거리에 위치\n");
+        prompt.append("3. **⏰ 현실적인 시간 배분**:\n");
+        prompt.append("   - 오전 9:00-12:00: 관광지/문화시설 (2-3시간 소요)\n");
+        prompt.append("   - 점심 12:00-13:30: 음식점 (1.5시간)\n");
+        prompt.append("   - 오후 14:00-17:00: 쇼핑/레포츠/추가 관광 (3시간)\n");
+        prompt.append("   - 저녁 18:00-20:00: 음식점/축제 (2시간)\n");
+        prompt.append("4. **🎯 장소별 적정 관광시간**: 관광지 2-3시간, 음식점 1-1.5시간, 쇼핑 1-2시간\n");
+        prompt.append("5. **📍 위치 우선순위**: 위의 TourAPI 실제 데이터를 **지리적 거리 순**으로 우선 사용\n");
+        prompt.append("6. **🚇 교통편 고려**: 대중교통 접근성이 좋은 장소 우선 선택\n");
+        prompt.append("7. **💡 현실적인 제약조건**:\n");
+        prompt.append("   - 하루 총 이동시간 2시간 이내\n");
+        prompt.append("   - 도심권과 외곽 혼합 금지\n");
+        prompt.append("   - 산/해안가는 당일 집중 배치\n");
+        prompt.append("8. 각 장소마다 '@location:[위도,경도] @day:숫자' 형식 필수 포함\n");
         prompt.append("9. 이모지나 특수기호는 사용하지 마세요\n");
         prompt.append("10. 자연스러운 한국어로 작성해주세요\n\n");
         

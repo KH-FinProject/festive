@@ -121,6 +121,9 @@ public class SecurityConfig {
             
             // 게시글 이미지
             .requestMatchers("/board-images/**").permitAll()
+            
+            // 부스 이미지
+            .requestMatchers("/upload/festive/booth/**").permitAll()
 
             // 정적 리소스/시스템 경로 - Spring Security 권장 방식
             .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()

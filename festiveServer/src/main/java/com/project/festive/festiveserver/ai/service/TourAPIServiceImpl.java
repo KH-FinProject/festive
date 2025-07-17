@@ -500,16 +500,17 @@ public class TourAPIServiceImpl implements TourAPIService {
             JsonNode root = mapper.readTree(response);
             JsonNode body = root.path("response").path("body");
             JsonNode itemsNode = body.path("items");
+            JsonNode itemNode = itemsNode.path("item");
             
-            if (itemsNode.isArray() && itemsNode.size() > 0) {
-                for (JsonNode itemNode : itemsNode.path("item")) {
-                    AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(itemNode);
+            if (itemNode.isArray() && itemNode.size() > 0) {
+                for (JsonNode singleItem : itemNode) {
+                    AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(singleItem);
                     if (item != null) {
                         items.add(item);
                     }
                 }
-            } else if (itemsNode.path("item").isObject()) {
-                AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(itemsNode.path("item"));
+            } else if (itemNode.isObject()) {
+                AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(itemNode);
                 if (item != null) {
                     items.add(item);
                 }

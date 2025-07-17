@@ -947,7 +947,13 @@ const AIChatbot = () => {
           travelInfo.requestType !== "general_chat" &&
           travelInfo.requestType !== "help_shown" &&
           travelInfo.requestType !== "unclear_request" &&
-          !travelInfo.isRejected && (
+          !travelInfo.isRejected &&
+          // 실제로 표시할 콘텐츠가 있을 때만 렌더링
+          ((travelInfo.requestType === "festival_info" &&
+            travelInfo.festivals &&
+            travelInfo.festivals.length > 0) ||
+            (travelInfo.requestType !== "festival_info" &&
+              locations.length > 0)) && (
             <div className="ai-chatbot-travel-summary">
               <div className="ai-chatbot-travel-info-grid">
                 {/* 축제 정보 섹션 - festival_info일 때만 표시 */}
