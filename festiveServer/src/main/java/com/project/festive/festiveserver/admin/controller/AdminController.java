@@ -214,4 +214,41 @@ public class AdminController {
         );
     }
     
+    
+    /** 전체 회원 관리
+     * @return
+     * @author 미애
+     */
+    @GetMapping("allMembers")
+	public ResponseEntity<Object> selectAllMembers() {
+		try {
+			List<MemberDto> allMemberList = new ArrayList<>();
+			allMemberList = service.selectAllMembers();
+			return ResponseEntity.status(HttpStatus.OK).body(allMemberList);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+		
+	}
+    
+    /** 회원 로그인 제재
+     * @param memberNoList
+     * @return
+     * @author 미애
+     */
+    @PostMapping("memberDisable")
+    public ResponseEntity<Object> updateMemberDisable(@RequestBody List<Integer> memberNoList) {
+    	try {
+			int result = service.updateMemberDisable(memberNoList);
+			return ResponseEntity.status(HttpStatus.OK).body(result);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+		}
+    	
+    }
+    
 }
