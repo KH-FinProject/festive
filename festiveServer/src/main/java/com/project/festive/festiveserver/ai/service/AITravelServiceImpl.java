@@ -2021,6 +2021,8 @@ public class AITravelServiceImpl implements AITravelService {
                         location.setName(title);
                         location.setLatitude(latitude);
                         location.setLongitude(longitude);
+                        location.setContentId(String.valueOf(data.get("contentid"))); // ✅ 축제 contentId 설정 추가!
+                        location.setContentTypeId(String.valueOf(data.get("contenttypeid"))); // ✅ 축제 contentTypeId 설정 추가!
                         location.setDay(1); // 축제는 모두 1일차로 설정
                         location.setTime("종일");
                         
@@ -2095,6 +2097,7 @@ public class AITravelServiceImpl implements AITravelService {
                         location.setLatitude(Double.parseDouble(String.valueOf(place.get("mapy"))));
                         location.setLongitude(Double.parseDouble(String.valueOf(place.get("mapx"))));
                         location.setCategory(getContentTypeNameByCode(String.valueOf(place.get("contenttypeid"))));
+                        location.setContentId(String.valueOf(place.get("contentid"))); // ✅ contentId 설정 추가!
                         location.setContentTypeId(String.valueOf(place.get("contenttypeid")));
                         location.setImage(String.valueOf(place.get("firstimage")));
                         location.setDescription(String.valueOf(place.get("addr1")));
