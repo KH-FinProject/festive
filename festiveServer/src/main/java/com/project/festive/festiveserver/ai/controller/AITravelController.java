@@ -27,7 +27,7 @@ public class AITravelController {
     /**
      * AI 여행 추천 채팅 (일반 응답)
      */
-    @PostMapping("/chat")
+    @PostMapping(value = "/chat", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ChatResponse> generateTravelRecommendation(@RequestBody ChatRequest request) {
         
         try {
@@ -46,7 +46,7 @@ public class AITravelController {
     /**
      * 상태 확인
      */
-    @GetMapping("/health")
+    @GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("AI Travel Service is running!");
     }
@@ -56,7 +56,7 @@ public class AITravelController {
     /**
      * 장소의 상세 이미지들을 가져오는 API
      */
-    @GetMapping("/place-images/{contentId}")
+    @GetMapping(value = "/place-images/{contentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> getPlaceImages(@PathVariable String contentId) {
         try {
             
@@ -84,7 +84,7 @@ public class AITravelController {
     /**
      * 장소의 상세 정보(overview)를 가져오는 API
      */
-    @GetMapping("/place-overview/{contentId}")
+    @GetMapping(value = "/place-overview/{contentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> getPlaceOverview(@PathVariable String contentId) {
         try {
             
