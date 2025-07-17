@@ -119,7 +119,7 @@ const LocalFestive = () => {
       _type: "json",
       eventStartDate: yyyyMMdd,
       arrange: "A",
-      numOfRows: "100",
+      numOfRows: "1000",
       pageNo: "1",
     });
 
@@ -189,7 +189,7 @@ const LocalFestive = () => {
         eventStartDate: formatDate(searchStartDate),
         eventEndDate: formatDate(searchEndDate),
         arrange: "A",
-        numOfRows: "100",
+        numOfRows: "1000",
         pageNo: "1",
       });
 
@@ -283,7 +283,7 @@ const LocalFestive = () => {
         MobileApp: "Festive",
         _type: "json",
         arrange: "A",
-        numOfRows: "100",
+        numOfRows: "10000",
         pageNo: "1",
         contentTypeId: "15",
         keyword: searchKeyword,
@@ -617,7 +617,7 @@ const LocalFestive = () => {
           <div className="keyword-info-message-area">
             {searchKeyword && (
               <div className="keyword-info-message">
-                키워드 검색 결과는 날짜 정보가 제공되지 않습니다.
+                축제명 검색은 날짜 정보가 제공되지 않습니다.
               </div>
             )}
           </div>
