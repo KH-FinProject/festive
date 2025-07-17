@@ -243,7 +243,7 @@ public class AITravelServiceImpl implements AITravelService {
             List<ChatResponse.LocationInfo> locations = createLocationsFromTourAPIDataWithPreference(
                     tourApiDataMaps, requiredPlaces, totalDays, analysis.getPreferredContentType());
             
-            // 🚀 빠른 모드: 템플릿 기반 여행 응답 생성 (AI 호출 최소화)
+            // 🚀 빠른 모드: 템플릿 기반 여행 응답 생성 (AI 호출 최소화) + Day별 포인트 추가
             String structuredContent = createFastTravelResponse(analysis, locations);
             
             // AI가 생성한 day별 코스 설명 저장 (프론트엔드 표시용)
@@ -334,7 +334,7 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 🚀 빠른 모드: 템플릿 기반 여행 응답 생성 (AI 호출 최소화)
+     * 🚀 빠른 모드: 템플릿 기반 여행 응답 생성 (AI 호출 최소화) + Day별 포인트 추가
      */
     private String createFastTravelResponse(TravelAnalysis analysis, List<ChatResponse.LocationInfo> locations) {
         StringBuilder response = new StringBuilder();
@@ -356,13 +356,14 @@ public class AITravelServiceImpl implements AITravelService {
             .filter(location -> location.getDay() != null)
             .collect(Collectors.groupingBy(ChatResponse.LocationInfo::getDay));
         
-        // Day별로 정렬하여 일정 생성
+        // Day별로 정렬하여 일정 생성 (AI 포인트 포함)
         for (int day = 1; day <= dayGroups.size(); day++) {
             List<ChatResponse.LocationInfo> dayLocations = dayGroups.get(day);
             if (dayLocations == null || dayLocations.isEmpty()) continue;
             
             response.append("## 📅 Day ").append(day).append("\n\n");
             
+            // 장소 목록
             for (int i = 0; i < dayLocations.size(); i++) {
                 ChatResponse.LocationInfo location = dayLocations.get(i);
                 
@@ -377,6 +378,12 @@ public class AITravelServiceImpl implements AITravelService {
                 }
                 
                 response.append("\n");
+            }
+            
+            // ✨ Day별 AI 포인트 생성 추가
+            String dayPoint = generateDayPointFromLocations(dayLocations, day, region);
+            if (dayPoint != null && !dayPoint.trim().isEmpty()) {
+                response.append("**포인트:** ").append(dayPoint).append("\n\n");
             }
             
             response.append("---\n\n");
@@ -436,7 +443,7 @@ public class AITravelServiceImpl implements AITravelService {
     }
     
     /**
-     * 생성된 locations를 바탕으로 Day별 포인트 생성
+     * 생성된 locations를 바탕으로 Day별 포인트 생성 (이모지 제거 포함)
      */
     private String generateDayPointFromLocations(List<ChatResponse.LocationInfo> dayLocations, int day, String region) {
         if (dayLocations.isEmpty()) {
@@ -456,12 +463,15 @@ public class AITravelServiceImpl implements AITravelService {
         }
         
         prompt.append("\n이 일정의 특징과 포인트를 한 문장으로 요약해주세요. ");
-        prompt.append("이동 동선, 테마, 또는 특별한 매력 등을 언급하며 여행자에게 도움이 되는 간단한 팁을 포함해주세요.");
+        prompt.append("이동 동선, 테마, 또는 특별한 매력 등을 언급하며 여행자에게 도움이 되는 간단한 팁을 포함해주세요. ");
+        prompt.append("이모지나 특수기호는 사용하지 말고 자연스러운 한국어로 작성해주세요.");
         
         try {
             String aiResponse = callOpenAI(prompt.toString());
             if (aiResponse != null && !aiResponse.trim().isEmpty()) {
-                return aiResponse.trim();
+                // ✅ 이모지 제거 적용
+                String cleanedResponse = removeEmojis(aiResponse.trim());
+                return cleanedResponse;
             }
         } catch (Exception e) {
             log.debug("OpenAI 호출 실패, 기본 메시지 사용", e);

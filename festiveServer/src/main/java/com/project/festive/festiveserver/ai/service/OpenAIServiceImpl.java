@@ -248,7 +248,7 @@ public class OpenAIServiceImpl implements OpenAIService {
         }
         
         // 마무리 멘트
-        recommendation.append("\n즐거운 여행 되세요! 🎉");
+        recommendation.append("\n즐거운 여행 되세요!");
         
         return recommendation.toString();
     }
