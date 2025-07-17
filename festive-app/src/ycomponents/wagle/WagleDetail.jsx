@@ -418,7 +418,7 @@ function WagleDetail() {
           views: data.boardViewCount,
           likes: data.boardLikeCount,
           commentCount: data.boardCommentCount,
-          images: data.boardImages || [],
+
           memberNo: data.memberNo,
           memberProfileImage: data.memberProfileImage,
         };
@@ -772,12 +772,6 @@ function WagleDetail() {
           </div>
           <div className="wagle-detail-content">
             <Viewer initialValue={post?.content || ""} />
-          </div>
-          <div className="wagle-detail-images">
-            {post.images &&
-              post.images.map((img, idx) => (
-                <img src={img} alt={`user-upload-${idx}`} key={idx} />
-              ))}
           </div>
           <div className="wagle-detail-actions-bar">
             <div className="wagle-detail-actions">

@@ -205,23 +205,4 @@
         WHERE COMMENT_NO = #{commentNo}
     </update>
 
-    <!-- 게시글 이미지 저장 -->
-    <insert id="insertBoardImg">
-        INSERT INTO BOARD_IMG (
-            BOARD_IMG_NO, BOARD_NO, BOARD_IMG_ORIGINAL, 
-            BOARD_IMG_RENAME, BOARD_IMG_PATH, BOARD_IMG_LEVEL
-        ) VALUES (
-            SEQ_BOARD_IMG_NO.NEXTVAL, #{boardNo}, #{originalName}, 
-            #{renameName}, #{imagePath}, #{level}
-        )
-    </insert>
-
-    <!-- 게시글 이미지 조회 -->
-    <select id="selectBoardImages" resultType="string">
-        SELECT IMG_PATH
-        FROM BOARD_IMG
-        WHERE BOARD_NO = #{boardNo}
-        ORDER BY IMG_ORDER ASC
-    </select>
-
 </mapper> 

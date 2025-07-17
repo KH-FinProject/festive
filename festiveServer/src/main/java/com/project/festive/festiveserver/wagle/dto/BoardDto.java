@@ -31,7 +31,6 @@ public class BoardDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime boardUpdateDate;
     private String boardDeleteYn;
-    private List<String> boardImages;
     private String memberProfileImage;
     
     // 지현이가 추가

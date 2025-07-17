@@ -65,8 +65,7 @@ public class WagleServiceImpl implements WagleService {
                 throw new RuntimeException("존재하지 않는 게시글입니다.");
             }
             
-            List<String> boardImages = wagleMapper.selectBoardImages(boardNo);
-            boardDetail.setBoardImages(boardImages);
+
             
             return boardDetail;
         } catch (Exception e) {
