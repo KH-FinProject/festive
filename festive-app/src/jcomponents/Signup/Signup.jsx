@@ -995,10 +995,10 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
               disabled={isEmailLoading || isTelLoading || duplicateStatus.authKey.available}
             >
               {isEmailLoading || isTelLoading
-                ? "인증중..."
+                ? "전송 중..."
                 : formData.authMethod === "email"
-                ? "이메일 인증"
-                : "전화번호 인증"}
+                ? "이메일 전송"
+                : "메시지 전송"}
             </button>
           </div>
           {getStatusMessage("authKey")}
@@ -1056,7 +1056,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
               <input
                 type="text"
                 disabled
-                className="form-input"
+                className="form-input form-address-input"
                 placeholder="우편번호"
                 value={formData.address.zipcode}
                 onChange={(e) =>
@@ -1075,7 +1075,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
             <input
               type="text"
               disabled
-              className="form-input full-width"
+              className="form-input form-address-input full-width"
               placeholder="기본 주소"
               value={formData.address.detail}
               onChange={(e) =>
@@ -1084,7 +1084,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
             />
             <input
               type="text"
-              className="form-input full-width"
+              className="form-input form-address-input full-width"
               placeholder="상세 주소 (예: 101동 101호)"
               value={formData.address.extra}
               onChange={(e) =>

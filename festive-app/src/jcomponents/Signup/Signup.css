@@ -760,7 +760,7 @@
 }
 
 /* ===== 인증/입력 비활성화(Disabled) 스타일 ===== */
-.form-input:disabled,
+.form-input:disabled:not(.form-address-input),
 input[type="email"]:disabled,
 input[type="tel"]:disabled {
   background-color: #ececec;
