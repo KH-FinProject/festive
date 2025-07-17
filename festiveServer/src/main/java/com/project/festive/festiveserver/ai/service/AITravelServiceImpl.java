@@ -67,11 +67,8 @@ public class AITravelServiceImpl implements AITravelService {
     @Override
     public ChatResponse generateTravelRecommendation(ChatRequest request) {
         try {
-            log.info(" 여행/축제 전용 AI 추천 시작: {}", request.getMessage());
-            
             // TourAPI 데이터 기반 재생성 요청인지 확인 (레거시 지원)
             if (request.getTourApiData() != null && !request.getTourApiData().isEmpty()) {
-                log.info("🌐 레거시 TourAPI 데이터 기반 AI 응답 재생성: {}개 관광지", request.getTourApiData().size());
                 return regenerateWithTourAPIData(request);
             }
             
@@ -96,19 +93,14 @@ public class AITravelServiceImpl implements AITravelService {
                     response.setFestivals(new ArrayList<>());
                     response.setTravelCourse(null);
                     
-                    log.info("❌ 일반 대화 요청 거부됨: {}", request.getMessage());
                     return response;
                 }
                 throw e;
             }
-            
-            log.info("⚡ 빠른 분석 완료 - 타입: {}, 지역: {}, 기간: {}", 
-                    analysis.getRequestType(), analysis.getRegion(), analysis.getDuration());
 
             // 🌐 2단계: 백엔드에서 모든 처리 완료 (TourAPI 데이터 기반으로만 응답)
             ChatResponse response = generateDataBasedResponseOnly(request.getMessage(), analysis);
             
-            log.info("여행/축제 전용 AI 추천 완료");
             return response;
 
         } catch (Exception e) {
@@ -557,14 +549,8 @@ public class AITravelServiceImpl implements AITravelService {
         String preferredContentType = analysis.getPreferredContentType();
         String regionName = analysis.getRegion();
         
-        log.info(" 백엔드 TourAPI 호출 시작 - 지역명: {}, 지역코드: {}, 시군구코드: {}, 키워드: {}, 요청타입: {}", 
+        log.debug("백엔드 TourAPI 호출 시작 - 지역명: {}, 지역코드: {}, 시군구코드: {}, 키워드: {}, 요청타입: {}", 
                 regionName, areaCode != null ? areaCode : "전국", sigunguCode != null ? sigunguCode : "없음", keyword, requestType);
-        
-        // 🔎 통영 관련 디버깅
-        if (regionName != null && regionName.contains("통영")) {
-            log.info("🎯 [TONGYEONG API] 통영 TourAPI 호출 시작!");
-            log.info("🎯 [TONGYEONG API] 파라미터 - areaCode: {}, sigunguCode: {}", areaCode, sigunguCode);
-        }
         
         try {
             // 🎪 순수 축제 검색 요청인 경우 - 축제 데이터만 수집 (좌표 보완 포함)
@@ -840,15 +826,15 @@ public class AITravelServiceImpl implements AITravelService {
                 
                 if (!items.isEmpty()) {
                     TourAPIResponse.Item item = items.get(0);
-                    log.info("✅ detailCommon2 정보 조회 성공 - contentId: {}, addr1: {}, overview 길이: {}", 
+                    log.debug("detailCommon2 정보 조회 성공 - contentId: {}, addr1: {}, overview 길이: {}", 
                             contentId, item.getAddr1(), 
                             item.getOverview() != null ? item.getOverview().length() : 0);
                     return item;
                 } else {
-                    log.warn("⚠️ detailCommon2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
+                    log.warn("detailCommon2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
                 }
             } else {
-                log.warn("⚠️ detailCommon2 API 호출 실패 - contentId: {}, 상태코드: {}", 
+                log.warn("detailCommon2 API 호출 실패 - contentId: {}, 상태코드: {}", 
                         contentId, response.getStatusCode());
             }
             
@@ -1539,15 +1525,9 @@ public class AITravelServiceImpl implements AITravelService {
             // URI.create로 추가 인코딩 방지
             ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(finalUrl), String.class);
             
-            log.info("📥 TourAPI 응답 상태: {}", response.getStatusCode());
-            if (response.getBody() != null) {
-                log.info("📄 TourAPI 응답 데이터 (처음 500자): {}", 
-                    response.getBody().length() > 500 ? response.getBody().substring(0, 500) + "..." : response.getBody());
-            }
-            
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 List<TourAPIResponse.Item> items = parseTourAPIResponse(response.getBody());
-                log.info("TourAPI 성공: {}개 데이터 수집", items.size());
+                log.debug("TourAPI 성공: {}개 데이터 수집", items.size());
                 return items;
             } else {
                 log.warn("TourAPI 응답 오류: {}", response.getStatusCode());
@@ -1603,17 +1583,10 @@ public class AITravelServiceImpl implements AITravelService {
             String urlWithoutServiceKey = builder.toUriString();
             String finalUrl = urlWithoutServiceKey + "&keyword=" + encodedKeyword + "&serviceKey=" + tourApiServiceKey;
             
-            log.info("🔍 키워드 검색: '{}' -> '{}', 지역코드={}, 시군구코드={}", 
+            log.debug("키워드 검색: '{}' -> '{}', 지역코드={}, 시군구코드={}", 
                     keyword, encodedKeyword, areaCode, sigunguCode != null ? sigunguCode : "없음");
-            log.info("📡 키워드 검색 URL: {}", finalUrl);
             
             ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(finalUrl), String.class);
-            
-            log.info("📥 키워드 검색 응답 상태: {}", response.getStatusCode());
-            if (response.getBody() != null) {
-                log.info("📄 키워드 검색 응답 데이터 (처음 500자): {}", 
-                    response.getBody().length() > 500 ? response.getBody().substring(0, 500) + "..." : response.getBody());
-            }
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 List<TourAPIResponse.Item> items = parseTourAPIResponse(response.getBody());
@@ -1682,34 +1655,18 @@ public class AITravelServiceImpl implements AITravelService {
             
             log.info("🎪 축제 검색: 지역코드={}, 시군구코드={}, 시작일={}", 
                     areaCode, sigunguCode != null ? sigunguCode : "없음", today);
-            log.info("📡 축제 검색 URL: {}", finalUrl);
-            
             ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(finalUrl), String.class);
-            
-            log.info("📥 축제 검색 응답 상태: {}", response.getStatusCode());
-            if (response.getBody() != null) {
-                log.info("📄 축제 검색 응답 데이터 (처음 1000자): {}", 
-                    response.getBody().length() > 1000 ? response.getBody().substring(0, 1000) + "..." : response.getBody());
-            }
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 List<TourAPIResponse.Item> items = parseTourAPIResponse(response.getBody());
-                log.info("✅ 축제 검색 성공: {}개 데이터", items.size());
+                log.debug("축제 검색 성공: {}개 데이터", items.size());
                 
-                // 🎪 축제 데이터만 필터링 및 로깅
+                // 🎪 축제 데이터만 필터링
                 List<TourAPIResponse.Item> festivalItems = items.stream()
                     .filter(item -> "15".equals(item.getContentTypeId()))
                     .collect(Collectors.toList());
                 
-                log.info("🎭 축제(contentTypeId=15) 필터링 결과: {}개", festivalItems.size());
-                
-                // 축제 데이터 샘플 로깅
-                for (int i = 0; i < Math.min(3, festivalItems.size()); i++) {
-                    TourAPIResponse.Item festival = festivalItems.get(i);
-                    log.info("  - 축제 샘플 {}: {} (시작:{}, 종료:{}, 이미지:{})", 
-                        i+1, festival.getTitle(), festival.getEventStartDate(), festival.getEventEndDate(),
-                        festival.getFirstImage() != null ? "있음" : "없음");
-                }
+                log.debug("축제(contentTypeId=15) 필터링 결과: {}개", festivalItems.size());
                 
                 return items; // 원본 items 반환 (다른 타입도 포함)
             }
@@ -1727,12 +1684,11 @@ public class AITravelServiceImpl implements AITravelService {
         List<TourAPIResponse.Item> items = new ArrayList<>();
         
         try {
-            log.info("🔍 JSON 응답 파싱 시작");
             items = parseJSONResponse(response);
-            log.info("📋 JSON 파싱 완료: {}개 아이템", items.size());
+            log.debug("JSON 파싱 완료: {}개 아이템", items.size());
             
         } catch (Exception e) {
-            log.error("❌ JSON 응답 파싱 실패", e);
+            log.error("JSON 응답 파싱 실패", e);
         }
         
         return items;
@@ -2059,14 +2015,8 @@ public class AITravelServiceImpl implements AITravelService {
                 .collect(Collectors.toList());
             placesByType.put(type, places);
             
-            log.info("📊 타입 {} ({}) 분류 완료: {}개", 
+            log.debug("타입 {} ({}) 분류 완료: {}개", 
                 type, getContentTypeNameByCode(type), places.size());
-                
-            // 각 타입별 샘플 데이터 로그
-            if (!places.isEmpty()) {
-                Map<String, Object> sample = places.get(0);
-                log.debug("  - 샘플: {} (ID: {})", sample.get("title"), sample.get("contentid"));
-            }
         }
         
         // 🎯 선호 타입별 처리 분기
@@ -2374,7 +2324,7 @@ public class AITravelServiceImpl implements AITravelService {
             Map<String, List<Map<String, Object>>> placesByType, int requiredPlaces, int totalDays, Set<String> usedPlaces) {
         
         List<ChatResponse.LocationInfo> locations = new ArrayList<>();
-        log.info("🎪 축제 위주 일정 생성 시작 - 필요장소: {}개, 총일수: {}일", requiredPlaces, totalDays);
+        log.debug("축제 위주 일정 생성 시작 - 필요장소: {}개, 총일수: {}일", requiredPlaces, totalDays);
         
         List<Map<String, Object>> festivals = placesByType.get("15");
         List<Map<String, Object>> attractions = placesByType.get("12");
@@ -2388,24 +2338,8 @@ public class AITravelServiceImpl implements AITravelService {
         int cultureCount = cultures != null ? cultures.size() : 0;
         int courseCount = courses != null ? courses.size() : 0;
         
-        log.info("🎪 수집된 데이터 현황:");
-        log.info("  - 축제: {}개", festivalCount);
-        log.info("  - 관광지: {}개", attractionCount);
-        log.info("  - 음식점: {}개", foodCount);
-        log.info("  - 문화시설: {}개", cultureCount);
-        log.info("  - 여행코스: {}개", courseCount);
-        
-        // 축제 데이터 상세 로깅
-        if (festivals != null && !festivals.isEmpty()) {
-            log.info("🎭 축제 데이터 목록:");
-            for (int i = 0; i < Math.min(5, festivals.size()); i++) {
-                Map<String, Object> festival = festivals.get(i);
-                log.info("  - 축제 {}: {}", i+1, festival.get("title"));
-            }
-            if (festivals.size() > 5) {
-                log.info("  - ... 총 {}개 축제", festivals.size());
-            }
-        }
+        log.debug("수집된 데이터 현황 - 축제: {}개, 관광지: {}개, 음식점: {}개, 문화시설: {}개, 여행코스: {}개", 
+                 festivalCount, attractionCount, foodCount, cultureCount, courseCount);
         
         // 🎯 Day별 최소 장소 수 계산 (균등 분배)
         int placesPerDay = Math.max(3, requiredPlaces / totalDays); // 최소 3개씩
