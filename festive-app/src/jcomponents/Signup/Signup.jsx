@@ -9,7 +9,6 @@ import aiIcon from "../../assets/signup/ai.png";
 import localIcon from "../../assets/signup/local.png";
 import calendarIcon from "../../assets/signup/calendar.png";
 import koreanCharacter from "../../assets/signup/korean.png";
-import fireworkIcon from "../../assets/signup/firework.png";
 
 const Signup = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -413,7 +412,8 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [isEmailLoading, setIsEmailLoading] = useState(false); // 이메일 인증 로딩 상태
   const [isTelLoading, setIsTelLoading] = useState(false); // 전화번호 인증 로딩 상태
-
+  const [isSigning, setIsSigning] = useState(false);
+  
   // 2. useRef (race condition 방지)
   // [lastRequestedValue] : 중복확인 요청의 마지막 값을 기억하여 응답 순서 꼬임(race condition) 방지
   // [authKeyInputRef] : 인증번호 입력 필드 참조
@@ -797,6 +797,8 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       return;
     }
     try {
+      setIsSigning(true);
+      
       // 회원가입 API 호출
       const { name, nickname, email, tel, id, password, address } = formData;
 
@@ -822,12 +824,13 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       if (response.data === 1) {
         alert("회원가입이 완료되었습니다!");
         setCurrentStep(3); // 직접 3으로 이동
-        return; // 여기서 함수 종료!
       } else {
         alert("회원가입 중 오류가 발생했습니다.");
       }
     } catch (err) {
       alert("회원가입 중 오류가 발생했습니다.");
+    } finally {
+      setIsSigning(false);
     }
   };
 
@@ -915,6 +918,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
               onChange={(e) =>
                 handleInputChange("email", e.target.value.trim())
               }
+              disabled={formData.authMethod === "email" && duplicateStatus.authKey.available}
             />
             {getStatusMessage("email")}
             {getValidationError("email")}
@@ -930,6 +934,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
               value={formData.tel}
               onChange={(e) => handleInputChange("tel", e.target.value)}
               maxLength={11}
+              disabled={formData.authMethod === "tel" && duplicateStatus.authKey.available}
             />
           </div>
         </div>
@@ -947,6 +952,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
                 onChange={(e) =>
                   handleInputChange("authMethod", e.target.value)
                 }
+                disabled={duplicateStatus.authKey.available}
               />
               <span className="auth-method-label">이메일 인증</span>
             </label>
@@ -959,6 +965,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
                 onChange={(e) =>
                   handleInputChange("authMethod", e.target.value)
                 }
+                disabled={duplicateStatus.authKey.available}
               />
               <span className="auth-method-label">전화번호 인증</span>
             </label>
@@ -979,12 +986,13 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
               }
               ref={authKeyInputRef}
               maxLength={6}
+              disabled={duplicateStatus.authKey.available}
             />
             <button
               type="button"
               className="action-btn"
               onClick={handleSmsVerification}
-              disabled={isEmailLoading || isTelLoading}
+              disabled={isEmailLoading || isTelLoading || duplicateStatus.authKey.available}
             >
               {isEmailLoading || isTelLoading
                 ? "인증중..."
@@ -1092,8 +1100,8 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
                 이전
               </button>
             )}
-            <button className="next-btn" disabled={!isAllValid()} type="submit">
-              회원가입
+            <button className="next-btn" disabled={!isAllValid() || isSigning} type="submit">
+              {!isSigning ? "회원가입" : "회원가입 중.."}
             </button>
           </div>
         )}
