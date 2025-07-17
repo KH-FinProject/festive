@@ -49,10 +49,17 @@
 	<delete id="deleteWithdrawMember">
 		DELETE FROM MEMBER
 		WHERE MEMBER_NO = #{memberNo}
-		AND
-		MEMBER_DEL_FL = 'Y'
+		<!-- AND MEMBER_DEL_FL = 'Y' -->
 	</delete>
 
+	<!-- 탈퇴 회원 복구 : 미애 -->
+	<update id="updateWithdrawMember">
+		UPDATE MEMBER
+		SET MEMBER_DEL_FL = 'N',
+		WITHDRAW_DATE =
+		NULL
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
 	
 	<!-- 통계 조회: 전체 회원 수 -->
 	<select id="getTotalMembers" resultType="int">
@@ -153,16 +160,6 @@
 	</select>
 
 
-  
-	<!-- 탈퇴 회원 복구 : 미애 -->
-	<update id="updateWithdrawMember">
-		UPDATE MEMBER
-		SET MEMBER_DEL_FL = 'N',
-		WITHDRAW_DATE =
-		NULL
-		WHERE MEMBER_NO = #{memberNo}
-	</update>
-
 	<!-- 공지글 작성 : 지현 -->
 	<insert id="insertBoard">
 		INSERT INTO BOARD (
@@ -216,5 +213,27 @@
 	</delete>
 
 
+	<!-- 전체 회원 관리 : 미애 -->
+	<select id="selectAllMembers">
+		SELECT MEMBER_NO, ID, NAME, NICKNAME, SANCTION_COUNT, MEMBER_DEL_FL
+		FROM MEMBER
+		WHERE ROLE = 'USER'
+		ORDER BY NAME
+	</select>
+	
+	
+	<!-- 회원 로그인 제재 -->
+	<update id="updateMemberDisable">
+		UPDATE MEMBER
+		SET SANCTION_COUNT = #{sanctionCount}
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
+	
+	<!-- 회원의 로그인 제재 상태 확인 -->
+	<select id="getSantionCount">
+		SELECT SANCTION_COUNT 
+		FROM MEMBER
+		WHERE MEMBER_NO = #{memberNo}
+	</select>
 
 </mapper>

@@ -3,6 +3,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -270,6 +271,45 @@ public class AdminServiceImpl implements AdminService{
 		
 		return result;
 
+	}
+
+	// 전체 회원 관리
+	@Override
+	public List<MemberDto> selectAllMembers() {
+		// TODO Auto-generated method stub
+		return mapper.selectAllMembers();
+	}
+
+	// 회원 로그인 제재
+	@Override
+	public int updateMemberDisable(List<Integer> memberNoList) {
+		int result = 0;
+		int updateMember = 0;
+		Map<String, Integer> disableMap = new HashMap<>();
+		
+		for (int memberNo : memberNoList) {
+			// 사용자의 제재 횟수를 불러옴
+			int sactionCount = mapper.getSantionCount(memberNo);
+			disableMap.put("memberNo", memberNo);
+			if(sactionCount<3) {
+				// 제재 횟수가 3보다 작을경우(정상 로그인 가능)
+				// 3을 넣어서 로그인 불가능하도록 함
+				disableMap.put("sanctionCount", 3);
+			} else {
+				// 제재 횟수가 3 이상일 경우 (로그인 제재 상태)
+				// 0으로 변경하여 해당 사용자 로그인 할 수 있게 함
+				disableMap.put("sanctionCount", 0);
+			}
+			updateMember = mapper.updateMemberDisable(disableMap);
+			
+			if(updateMember > 0) {
+				result ++;
+			} else {
+				log.debug("회원 로그인 제재 실패 : " + memberNo);
+			}
+		}
+		
+		return result;
 	}
 
 

@@ -74,4 +74,22 @@ public interface AdminMapper {
 	/** 재방문 회원 수 조회 (가입 후 7일 이상 된 활성 회원) */
 	int getReturnMembers();
 
+	/** 전체 회원 관리
+	 * @return
+	 * @author 미애
+	 */
+	List<MemberDto> selectAllMembers();
+
+	/** 회원 로그인 제재
+	 * @param disableMap
+	 * @return
+	 */
+	int updateMemberDisable(Map<String, Integer> disableMap);
+
+	/** 회원의 로그인 제재 상태 확인
+	 * @param memberNo
+	 * @return
+	 */
+	int getSantionCount(int memberNo);
+
 }
