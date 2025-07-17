@@ -53,8 +53,8 @@ public class OpenAIServiceImpl implements OpenAIService {
             // 요청 바디 구성
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-4o-mini");
-            requestBody.put("max_tokens", 1500);
-            requestBody.put("temperature", 0.7);
+            requestBody.put("max_tokens", 1200);  // 1500 → 1200 (더 간결한 응답)
+            requestBody.put("temperature", 0.3);  // 0.7 → 0.3 (일관성과 속도 향상)
 
             Map<String, Object> message = new HashMap<>();
             message.put("role", "user");
@@ -436,20 +436,16 @@ public class OpenAIServiceImpl implements OpenAIService {
             // 🎯 1단계: 매우 엄격한 AI 프롬프트
             String firstResponse = callStrictKeywordExtractionAI(userMessage);
             if (isValidSpecificKeyword(firstResponse)) {
-                log.info("✅ 1단계 AI 키워드 추출 성공: '{}' → '{}'", userMessage, firstResponse);
                 return firstResponse;
             }
             
             // 🎯 2단계: 더 엄격한 경고 포함 프롬프트
-            log.info("⚠️ 1단계 실패, 2단계 시도");
             String secondResponse = callUltraStrictKeywordExtractionAI(userMessage);
             if (isValidSpecificKeyword(secondResponse)) {
-                log.info("✅ 2단계 AI 키워드 추출 성공: '{}' → '{}'", userMessage, secondResponse);
                 return secondResponse;
             }
             
             // 🎯 3단계: 완전 실패 시 빈 문자열 반환
-            log.info("❌ AI 키워드 추출 완전 실패 - 구체적 키워드 없음: '{}'", userMessage);
             return "";
             
         } catch (Exception e) {
