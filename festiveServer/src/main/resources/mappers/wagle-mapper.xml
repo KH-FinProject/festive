@@ -10,25 +10,25 @@
             SELECT ROWNUM rn, t.* FROM (
                 SELECT 
                     b.BOARD_NO as boardNo,
-                    b.BOARD_CODE as boardTypeNo,
-                    bt.BOARD_NAME as boardTypeName,
+                    b.BOARD_TYPE_NO as boardTypeNo,
+                    bt.BOARD_TYPE_NAME as boardTypeName,
                     b.MEMBER_NO as memberNo,
                     m.NICKNAME as memberNickname,
                     m.PROFILE_IMAGE as member_profile_image,
                     b.BOARD_TITLE as boardTitle,
                     b.BOARD_CONTENT as boardContent,
-                    b.READ_COUNT as boardViewCount,
-                    b.BOARD_CREAT_DATE as boardCreateDate,
+                    b.BOARD_VIEW_COUNT as boardViewCount,
+                    b.BOARD_CREATE_DATE as boardCreateDate,
                     b.BOARD_UPDATE_DATE as boardUpdateDate,
-                    b.BOARD_DEL_FL as boardDeleteYn,
+                    b.BOARD_DELETE_YN as boardDeleteYn,
                     (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
                     (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
                 FROM BOARD b
                 JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
-                JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
-                WHERE b.BOARD_DEL_FL = 'N'
+                LEFT JOIN BOARD_TYPE bt ON b.BOARD_TYPE_NO = bt.BOARD_TYPE_NO
+                WHERE b.BOARD_DELETE_YN = 'N'
                 <if test="boardTypeNo != null">
-                    AND b.BOARD_CODE = #{boardTypeNo}
+                    AND b.BOARD_TYPE_NO = #{boardTypeNo}
                 </if>
                 <if test="searchType != null and searchKeyword != null and searchKeyword != ''">
                     <choose>
@@ -44,7 +44,7 @@
                         </when>
                     </choose>
                 </if>
-                ORDER BY b.BOARD_CREAT_DATE DESC
+                ORDER BY b.BOARD_CREATE_DATE DESC
             ) t WHERE ROWNUM &lt;= #{offset} + #{limit}
         ) WHERE rn &gt; #{offset}
     </select>
@@ -54,9 +54,9 @@
         SELECT COUNT(*)
         FROM BOARD b
         JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
-        WHERE b.BOARD_DEL_FL = 'N'
+        WHERE b.BOARD_DELETE_YN = 'N'
         <if test="boardTypeNo != null">
-            AND b.BOARD_CODE = #{boardTypeNo}
+            AND b.BOARD_TYPE_NO = #{boardTypeNo}
         </if>
         <if test="searchType != null and searchKeyword != null and searchKeyword != ''">
             <choose>
@@ -78,29 +78,29 @@
     <select id="selectBoardDetail" resultType="com.project.festive.festiveserver.wagle.dto.BoardDto">
         SELECT 
             b.BOARD_NO as boardNo,
-            b.BOARD_CODE as boardTypeNo,
-            bt.BOARD_NAME as boardTypeName,
+            b.BOARD_TYPE_NO as boardTypeNo,
+            bt.BOARD_TYPE_NAME as boardTypeName,
             b.MEMBER_NO as memberNo,
             m.NICKNAME as memberNickname,
             m.PROFILE_IMAGE as member_profile_image,
             b.BOARD_TITLE as boardTitle,
             b.BOARD_CONTENT as boardContent,
-            b.READ_COUNT as boardViewCount,
-            b.BOARD_CREAT_DATE as boardCreateDate,
+            b.BOARD_VIEW_COUNT as boardViewCount,
+            b.BOARD_CREATE_DATE as boardCreateDate,
             b.BOARD_UPDATE_DATE as boardUpdateDate,
-            b.BOARD_DEL_FL as boardDeleteYn,
+            b.BOARD_DELETE_YN as boardDeleteYn,
             (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
             (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
         FROM BOARD b
         JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
-        JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
-        WHERE b.BOARD_NO = #{boardNo} AND b.BOARD_DEL_FL = 'N'
+        LEFT JOIN BOARD_TYPE bt ON b.BOARD_TYPE_NO = bt.BOARD_TYPE_NO
+        WHERE b.BOARD_NO = #{boardNo} AND b.BOARD_DELETE_YN = 'N'
     </select>
 
     <!-- 게시글 조회수 증가 -->
     <update id="updateBoardViewCount">
         UPDATE BOARD 
-        SET READ_COUNT = READ_COUNT + 1 
+        SET BOARD_VIEW_COUNT = BOARD_VIEW_COUNT + 1 
         WHERE BOARD_NO = #{boardNo}
     </update>
 
@@ -110,8 +110,8 @@
             SELECT SEQ_BOARD_NO.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO BOARD (
-            BOARD_NO, BOARD_CODE, MEMBER_NO, BOARD_TITLE, BOARD_CONTENT, 
-            READ_COUNT, BOARD_DEL_FL, BOARD_CREAT_DATE
+            BOARD_NO, BOARD_TYPE_NO, MEMBER_NO, BOARD_TITLE, BOARD_CONTENT, 
+            BOARD_VIEW_COUNT, BOARD_DELETE_YN, BOARD_CREATE_DATE
         ) VALUES (
             #{boardNo}, #{boardTypeNo}, #{memberNo}, #{boardTitle}, #{boardContent}, 
             0, 'N', 
@@ -131,7 +131,7 @@
     <!-- 게시글 삭제 (논리삭제) -->
     <update id="deleteBoardLogical">
         UPDATE BOARD 
-        SET BOARD_DEL_FL = 'Y' 
+        SET BOARD_DELETE_YN = 'Y' 
         WHERE BOARD_NO = #{boardNo}
     </update>
 
