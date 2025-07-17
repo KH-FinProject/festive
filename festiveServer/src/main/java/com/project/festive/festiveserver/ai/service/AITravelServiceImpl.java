@@ -308,8 +308,9 @@ public class AITravelServiceImpl implements AITravelService {
             response.append("네! ").append(region).append(" ").append(duration).append(" 여행코스를 추천해드리겠습니다.\n\n");
         }
         
-        // 🎯 실제 생성된 locations를 Day별로 그룹화
+        // 🎯 실제 생성된 locations를 Day별로 그룹화 (null 값 필터링)
         Map<Integer, List<ChatResponse.LocationInfo>> dayGroups = locations.stream()
+            .filter(location -> location.getDay() != null) // null day 값 필터링
             .collect(Collectors.groupingBy(ChatResponse.LocationInfo::getDay));
         
         // Day별로 정렬하여 메시지 생성
@@ -2097,6 +2098,7 @@ public class AITravelServiceImpl implements AITravelService {
                         location.setContentTypeId(String.valueOf(place.get("contenttypeid")));
                         location.setImage(String.valueOf(place.get("firstimage")));
                         location.setDescription(String.valueOf(place.get("addr1")));
+                        location.setDay(1); // ✅ 기본값으로 1일차 설정 (나중에 재배정됨)
                         
                         if (!usedPlaces.contains(location.getName())) {
                             allCandidates.add(location);
@@ -2124,6 +2126,7 @@ public class AITravelServiceImpl implements AITravelService {
         // 첫 번째 장소는 선호 타입에서 선택
         ChatResponse.LocationInfo firstPlace = selectFirstPlace(allCandidates, preferredContentType);
         if (firstPlace != null) {
+            firstPlace.setDay(1); // ✅ 첫 번째 장소는 1일차로 설정
             result.add(firstPlace);
             usedPlaces.add(firstPlace.getName());
             allCandidates.remove(firstPlace);
