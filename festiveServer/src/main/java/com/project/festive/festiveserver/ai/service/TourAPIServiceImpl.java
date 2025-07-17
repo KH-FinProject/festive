@@ -198,23 +198,19 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 String responseBody = response.getBody();
-                log.info("📄 detailIntro2 응답 데이터 길이: {}", responseBody.length());
-                log.debug("📄 detailIntro2 응답 내용 (처음 500자): {}", 
-                    responseBody.length() > 500 ? responseBody.substring(0, 500) + "..." : responseBody);
-                
                 // JSON 응답 파싱
                 List<AITravelServiceImpl.TourAPIResponse.Item> items = parseDetailIntro2Response(responseBody);
                 
                 if (!items.isEmpty()) {
                     AITravelServiceImpl.TourAPIResponse.Item item = items.get(0);
-                    log.info("✅ detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
+                    log.debug("detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
                             contentId, item.getEventStartDate(), item.getEventEndDate());
                     return item;
                 } else {
-                    log.warn("⚠️ detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
+                    log.warn("detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
                 }
             } else {
-                log.warn("⚠️ detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
+                log.warn("detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
                         contentId, response.getStatusCode());
             }
             
