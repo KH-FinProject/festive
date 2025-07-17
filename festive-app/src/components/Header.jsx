@@ -41,9 +41,9 @@ const Header = () => {
   return (
     <header className="header">
       <div className="headerlogo">
-        <a href="/">
+        <div onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
           <img src={mainLogo} alt="festive logo" />
-        </a>
+        </div>
       </div>
       <nav className="headernav">
         {[
@@ -99,7 +99,13 @@ const Header = () => {
               <img
                 src={
                   member?.profileImage
-                    ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${member.profileImage.startsWith('/') ? member.profileImage : `/${member.profileImage}`}`
+                    ? `${(
+                        import.meta.env.VITE_API_URL || "http://localhost:8080"
+                      ).replace(/\/+$/, "")}${
+                        member.profileImage.startsWith("/")
+                          ? member.profileImage
+                          : `/${member.profileImage}`
+                      }`
                     : "/logo.png"
                 }
                 alt="프로필"

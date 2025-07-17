@@ -103,9 +103,9 @@ const LocalFestive = () => {
 
   // 축제 검색시(시작/끝 날짜, 지역 수정시) 데이터 로드
   useEffect(() => {
-    if(!isMounted.current) return;
+    if (!isMounted.current) return;
     searchFestivals();
-  }, [searchStartDate, searchEndDate, searchLocation])
+  }, [searchStartDate, searchEndDate, searchLocation]);
 
   // 축제 데이터 가져오기 함수
   const fetchFestivalData = async () => {
@@ -261,10 +261,8 @@ const LocalFestive = () => {
       setFestivals(mapped);
       setDisplayedFestivals(mapped.slice(0, pageSize));
       setHasMore(mapped.length > pageSize);
-
     } catch (error) {
       console.error("축제 검색 실패:", error);
-
     } finally {
       setIsMoreLoading(false);
     }
@@ -288,7 +286,7 @@ const LocalFestive = () => {
         numOfRows: "100",
         pageNo: "1",
         contentTypeId: "15",
-        keyword: searchKeyword
+        keyword: searchKeyword,
       });
 
       const url = `https://apis.data.go.kr/B551011/KorService2/searchKeyword2?serviceKey=${serviceKey}&${params.toString()}`;
@@ -578,12 +576,15 @@ const LocalFestive = () => {
                 </select>
               </div>
               <div className="input-block">
-                <span className="input-label">키워드</span>
-                <div className="keyword-input-icon-wrapper" style={{ position: 'relative' }}>
+                <span className="input-label">축제명</span>
+                <div
+                  className="keyword-input-icon-wrapper"
+                  style={{ position: "relative" }}
+                >
                   <input
                     type="text"
                     className="search-input keyword-input"
-                    placeholder="축제명 키워드로 검색"
+                    placeholder="축제명으로 검색"
                     value={searchKeyword || ""}
                     onChange={(e) => setSearchKeyword(e.target.value)}
                     onKeyDown={(e) => handleKeyDown(e)}
@@ -595,14 +596,14 @@ const LocalFestive = () => {
                     tabIndex={0}
                     aria-label="검색"
                     style={{
-                      position: 'absolute',
-                      right: '16px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      cursor: 'pointer',
-                      fontSize: '22px',
-                      color: '#60a5fa',
-                      zIndex: 2
+                      position: "absolute",
+                      right: "16px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      cursor: "pointer",
+                      fontSize: "22px",
+                      color: "#60a5fa",
+                      zIndex: 2,
                     }}
                   >
                     <FontAwesomeIcon icon={faMagnifyingGlass} />
@@ -611,7 +612,7 @@ const LocalFestive = () => {
               </div>
             </div>
           </div>
-          
+
           {/* 안내 메시지 영역: 항상 고정 */}
           <div className="keyword-info-message-area">
             {searchKeyword && (
@@ -674,7 +675,6 @@ const LocalFestive = () => {
       <div className="festival-main">
         {/* 축제 목록 섹션 */}
         <section className="festivals-section">
-
           {/* 정렬 옵션 */}
           {isKeywordSearch ? (
             <div className="sort-options">
@@ -690,7 +690,9 @@ const LocalFestive = () => {
               </span>
               <span className="divider">|</span>
               <span
-                className={`sort-option ${sortType === "distance" ? "active" : ""}`}
+                className={`sort-option ${
+                  sortType === "distance" ? "active" : ""
+                }`}
                 onClick={() => handleSortChange("distance")}
               >
                 거리순

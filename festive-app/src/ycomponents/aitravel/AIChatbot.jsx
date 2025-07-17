@@ -358,8 +358,7 @@ const AIChatbot = () => {
     const isFestivalOnly = travelInfo.requestType === "festival_info";
 
     if (isFestivalOnly) {
-      // 🎪 축제 검색: 단순한 마커만 표시 (연결선 없음, 거리 표시 없음)
-      // 축제 데이터를 locations 형태로 변환
+      // 🎪 축제 검색: 마커만 단순하게 표시
       const festivalLocations = travelInfo.festivals.map((festival) => ({
         name: festival.title,
         latitude: parseFloat(festival.mapY),
@@ -382,19 +381,19 @@ const AIChatbot = () => {
 
         const markerPosition = new window.kakao.maps.LatLng(lat, lng);
 
-        // 축제 전용 마커 (빨간색 축제 아이콘)
+        // 축제 마커 (간단한 빨간색 원형)
         const festivalMarker = new window.kakao.maps.CustomOverlay({
           position: markerPosition,
           content: `<div style="
             background: #FF6B6B;
             color: white;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 12px;
             font-weight: bold;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 2px solid white;
@@ -405,35 +404,6 @@ const AIChatbot = () => {
 
         festivalMarker.setMap(map);
         map._markers.push(festivalMarker);
-
-        // 축제 인포윈도우
-        const imageContent = location.image
-          ? `<img src="${location.image}" alt="${location.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
-          : "";
-
-        const infowindow = new window.kakao.maps.InfoWindow({
-          content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
-            ${imageContent}
-            <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 ${
-              location.category || "축제"
-            }</div>
-            <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
-              location.name
-            }</div>
-            <div style="color:#666;font-size:11px;">${
-              location.description || ""
-            }</div>
-          </div>`,
-        });
-
-        // 클릭 이벤트
-        window.kakao.maps.event.addListener(festivalMarker, "click", () => {
-          if (map._currentInfoWindow) {
-            map._currentInfoWindow.close();
-          }
-          infowindow.open(map, festivalMarker);
-          map._currentInfoWindow = infowindow;
-        });
 
         bounds.extend(markerPosition);
       });
@@ -472,35 +442,6 @@ const AIChatbot = () => {
           travelMarker.setMap(map);
           map._markers.push(travelMarker);
 
-          // 장소명 라벨 추가 (마커 위에)
-          const labelPosition = new window.kakao.maps.LatLng(
-            lat + 0.001, // 마커보다 약간 위에 위치
-            lng
-          );
-
-          const labelOverlay = new window.kakao.maps.CustomOverlay({
-            position: labelPosition,
-            content: `<div style="
-              background: rgba(255,255,255,0.95);
-              border: 1px solid ${dayColor};
-              border-radius: 8px;
-              padding: 4px 8px;
-              font-size: 11px;
-              font-weight: bold;
-              color: #333;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-              text-align: center;
-              white-space: nowrap;
-              max-width: 150px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            ">${location.name}</div>`,
-            yAnchor: 1,
-          });
-
-          labelOverlay.setMap(map);
-          map._markers.push(labelOverlay);
-
           // 여행지 인포윈도우
           const imageContent = location.image
             ? `<img src="${location.image}" alt="${location.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
@@ -510,10 +451,10 @@ const AIChatbot = () => {
             content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
               ${imageContent}
               <div style="color:${dayColor};font-weight:bold;margin-bottom:4px;">Day ${
-              location.day
+              location.day || 1
             }</div>
               <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
-                location.name
+                location.name || "장소명 없음"
               }</div>
               <span style="background:${dayColor};color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${
               location.category || "관광지"
@@ -547,45 +488,6 @@ const AIChatbot = () => {
 
           polyline.setMap(map);
           map._polylines.push(polyline);
-
-          // 각 선분마다 거리 표기 추가
-          for (let i = 0; i < polylinePath.length - 1; i++) {
-            const startPos = polylinePath[i];
-            const endPos = polylinePath[i + 1];
-
-            // 거리 계산 (km)
-            const distance = calculateDistance(
-              startPos.getLat(),
-              startPos.getLng(),
-              endPos.getLat(),
-              endPos.getLng()
-            );
-
-            // 선분 중간 지점 계산
-            const midLat = (startPos.getLat() + endPos.getLat()) / 2;
-            const midLng = (startPos.getLng() + endPos.getLng()) / 2;
-            const midPosition = new window.kakao.maps.LatLng(midLat, midLng);
-
-            // 거리 라벨 표시
-            const distanceOverlay = new window.kakao.maps.CustomOverlay({
-              position: midPosition,
-              content: `<div style="
-                background: ${dayColor};
-                color: white;
-                border-radius: 12px;
-                padding: 3px 8px;
-                font-size: 10px;
-                font-weight: bold;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-                text-align: center;
-                white-space: nowrap;
-              ">${distance.toFixed(1)}km</div>`,
-              yAnchor: 0.5,
-            });
-
-            distanceOverlay.setMap(map);
-            map._markers.push(distanceOverlay);
-          }
         }
       });
     }

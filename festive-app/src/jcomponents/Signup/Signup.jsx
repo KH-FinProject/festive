@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import axiosAPI from "../../api/axiosAPI";
-import { useDebounce } from '../../hooks/useDebounce';
-import './Signup.css';
-import { Link } from 'react-router-dom';
+import { useDebounce } from "../../hooks/useDebounce";
+import "./Signup.css";
+import { Link } from "react-router-dom";
+
+// 이미지들을 import로 불러오기
+import aiIcon from "../../assets/signup/ai.png";
+import localIcon from "../../assets/signup/local.png";
+import calendarIcon from "../../assets/signup/calendar.png";
+import koreanCharacter from "../../assets/signup/korean.png";
+import fireworkIcon from "../../assets/signup/firework.png";
 
 const Signup = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -10,88 +17,102 @@ const Signup = () => {
     terms: false,
     privacy: false,
     marketing: false,
-    location: false
+    location: false,
   });
-  
+
   const handlePrev = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
-  
+
   const handleNext = () => {
     // 필수 약관 동의 확인
     if (currentStep === 1) {
-      const requiredAgreements = ['terms', 'privacy'];
-      const allRequiredChecked = requiredAgreements.every(key => agreements[key]);
-      
+      const requiredAgreements = ["terms", "privacy"];
+      const allRequiredChecked = requiredAgreements.every(
+        (key) => agreements[key]
+      );
+
       if (!allRequiredChecked) {
-        alert('필수 약관에 동의해주세요.');
+        alert("필수 약관에 동의해주세요.");
         return;
       }
     }
-    
+
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
-  
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <Agreements agreements={agreements} setAgreements={setAgreements} />;
+        return (
+          <Agreements agreements={agreements} setAgreements={setAgreements} />
+        );
       case 2:
-        return <Inform handlePrev={handlePrev} currentStep={currentStep} setCurrentStep={setCurrentStep} />;
+        return (
+          <Inform
+            handlePrev={handlePrev}
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+          />
+        );
       case 3:
         return <Completion />;
       default:
-        return <Agreements agreements={agreements} setAgreements={setAgreements} />;
+        return (
+          <Agreements agreements={agreements} setAgreements={setAgreements} />
+        );
     }
   };
-  
+
   return (
-      <div className="signup-container">
-        <div className="signup-wrapper">
-          <ProgressSteps currentStep={currentStep} />
-          
-          {/* Main Content */}
-          <div className="signup-content">
-            {renderCurrentStep()}
-            
-            {currentStep === 1 && (
-                <div className="nav-buttons">
-                  <button className="next-btn" onClick={handleNext}>
-                    다음
-                  </button>
-                </div>
-            )}
-          </div>
+    <div className="signup-container">
+      <div className="signup-wrapper">
+        <ProgressSteps currentStep={currentStep} />
+
+        {/* Main Content */}
+        <div className="signup-content">
+          {renderCurrentStep()}
+
+          {currentStep === 1 && (
+            <div className="nav-buttons">
+              <button className="next-btn" onClick={handleNext}>
+                다음
+              </button>
+            </div>
+          )}
         </div>
       </div>
+    </div>
   );
 };
 
 const ProgressSteps = ({ currentStep }) => {
   const steps = [
-    { number: 1, label: '약관동의' },
-    { number: 2, label: '정보입력' },
-    { number: 3, label: '가입완료' }
+    { number: 1, label: "약관동의" },
+    { number: 2, label: "정보입력" },
+    { number: 3, label: "가입완료" },
   ];
-  
+
   return (
-      <div className="progress-steps">
-        {steps.map((step, index) => (
-            <React.Fragment key={step.number}>
-              <div className={`step ${currentStep >= step.number ? 'active' : ''}`}>
-                <div className="step-number">{step.number}</div>
-                <div className="step-label">{step.label}</div>
-              </div>
-              {index < steps.length - 1 && (
-                  <div className={`step-line ${currentStep === 3 ? 'zigzag-line' : ''}`}></div>
-              )}
-            </React.Fragment>
-        ))}
-      </div>
+    <div className="progress-steps">
+      {steps.map((step, index) => (
+        <React.Fragment key={step.number}>
+          <div className={`step ${currentStep >= step.number ? "active" : ""}`}>
+            <div className="step-number">{step.number}</div>
+            <div className="step-label">{step.label}</div>
+          </div>
+          {index < steps.length - 1 && (
+            <div
+              className={`step-line ${currentStep === 3 ? "zigzag-line" : ""}`}
+            ></div>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
   );
 };
 
@@ -100,39 +121,39 @@ const Agreements = ({ agreements, setAgreements }) => {
     terms: false,
     privacy: false,
     marketing: false,
-    location: false
+    location: false,
   });
-  
+
   const handleAgreementChange = (key) => {
-    setAgreements(prev => ({
+    setAgreements((prev) => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
-  
+
   const handleToggleExpand = (section) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [section]: !prev[section]
+      [section]: !prev[section],
     }));
   };
-  
+
   const handleSelectAll = () => {
-    const allChecked = Object.values(agreements).every(val => val);
+    const allChecked = Object.values(agreements).every((val) => val);
     const newState = !allChecked;
     setAgreements({
       terms: newState,
       privacy: newState,
       marketing: newState,
-      location: newState
+      location: newState,
     });
   };
-  
+
   // FIXME: 약관 내용 하드코딩 수정 필요
   const sections = [
     {
-      id: 'terms',
-      label: '이용약관',
+      id: "terms",
+      label: "이용약관",
       required: true,
       content: `제1조 (목적)
 본 약관은 축제 알림 및 소통 게시판 웹사이트(이하 "사이트")가 제공하는 서비스의 이용과 관련하여
@@ -149,96 +170,103 @@ const Agreements = ({ agreements, setAgreements }) => {
 - 사이트 운영에 지장을 주는 행위를 해서는 안 됩니다.
 
 제5조 (서비스 이용 제한)
-사이트는 회원이 약관을 위반하거나 공공질서 및 미풍양속에 반하는 행위를 할 경우 서비스 이용을 제한할 수 있습니다.`
+사이트는 회원이 약관을 위반하거나 공공질서 및 미풍양속에 반하는 행위를 할 경우 서비스 이용을 제한할 수 있습니다.`,
     },
     {
-      id: 'privacy',
-      label: '개인정보의 수집범위',
+      id: "privacy",
+      label: "개인정보의 수집범위",
       required: true,
       content: `사이트는 회원가입 및 서비스 이용을 위해 다음과 같은 개인정보를 수집합니다:
 - 필수 수집항목: 이름(닉네임), 이메일 주소, 비밀번호
 - 선택 수집항목: 프로필 이미지, 관심 축제 지역/카테고리
-- 자동 수집 항목: 접속 로그, 쿠키, 이용 기록, IP 주소 등`
+- 자동 수집 항목: 접속 로그, 쿠키, 이용 기록, IP 주소 등`,
     },
     {
-      id: 'marketing',
-      label: '개인정보의 수집 및 이용 목적',
+      id: "marketing",
+      label: "개인정보의 수집 및 이용 목적",
       required: false,
       content: `수집한 개인정보는 다음의 목적을 위해 사용됩니다:
 1. 회원 관리: 가입의사 확인, 이용자 식별, 탈퇴 의사 확인 등
 2. 서비스 제공: 축제 알림, 게시판 글 작성 및 댓글 기능 제공 등
 3. 알림 서비스: 사용자가 선택한 관심 축제 정보 제공 및 푸시 알림
-4. 분석 및 개선: 이용 패턴 분석을 통한 서비스 개선`
+4. 분석 및 개선: 이용 패턴 분석을 통한 서비스 개선`,
     },
     {
-      id: 'location',
-      label: '개인정보의 보유기간 및 이용기간',
+      id: "location",
+      label: "개인정보의 보유기간 및 이용기간",
       required: false,
       content: `회원 탈퇴 시: 즉시 삭제 (단, 관련 법령에 따라 일정 기간 보존되는 정보 제외)
 전자상거래 기록 보존 (해당 시):
 계약/청약철회/결제 기록: 5년
 소비자 불만 또는 분쟁처리 기록: 3년
-접속에 관한 기록(IP 등): 3개월`
-    }
+접속에 관한 기록(IP 등): 3개월`,
+    },
   ];
-  
-  const TermsSection = ({ label, content, checked, onChange, expanded, onToggle, required }) => {
+
+  const TermsSection = ({
+    label,
+    content,
+    checked,
+    onChange,
+    expanded,
+    onToggle,
+    required,
+  }) => {
     return (
-        <div className="terms-section">
-          <div className="terms-header">
-            <label className="checkbox-label">
-              <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={onChange}
-                  required={required}
-              />
-              <span className="checkmark"></span>
-              {label} {required && <span className="required">*</span>}
-            </label>
-            <button className="toggle-btn" onClick={onToggle}>
-              상세
-            </button>
-          </div>
-          {expanded && (
-              <div className="terms-content">
-                {content}
-              </div>
-          )}
-        </div>
-    );
-  };
-  
-  return (
-      <>
-        <h2 className="signup-title">약관동의</h2>
-        <hr/>
-        {sections.map((section) => (
-            <TermsSection
-                key={section.id}
-                label={section.label}
-                content={section.content}
-                checked={agreements[section.id] || false}
-                onChange={() => handleAgreementChange(section.id)}
-                expanded={expandedSections[section.id] || false}
-                onToggle={() => handleToggleExpand(section.id)}
-                required={section.required}
-            />
-        ))}
-        
-        <div className="bottom-notice">
-          <p>이용약관, 개인정보의 수집범위, 개인정보의 수집 및 이용 목적, 개인정보의 보유기간 및 이용기간 동의를 포함합니다.</p>
-          <label className="select-all-label">
+      <div className="terms-section">
+        <div className="terms-header">
+          <label className="checkbox-label">
             <input
-                type="checkbox"
-                checked={Object.values(agreements).every(Boolean)}
-                onChange={handleSelectAll}
+              type="checkbox"
+              checked={checked}
+              onChange={onChange}
+              required={required}
             />
             <span className="checkmark"></span>
-            전체동의
+            {label} {required && <span className="required">*</span>}
           </label>
+          <button className="toggle-btn" onClick={onToggle}>
+            상세
+          </button>
         </div>
-      </>
+        {expanded && <div className="terms-content">{content}</div>}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <h2 className="signup-title">약관동의</h2>
+      <hr />
+      {sections.map((section) => (
+        <TermsSection
+          key={section.id}
+          label={section.label}
+          content={section.content}
+          checked={agreements[section.id] || false}
+          onChange={() => handleAgreementChange(section.id)}
+          expanded={expandedSections[section.id] || false}
+          onToggle={() => handleToggleExpand(section.id)}
+          required={section.required}
+        />
+      ))}
+
+      <div className="bottom-notice">
+        <p>
+          이용약관, 개인정보의 수집범위, 개인정보의 수집 및 이용 목적,
+          개인정보의 보유기간 및 이용기간 동의를 포함합니다.
+        </p>
+        <label className="select-all-label">
+          <input
+            type="checkbox"
+            checked={Object.values(agreements).every(Boolean)}
+            onChange={handleSelectAll}
+          />
+          <span className="checkmark"></span>
+          전체동의
+        </label>
+      </div>
+    </>
   );
 };
 
@@ -250,29 +278,29 @@ const validationRules = {
     maxLength: 20,
     pattern: /^[a-zA-Z0-9]+$/,
     message: {
-      required: '아이디를 입력해주세요',
-      minLength: '아이디는 4~20자 사이로 입력해주세요',
-      maxLength: '아이디는 4~20자 사이로 입력해주세요',
-      pattern: '아이디는 영문자와 숫자만 사용 가능합니다'
-    }
+      required: "아이디를 입력해주세요",
+      minLength: "아이디는 4~20자 사이로 입력해주세요",
+      maxLength: "아이디는 4~20자 사이로 입력해주세요",
+      pattern: "아이디는 영문자와 숫자만 사용 가능합니다",
+    },
   },
   name: {
     required: true,
     minLength: 2,
     maxLength: 20,
     message: {
-      required: '이름을 입력해주세요',
-      minLength: '이름은 2~20자 사이로 입력해주세요',
-      maxLength: '이름은 2~20자 사이로 입력해주세요'
-    }
+      required: "이름을 입력해주세요",
+      minLength: "이름은 2~20자 사이로 입력해주세요",
+      maxLength: "이름은 2~20자 사이로 입력해주세요",
+    },
   },
   email: {
     required: true,
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     message: {
-      required: '이메일을 입력해주세요',
-      pattern: '올바른 이메일 형식으로 입력해주세요'
-    }
+      required: "이메일을 입력해주세요",
+      pattern: "올바른 이메일 형식으로 입력해주세요",
+    },
   },
   nickname: {
     required: true,
@@ -280,11 +308,11 @@ const validationRules = {
     maxLength: 15,
     pattern: /^[ㄱ-힣a-zA-Z0-9]+$/,
     message: {
-      required: '닉네임을 입력해주세요',
-      minLength: '닉네임은 2~15자 사이로 입력해주세요',
-      maxLength: '닉네임은 2~15자 사이로 입력해주세요',
-      pattern: '닉네임은 한글, 영문자, 숫자만 사용 가능합니다'
-    }
+      required: "닉네임을 입력해주세요",
+      minLength: "닉네임은 2~15자 사이로 입력해주세요",
+      maxLength: "닉네임은 2~15자 사이로 입력해주세요",
+      pattern: "닉네임은 한글, 영문자, 숫자만 사용 가능합니다",
+    },
   },
   password: {
     required: true,
@@ -292,26 +320,26 @@ const validationRules = {
     maxLength: 20,
     pattern: /^(?=.*[a-zA-Z])(?=.*[0-9]).{6,}$/,
     message: {
-      required: '비밀번호를 입력해주세요',
-      minLength: '비밀번호는 6~20자 사이로 입력해주세요',
-      maxLength: '비밀번호는 6~20자 사이로 입력해주세요',
-      pattern: '비밀번호는 영문자와 숫자를 포함해야 합니다'
-    }
+      required: "비밀번호를 입력해주세요",
+      minLength: "비밀번호는 6~20자 사이로 입력해주세요",
+      maxLength: "비밀번호는 6~20자 사이로 입력해주세요",
+      pattern: "비밀번호는 영문자와 숫자를 포함해야 합니다",
+    },
   },
   passwordConfirm: {
     required: true,
     message: {
-      required: '비밀번호 확인을 입력해주세요',
-      match: '비밀번호가 일치하지 않습니다'
-    }
+      required: "비밀번호 확인을 입력해주세요",
+      match: "비밀번호가 일치하지 않습니다",
+    },
   },
   authKey: {
     required: true,
     length: 6,
     message: {
-      required: '인증번호를 입력해주세요',
-      length: '인증번호는 6자리로 입력해주세요'
-    }
+      required: "인증번호를 입력해주세요",
+      length: "인증번호는 6자리로 입력해주세요",
+    },
   },
   tel: {
     required: true,
@@ -319,59 +347,67 @@ const validationRules = {
     maxLength: 11,
     pattern: /^\d{10,11}$/,
     message: {
-      required: '전화번호를 입력해주세요',
-      minLength: '전화번호는 10~11자리 숫자만 입력 가능합니다',
-      maxLength: '전화번호는 10~11자리 숫자만 입력 가능합니다',
-      pattern: '숫자만 입력해주세요 (예: 01012345678)'
-    }
-  }
+      required: "전화번호를 입력해주세요",
+      minLength: "전화번호는 10~11자리 숫자만 입력 가능합니다",
+      maxLength: "전화번호는 10~11자리 숫자만 입력 가능합니다",
+      pattern: "숫자만 입력해주세요 (예: 01012345678)",
+    },
+  },
 };
 
 const duplicateErrorMessages = {
   id: {
-    TOO_SHORT: '아이디는 4~20자 사이로 입력해주세요.',
-    INVALID_FORMAT: '아이디는 영문자와 숫자만 사용 가능합니다.',
-    DUPLICATE: '이미 사용 중인 아이디입니다.',
-    SERVER_ERROR: '확인 중 오류가 발생했습니다.',
-    UNSUPPORTED_TYPE: '지원하지 않는 타입입니다.'
+    TOO_SHORT: "아이디는 4~20자 사이로 입력해주세요.",
+    INVALID_FORMAT: "아이디는 영문자와 숫자만 사용 가능합니다.",
+    DUPLICATE: "이미 사용 중인 아이디입니다.",
+    SERVER_ERROR: "확인 중 오류가 발생했습니다.",
+    UNSUPPORTED_TYPE: "지원하지 않는 타입입니다.",
   },
   nickname: {
-    TOO_SHORT: '닉네임은 2~15자여야 합니다.',
-    INVALID_FORMAT: '닉네임은 한글, 영문자, 숫자만 사용 가능합니다.',
-    DUPLICATE: '이미 사용 중인 닉네임입니다.',
-    SERVER_ERROR: '확인 중 오류가 발생했습니다.',
-    UNSUPPORTED_TYPE: '지원하지 않는 타입입니다.'
+    TOO_SHORT: "닉네임은 2~15자여야 합니다.",
+    INVALID_FORMAT: "닉네임은 한글, 영문자, 숫자만 사용 가능합니다.",
+    DUPLICATE: "이미 사용 중인 닉네임입니다.",
+    SERVER_ERROR: "확인 중 오류가 발생했습니다.",
+    UNSUPPORTED_TYPE: "지원하지 않는 타입입니다.",
   },
   email: {
-    INVALID_FORMAT: '올바른 이메일 형식으로 입력해주세요.',
-    DUPLICATE: '이미 사용 중인 이메일입니다.',
-    SERVER_ERROR: '확인 중 오류가 발생했습니다.',
-    UNSUPPORTED_TYPE: '지원하지 않는 타입입니다.'
-  }
+    INVALID_FORMAT: "올바른 이메일 형식으로 입력해주세요.",
+    DUPLICATE: "이미 사용 중인 이메일입니다.",
+    SERVER_ERROR: "확인 중 오류가 발생했습니다.",
+    UNSUPPORTED_TYPE: "지원하지 않는 타입입니다.",
+  },
 };
 
 const getDuplicateMessage = (field, code) => {
-  if (!code) return '';
-  return duplicateErrorMessages[field]?.[code] || '확인 중 오류가 발생했습니다.';
+  if (!code) return "";
+  return (
+    duplicateErrorMessages[field]?.[code] || "확인 중 오류가 발생했습니다."
+  );
 };
 
 const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
-
   // 1. 상태 선언
   // [formData] : 회원가입 입력값 전체를 관리
   // [duplicateStatus] : id, nickname, email, authKey의 중복확인/인증 상태(checked, available, message)
   // [validationErrors] : 각 입력값의 validation 에러 메시지
   const [formData, setFormData] = useState({
-    name: '', nickname: '', email: '', tel: '', authKey: '', id: '', password: '', passwordConfirm: '', 
-    address: { zipcode: '', detail: '', extra: '' }, 
-    authMethod: 'email'
+    name: "",
+    nickname: "",
+    email: "",
+    tel: "",
+    authKey: "",
+    id: "",
+    password: "",
+    passwordConfirm: "",
+    address: { zipcode: "", detail: "", extra: "" },
+    authMethod: "email",
   });
 
   const [duplicateStatus, setDuplicateStatus] = useState({
-    id: { checked: false, available: false, message: '' },
-    nickname: { checked: false, available: false, message: '' },
-    email: { checked: false, available: false, message: '' },
-    authKey: { checked: false, available: false, message: '' } // 인증번호 상태 추가
+    id: { checked: false, available: false, message: "" },
+    nickname: { checked: false, available: false, message: "" },
+    email: { checked: false, available: false, message: "" },
+    authKey: { checked: false, available: false, message: "" }, // 인증번호 상태 추가
   });
 
   const [validationErrors, setValidationErrors] = useState({});
@@ -390,7 +426,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     id: useDebounce(formData.id, 500),
     nickname: useDebounce(formData.nickname, 500),
     email: useDebounce(formData.email, 500),
-    authKey: useDebounce(formData.authKey, 500)
+    authKey: useDebounce(formData.authKey, 500),
   };
 
   // 4. 헬퍼: validation
@@ -398,18 +434,22 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   const validateField = (field, value, compareValue) => {
     const rules = validationRules[field];
 
-    if (!rules) return '';
+    if (!rules) return "";
     if (rules.required && !value) return rules.message.required;
 
-    if (rules.minLength && value.length < rules.minLength) return rules.message.minLength;
-    if (rules.maxLength && value.length > rules.maxLength) return rules.message.maxLength;
+    if (rules.minLength && value.length < rules.minLength)
+      return rules.message.minLength;
+    if (rules.maxLength && value.length > rules.maxLength)
+      return rules.message.maxLength;
 
-    if (rules.pattern && !rules.pattern.test(value)) return rules.message.pattern;
-    
-    if (field === 'passwordConfirm' && value !== compareValue) return rules.message.match;
-    if (field === 'authKey' && value.length !== 6) return rules.message.length;
+    if (rules.pattern && !rules.pattern.test(value))
+      return rules.message.pattern;
 
-    return '';
+    if (field === "passwordConfirm" && value !== compareValue)
+      return rules.message.match;
+    if (field === "authKey" && value.length !== 6) return rules.message.length;
+
+    return "";
   };
 
   // 5. 헬퍼: 중복확인
@@ -418,63 +458,70 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     lastRequestedValue.current[field] = value;
 
     try {
-      setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
+      setDuplicateStatus((prev) => ({
+        ...prev,
+        [field]: { checked: false, available: false, message: "" },
+      }));
 
       // 중복 확인하는 필드가 아닌 경우
-      if (!['id', 'nickname', 'email'].includes(field)) return;
+      if (!["id", "nickname", "email"].includes(field)) return;
 
       // 특수 문자가 포함된 경우 인코딩 처리
-      const response = await axiosAPI.get(`/member/exists?type=${field}&value=${encodeURIComponent(value)}`);
+      const response = await axiosAPI.get(
+        `/member/exists?type=${field}&value=${encodeURIComponent(value)}`
+      );
 
       // 마지막 요청값과 현재 값이 다른 경우 중복확인 중단
       if (lastRequestedValue.current[field] !== value) return;
-      
+
       // 중복 확인 결과 업데이트
-      setDuplicateStatus(prev => ({
+      setDuplicateStatus((prev) => ({
         ...prev,
         [field]: {
           checked: true,
           available: response.data.available,
-          message: getDuplicateMessage(field, response.data.code)
-        }
+          message: getDuplicateMessage(field, response.data.code),
+        },
       }));
-
     } catch {
       if (lastRequestedValue.current[field] !== value) return;
-      
-      setDuplicateStatus(prev => ({
+
+      setDuplicateStatus((prev) => ({
         ...prev,
         [field]: {
           checked: true,
           available: false,
-          message: getDuplicateMessage(field, 'SERVER_ERROR')
-        }
+          message: getDuplicateMessage(field, "SERVER_ERROR"),
+        },
       }));
     }
   };
 
   // 6. useEffect: 중복확인 (id, nickname, email)
   useEffect(() => {
-    ['id', 'nickname', 'email'].forEach(field => {
+    ["id", "nickname", "email"].forEach((field) => {
       const value = debounced[field];
       let shouldCheck = false;
 
-      switch(field) {
-        case 'id':
+      switch (field) {
+        case "id":
           shouldCheck = value && value.length >= 4;
           break;
-        case 'nickname':
+        case "nickname":
           shouldCheck = value && value.length >= 2;
           break;
-        case 'email':
-          shouldCheck = value && value.includes('@');
+        case "email":
+          shouldCheck = value && value.includes("@");
           break;
         default:
           shouldCheck = false;
       }
 
       if (shouldCheck) {
-        setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
+        setDuplicateStatus((prev) => ({
+          ...prev,
+          [field]: { checked: false, available: false, message: "" },
+        }));
         checkDuplicate(field, value);
       }
     });
@@ -485,34 +532,52 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   useEffect(() => {
     const checkAuthKey = async () => {
       if ((!debounced.email && !formData.tel) || !debounced.authKey) {
-        setDuplicateStatus(prev => ({ ...prev, authKey: { checked: false, available: false, message: '' } }));
+        setDuplicateStatus((prev) => ({
+          ...prev,
+          authKey: { checked: false, available: false, message: "" },
+        }));
         return;
       }
       try {
-        const res = await axiosAPI.post('/auth/checkAuthKey', {
+        const res = await axiosAPI.post("/auth/checkAuthKey", {
           email: debounced.email,
           tel: formData.tel,
           authKey: debounced.authKey,
-          authMethod: formData.authMethod
+          authMethod: formData.authMethod,
         });
 
         if (res.data.success) {
-          setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: true, message: '인증 성공!' } }));
+          setDuplicateStatus((prev) => ({
+            ...prev,
+            authKey: { checked: true, available: true, message: "인증 성공!" },
+          }));
         } else {
-          setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: false, message: res.data.message || '인증번호가 일치하지 않습니다.' } }));
+          setDuplicateStatus((prev) => ({
+            ...prev,
+            authKey: {
+              checked: true,
+              available: false,
+              message: res.data.message || "인증번호가 일치하지 않습니다.",
+            },
+          }));
         }
-
       } catch (error) {
         // 서버에서 401, 400 등 에러 응답 시 메시지를 그대로 안내
-        const msg = error.response?.data?.message || '서버 오류';
-        setDuplicateStatus(prev => ({ ...prev, authKey: { checked: true, available: false, message: msg } }));
+        const msg = error.response?.data?.message || "서버 오류";
+        setDuplicateStatus((prev) => ({
+          ...prev,
+          authKey: { checked: true, available: false, message: msg },
+        }));
       }
     };
 
     if (debounced.authKey.length === 6) {
       checkAuthKey();
     } else {
-      setDuplicateStatus(prev => ({ ...prev, authKey: { checked: false, available: false, message: '' } }));
+      setDuplicateStatus((prev) => ({
+        ...prev,
+        authKey: { checked: false, available: false, message: "" },
+      }));
     }
   }, [debounced.authKey, debounced.email, formData.tel, formData.authMethod]);
 
@@ -523,45 +588,56 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // - 인증번호 입력 시 인증 상태 초기화
   const handleInputChange = (field, value) => {
     // 중첩된 필드 처리 (예: address.zipcode)
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      setFormData(prev => ({
+    if (field.includes(".")) {
+      const [parent, child] = field.split(".");
+      setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
       // 인증 방식(authMethod) 변경 시 인증번호(authKey)와 인증 상태 모두 초기화
-      if (field === 'authMethod') {
-        setFormData(prev => ({ ...prev, authMethod: value, authKey: '' }));
-        setDuplicateStatus(prev => ({
+      if (field === "authMethod") {
+        setFormData((prev) => ({ ...prev, authMethod: value, authKey: "" }));
+        setDuplicateStatus((prev) => ({
           ...prev,
-          authKey: { checked: false, available: false, message: '' }
+          authKey: { checked: false, available: false, message: "" },
         }));
-      } else if (field === 'tel') {
+      } else if (field === "tel") {
         // 숫자만 허용
-        const onlyNumber = value.replace(/[^\d]/g, '');
-        setFormData(prev => ({ ...prev, tel: onlyNumber }));
+        const onlyNumber = value.replace(/[^\d]/g, "");
+        setFormData((prev) => ({ ...prev, tel: onlyNumber }));
       } else {
-        setFormData(prev => ({ ...prev, [field]: value }));
+        setFormData((prev) => ({ ...prev, [field]: value }));
       }
     }
 
     if (["id", "nickname", "email", "authKey"].includes(field)) {
-      setDuplicateStatus(prev => ({ ...prev, [field]: { checked: false, available: false, message: '' } }));
+      setDuplicateStatus((prev) => ({
+        ...prev,
+        [field]: { checked: false, available: false, message: "" },
+      }));
     }
 
-    setValidationErrors(prev => ({
+    setValidationErrors((prev) => ({
       ...prev,
-      [field]: validateField(field, value, field === 'passwordConfirm' ? formData.password : undefined)
+      [field]: validateField(
+        field,
+        value,
+        field === "passwordConfirm" ? formData.password : undefined
+      ),
     }));
 
-    if (field === 'password') {
-      setValidationErrors(prev => ({
+    if (field === "password") {
+      setValidationErrors((prev) => ({
         ...prev,
-        passwordConfirm: validateField('passwordConfirm', formData.passwordConfirm, value)
+        passwordConfirm: validateField(
+          "passwordConfirm",
+          formData.passwordConfirm,
+          value
+        ),
       }));
     }
   };
@@ -573,18 +649,18 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   const handleSmsVerification = async () => {
     const { email, tel } = formData;
 
-    if (formData.authMethod === 'email') {
-      if (!email || email.trim() === '') {
-        alert('이메일을 입력해주세요.');
+    if (formData.authMethod === "email") {
+      if (!email || email.trim() === "") {
+        alert("이메일을 입력해주세요.");
         return;
       }
 
-      if(!duplicateStatus.email.available) {
+      if (!duplicateStatus.email.available) {
         alert(duplicateStatus.email.message);
         return;
       }
 
-      if(validationErrors.email) {
+      if (validationErrors.email) {
         alert(validationErrors.email);
         return;
       }
@@ -592,44 +668,54 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       // 이메일 인증
       try {
         setIsEmailLoading(true);
-        const response = await axiosAPI.post(`/auth/email`, { email: email.trim() });
-        if(response.data.success) {
-          alert('이메일로 인증번호가 전송되었습니다.');
-          setFormData(prev => ({ ...prev, authMethod: 'email', authKey: '' }));
+        const response = await axiosAPI.post(`/auth/email`, {
+          email: email.trim(),
+        });
+        if (response.data.success) {
+          alert("이메일로 인증번호가 전송되었습니다.");
+          setFormData((prev) => ({
+            ...prev,
+            authMethod: "email",
+            authKey: "",
+          }));
           if (authKeyInputRef.current) {
             authKeyInputRef.current.focus();
           }
         } else {
-          alert('이메일로 인증번호 전송에 실패했습니다.');
+          alert("이메일로 인증번호 전송에 실패했습니다.");
         }
       } catch (error) {
-        alert('이메일로 인증번호 전송에 실패했습니다.');
+        alert("이메일로 인증번호 전송에 실패했습니다.");
       } finally {
         setIsEmailLoading(false);
       }
-
     } else {
-      if (!tel || tel.trim() === '') {
-        alert('전화번호를 입력해주세요.');
+      if (!tel || tel.trim() === "") {
+        alert("전화번호를 입력해주세요.");
         return;
       }
-      
+
       // SMS 인증
       try {
         setIsTelLoading(true);
         // 실제 인증번호 발송 API 호출
-        const response = await axiosAPI.post('/auth/sms', { tel: tel.trim() });
+        const response = await axiosAPI.post("/auth/sms", { tel: tel.trim() });
         if (response.data.success) {
-          alert('전화번호로 인증번호가 전송되었습니다.');
-          setFormData(prev => ({ ...prev, authMethod: 'tel', authKey: '' }));
+          alert("전화번호로 인증번호가 전송되었습니다.");
+          setFormData((prev) => ({ ...prev, authMethod: "tel", authKey: "" }));
           if (authKeyInputRef.current) {
             authKeyInputRef.current.focus();
           }
         } else {
-          alert(response.data.message || '전화번호로 인증번호 전송에 실패했습니다.');
+          alert(
+            response.data.message || "전화번호로 인증번호 전송에 실패했습니다."
+          );
         }
       } catch (error) {
-        alert(error.response?.data?.message || '전화번호로 인증번호 전송에 실패했습니다.');
+        alert(
+          error.response?.data?.message ||
+            "전화번호로 인증번호 전송에 실패했습니다."
+        );
       } finally {
         setIsTelLoading(false);
       }
@@ -640,33 +726,35 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
     // 다음 주소 API 다루기
     function execDaumPostcode() {
       new daum.Postcode({
-        oncomplete: function(data) {
+        oncomplete: function (data) {
           // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
 
           // 각 주소의 노출 규칙에 따라 주소를 조합한다.
           // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
-          var addr = ''; // 주소 변수
+          var addr = ""; // 주소 변수
 
           //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
-          if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+          if (data.userSelectedType === "R") {
+            // 사용자가 도로명 주소를 선택했을 경우
             addr = data.roadAddress;
-          } else { // 사용자가 지번 주소를 선택했을 경우(J)
+          } else {
+            // 사용자가 지번 주소를 선택했을 경우(J)
             addr = data.jibunAddress;
           }
 
           // 우편번호와 주소 정보를 해당 필드에 넣는다.
           // 상세 주소 정보도 함께 설정
-          setFormData(prev => ({ 
-            ...prev, 
-            address: { 
-              zipcode: data.zonecode, 
-              detail: addr, 
-              extra: data.buildingName || '' // 건물명이 있으면 상세 주소에 자동 입력
-            } 
+          setFormData((prev) => ({
+            ...prev,
+            address: {
+              zipcode: data.zonecode,
+              detail: addr,
+              extra: data.buildingName || "", // 건물명이 있으면 상세 주소에 자동 입력
+            },
           }));
-        }
+        },
       }).open();
-    };
+    }
 
     execDaumPostcode();
   };
@@ -674,11 +762,24 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   // 모든 중복/유효성 검사 통과 여부 확인 함수
   const isAllValid = () => {
     // 필수 유효성 검사
-    const requiredFields = ['name', 'nickname', 'email', 'id', 'password', 'passwordConfirm', 'authKey'];
+    const requiredFields = [
+      "name",
+      "nickname",
+      "email",
+      "id",
+      "password",
+      "passwordConfirm",
+      "authKey",
+    ];
     for (const field of requiredFields) {
       const value = formData[field];
       // 공백만 있는 경우도 체크
-      if (validationErrors[field] || !value || (typeof value === 'string' && value.trim() === '')) return false;
+      if (
+        validationErrors[field] ||
+        !value ||
+        (typeof value === "string" && value.trim() === "")
+      )
+        return false;
     }
     // 중복/인증 체크
     if (!duplicateStatus.id.available) return false;
@@ -692,63 +793,70 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAllValid()) {
-      alert('모든 입력값을 올바르게 입력해주세요.');
+      alert("모든 입력값을 올바르게 입력해주세요.");
       return;
     }
     try {
       // 회원가입 API 호출
       const { name, nickname, email, tel, id, password, address } = formData;
-      
+
       // 주소 형식 조합 (MyPageEditInfo.jsx와 동일한 형식)
-      let formattedAddress = '';
+      let formattedAddress = "";
       if (address.zipcode && address.detail) {
         formattedAddress = `${address.zipcode} ${address.detail}`;
         if (address.extra) {
           formattedAddress += ` (${address.extra})`;
         }
       }
-      
-      const response = await axiosAPI.post('/member/signup', {
+
+      const response = await axiosAPI.post("/member/signup", {
         name: name.trim(),
         nickname: nickname.trim(),
         email: email.trim(),
         tel: tel.trim(),
         id: id.trim(),
         password: password.trim(),
-        address: formattedAddress
+        address: formattedAddress,
       });
 
-      if(response.data === 1) {
-        alert('회원가입이 완료되었습니다!');
+      if (response.data === 1) {
+        alert("회원가입이 완료되었습니다!");
         setCurrentStep(3); // 직접 3으로 이동
         return; // 여기서 함수 종료!
       } else {
-        alert('회원가입 중 오류가 발생했습니다.');
+        alert("회원가입 중 오류가 발생했습니다.");
       }
-
     } catch (err) {
-      alert('회원가입 중 오류가 발생했습니다.');
+      alert("회원가입 중 오류가 발생했습니다.");
     }
   };
 
   // 10. 렌더링
-  const getInputClass = field => {
-    const base = 'form-input';
+  const getInputClass = (field) => {
+    const base = "form-input";
     const status = duplicateStatus[field];
     if (validationErrors[field]) return `${base} unavailable`;
-    if (!['id', 'nickname', 'email', 'authKey'].includes(field)) return base;
-    if (status && status.checked && status.available) return `${base} available`;
-    if (status && status.checked && !status.available) return `${base} unavailable`;
+    if (!["id", "nickname", "email", "authKey"].includes(field)) return base;
+    if (status && status.checked && status.available)
+      return `${base} available`;
+    if (status && status.checked && !status.available)
+      return `${base} unavailable`;
     return base;
   };
 
-  const getStatusMessage = field => {
+  const getStatusMessage = (field) => {
     const status = duplicateStatus[field];
     if (!status || !status.checked || !status.message) return null;
-    return <span className={`status-message ${status.available ? 'success' : 'error'}`}>{status.message}</span>;
+    return (
+      <span
+        className={`status-message ${status.available ? "success" : "error"}`}
+      >
+        {status.message}
+      </span>
+    );
   };
 
-  const getValidationError = field => {
+  const getValidationError = (field) => {
     const error = validationErrors[field];
     return error ? <span className="validation-error">{error}</span> : null;
   };
@@ -756,46 +864,89 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
   return (
     <>
       <h2 className="signup-title">정보입력</h2>
-      <p className="signup-subtitle">회원 가입을 위해 *표시는 필수로 입력해주세요</p>
-      <hr/>
+      <p className="signup-subtitle">
+        회원 가입을 위해 *표시는 필수로 입력해주세요
+      </p>
+      <hr />
       <form className="signup-form" onSubmit={handleSubmit}>
         <div className="user-form-row">
           <div className="user-form-group">
-            <label className="form-label">이름 <span className="required">*</span></label>
-            <input type="text" className={getInputClass('name')} placeholder="이름을 입력해주세요" value={formData.name} onChange={e => handleInputChange('name', e.target.value.trim())} />
-            {getValidationError('name')}
+            <label className="form-label">
+              이름 <span className="required">*</span>
+            </label>
+            <input
+              type="text"
+              className={getInputClass("name")}
+              placeholder="이름을 입력해주세요"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value.trim())}
+            />
+            {getValidationError("name")}
           </div>
           <div className="user-form-group">
-            <label className="form-label">닉네임 <span className="required">*</span></label>
+            <label className="form-label">
+              닉네임 <span className="required">*</span>
+            </label>
             <div className="form-input-group">
-              <input type="text" className={getInputClass('nickname')} placeholder="닉네임을 입력해주세요" value={formData.nickname} onChange={e => handleInputChange('nickname', e.target.value.trim())} />
+              <input
+                type="text"
+                className={getInputClass("nickname")}
+                placeholder="닉네임을 입력해주세요"
+                value={formData.nickname}
+                onChange={(e) =>
+                  handleInputChange("nickname", e.target.value.trim())
+                }
+              />
             </div>
-            {getStatusMessage('nickname')}
-            {getValidationError('nickname')}
+            {getStatusMessage("nickname")}
+            {getValidationError("nickname")}
           </div>
         </div>
         <div className="user-form-row">
           <div className="user-form-group">
-            <label className="form-label">이메일 <span className="required">*</span></label>
-            <input type="email" className={getInputClass('email')} placeholder="이메일을 입력해주세요" value={formData.email} onChange={e => handleInputChange('email', e.target.value.trim())} />
-            {getStatusMessage('email')}
-            {getValidationError('email')}
+            <label className="form-label">
+              이메일 <span className="required">*</span>
+            </label>
+            <input
+              type="email"
+              className={getInputClass("email")}
+              placeholder="이메일을 입력해주세요"
+              value={formData.email}
+              onChange={(e) =>
+                handleInputChange("email", e.target.value.trim())
+              }
+            />
+            {getStatusMessage("email")}
+            {getValidationError("email")}
           </div>
           <div className="user-form-group">
-            <label className="form-label">전화번호 <span className="required">*</span></label>
-            <input type="tel" className="form-input" placeholder="숫자만 입력(예: 01012345678)" value={formData.tel} onChange={e => handleInputChange('tel', e.target.value)} maxLength={11} />
+            <label className="form-label">
+              전화번호 <span className="required">*</span>
+            </label>
+            <input
+              type="tel"
+              className="form-input"
+              placeholder="숫자만 입력(예: 01012345678)"
+              value={formData.tel}
+              onChange={(e) => handleInputChange("tel", e.target.value)}
+              maxLength={11}
+            />
           </div>
         </div>
         <div className="user-form-group">
-          <label className="form-label">인증 방식 선택 <span className="required">*</span></label>
+          <label className="form-label">
+            인증 방식 선택 <span className="required">*</span>
+          </label>
           <div className="auth-method-selector">
             <label className="auth-method-option">
               <input
                 type="radio"
                 name="authMethod"
                 value="email"
-                checked={formData.authMethod === 'email'}
-                onChange={(e) => handleInputChange('authMethod', e.target.value)}
+                checked={formData.authMethod === "email"}
+                onChange={(e) =>
+                  handleInputChange("authMethod", e.target.value)
+                }
               />
               <span className="auth-method-label">이메일 인증</span>
             </label>
@@ -804,58 +955,134 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
                 type="radio"
                 name="authMethod"
                 value="tel"
-                checked={formData.authMethod === 'tel'}
-                onChange={(e) => handleInputChange('authMethod', e.target.value)}
+                checked={formData.authMethod === "tel"}
+                onChange={(e) =>
+                  handleInputChange("authMethod", e.target.value)
+                }
               />
               <span className="auth-method-label">전화번호 인증</span>
             </label>
           </div>
         </div>
         <div className="user-form-group">
-          <label className="form-label">인증번호 <span className="required">*</span></label>
+          <label className="form-label">
+            인증번호 <span className="required">*</span>
+          </label>
           <div className="form-input-group">
             <input
               type="text"
-              className={getInputClass('authKey')}
+              className={getInputClass("authKey")}
               placeholder="인증번호를 입력해주세요"
               value={formData.authKey}
-              onChange={e => handleInputChange('authKey', e.target.value.trim())}
+              onChange={(e) =>
+                handleInputChange("authKey", e.target.value.trim())
+              }
               ref={authKeyInputRef}
               maxLength={6}
             />
-            <button type="button" className="action-btn" onClick={handleSmsVerification} disabled={isEmailLoading || isTelLoading}>
-              {isEmailLoading || isTelLoading ? '인증중...' : (formData.authMethod === 'email' ? '이메일 인증' : '전화번호 인증')}
+            <button
+              type="button"
+              className="action-btn"
+              onClick={handleSmsVerification}
+              disabled={isEmailLoading || isTelLoading}
+            >
+              {isEmailLoading || isTelLoading
+                ? "인증중..."
+                : formData.authMethod === "email"
+                ? "이메일 인증"
+                : "전화번호 인증"}
             </button>
           </div>
-          {getStatusMessage('authKey')}
+          {getStatusMessage("authKey")}
         </div>
         <div className="user-form-group">
-          <label className="form-label">아이디 <span className="required">*</span></label>
+          <label className="form-label">
+            아이디 <span className="required">*</span>
+          </label>
           <div className="form-input-group">
-            <input type="text" className={getInputClass('id')} placeholder="아이디를 입력해주세요 (4~20자, 영문자/숫자)" value={formData.id} onChange={e => handleInputChange('id', e.target.value.trim())} />
+            <input
+              type="text"
+              className={getInputClass("id")}
+              placeholder="아이디를 입력해주세요 (4~20자, 영문자/숫자)"
+              value={formData.id}
+              onChange={(e) => handleInputChange("id", e.target.value.trim())}
+            />
           </div>
-          {getStatusMessage('id')}
-          {getValidationError('id')}
+          {getStatusMessage("id")}
+          {getValidationError("id")}
         </div>
         <div className="user-form-group">
-          <label className="form-label">비밀번호 <span className="required">*</span></label>
-          <input type="password" className={getInputClass('password')} placeholder="비밀번호를 입력해주세요 (6~20자, 영문자+숫자)" value={formData.password} onChange={e => handleInputChange('password', e.target.value.trim())} />
-          {getValidationError('password')}
+          <label className="form-label">
+            비밀번호 <span className="required">*</span>
+          </label>
+          <input
+            type="password"
+            className={getInputClass("password")}
+            placeholder="비밀번호를 입력해주세요 (6~20자, 영문자+숫자)"
+            value={formData.password}
+            onChange={(e) =>
+              handleInputChange("password", e.target.value.trim())
+            }
+          />
+          {getValidationError("password")}
         </div>
         <div className="user-form-group">
-          <label className="form-label">비밀번호 확인 <span className="required">*</span></label>
-          <input type="password" className={getInputClass('passwordConfirm')} placeholder="비밀번호를 다시 입력해주세요" value={formData.passwordConfirm} onChange={e => handleInputChange('passwordConfirm', e.target.value.trim())} />
-          {getValidationError('passwordConfirm')}
+          <label className="form-label">
+            비밀번호 확인 <span className="required">*</span>
+          </label>
+          <input
+            type="password"
+            className={getInputClass("passwordConfirm")}
+            placeholder="비밀번호를 다시 입력해주세요"
+            value={formData.passwordConfirm}
+            onChange={(e) =>
+              handleInputChange("passwordConfirm", e.target.value.trim())
+            }
+          />
+          {getValidationError("passwordConfirm")}
         </div>
         <div className="user-form-group">
           <label className="form-label">주소</label>
           <div className="address-group">
             <div className="form-input-group">
-              <input type="text" disabled className="form-input" placeholder="우편번호" value={formData.address.zipcode} onChange={e => handleInputChange('address.zipcode', e.target.value)} readOnly />
-              <button type="button" className="action-btn" onClick={handleAddressSearch}>우편번호 찾기</button>
+              <input
+                type="text"
+                disabled
+                className="form-input"
+                placeholder="우편번호"
+                value={formData.address.zipcode}
+                onChange={(e) =>
+                  handleInputChange("address.zipcode", e.target.value)
+                }
+                readOnly
+              />
+              <button
+                type="button"
+                className="action-btn"
+                onClick={handleAddressSearch}
+              >
+                우편번호 찾기
+              </button>
             </div>
-            <input type="text" disabled className="form-input full-width" placeholder="기본 주소" value={formData.address.detail} onChange={e => handleInputChange('address.detail', e.target.value)} />
-            <input type="text" className="form-input full-width" placeholder="상세 주소 (예: 101동 101호)" value={formData.address.extra} onChange={e => handleInputChange('address.extra', e.target.value.trim())} />
+            <input
+              type="text"
+              disabled
+              className="form-input full-width"
+              placeholder="기본 주소"
+              value={formData.address.detail}
+              onChange={(e) =>
+                handleInputChange("address.detail", e.target.value)
+              }
+            />
+            <input
+              type="text"
+              className="form-input full-width"
+              placeholder="상세 주소 (예: 101동 101호)"
+              value={formData.address.extra}
+              onChange={(e) =>
+                handleInputChange("address.extra", e.target.value.trim())
+              }
+            />
           </div>
         </div>
         {currentStep === 2 && (
@@ -865,11 +1092,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
                 이전
               </button>
             )}
-            <button
-              className="next-btn"
-              disabled={!isAllValid()}
-              type="submit"
-            >
+            <button className="next-btn" disabled={!isAllValid()} type="submit">
               회원가입
             </button>
           </div>
@@ -880,64 +1103,74 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
 };
 
 const Completion = () => {
-  
-  const path = '/src/assets/signup/';
   const cards = [
     {
-      img: 'ai.png',
-      title: 'AI 맞춤 여행정보 추천',
-      content: '당신의 취향과 일정에 맞는 축제 여행 코스를 AI가 똑똑하게 추천해드립니다. 개인별 선호도를 분석하여 최적의 루트를 제안합니다.'
+      img: aiIcon,
+      title: "AI 맞춤 여행정보 추천",
+      content:
+        "당신의 취향과 일정에 맞는 축제 여행 코스를 AI가 똑똑하게 추천해드립니다. 개인별 선호도를 분석하여 최적의 루트를 제안합니다.",
     },
     {
-      img: 'local.png',
-      title: '지역별 상세 축제 정보',
-      content: '전국 각 지역의 크고 작은 축제들을 한눈에! 지역 특색이 담긴 다양한 축제 정보를 상세히 제공합니다.'
+      img: localIcon,
+      title: "지역별 상세 축제 정보",
+      content:
+        "전국 각 지역의 크고 작은 축제들을 한눈에! 지역 특색이 담긴 다양한 축제 정보를 상세히 제공합니다.",
     },
     {
-      img: 'calendar.png',
-      title: '월별 축제 캘린더 & 검색',
-      content: '월별로 열리는 축제들을 캘린더로 확인하고, 원하는 타입이나 지역으로 쉽게 검색할 수 있습니다. 놓치고 싶지 않은 축제 일정을 확인 가능해요!'
-    }
-  ]
-  
+      img: calendarIcon,
+      title: "월별 축제 캘린더 & 검색",
+      content:
+        "월별로 열리는 축제들을 캘린더로 확인하고, 원하는 타입이나 지역으로 쉽게 검색할 수 있습니다. 놓치고 싶지 않은 축제 일정을 확인 가능해요!",
+    },
+  ];
+
   return (
-      <>
-        <div className="completion-container">
-          
-          {/* Center Content */}
-          <div className="completion-content">
-            {/* Character Images */}
-            <div className="character">
-              <img src="/src/assets/signup/korean.png" alt="사물놀이 캐릭터" className="character-img" />
-            </div>
-            
-            <h2 className="completion-title">가입을 진심으로 환영합니다!</h2>
-            
-            {/* Feature Cards */}
-            <div className="feature-cards">
-              
-              {cards.map((card, index) => (
-                <div className="feature-card" key={index}>
-                  <div className="feature-icon-wrapper">
-                    <img src={path + card.img} alt={card.img} className="feature-icon-img" />
-                  </div>
-                
-                  <div className="feature-content">
-                    <h3>{card.title}</h3>
-                    <p>{card.content}</p>
-                  </div>
+    <>
+      <div className="completion-container">
+        {/* Center Content */}
+        <div className="completion-content">
+          {/* Character Images */}
+          <div className="character">
+            <img
+              src={koreanCharacter}
+              alt="사물놀이 캐릭터"
+              className="character-img"
+            />
+          </div>
+
+          <h2 className="completion-title">가입을 진심으로 환영합니다!</h2>
+
+          {/* Feature Cards */}
+          <div className="feature-cards">
+            {cards.map((card, index) => (
+              <div className="feature-card" key={index}>
+                <div className="feature-icon-wrapper">
+                  <img
+                    src={card.img}
+                    alt={card.title}
+                    className="feature-icon-img"
+                  />
                 </div>
-              ))}
-              
-            </div>
+
+                <div className="feature-content">
+                  <h3>{card.title}</h3>
+                  <p>{card.content}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-        
-        {/* Login Button */}
-        <Link to="/signin" className="login-btn" style={{ display: 'block', width: '100%' }}>
-          로그인 하러 가기
-        </Link>
-      </>
+      </div>
+
+      {/* Login Button */}
+      <Link
+        to="/signin"
+        className="login-btn"
+        style={{ display: "block", width: "100%" }}
+      >
+        로그인 하러 가기
+      </Link>
+    </>
   );
 };
 
