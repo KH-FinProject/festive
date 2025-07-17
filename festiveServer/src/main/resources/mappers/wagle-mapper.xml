@@ -135,6 +135,13 @@
         WHERE BOARD_NO = #{boardNo}
     </update>
 
+    <!-- 게시글 복구 (논리삭제 복구) -->
+    <update id="updateBoardDelFlN">
+        UPDATE BOARD 
+        SET BOARD_DEL_FL = 'N' 
+        WHERE BOARD_NO = #{boardNo}
+    </update>
+
     <!-- 게시글 좋아요 추가 (LIKE 테이블 사용) -->
     <insert id="insertBoardLike">
         INSERT INTO "LIKE" (BOARD_NO, MEMBER_NO)
@@ -202,6 +209,13 @@
     <update id="deleteCommentLogical">
         UPDATE "COMMENT" 
         SET COMMENT_DEL_FL = 'Y' 
+        WHERE COMMENT_NO = #{commentNo}
+    </update>
+
+    <!-- 댓글 복구 (논리삭제 복구) -->
+    <update id="updateCommentDelFlN">
+        UPDATE "COMMENT" 
+        SET COMMENT_DEL_FL = 'N' 
         WHERE COMMENT_NO = #{commentNo}
     </update>
 

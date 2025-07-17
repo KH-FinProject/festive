@@ -37,4 +37,4 @@ public class BoardType {
     
     @Column(name = "BOARD_TYPE_DESC", length = 200)
     private String boardTypeDesc;
-} 
+}
