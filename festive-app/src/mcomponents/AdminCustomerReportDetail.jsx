@@ -167,7 +167,8 @@ const AdminCustomerReportDetail = () => {
               <div className="info-item">
                 <span className="info-label">신고대상 회원:</span>
                 <span className="info-value">
-                  {detail.memberNickname} (No.{detail.memberNo})
+                  {detail.memberNickname ? detail.memberNickname : "알 수 없음"}{" "}
+                  (No.{detail.memberNo})
                 </span>
               </div>
             </div>
