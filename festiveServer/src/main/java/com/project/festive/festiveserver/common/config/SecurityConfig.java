@@ -118,6 +118,9 @@ public class SecurityConfig {
 
             // 프로필 이미지
             .requestMatchers("/profile-images/**").permitAll()
+            
+            // 게시글 이미지
+            .requestMatchers("/board-images/**").permitAll()
 
             // 정적 리소스/시스템 경로 - Spring Security 권장 방식
             .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
