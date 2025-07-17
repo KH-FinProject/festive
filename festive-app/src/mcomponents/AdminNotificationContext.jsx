@@ -1,26 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
 import { Client } from "@stomp/stompjs";
+import React, { useEffect, useState, useContext } from "react";
 import SockJS from "sockjs-client";
-
-const AdminNotificationContext = createContext();
-
-export const useAdminNotifications = () => {
-  const context = useContext(AdminNotificationContext);
-  if (!context) {
-    throw new Error(
-      "useAdminNotifications must be used within AdminNotificationProvider"
-    );
-  }
-  return context;
-};
+import useAuthStore from "../store/useAuthStore";
 
 export const AdminNotificationProvider = ({ children }) => {
   const [hasNewReport, setHasNewReport] = useState(false);
   const [hasNewBooth, setHasNewBooth] = useState(false);
   const [hasNewInquiry, setHasNewInquiry] = useState(false);
-  const [stompClient, setStompClient] = useState(null);
+  const { member } = useAuthStore();
 
   useEffect(() => {
+    // 관리자만 WebSocket 구독
+    if (!member || member.role !== "ADMIN") return;
     // WebSocket 연결 설정
     const connectWebSocket = () => {
       const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -89,7 +80,6 @@ export const AdminNotificationProvider = ({ children }) => {
       };
 
       client.activate();
-      setStompClient(client);
     };
 
     // 브라우저 알림 권한 요청
@@ -100,28 +90,32 @@ export const AdminNotificationProvider = ({ children }) => {
     }
 
     connectWebSocket();
-
-    // 컴포넌트 언마운트 시 연결 해제
-    return () => {
-      if (stompClient) {
-        stompClient.deactivate();
-        console.log("🔌 WebSocket 연결 정리됨");
-      }
-    };
-  }, []);
-
-  const value = {
-    hasNewReport,
-    setHasNewReport,
-    hasNewBooth,
-    setHasNewBooth,
-    hasNewInquiry,
-    setHasNewInquiry,
-  };
+  }, [member]);
 
   return (
-    <AdminNotificationContext.Provider value={value}>
+    <AdminNotificationContext.Provider
+      value={{
+        hasNewReport,
+        setHasNewReport,
+        hasNewBooth,
+        setHasNewBooth,
+        hasNewInquiry,
+        setHasNewInquiry,
+      }}
+    >
       {children}
     </AdminNotificationContext.Provider>
   );
+};
+
+export const AdminNotificationContext = React.createContext(null);
+
+export const useAdminNotifications = () => {
+  const context = useContext(AdminNotificationContext);
+  if (!context) {
+    throw new Error(
+      "useAdminNotifications must be used within AdminNotificationProvider"
+    );
+  }
+  return context;
 };
