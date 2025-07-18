@@ -162,7 +162,7 @@ const AdminMain = () => {
       data: statistics.dailyStatistics.map((stat) => stat.returnMembers),
     },
     {
-      name: "활동회원수",
+      name: "일별활동수",
       data: statistics.dailyStatistics.map((stat) => stat.activeMembers),
     },
   ];
@@ -221,7 +221,7 @@ const AdminMain = () => {
                 <div className="item">
                   <span>이용자 수 추이</span>
                   <div className="item-value">
-                    전체 {statistics.returnMembers}명 / 활동{" "}
+                    전체 {statistics.returnMembers}명 / 주간 활동{" "}
                     {statistics.activeMembers}명
                   </div>
                 </div>
@@ -250,7 +250,7 @@ const AdminMain = () => {
 
                   {/* 이용자 수 추이 차트 */}
                   <div className="chart-item">
-                    <h4>이용자 수 추이 (전체회원수 vs 활동회원수)</h4>
+                    <h4>이용자 수 추이 (전체회원수 vs 일별활동수)</h4>
                     <Chart
                       options={userActivityOptions}
                       series={userActivitySeries}
