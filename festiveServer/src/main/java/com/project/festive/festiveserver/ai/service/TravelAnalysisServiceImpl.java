@@ -86,10 +86,21 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "15"; // 축제공연행사
         }
         
-        // 음식 관련 키워드
+        // 🍽️ 음식 관련 키워드 (단순 맛집 추천과 여행 맛집 구분)
         if (lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
             lowerMessage.contains("식당") || lowerMessage.contains("먹거리")) {
-            return "39"; // 음식점
+            
+            // 여행 키워드가 없으면 단순 맛집 검색
+            boolean hasTravelContext = lowerMessage.contains("여행") || lowerMessage.contains("코스") ||
+                                     lowerMessage.contains("일정") || lowerMessage.contains("루트") ||
+                                     lowerMessage.contains("박") || lowerMessage.contains("당일");
+            
+            if (!hasTravelContext) {
+                log.info("🍽️ 단순 맛집 검색 감지: 여행 컨텍스트 없음");
+                return "SIMPLE_FOOD"; // 단순 맛집 검색 표시
+            }
+            
+            return "39"; // 음식점 (여행 맛집)
         }
         
         // 쇼핑 관련 키워드
@@ -205,6 +216,21 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         String lowerMessage = message.toLowerCase();
         
+        // 🍽️ 단순 맛집 추천인 경우 기간 설정하지 않음
+        boolean hasSimpleFoodRequest = (lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
+                                       lowerMessage.contains("식당") || lowerMessage.contains("먹거리")) &&
+                                      (lowerMessage.contains("추천") || lowerMessage.contains("알려") || 
+                                       lowerMessage.contains("찾아"));
+        
+        boolean hasTravelContext = lowerMessage.contains("여행") || lowerMessage.contains("코스") ||
+                                 lowerMessage.contains("일정") || lowerMessage.contains("루트") ||
+                                 lowerMessage.contains("박") || lowerMessage.contains("당일");
+        
+        if (hasSimpleFoodRequest && !hasTravelContext) {
+            log.info("🍽️ 단순 맛집 추천 - 기간 설정하지 않음");
+            return null; // 기간 없음
+        }
+        
         // 패턴 매칭으로 기간 추출
         Pattern[] patterns = {
             Pattern.compile("(\\d+)박\\s*(\\d+)일"), // "2박3일"
@@ -297,10 +323,11 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
 
         
-        // 🚫 일반적인 조사/어미 제외 리스트 (대폭 강화)
+        // 🚫 일반적인 조사/어미 제외 리스트 (역사명 고려하여 조정)
         String[] excludedWords = {
             "로", "에", "으로", "에서", "까지", "부터", "와", "과", "을", "를", "이", "가", "의", "도", "만", "라서", "라고",
-            "고", "구", "동", "면", "리", "번지", "호", "층", "가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"
+            "고", "면", "리", "번지", "호", "층", "가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"
+            // "동", "구" 제거: 명동역, 강남구 등 유효한 지역명에 포함될 수 있음
         };
         
         // 시군구 코드 먼저 확인 (더 구체적이므로) - 길이 순으로 정렬하여 긴 이름부터 매칭
@@ -420,7 +447,22 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         log.info("🔍 요청 타입 분석 시작: '{}'", message);
         
-        // 0. 먼저 여행/축제 관련성 체크
+        // 0️⃣ 단순 맛집/음식점 추천 체크 (여행과 구분)
+        boolean hasSimpleFoodRequest = (lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
+                                       lowerMessage.contains("식당") || lowerMessage.contains("먹거리")) &&
+                                      (lowerMessage.contains("추천") || lowerMessage.contains("알려") || 
+                                       lowerMessage.contains("찾아"));
+        
+        boolean hasTravelContext = lowerMessage.contains("여행") || lowerMessage.contains("코스") ||
+                                 lowerMessage.contains("일정") || lowerMessage.contains("루트") ||
+                                 lowerMessage.contains("박") || lowerMessage.contains("당일");
+        
+        if (hasSimpleFoodRequest && !hasTravelContext) {
+            log.info("🍽️ 단순 맛집 추천 감지 → food_only");
+            return "food_only";
+        }
+        
+        // 1. 여행/축제 관련성 체크
         if (!isTravelOrFestivalRelated(message)) {
             log.info("❌ 여행/축제 관련 없음 → unclear_request");
             return "unclear_request";
@@ -825,6 +867,22 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         }
         
         String aiRegionName = aiRegion.getRegionName().trim();
+        String lowerMessage = userMessage.toLowerCase();
+        
+        // 🚇 역사명 기반 강제 매핑 (AI가 놓친 경우 보정)
+        if (lowerMessage.contains("명동역") || lowerMessage.contains("명동")) {
+            // 명동역 → 서울 중구 강제 매핑
+            log.info("🚇 역사명 강제 매핑: 명동역 → 서울 중구");
+            return new RegionInfo("1", "1_24", "명동역");
+        }
+        if (lowerMessage.contains("홍대입구역") || lowerMessage.contains("홍대")) {
+            log.info("🚇 역사명 강제 매핑: 홍대 → 서울 마포구");
+            return new RegionInfo("1", "1_13", "홍대");
+        }
+        if (lowerMessage.contains("강남역") || lowerMessage.contains("강남")) {
+            log.info("🚇 역사명 강제 매핑: 강남역 → 서울 강남구");
+            return new RegionInfo("1", "1_11", "강남역");
+        }
         
         // 1️⃣ AI가 제공한 areaCode와 sigunguCode가 유효한지 먼저 확인
         if (aiRegion.getAreaCode() != null && aiRegion.getSigunguCode() != null) {
@@ -886,13 +944,17 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         String lowerMessage = userMessage.toLowerCase();
         
-        // 서울 관련 키워드가 있으면 서울 지역 우선
+        // 🚇 서울 관련 키워드가 있으면 서울 지역 우선 (강화된 역사명 감지)
         if (lowerMessage.contains("서울") || lowerMessage.contains("seoul") || 
-            lowerMessage.contains("지하철") || lowerMessage.contains("역")) {
+            lowerMessage.contains("지하철") || lowerMessage.contains("역") ||
+            lowerMessage.contains("명동") || lowerMessage.contains("홍대") || lowerMessage.contains("강남") ||
+            lowerMessage.contains("신촌") || lowerMessage.contains("이태원") || lowerMessage.contains("잠실") ||
+            lowerMessage.contains("여의도") || lowerMessage.contains("청량리") || lowerMessage.contains("건대") ||
+            lowerMessage.contains("노량진") || lowerMessage.contains("압구정") || lowerMessage.contains("선릉")) {
             
             for (Map.Entry<String, String> match : matches) {
                 if (match.getValue().startsWith("1_")) { // 서울 지역코드
-                    log.info("🎯 문맥 매칭: 서울 관련 키워드 감지 → {}", match.getKey());
+                    log.info("🎯 문맥 매칭: 서울 관련 키워드/역사명 감지 → {}", match.getKey());
                     return match;
                 }
             }

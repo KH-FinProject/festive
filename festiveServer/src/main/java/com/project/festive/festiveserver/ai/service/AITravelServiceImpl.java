@@ -82,6 +82,11 @@ public class AITravelServiceImpl implements AITravelService {
                     return createUnclearRequestResponse();
                 }
                 
+                // 🍽️ 단순 맛집 추천 체크
+                if ("food_only".equals(analysis.getRequestType())) {
+                    return createSimpleFoodResponse(request.getMessage(), analysis);
+                }
+                
             } catch (IllegalArgumentException e) {
                 if ("INVALID_REQUEST".equals(e.getMessage())) {
                     // 여행/축제 관련 질문이 아닌 경우 정중하게 거부
@@ -106,6 +111,72 @@ public class AITravelServiceImpl implements AITravelService {
         } catch (Exception e) {
             log.error("여행/축제 전용 AI 추천 생성 중 오류 발생", e);
             throw new RuntimeException("여행/축제 정보 서비스 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", e);
+        }
+    }
+    
+    /**
+     * 🍽️ 단순 맛집 추천 응답 생성
+     */
+    private ChatResponse createSimpleFoodResponse(String userMessage, TravelAnalysis analysis) {
+        try {
+            log.info("🍽️ 단순 맛집 추천 응답 생성 - 지역: {}", analysis.getRegion());
+            
+            // TourAPI에서 음식점 데이터만 수집
+            String areaCode = analysis.getAreaCode();
+            String sigunguCode = analysis.getSigunguCode();
+            
+            List<TourAPIResponse.Item> foodItems = fetchTourismDataSecurely(areaCode, sigunguCode, "39"); // 음식점
+            
+            if (foodItems.isEmpty()) {
+                return createNoDataResponse(analysis);
+            }
+            
+            // 음식점 데이터를 갤러리 형태로 표시
+            List<ChatResponse.FestivalInfo> restaurants = new ArrayList<>();
+            
+            for (int i = 0; i < Math.min(10, foodItems.size()); i++) { // 최대 10개
+                TourAPIResponse.Item item = foodItems.get(i);
+                ChatResponse.FestivalInfo restaurant = new ChatResponse.FestivalInfo();
+                
+                restaurant.setName(item.getTitle());
+                restaurant.setDescription(item.getAddr1() != null ? item.getAddr1() : "주소 정보 없음");
+                restaurant.setLocation(item.getAddr1());
+                restaurant.setPeriod("연중 운영"); // 음식점은 기간 대신 운영 정보
+                restaurant.setImage(processImageUrl(item.getFirstImage()));
+                restaurant.setContentId(item.getContentId());
+                restaurant.setContentTypeId(item.getContentTypeId());
+                
+                if (item.getMapX() != null && item.getMapY() != null) {
+                    try {
+                        restaurant.setLatitude(Double.parseDouble(item.getMapY()));
+                        restaurant.setLongitude(Double.parseDouble(item.getMapX()));
+                    } catch (NumberFormatException e) {
+                        restaurant.setLatitude(null);
+                        restaurant.setLongitude(null);
+                    }
+                }
+                
+                restaurants.add(restaurant);
+            }
+            
+            // 응답 생성
+            ChatResponse response = new ChatResponse();
+            String region = analysis.getRegion() != null ? analysis.getRegion() : "해당 지역";
+            response.setContent("네! " + region + " 맛집을 찾아드렸습니다.\n\n아래 갤러리에서 다양한 맛집 정보를 확인해보세요!");
+            response.setRequestType("food_only");
+            response.setStreaming(false);
+            response.setRegionName(analysis.getRegion());
+            response.setAreaCode(analysis.getAreaCode());
+            response.setLocations(new ArrayList<>()); // 맛집 추천은 위치 정보 없음
+            response.setFestivals(restaurants); // 갤러리 형태로 표시
+            response.setTravelCourse(null); // 여행 코스 없음
+            
+            log.info("🍽️ 단순 맛집 추천 응답 완료: {}개 맛집", restaurants.size());
+            return response;
+            
+        } catch (Exception e) {
+            log.error("🍽️ 단순 맛집 추천 응답 생성 실패", e);
+            return createNoDataResponse(analysis);
         }
     }
     
