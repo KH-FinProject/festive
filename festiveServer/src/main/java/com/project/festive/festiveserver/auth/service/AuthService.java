@@ -55,4 +55,10 @@ public interface AuthService {
 
 	int findPwSocialByEmail(String userId, String email, String authKey);
 	int findPwSocialByTel(String userId, String tel, String authKey);
+	
+	/**
+	 * 만료된 인증키들을 삭제합니다.
+	 * @return 삭제된 인증키의 개수
+	 */
+	int deleteExpiredAuthKeys();
 }

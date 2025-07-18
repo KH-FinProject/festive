@@ -46,16 +46,16 @@ function CustomerDetail() {
           answerContent: data.answerContent,
           answerDate: data.answerDate
             ? new Date(data.answerDate)
-              .toLocaleDateString("ko-KR", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-              .replace(/\. /g, ".")
-              .replace(".", ".")
-              .slice(0, -1)
+                .toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+                .replace(/\. /g, ".")
+                .replace(".", ".")
+                .slice(0, -1)
             : null,
           priority: data.priority || "일반",
           category: data.category || "기타",
@@ -233,8 +233,9 @@ function CustomerDetail() {
               }}
             >
               <span
-                className={`status-badge ${post.hasAnswer ? "answered" : "waiting"
-                  }`}
+                className={`status-badge ${
+                  post.hasAnswer ? "answered" : "waiting"
+                }`}
                 style={{
                   padding: "6px 12px",
                   borderRadius: "12px",
@@ -297,7 +298,14 @@ function CustomerDetail() {
                 post.memberProfileImage
                   ? post.memberProfileImage.startsWith("http")
                     ? post.memberProfileImage
-                    : `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${post.memberProfileImage.startsWith('/') ? post.memberProfileImage : `/${post.memberProfileImage}`}?t=${Date.now()}`
+                    : `${(
+                        import.meta.env.VITE_API_URL ||
+                        "https://api.festivekorea.site"
+                      ).replace(/\/+$/, "")}${
+                        post.memberProfileImage.startsWith("/")
+                          ? post.memberProfileImage
+                          : `/${post.memberProfileImage}`
+                      }?t=${Date.now()}`
                   : "/logo.png"
               }
               alt="프로필"

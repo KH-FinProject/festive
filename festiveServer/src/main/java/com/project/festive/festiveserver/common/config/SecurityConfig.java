@@ -42,6 +42,9 @@ public class SecurityConfig {
         // CSRF(Cross-Site Request Forgery) 보호를 비활성화 (JWT 사용 시)
         .csrf(auth -> auth.disable())
         
+        // X-Frame-Options 헤더 설정 (iframe 허용)
+        .headers(headers -> headers.frameOptions().sameOrigin())
+        
         // formLogin 비활성화 (사용자 지정 로그인 사용)
         .formLogin(auth -> auth.disable())
         

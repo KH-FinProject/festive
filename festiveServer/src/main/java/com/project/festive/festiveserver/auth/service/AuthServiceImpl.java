@@ -235,13 +235,21 @@ public class AuthServiceImpl implements AuthService {
 		if ("email".equals(req.getAuthMethod())) {
 			EmailAuthKey entity = emailAuthKeyRepository.findById(req.getEmail()).orElse(null);
 			if (entity == null) return 0;
-			if (entity.getAuthKey().equals(req.getAuthKey())) return 1;
+			if (entity.getAuthKey().equals(req.getAuthKey())) {
+				// 인증 성공 시 인증키 삭제
+				emailAuthKeyRepository.deleteById(req.getEmail());
+				return 1;
+			}
 			return 2;
 			
 		} else if ("tel".equals(req.getAuthMethod())) {
 			TelAuthKey entity = telAuthKeyRepository.findById(req.getTel()).orElse(null);
 			if (entity == null) return 0;
-			if (entity.getAuthKey().equals(req.getAuthKey())) return 1;
+			if (entity.getAuthKey().equals(req.getAuthKey())) {
+				// 인증 성공 시 인증키 삭제
+				telAuthKeyRepository.deleteById(req.getTel());
+				return 1;
+			}
 			return 2;
 		}
 		return 0;
@@ -255,13 +263,41 @@ public class AuthServiceImpl implements AuthService {
 	public int findCheckAuthKey(FindAuthKeyRequest req) {
         int result = switch (req.getType()) {
             case "id" -> switch (req.getAuthMethod()) {
-                case "email" -> authMapper.checkIdFindByEmail(req.getName(), req.getEmail(), req.getAuthKey()) > 0 ? 1 : 0;
-                case "tel" -> authMapper.checkIdFindByTel(req.getName(), req.getTel(), req.getAuthKey()) > 0 ? 1 : 0;
+                case "email" -> {
+                    int checkResult = authMapper.checkIdFindByEmail(req.getName(), req.getEmail(), req.getAuthKey());
+                    if (checkResult > 0) {
+                        // 인증 성공 시 인증키 삭제
+                        emailAuthKeyRepository.deleteById(req.getEmail());
+                    }
+                    yield checkResult > 0 ? 1 : 0;
+                }
+                case "tel" -> {
+                    int checkResult = authMapper.checkIdFindByTel(req.getName(), req.getTel(), req.getAuthKey());
+                    if (checkResult > 0) {
+                        // 인증 성공 시 인증키 삭제
+                        telAuthKeyRepository.deleteById(req.getTel());
+                    }
+                    yield checkResult > 0 ? 1 : 0;
+                }
                 default -> 0;
             };
             case "pw" -> switch (req.getAuthMethod()) {
-                case "email" -> authMapper.checkPwFindByEmail(req.getUserId(), req.getEmail(), req.getAuthKey()) > 0 ? 1 : 0;
-                case "tel" -> authMapper.checkPwFindByTel(req.getUserId(), req.getTel(), req.getAuthKey()) > 0 ? 1 : 0;
+                case "email" -> {
+                    int checkResult = authMapper.checkPwFindByEmail(req.getUserId(), req.getEmail(), req.getAuthKey());
+                    if (checkResult > 0) {
+                        // 인증 성공 시 인증키 삭제
+                        emailAuthKeyRepository.deleteById(req.getEmail());
+                    }
+                    yield checkResult > 0 ? 1 : 0;
+                }
+                case "tel" -> {
+                    int checkResult = authMapper.checkPwFindByTel(req.getUserId(), req.getTel(), req.getAuthKey());
+                    if (checkResult > 0) {
+                        // 인증 성공 시 인증키 삭제
+                        telAuthKeyRepository.deleteById(req.getTel());
+                    }
+                    yield checkResult > 0 ? 1 : 0;
+                }
                 default -> 0;
             };
             default -> 0;
@@ -367,6 +403,23 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public int findPwSocialByTel(String userId, String tel, String authKey) {
 		return authMapper.findPwSocialByTel(userId, tel, authKey);
+	}
+	
+	/**
+	 * 만료된 인증키들을 삭제합니다.
+	 * @return 삭제된 인증키의 개수
+	 */
+	@Override
+	public int deleteExpiredAuthKeys() {
+		LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(5); // 5분 만료
+		int emailDeletedCount = emailAuthKeyRepository.deleteAllByCreateTimeBefore(expirationTime);
+		int telDeletedCount = telAuthKeyRepository.deleteAllByCreateTimeBefore(expirationTime);
+		int totalDeletedCount = emailDeletedCount + telDeletedCount;
+		
+		log.info("만료된 인증키 {}개를 삭제했습니다. (이메일: {}, 전화번호: {})", 
+			totalDeletedCount, emailDeletedCount, telDeletedCount);
+		
+		return totalDeletedCount;
 	}
 	
 }

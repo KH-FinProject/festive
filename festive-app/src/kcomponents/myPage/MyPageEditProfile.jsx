@@ -230,7 +230,7 @@ const MyPageEditProfile = () => {
 
     // 일반 로그인 프로필 이미지 (서버 파일) - API URL 구성 필요
     const baseUrl = (
-      import.meta.env.VITE_API_URL || "http://localhost:8080"
+      import.meta.env.VITE_API_URL || "https://api.festivekorea.site"
     ).replace(/\/+$/, "");
 
     if (url.startsWith("/profile-images/")) {

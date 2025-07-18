@@ -1,5 +1,5 @@
 import "./This-month-festive.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Title from "./Title.jsx";
 import ExpandingCards from "./Month-Slider.jsx";
 import ScrollToTop from "./ScrollToTop.jsx";
@@ -13,6 +13,19 @@ const FestivalMainPage = () => {
   const [originalListFestivals, setOriginalListFestivals] = useState([]); // 원본 데이터 보존
   const [userLocation, setUserLocation] = useState(null); // 사용자 위치
   const navigate = useNavigate();
+
+  // 무한 스크롤을 위한 상태
+  const [page, setPage] = useState(1); // 현재 페이지
+  const [hasMore, setHasMore] = useState(true); // 더 많은 데이터 존재 여부
+  const [isInitialLoading, setIsInitialLoading] = useState(false); // 최초 전체 로딩
+  const [isMoreLoading, setIsMoreLoading] = useState(false); // 추가(무한 스크롤) 로딩
+  const [displayedFestivals, setDisplayedFestivals] = useState([]); // 화면에 표시할 축제
+  const [pageSize] = useState(12); // 한 번에 로드할 개수
+
+  // Intersection Observer 관련 ref
+  const observerRef = useRef();
+  const loadingRef = useRef();
+  const isMounted = useRef(false);
 
   // 사용자 위치 가져오기
   const getUserLocation = () => {
@@ -127,6 +140,7 @@ const FestivalMainPage = () => {
 
   useEffect(() => {
     const fetchFestivals = async () => {
+      setIsInitialLoading(true);
       try {
         const today = new Date();
         const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
@@ -180,8 +194,11 @@ const FestivalMainPage = () => {
         setSliderFestivals(recentFestivals);
         setListFestivals(list);
         setOriginalListFestivals(list); // 원본 데이터 보존
+        isMounted.current = true;
       } catch (error) {
         console.error("축제 정보 로드 실패:", error);
+      } finally {
+        setIsInitialLoading(false);
       }
     };
 
@@ -217,6 +234,9 @@ const FestivalMainPage = () => {
         // 거리순 정렬 시도 (투어API 사용)
         const sortedFestivals = await sortByDistance();
         setListFestivals(sortedFestivals);
+        setDisplayedFestivals(sortedFestivals.slice(0, pageSize));
+        setPage(1);
+        setHasMore(sortedFestivals.length > pageSize);
       } catch (error) {
         // 위치 권한이 거부된 경우
         if (error.code === 1) {
@@ -235,8 +255,63 @@ const FestivalMainPage = () => {
         a.startDate.localeCompare(b.startDate)
       );
       setListFestivals(sorted);
+      setDisplayedFestivals(sorted.slice(0, pageSize));
+      setPage(1);
+      setHasMore(sorted.length > pageSize);
     }
   };
+
+  // 데이터 받아오면 렌더링 개수 관리
+  useEffect(() => {
+    if (!isMounted.current) return;
+    setDisplayedFestivals(listFestivals.slice(0, page * pageSize));
+    setHasMore(listFestivals.length > page * pageSize);
+  }, [listFestivals, page, pageSize]);
+
+  // 무한 스크롤은 클라이언트에서 slice로만 처리 (추가 API 호출 없음)
+  const loadMoreFestivals = useCallback(() => {
+    if (isMoreLoading || !hasMore) return;
+    setIsMoreLoading(true);
+
+    setTimeout(() => {
+      const nextPage = page + 1;
+      const newDisplayed = listFestivals.slice(0, nextPage * pageSize);
+
+      setDisplayedFestivals(newDisplayed);
+      setPage(nextPage);
+      setHasMore(newDisplayed.length < listFestivals.length);
+      setIsMoreLoading(false);
+    }, 400); // 0.4초 뒤에 로딩 되도록 설정
+  }, [page, pageSize, isMoreLoading, hasMore, listFestivals]);
+
+  // Intersection Observer 설정
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && hasMore && !isMoreLoading) {
+          loadMoreFestivals();
+        }
+      },
+      {
+        root: null,
+        rootMargin: "20px",
+        threshold: 0.1,
+      }
+    );
+
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current);
+    }
+
+    observerRef.current = observer;
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isMoreLoading, loadMoreFestivals]);
 
   return (
     <>
@@ -270,73 +345,100 @@ const FestivalMainPage = () => {
             </span>
           </div>
 
-          {/* 축제 그리드 */}
-          <div className="festivals-grid">
-            {listFestivals.map((festival) => (
-              <div
-                key={festival.id}
-                className="festival-card"
-                onClick={() => handleFestivalClick(festival.id)}
-              >
-                <div className="festival-image-container">
-                  <img
-                    src={festival.image}
-                    alt={festival.title}
-                    className="festival-image"
-                  />
+          {/* 최초 전체 로딩 인디케이터 */}
+          {isInitialLoading ? (
+            <div className="loading-indicator">
+              <div className="spinner"></div>
+              <p>축제를 불러오는 중...</p>
+            </div>
+          ) : (
+            <>
+              {/* 축제 그리드 */}
+              <div className="festivals-grid">
+                {displayedFestivals.map((festival) => (
                   <div
-                    className={`festival-status ${festival.status === "진행중" ? "active" : "upcoming"
-                      }`}
+                    key={festival.id}
+                    className="festival-card"
+                    onClick={() => handleFestivalClick(festival.id)}
                   >
-                    {festival.status}
-                  </div>
-                </div>
-
-                <div className="festival-info">
-                  <h3 className="festival-title">{festival.title}</h3>
-                  <p className="festival-location">
-                    <svg
-                      className="icon"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                        clipRule="evenodd"
+                    <div className="festival-image-container">
+                      <img
+                        src={festival.image}
+                        alt={festival.title}
+                        className="festival-image"
                       />
-                    </svg>
-                    {festival.location}
-                    {sortType === "distance" && festival.distance && (
-                      <span
-                        style={{
-                          color: "#60a5fa",
-                          marginLeft: "8px",
-                          fontSize: "0.8rem",
-                        }}
+                      <div
+                        className={`festival-status ${
+                          festival.status === "진행중" ? "active" : "upcoming"
+                        }`}
                       >
-                        ({festival.distance.toFixed(1)}km)
-                      </span>
-                    )}
-                  </p>
-                  <p className="festival-date">
-                    <svg
-                      className="icon"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {festival.date}
-                  </p>
-                </div>
+                        {festival.status}
+                      </div>
+                    </div>
+
+                    <div className="festival-info">
+                      <h3 className="festival-title">{festival.title}</h3>
+                      <p className="festival-location">
+                        <svg
+                          className="icon"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {festival.location}
+                        {sortType === "distance" && festival.distance && (
+                          <span
+                            style={{
+                              color: "#60a5fa",
+                              marginLeft: "8px",
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            ({festival.distance.toFixed(1)}km)
+                          </span>
+                        )}
+                      </p>
+                      <p className="festival-date">
+                        <svg
+                          className="icon"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {festival.date}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+
+              {/* 무한 스크롤 로딩 인디케이터 */}
+              {hasMore && (
+                <div ref={loadingRef} className="loading-more-container">
+                  {isMoreLoading ? (
+                    <div className="loading-more">
+                      <div className="spinner"></div>
+                      <p>더 불러오는 중...</p>
+                    </div>
+                  ) : (
+                    <div className="scroll-hint">
+                      <p>스크롤하여 더 많은 축제를 확인하세요</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </section>
       </div>
       <ScrollToTop />

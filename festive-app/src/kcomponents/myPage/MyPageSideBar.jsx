@@ -8,7 +8,7 @@ const MyPageSideBar = () => {
   let profileImageUrl = member?.profileImage;
   if (profileImageUrl) {
     const baseUrl = (
-      import.meta.env.VITE_API_URL || "http://localhost:8080"
+      import.meta.env.VITE_API_URL || "https://api.festivekorea.site"
     ).replace(/\/+$/, "");
     const imagePath = profileImageUrl.startsWith("/")
       ? profileImageUrl
