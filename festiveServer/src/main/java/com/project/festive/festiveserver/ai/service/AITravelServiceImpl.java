@@ -119,24 +119,33 @@ public class AITravelServiceImpl implements AITravelService {
      */
     private ChatResponse createSimpleFoodResponse(String userMessage, TravelAnalysis analysis) {
         try {
-            log.info("🍽️ 단순 맛집 추천 응답 생성 - 지역: {}", analysis.getRegion());
+            log.info("🍽️ 단순 맛집 추천 응답 생성 시작 - 사용자 메시지: '{}', 지역: '{}'", userMessage, analysis.getRegion());
             
             // TourAPI에서 음식점 데이터만 수집
             String areaCode = analysis.getAreaCode();
             String sigunguCode = analysis.getSigunguCode();
             
+            log.info("🗺️ 맛집 검색 지역 정보 - areaCode: '{}', sigunguCode: '{}'", areaCode, sigunguCode);
+            
             List<TourAPIResponse.Item> foodItems = fetchTourismDataSecurely(areaCode, sigunguCode, "39"); // 음식점
             
-            if (foodItems.isEmpty()) {
+            log.info("📊 TourAPI 음식점 검색 결과: {}개", foodItems != null ? foodItems.size() : 0);
+            
+            if (foodItems == null || foodItems.isEmpty()) {
+                log.warn("⚠️ 음식점 데이터가 없습니다. NoData 응답 생성");
                 return createNoDataResponse(analysis);
             }
             
             // 음식점 데이터를 갤러리 형태로 표시
             List<ChatResponse.FestivalInfo> restaurants = new ArrayList<>();
             
+            log.info("🔄 음식점 데이터 변환 시작 - 처리할 개수: {}개", Math.min(10, foodItems.size()));
+            
             for (int i = 0; i < Math.min(10, foodItems.size()); i++) { // 최대 10개
                 TourAPIResponse.Item item = foodItems.get(i);
                 ChatResponse.FestivalInfo restaurant = new ChatResponse.FestivalInfo();
+                
+                log.debug("🍽️ 음식점 {}번: 이름='{}', 주소='{}'", (i+1), item.getTitle(), item.getAddr1());
                 
                 restaurant.setName(item.getTitle());
                 restaurant.setDescription(item.getAddr1() != null ? item.getAddr1() : "주소 정보 없음");
@@ -150,7 +159,9 @@ public class AITravelServiceImpl implements AITravelService {
                     try {
                         restaurant.setLatitude(Double.parseDouble(item.getMapY()));
                         restaurant.setLongitude(Double.parseDouble(item.getMapX()));
+                        log.debug("🗺️ 좌표 설정 완료: 위도={}, 경도={}", item.getMapY(), item.getMapX());
                     } catch (NumberFormatException e) {
+                        log.warn("⚠️ 좌표 파싱 실패: 위도='{}', 경도='{}'", item.getMapY(), item.getMapX());
                         restaurant.setLatitude(null);
                         restaurant.setLongitude(null);
                     }
@@ -162,7 +173,9 @@ public class AITravelServiceImpl implements AITravelService {
             // 응답 생성
             ChatResponse response = new ChatResponse();
             String region = analysis.getRegion() != null ? analysis.getRegion() : "해당 지역";
-            response.setContent("네! " + region + " 맛집을 찾아드렸습니다.\n\n아래 갤러리에서 다양한 맛집 정보를 확인해보세요!");
+            String responseContent = "네! " + region + " 맛집을 찾아드렸습니다.\n\n아래 갤러리에서 다양한 맛집 정보를 확인해보세요!";
+            
+            response.setContent(responseContent);
             response.setRequestType("food_only");
             response.setStreaming(false);
             response.setRegionName(analysis.getRegion());
@@ -171,11 +184,11 @@ public class AITravelServiceImpl implements AITravelService {
             response.setFestivals(restaurants); // 갤러리 형태로 표시
             response.setTravelCourse(null); // 여행 코스 없음
             
-            log.info("🍽️ 단순 맛집 추천 응답 완료: {}개 맛집", restaurants.size());
+            log.info("✅ 단순 맛집 추천 응답 완료: {}개 맛집, 응답 내용: '{}'", restaurants.size(), responseContent);
             return response;
             
         } catch (Exception e) {
-            log.error("🍽️ 단순 맛집 추천 응답 생성 실패", e);
+            log.error("❌ 단순 맛집 추천 응답 생성 실패: {}", e.getMessage(), e);
             return createNoDataResponse(analysis);
         }
     }
