@@ -50,10 +50,7 @@ function CustomerWrite() {
         inquiryStatus: "대기중",
       };
 
-      const response = await axiosApi.post(
-        "/api/customer/boards",
-        inquiryData
-      );
+      const response = await axiosApi.post("/api/customer/boards", inquiryData);
 
       if (response.status === 200) {
         alert("문의가 성공적으로 등록되었습니다.");
@@ -114,6 +111,26 @@ function CustomerWrite() {
             previewStyle="vertical"
             hideModeSwitch={true}
             disabled={isSubmitting}
+            hooks={{
+              addImageBlobHook: async (blob, callback) => {
+                const formData = new FormData();
+                formData.append("image", blob);
+                try {
+                  const res = await axiosApi.post(
+                    "/api/board/upload-image",
+                    formData,
+                    {
+                      headers: { "Content-Type": "multipart/form-data" },
+                    }
+                  );
+                  const imageUrl = res.data;
+                  callback(imageUrl, "image");
+                } catch {
+                  alert("이미지 업로드 실패");
+                }
+                return false;
+              },
+            }}
           />
           <div className="customer-write-btns">
             <button

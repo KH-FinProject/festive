@@ -52,8 +52,6 @@ const CustomerBoard = ({
                   .replace(/\. /g, ".")
                   .replace(".", ".")
               : "날짜 없음",
-            likes: post.boardLikeCount || 0,
-            views: post.boardViewCount || 0,
             status: post.inquiryStatus || "대기중", // 고객센터 전용 상태 정보
             hasAnswer: post.hasAnswer || false, // 답변 여부
           };
@@ -172,10 +170,6 @@ const CustomerBoard = ({
             />
             <span className="customer-board-author">{post.author}</span>
             <span className="customer-board-date">{post.date}</span>
-            <div className="customer-board-views">
-              <FontAwesomeIcon icon={faEye} />
-              <span>{post.views}</span>
-            </div>
           </div>
         </div>
       ))}
