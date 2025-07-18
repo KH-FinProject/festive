@@ -58,8 +58,7 @@ const AdminCustomerReply = () => {
     try {
       const replyData = {
         boardNo: inquiry.boardNo,
-        commentContent: replyContent.trim(),
-        memberNo: 46, // TODO: 실제 관리자 memberNo로 변경
+        commentContent: replyContent.trim()
       };
       let response;
       if (inquiry.answerCommentNo) {
