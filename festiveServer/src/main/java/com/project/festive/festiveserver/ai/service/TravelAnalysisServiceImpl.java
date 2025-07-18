@@ -45,6 +45,12 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             // 선호 콘텐츠 타입 감지
             String preferredContentType = detectPreferredContentType(userMessage);
             
+            // 🚀 모든 요청에 대해 기간이 없으면 당일치기로 기본 설정
+            if (duration == null || duration.trim().isEmpty()) {
+                duration = "당일치기";
+                log.info("📅 기간 정보 없음 - 기본값 설정: 당일치기");
+            }
+            
             TravelAnalysis analysis = new TravelAnalysis(requestType, region, keyword, duration, intent, areaCode, sigunguCode);
             analysis.setPreferredContentType(preferredContentType);
             

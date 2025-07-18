@@ -2909,13 +2909,20 @@ public class AITravelServiceImpl implements AITravelService {
      * 여행 기간에서 총 일수 추출 (4박5일 제한)
      */
     private int getTotalDaysFromDuration(String duration) {
-        switch (duration) {
+        if (duration == null || duration.trim().isEmpty()) {
+            log.warn("⚠️ 기간 정보가 없어서 기본값(당일치기) 사용");
+            return 1; // 기본값: 당일치기
+        }
+        
+        switch (duration.trim()) {
             case "당일치기": return 1;
             case "1박2일": return 2;
             case "2박3일": return 3;
             case "3박4일": return 4;
             case "4박5일": return 5;
-            default: return 2; // 4박5일 제한으로 최대 5일
+            default: 
+                log.warn("⚠️ 알 수 없는 기간 형식: '{}', 기본값(당일치기) 사용", duration);
+                return 1; // 알 수 없는 기간은 당일치기로 처리
         }
     }
     
