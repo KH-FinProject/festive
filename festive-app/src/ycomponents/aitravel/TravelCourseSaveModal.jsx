@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "./TravelCourseSaveModal.css";
 import useAuthStore from "../../store/useAuthStore";
-import logo from "../../assets/festiveLogo.png";
 
 const TravelCourseSaveModal = ({ isOpen, onClose, onSave, travelData }) => {
   const [courseTitle, setCourseTitle] = useState("");
@@ -23,9 +22,9 @@ const TravelCourseSaveModal = ({ isOpen, onClose, onSave, travelData }) => {
         const firstImageLocation = travelData.locations.find(
           (loc) => loc.image && loc.image.trim()
         );
-        setSelectedThumbnail(firstImageLocation?.image || logo);
+        setSelectedThumbnail(firstImageLocation?.image || "/logo.png");
       } else {
-        setSelectedThumbnail(logo);
+        setSelectedThumbnail("/logo.png");
       }
     }
   }, [isOpen, travelData]);
@@ -61,7 +60,7 @@ const TravelCourseSaveModal = ({ isOpen, onClose, onSave, travelData }) => {
       const saveData = {
         courseTitle: courseTitle.trim(),
         isShared: isShared ? "Y" : "N",
-        thumbnailImage: selectedThumbnail || logo,
+        thumbnailImage: selectedThumbnail || "/logo.png",
         regionName: travelData.regionName || "",
         areaCode: travelData.areaCode || "",
         totalDays: travelData.totalDays || 1,
@@ -126,11 +125,11 @@ const TravelCourseSaveModal = ({ isOpen, onClose, onSave, travelData }) => {
                     {/* 로고 이미지 */}
                     <div
                       className={`thumbnail-item ${
-                        selectedThumbnail === logo ? "selected" : ""
+                        selectedThumbnail === "/logo.png" ? "selected" : ""
                       }`}
-                      onClick={() => setSelectedThumbnail(logo)}
+                      onClick={() => setSelectedThumbnail("/logo.png")}
                     >
-                      <img src={logo} alt="기본 로고" />
+                      <img src="/logo.png" alt="기본 로고" />
                       <span className="thumbnail-label">기본 이미지</span>
                     </div>
 
@@ -140,7 +139,7 @@ const TravelCourseSaveModal = ({ isOpen, onClose, onSave, travelData }) => {
                         (location) =>
                           location.image &&
                           location.image.trim() &&
-                          location.image !== logo
+                          location.image !== "/logo.png"
                       )
                       .map((location, index) => (
                         <div
@@ -156,7 +155,7 @@ const TravelCourseSaveModal = ({ isOpen, onClose, onSave, travelData }) => {
                             src={location.image}
                             alt={location.name}
                             onError={(e) => {
-                              e.target.src = logo;
+                              e.target.src = "/logo.png";
                             }}
                           />
                           <span className="thumbnail-label">

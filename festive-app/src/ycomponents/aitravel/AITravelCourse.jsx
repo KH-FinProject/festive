@@ -14,7 +14,6 @@ import image10 from "../../assets/temp/image 10.png";
 import image11 from "../../assets/temp/image 11.png";
 import image12 from "../../assets/temp/image 12.png";
 import image13 from "../../assets/temp/image 13.png";
-import logo from "../../assets/festiveLogo.png";
 
 const AITravelCourse = () => {
   const [activeMenu, setActiveMenu] = useState("share");
@@ -104,7 +103,7 @@ const AITravelCourse = () => {
           // 공유 코스는 올린 사람 정보 표시 (nickname 우선, 없으면 name 사용)
           memberNickname:
             course.memberNickname || course.memberName || "알 수 없음",
-          memberProfileImage: course.memberProfileImage || logo,
+          memberProfileImage: course.memberProfileImage || "/logo.png",
           location: course.regionName || "지역 미정", // 개인 코스용 (호환성)
           image:
             course.thumbnailImage ||
@@ -164,9 +163,9 @@ const AITravelCourse = () => {
             member?.nickname ||
             "내 계정",
           memberProfileImage:
-            course.memberProfileImage || member?.profileImage || logo,
+            course.memberProfileImage || member?.profileImage || "/logo.png",
           location: course.regionName || "지역 미정",
-          image: course.thumbnailImage || logo,
+          image: course.thumbnailImage || "/logo.png",
           totalDays: course.totalDays,
           requestType: course.requestType,
           isShared: course.isShared || "N", // 공유 상태 추가
@@ -468,7 +467,7 @@ const AITravelCourse = () => {
                             alt={course.memberNickname}
                             className="ai-travel__author-profile"
                             onError={(e) => {
-                              e.target.src = logo; // 프로필 이미지 로드 실패시 로고 표시
+                              e.target.src = "/logo.png"; // 프로필 이미지 로드 실패시 로고 표시
                             }}
                           />
                           <span className="ai-travel__author-nickname">

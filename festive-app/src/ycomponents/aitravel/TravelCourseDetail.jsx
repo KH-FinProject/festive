@@ -4,7 +4,6 @@ import { Map, MapMarker, Polyline, useKakaoLoader } from "react-kakao-maps-sdk";
 import axios from "axios";
 import axiosApi from "../../api/axiosAPI";
 import "./TravelCourseDetail.css";
-import logo from "../../assets/festiveLogo.png";
 
 const TravelCourseDetail = () => {
   const { courseId } = useParams();
@@ -704,11 +703,11 @@ const TravelCourseDetail = () => {
             {/* 작성자 정보 */}
             <div className="travel-detail-author">
               <img
-                src={courseData?.memberProfileImage || logo}
+                src={courseData?.memberProfileImage || "/logo.png"}
                 alt="작성자"
                 className="travel-detail-author-profile"
                 onError={(e) => {
-                  e.target.src = logo;
+                  e.target.src = "/logo.png";
                 }}
               />
               <div className="travel-detail-author-info">
