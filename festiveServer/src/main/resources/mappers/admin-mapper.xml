@@ -86,6 +86,7 @@
 				AND c.COMMENT_DEL_FL = 'N'
 			)
 		)
+		AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 탈퇴 회원 수 -->
@@ -98,6 +99,7 @@
 		SELECT COUNT(*) 
 		FROM MEMBER 
 		WHERE TRUNC(ENROLL_DATE) &gt;= TRUNC(SYSDATE) - 6
+		AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 최근 일주일 탈퇴 회원 수 -->
@@ -106,6 +108,7 @@
 		FROM MEMBER 
 		WHERE TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6 
 		AND WITHDRAW_DATE IS NOT NULL
+		AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 일반 활성 회원 수 (탈퇴하지 않은 전체 회원) -->
@@ -113,6 +116,7 @@
 		SELECT COUNT(*) 
 		FROM MEMBER 
 		WHERE MEMBER_DEL_FL = 'N'
+		AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 7일 전까지의 기준 회원 수 (누적 계산용) -->
@@ -121,6 +125,7 @@
 		FROM MEMBER 
 		WHERE TRUNC(ENROLL_DATE) &lt; TRUNC(SYSDATE) - 6
 		AND (MEMBER_DEL_FL = 'N' OR TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6)
+		AND ROLE = 'USER'
 	</select>
 
 	<!-- 통계 조회: 일별 신규 회원 수 -->
@@ -129,6 +134,7 @@
 			   COUNT(*) as NEW_MEMBERS
 		FROM MEMBER
 		WHERE TRUNC(ENROLL_DATE) &gt;= TRUNC(SYSDATE) - 6
+		AND ROLE = 'USER'
 		GROUP BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
 		ORDER BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
 	</select>
@@ -140,6 +146,7 @@
 		FROM MEMBER
 		WHERE TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6 
 		AND WITHDRAW_DATE IS NOT NULL
+		AND ROLE = 'USER'
 		GROUP BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
 		ORDER BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
 	</select>
