@@ -11,11 +11,13 @@ import AdminBoardWrite from "./AdminBoardWrite";
 import AdminCustomerReply from "./AdminCustomerReply";
 import AdminCustomerReportDetail from "./AdminCustomerReportDetail";
 import AdminApplicationDetail from "./AdminApplicationDetail";
+import AdminMemberManagement from "./AdminMemberManagement";
 
 const AdminRoutes = () => (
   <Routes>
     <Route path="" element={<AdminMain />} />
     <Route path="create" element={<AdminCreateAccount />} />
+    <Route path="allMembers" element={<AdminMemberManagement />} />
     <Route path="users" element={<AdminDeleteMember />} />
     <Route path="customer" element={<AdminCustomerService />} />
     <Route path="board" element={<AdminBoardManagement />} />
