@@ -5,6 +5,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import useAuthStore from "../../store/useAuthStore";
 import axiosApi from "../../api/axiosAPI";
 
+// 마크다운 이미지 태그를 <img>로 변환하는 함수
+function renderMarkdownImages(text) {
+  if (!text) return "";
+  return text.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    '<img src="$2" alt="$1" style="max-width:100%;" />'
+  );
+}
+
 function CustomerDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -39,7 +48,6 @@ function CustomerDetail() {
             .replace(/\. /g, ".")
             .replace(".", "."),
           content: data.boardContent,
-          views: data.boardViewCount,
           // 고객센터 전용 정보
           status: data.inquiryStatus || "대기중",
           hasAnswer: data.hasAnswer || false,
@@ -299,8 +307,7 @@ function CustomerDetail() {
                   ? post.memberProfileImage.startsWith("http")
                     ? post.memberProfileImage
                     : `${(
-                        import.meta.env.VITE_API_URL ||
-                        "https://api.festivekorea.site"
+                        import.meta.env.VITE_API_URL || "http://localhost:8080"
                       ).replace(/\/+$/, "")}${
                         post.memberProfileImage.startsWith("/")
                           ? post.memberProfileImage
@@ -316,7 +323,6 @@ function CustomerDetail() {
             />
             <span className="customer-detail-author">{post.author}</span>
             <span className="customer-detail-date">{post.date}</span>
-            <span className="customer-detail-views">조회수 {post.views}</span>
           </div>
           <div className="customer-detail-content">
             <h3
@@ -335,9 +341,10 @@ function CustomerDetail() {
                   lineHeight: "1.6",
                   marginBottom: "30px",
                 }}
-              >
-                {post.content}
-              </div>
+                dangerouslySetInnerHTML={{
+                  __html: renderMarkdownImages(post.content),
+                }}
+              />
             )}
           </div>
 
