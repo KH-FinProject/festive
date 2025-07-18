@@ -64,6 +64,7 @@
 	<!-- 통계 조회: 전체 회원 수 -->
 	<select id="getTotalMembers" resultType="int">
 		SELECT COUNT(*) FROM MEMBER
+		WHERE ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 활동 회원 수 (최근 일주일 내 게시글/댓글 활동이 있는 회원) -->
@@ -91,7 +92,7 @@
 	
 	<!-- 통계 조회: 탈퇴 회원 수 -->
 	<select id="getWithdrawMembers" resultType="int">
-		SELECT COUNT(*) FROM MEMBER WHERE MEMBER_DEL_FL = 'Y'
+		SELECT COUNT(*) FROM MEMBER WHERE MEMBER_DEL_FL = 'Y' AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 최근 일주일 신규 회원 수 -->
