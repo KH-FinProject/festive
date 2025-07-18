@@ -759,15 +759,18 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         // 1️⃣ AI가 제공한 areaCode와 sigunguCode가 모두 있는 경우
         if (aiRegion.getAreaCode() != null && aiRegion.getSigunguCode() != null) {
             String fullSigunguCode = aiRegion.getAreaCode() + "_" + aiRegion.getSigunguCode();
+            log.info("🔍 AI 코드 검증 시도: fullSigunguCode={}", fullSigunguCode);
             
             // DB에서 해당 코드가 실제로 존재하는지 확인
             for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
+                log.debug("🔍 DB 매핑 확인: {} → {}", entry.getKey(), entry.getValue());
                 if (entry.getValue().equals(fullSigunguCode)) {
-                    log.info("✅ AI 코드 검증 성공: {} → {} ({})", 
+                    log.info("✅ AI 시군구 코드 검증 성공: {} → {} ({})", 
                             aiRegion.getRegionName(), entry.getKey(), fullSigunguCode);
                     return new RegionInfo(aiRegion.getAreaCode(), fullSigunguCode, aiRegion.getRegionName());
                 }
             }
+            log.warn("❌ AI 시군구 코드 검증 실패: DB에서 '{}' 찾을 수 없음", fullSigunguCode);
         }
         
         // 2️⃣ areaCode만 있는 경우
