@@ -827,7 +827,7 @@ const Inform = ({ handlePrev, currentStep, setCurrentStep }) => {
       } else {
         alert("회원가입 중 오류가 발생했습니다.");
       }
-    } catch (err) {
+    } catch (error) {
       alert("회원가입 중 오류가 발생했습니다.");
     } finally {
       setIsSigning(false);
