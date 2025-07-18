@@ -269,10 +269,16 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             url += "&serviceKey=" + tourApiServiceKey;
             
+            log.info("🔍 detailCommon2 실제 호출 URL: {}", url);
+            
             ResponseEntity<String> response = restTemplate.getForEntity(
                 java.net.URI.create(url), 
                 String.class
             );
+            
+            log.info("📥 detailCommon2 응답 상태: {}, 응답 데이터 시작 50자: {}", 
+                    response.getStatusCode(), 
+                    response.getBody() != null ? response.getBody().substring(0, Math.min(50, response.getBody().length())) : "null");
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 List<AITravelServiceImpl.TourAPIResponse.Item> items = parseDetailCommon2Response(response.getBody());
