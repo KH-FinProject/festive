@@ -86,21 +86,11 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "15"; // 축제공연행사
         }
         
-        // 🍽️ 음식 관련 키워드 (단순 맛집 추천과 여행 맛집 구분)
+        // 🍽️ 음식 관련 키워드 (모든 맛집 요청을 39로 처리)
         if (lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
             lowerMessage.contains("식당") || lowerMessage.contains("먹거리")) {
-            
-            // 여행 키워드가 없으면 단순 맛집 검색
-            boolean hasTravelContext = lowerMessage.contains("여행") || lowerMessage.contains("코스") ||
-                                     lowerMessage.contains("일정") || lowerMessage.contains("루트") ||
-                                     lowerMessage.contains("박") || lowerMessage.contains("당일");
-            
-            if (!hasTravelContext) {
-                log.info("🍽️ 단순 맛집 검색 감지: 여행 컨텍스트 없음");
-                return "SIMPLE_FOOD"; // 단순 맛집 검색 표시
-            }
-            
-            return "39"; // 음식점 (여행 맛집)
+            log.info("🍽️ 맛집 키워드 감지 → preferredContentType: 39 (음식점)");
+            return "39"; // 음식점
         }
         
         // 쇼핑 관련 키워드
@@ -479,19 +469,13 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         log.info("🔍 요청 타입 분석 시작: '{}'", message);
         
-        // 0️⃣ 단순 맛집/음식점 추천 체크 (여행과 구분)
-        boolean hasSimpleFoodRequest = (lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
-                                       lowerMessage.contains("식당") || lowerMessage.contains("먹거리")) &&
-                                      (lowerMessage.contains("추천") || lowerMessage.contains("알려") || 
-                                       lowerMessage.contains("찾아"));
+        // 🍽️ 맛집 요청은 모두 travel_only로 처리 (preferredContentType: 39로 설정)
+        boolean hasFoodRequest = lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
+                                lowerMessage.contains("식당") || lowerMessage.contains("먹거리");
         
-        boolean hasTravelContext = lowerMessage.contains("여행") || lowerMessage.contains("코스") ||
-                                 lowerMessage.contains("일정") || lowerMessage.contains("루트") ||
-                                 lowerMessage.contains("박") || lowerMessage.contains("당일");
-        
-        if (hasSimpleFoodRequest && !hasTravelContext) {
-            log.info("🍽️ 단순 맛집 추천 감지 → food_only");
-            return "food_only";
+        if (hasFoodRequest) {
+            log.info("🍽️ 맛집 요청 감지 → travel_only (음식점 위주)로 처리");
+            // 나중에 analysis에서 preferredContentType을 "39"로 설정할 예정
         }
         
         // 1. 여행/축제 관련성 체크
