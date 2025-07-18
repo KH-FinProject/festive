@@ -8,6 +8,7 @@ import AItitle from "./AItitle";
 import ScrollToTop from "./ScrollToTop";
 import AISideMenu from "./AISideMenu";
 import useAuthStore from "../../store/useAuthStore";
+import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 import image9 from "../../assets/temp/image 9.png";
 import image10 from "../../assets/temp/image 10.png";
 import image11 from "../../assets/temp/image 11.png";
@@ -240,7 +241,7 @@ const AITravelCourse = () => {
   };
 
   // 🔐 AI 추천받으러 가기 버튼 클릭 핸들러
-  const handleRecommendationClick = () => {
+  const handleRecommendationClick = async () => {
     if (!isLoggedIn || !member) {
       alert(
         "로그인이 필요한 서비스입니다.\n로그인 후 AI 여행 추천을 받아보세요!"
@@ -248,7 +249,12 @@ const AITravelCourse = () => {
       navigate("/signin");
       return;
     }
-    navigate("/ai-travel/chat");
+
+    // ✅ 닉네임 체크 (wagle 글쓰기와 동일한 로직)
+    const canProceed = await checkNicknameForSocialUser(navigate);
+    if (canProceed) {
+      navigate("/ai-travel/chat");
+    }
   };
 
   // 공유 상태 변경 함수

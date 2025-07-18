@@ -49,7 +49,7 @@ const FestiveCalendar = () => {
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
         try {
             const response = await fetch(
-                `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=19960205&arrange=A&numOfRows=10000&pageNo=1`
+                `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=20210101&arrange=A&numOfRows=1700&pageNo=1`
             );
             const result = await response.json();
             const items = result.response.body.items.item || [];
