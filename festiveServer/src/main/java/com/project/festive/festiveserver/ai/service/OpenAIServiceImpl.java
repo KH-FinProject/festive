@@ -53,7 +53,7 @@ public class OpenAIServiceImpl implements OpenAIService {
             // 요청 바디 구성
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-4o-mini");
-            requestBody.put("max_tokens", 1500);
+            requestBody.put("max_tokens", 4000); // 1500 → 4000으로 대폭 증가
             requestBody.put("temperature", 0.7);
 
             Map<String, Object> message = new HashMap<>();
