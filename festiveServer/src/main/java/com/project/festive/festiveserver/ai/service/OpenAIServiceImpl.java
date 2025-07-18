@@ -421,7 +421,10 @@ public class OpenAIServiceImpl implements OpenAIService {
         prompt.append("7. **🏢 상권/동네 → 지역 추론**: 유명한 상권이나 동네명으로 지역 판단\n");
         prompt.append("   예) 강남 → 서울 강남구, 명동 → 서울 중구, 센텀시티 → 부산 해운대구\n");
         prompt.append("8. **일반 지식 활용**: 당신이 알고 있는 한국 지리 지식을 최대한 활용하여 추론\n");
-        prompt.append("9. **추론된 지역을 위 목록과 매칭**: 추론한 지역명을 가능한 지역 목록에서 찾아 정확한 코드 반환\n");
+        prompt.append("9. **⚠️ 중요: 반드시 DB 목록에서 정확히 찾기**: 추론한 지역명을 위 목록에서 **정확히** 찾아서 코드 반환\n");
+        prompt.append("   - 지역명 추론 후 반드시 위 목록에서 해당 지역을 검색\n");
+        prompt.append("   - 목록에 없는 코드는 절대 사용 금지\n");
+        prompt.append("   - 예: 남대문 → 서울 중구 → 목록에서 '중구' 검색 → 1_24 코드 사용\n");
         prompt.append("10. **region 필드는 원본 표현 유지**: 사용자가 입력한 원래 지역 표현을 그대로 반환 (예: '명동역' → '명동역', '홍대' → '홍대')\n");
         prompt.append("11. **areaCode와 sigunguCode는 정확한 코드**: DB 목록에서 찾은 정확한 지역코드와 시군구코드 반환\n");
         prompt.append("12. **지역 정보가 없으면 'NONE' 반환**: 명확한 지역 정보가 없거나 추론이 불가능한 경우\n\n");
@@ -435,16 +438,20 @@ public class OpenAIServiceImpl implements OpenAIService {
         prompt.append("  \"reasoning\": \"추론 과정 설명\"\n");
         prompt.append("}\n\n");
         
-        prompt.append("**🎯 지능적 추론 예시**:\n");
+        prompt.append("**🎯 지능적 추론 예시** (정확한 DB 매칭 과정):\n");
         prompt.append("1. 지하철역: '명동역 맛집 추천해줘'\n");
         prompt.append("   → 명동역이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 매칭된 코드 반환\n");
         prompt.append("   → {\"region\": \"명동역\", \"areaCode\": \"1\", \"sigunguCode\": \"24\", \"confidence\": \"HIGH\", \"reasoning\": \"명동역은 서울 중구에 위치\"}\n\n");
         
-        prompt.append("2. 랜드마크: '경복궁 주변 관광지 알려줘'\n");
+        prompt.append("2. 🔥 랜드마크: '남대문 근처 맛집 추천해줘'\n");
+        prompt.append("   → 남대문이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 1_24 코드 확인\n");
+        prompt.append("   → {\"region\": \"남대문\", \"areaCode\": \"1\", \"sigunguCode\": \"24\", \"confidence\": \"HIGH\", \"reasoning\": \"남대문은 서울 중구에 위치한 유명한 명소\"}\n\n");
+        
+        prompt.append("3. 랜드마크: '경복궁 주변 관광지 알려줘'\n");
         prompt.append("   → 경복궁이 서울 종로구에 있다는 지식 활용 → 목록에서 '종로구' 검색\n");
         prompt.append("   → {\"region\": \"경복궁\", \"areaCode\": \"1\", \"sigunguCode\": \"25\", \"confidence\": \"HIGH\", \"reasoning\": \"경복궁은 서울 종로구에 위치\"}\n\n");
         
-        prompt.append("3. 대학교: 'KAIST 근처 맛집 추천'\n");
+        prompt.append("4. 대학교: 'KAIST 근처 맛집 추천'\n");
         prompt.append("   → KAIST가 대전 유성구에 있다는 지식 활용 → 목록에서 '유성구' 검색\n");
         prompt.append("   → {\"region\": \"KAIST\", \"areaCode\": \"8\", \"sigunguCode\": \"3\", \"confidence\": \"HIGH\", \"reasoning\": \"KAIST는 대전 유성구에 위치\"}\n\n");
         

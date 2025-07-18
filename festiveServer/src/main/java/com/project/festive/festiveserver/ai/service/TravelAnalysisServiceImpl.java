@@ -746,7 +746,7 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
     }
     
     /**
-     * AI가 제공한 지역 코드가 DB에 유효한지 간단히 검증
+     * AI 코드 신뢰 기반 검증 (개선된 AI 프롬프트 활용)
      */
     private RegionInfo validateAIRegionCodes(RegionInfo aiRegion, 
                                            Map<String, String> sigunguCodeMapping, 
@@ -756,14 +756,13 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return null;
         }
         
-        // 1️⃣ AI가 제공한 areaCode와 sigunguCode가 모두 있는 경우
+        // 1️⃣ AI가 제공한 areaCode와 sigunguCode 우선 신뢰 (개선된 프롬프트 적용)
         if (aiRegion.getAreaCode() != null && aiRegion.getSigunguCode() != null) {
             String fullSigunguCode = aiRegion.getAreaCode() + "_" + aiRegion.getSigunguCode();
-            log.info("🔍 AI 코드 검증 시도: fullSigunguCode={}", fullSigunguCode);
+            log.info("🔍 AI 코드 검증: fullSigunguCode={}", fullSigunguCode);
             
             // DB에서 해당 코드가 실제로 존재하는지 확인
             for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
-                log.debug("🔍 DB 매핑 확인: {} → {}", entry.getKey(), entry.getValue());
                 if (entry.getValue().equals(fullSigunguCode)) {
                     log.info("✅ AI 시군구 코드 검증 성공: {} → {} ({})", 
                             aiRegion.getRegionName(), entry.getKey(), fullSigunguCode);
@@ -784,10 +783,11 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             }
         }
         
-        log.warn("❌ AI 코드 검증 실패: areaCode={}, sigunguCode={}", 
-                aiRegion.getAreaCode(), aiRegion.getSigunguCode());
+        log.warn("❌ AI 검증 실패: regionName={}, areaCode={}, sigunguCode={}", 
+                aiRegion.getRegionName(), aiRegion.getAreaCode(), aiRegion.getSigunguCode());
         return null;
     }
+
 
 
     /**
