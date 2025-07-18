@@ -504,7 +504,7 @@ const TravelCourseDetail = () => {
     // 이미지가 없으면 로고 추가
     if (images.length === 0) {
       images.push({
-        url: logo,
+        url: "/logo.png",
         alt: selectedPlace?.placeName || "기본 이미지",
         type: "default",
       });
@@ -814,10 +814,10 @@ const TravelCourseDetail = () => {
                   <div className="travel-detail-place-number">{index + 1}</div>
                   <div className="travel-detail-place-image">
                     <img
-                      src={place.placeImage || logo}
+                      src={place.placeImage || "/logo.png"}
                       alt={place.placeName}
                       onError={(e) => {
-                        e.target.src = logo;
+                        e.target.src = "/logo.png";
                       }}
                     />
                   </div>
@@ -975,7 +975,7 @@ const TravelCourseDetail = () => {
               <div className="travel-detail-place-slider">
                 {loadingImages ? (
                   <div className="travel-detail-slider-loading">
-                    <img src={logo} alt="로딩중" />
+                    <img src="/logo.png" alt="로딩중" />
                     <div className="loading-text">이미지를 불러오는 중...</div>
                   </div>
                 ) : (
@@ -996,7 +996,7 @@ const TravelCourseDetail = () => {
                               src={image.url}
                               alt={image.alt}
                               onError={(e) => {
-                                e.target.src = logo;
+                                e.target.src = "/logo.png";
                               }}
                               className="travel-detail-slider-image"
                             />
