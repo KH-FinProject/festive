@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.project.festive.festiveserver.auth.dto.CustomUserDetails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,7 +43,14 @@ public class AuthController {
     private final MemberService memberService;
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder bcrypt;
-
+    
+    /**
+     * 현재 요청 쿠키를 확인해서 유효한 accessToken이 존재한다면,
+     * 해당 토큰 내부의 memberNo를 통해 회원 정보를 조회하는 메서드
+     * @param request 쿠키를 담은 요청
+     * @return ResponseEntity
+     * (200 - 회원 정보 조회 성공, 401 - 토큰이 없거나 유효하지 않거나 만료됨)
+     */
     @GetMapping("userInfo")
     public ResponseEntity<?> userInfo(HttpServletRequest request) {
 
@@ -49,16 +59,12 @@ public class AuthController {
             String accessToken = cookie != null ? cookie.getValue() : null;
 
             Long memberNo = null;
-            String email = null;
-            String socialId = null;
 
             if (accessToken != null) {
                 boolean isTokenValid = jwtUtil.isValidToken(accessToken);
 
                 if (isTokenValid) {
                     memberNo = jwtUtil.getMemberNo(accessToken);
-                    email = jwtUtil.getEmail(accessToken);
-                    socialId = jwtUtil.getSocialId(accessToken);
 
                     Member member = authService.findMember(memberNo);
                     if (member == null) {
@@ -70,23 +76,26 @@ public class AuthController {
                 }
             }
 
+            Map<String, String> responseBody = new HashMap<>();
+            responseBody.put("message", "로그인이 필요합니다.");
             Cookie refreshCookie = WebUtils.getCookie(request, "refreshToken");
             if (refreshCookie == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+                responseBody.put("code", "REFRESH_TOKEN_MISSING");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
             }
 
             String refreshToken = refreshCookie.getValue();
             if (refreshToken == null || refreshToken.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+                responseBody.put("code", "INVALID_REFRESH_TOKEN");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
             }
 
             if (!jwtUtil.isValidToken(refreshToken)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("로그인이 필요합니다.");
+                responseBody.put("code", "INVALID_REFRESH_TOKEN");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
             }
 
             memberNo = jwtUtil.getMemberNo(refreshToken);
-            email = jwtUtil.getEmail(refreshToken);
-            socialId = jwtUtil.getSocialId(refreshToken);
 
             String savedRefreshToken = authService.findRefreshToken(memberNo);
             if (!refreshToken.equals(savedRefreshToken)) {
@@ -104,16 +113,8 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("회원을 찾을 수 없습니다.");
             }
 
-            String newAccessToken = jwtUtil.generateAccessToken(memberNo, email, member.getRole(), member.getSocialId());
-            ResponseCookie newAccessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
-                    .httpOnly(true)
-                    .maxAge(30 * 60)
-                    .path("/auth")
-                    .build();
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, newAccessTokenCookie.toString())
-                    .body(createUserInfoResponse(member));
+            responseBody.put("code", "INVALID_AUTHENTICATION");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
 
         } catch (Exception e) {
             log.error("userInfo 조회 중 오류 발생", e);
@@ -184,31 +185,35 @@ public class AuthController {
     }
 
     @PostMapping("logout")
-    public ResponseEntity<?> logout(HttpServletRequest request) {
-        Cookie refreshTokenCookie = WebUtils.getCookie(request, "refreshToken");
-        Long memberNo = null;
-
-        if (refreshTokenCookie != null) {
-            String refreshToken = refreshTokenCookie.getValue();
-            memberNo = jwtUtil.getMemberNo(refreshToken);
+    public ResponseEntity<?> logout(Authentication authentication, HttpServletRequest request) {
+        
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
+            Long memberNo = userDetails.getMemberNo();
+            
+            // DB에서 refreshToken 삭제
             authService.logout(memberNo);
+            
+            // SecurityContext 초기화
+            SecurityContextHolder.clearContext();
+            
+            ResponseCookie expiredAccessToken = ResponseCookie.from("accessToken", "")
+                    .httpOnly(true).path("/").maxAge(0)
+                    .sameSite("Lax").secure(true).build();
+            ResponseCookie expiredRefreshToken = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true).path("/auth").maxAge(0)
+                    .sameSite("Lax").secure(true).build();
+            
+            log.info("로그아웃 처리 완료 - memberNo: {}", memberNo);
+            
+            return ResponseEntity.ok()
+                    .headers(headers -> {
+                        headers.add(HttpHeaders.SET_COOKIE, expiredAccessToken.toString());
+                        headers.add(HttpHeaders.SET_COOKIE, expiredRefreshToken.toString());
+                    })
+                    .body(Map.of("success", true, "message", "로그아웃 완료"));
         }
-
-        ResponseCookie expiredAccessToken = ResponseCookie.from("accessToken", "")
-            .httpOnly(true).path("/").maxAge(0)
-            .sameSite("Lax").secure(true).build();
-        ResponseCookie expiredRefreshToken = ResponseCookie.from("refreshToken", "")
-            .httpOnly(true).path("/auth").maxAge(0)
-            .sameSite("Lax").secure(true).build();
-
-        log.info("로그아웃 처리 완료 - memberNo: {}", memberNo);
-
-        return ResponseEntity.ok()
-            .headers(headers -> {
-                headers.add(HttpHeaders.SET_COOKIE, expiredAccessToken.toString());
-                headers.add(HttpHeaders.SET_COOKIE, expiredRefreshToken.toString());
-            })
-            .body(Map.of("success", true, "message", "로그아웃 완료"));
+        
+        return ResponseEntity.ok("이미 로그아웃 되어 있습니다.");
     }
     
     @PostMapping("refresh")
