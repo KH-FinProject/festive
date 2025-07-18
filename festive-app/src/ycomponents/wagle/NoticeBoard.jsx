@@ -128,7 +128,7 @@ function NoticeBoard({ hideTitle }) {
                       notice.memberProfileImage
                         ? `${(
                             import.meta.env.VITE_API_URL ||
-                            "http://localhost:8080"
+                            "https://api.festivekorea.site"
                           ).replace(/\/+$/, "")}${
                             notice.memberProfileImage.startsWith("/")
                               ? notice.memberProfileImage

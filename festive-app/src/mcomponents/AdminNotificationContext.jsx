@@ -14,7 +14,8 @@ export const AdminNotificationProvider = ({ children }) => {
     if (!member || member.role !== "ADMIN") return;
     // WebSocket 연결 설정
     const connectWebSocket = () => {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const API_URL =
+        import.meta.env.VITE_API_URL || "https://api.festivekorea.site";
       const socket = new SockJS(`${API_URL}/ws`);
       const client = new Client({
         webSocketFactory: () => socket,
