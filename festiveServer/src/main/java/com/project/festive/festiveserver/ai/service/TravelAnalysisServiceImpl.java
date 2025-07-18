@@ -321,27 +321,33 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         // 🚇 역사명 기반 강제 매핑 (우선순위 최고) - 명동역 문제 해결
         if (message.contains("명동역") || message.contains("명동")) {
             log.info("🚇 역사명 강제 매핑: 명동역 → 서울 중구");
-            return new RegionInfo("1", "1_24", "명동역");
+            String originalRegion = message.contains("명동역") ? "명동역" : "명동";
+            return new RegionInfo("1", "1_24", originalRegion);
         }
         if (message.contains("홍대입구역") || message.contains("홍대")) {
             log.info("🚇 역사명 강제 매핑: 홍대 → 서울 마포구");
-            return new RegionInfo("1", "1_13", "홍대");
+            String originalRegion = message.contains("홍대입구역") ? "홍대입구역" : "홍대";
+            return new RegionInfo("1", "1_13", originalRegion);
         }
         if (message.contains("강남역") || message.contains("강남")) {
             log.info("🚇 역사명 강제 매핑: 강남역 → 서울 강남구");
-            return new RegionInfo("1", "1_11", "강남역");
+            String originalRegion = message.contains("강남역") ? "강남역" : "강남";
+            return new RegionInfo("1", "1_11", originalRegion);
         }
         if (message.contains("신촌역") || message.contains("신촌")) {
             log.info("🚇 역사명 강제 매핑: 신촌 → 서울 서대문구");
-            return new RegionInfo("1", "1_5", "신촌");
+            String originalRegion = message.contains("신촌역") ? "신촌역" : "신촌";
+            return new RegionInfo("1", "1_5", originalRegion);
         }
         if (message.contains("이태원역") || message.contains("이태원")) {
             log.info("🚇 역사명 강제 매핑: 이태원 → 서울 용산구");
-            return new RegionInfo("1", "1_21", "이태원");
+            String originalRegion = message.contains("이태원역") ? "이태원역" : "이태원";
+            return new RegionInfo("1", "1_21", originalRegion);
         }
         if (message.contains("잠실역") || message.contains("잠실")) {
             log.info("🚇 역사명 강제 매핑: 잠실 → 서울 송파구");
-            return new RegionInfo("1", "1_18", "잠실");
+            String originalRegion = message.contains("잠실역") ? "잠실역" : "잠실";
+            return new RegionInfo("1", "1_18", originalRegion);
         }
         
         // DB 기반 시군구 매핑 사용
@@ -773,16 +779,22 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return false;
         }
         
-        // 🚫 일반적인 조사/어미/단어는 지역명이 아님
+        // 🚫 일반적인 조사/어미/단어는 지역명이 아님 (구, 동 제외 - 지역명에 포함될 수 있음)
         String[] invalidWords = {
             "로", "에", "으로", "에서", "까지", "부터", "와", "과", "을", "를", "이", "가", "의", "도", "만", "라서", "라고",
-            "고", "구", "동", "면", "리", "번지", "호", "층", "가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"
+            "고", "면", "리", "번지", "호", "층", "가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"
+            // "구", "동" 제거: 중구, 동구, 강남구 등 유효한 지역명에 포함될 수 있음
         };
         
         for (String invalid : invalidWords) {
             if (regionName.equals(invalid)) {
                 return false;
             }
+        }
+        
+        // 🚫 단독 "구", "동"은 제외하되, "OO구", "OO동" 형태는 허용
+        if (regionName.equals("구") || regionName.equals("동")) {
+            return false;
         }
         
         // ✅ 의미 있는 지역명 패턴 검증
@@ -899,15 +911,18 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         if (lowerMessage.contains("명동역") || lowerMessage.contains("명동")) {
             // 명동역 → 서울 중구 강제 매핑
             log.info("🚇 역사명 강제 매핑: 명동역 → 서울 중구");
-            return new RegionInfo("1", "1_24", "명동역");
+            String originalRegion = lowerMessage.contains("명동역") ? "명동역" : "명동";
+            return new RegionInfo("1", "1_24", originalRegion);
         }
         if (lowerMessage.contains("홍대입구역") || lowerMessage.contains("홍대")) {
             log.info("🚇 역사명 강제 매핑: 홍대 → 서울 마포구");
-            return new RegionInfo("1", "1_13", "홍대");
+            String originalRegion = lowerMessage.contains("홍대입구역") ? "홍대입구역" : "홍대";
+            return new RegionInfo("1", "1_13", originalRegion);
         }
         if (lowerMessage.contains("강남역") || lowerMessage.contains("강남")) {
             log.info("🚇 역사명 강제 매핑: 강남역 → 서울 강남구");
-            return new RegionInfo("1", "1_11", "강남역");
+            String originalRegion = lowerMessage.contains("강남역") ? "강남역" : "강남";
+            return new RegionInfo("1", "1_11", originalRegion);
         }
         
         // 1️⃣ AI가 제공한 areaCode와 sigunguCode가 유효한지 먼저 확인
