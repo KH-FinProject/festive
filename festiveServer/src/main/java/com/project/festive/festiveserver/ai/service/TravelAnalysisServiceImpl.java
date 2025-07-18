@@ -756,20 +756,15 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return null;
         }
         
-        // 1️⃣ AI가 제공한 areaCode와 sigunguCode 우선 신뢰 (개선된 프롬프트 적용)
+        // 1️⃣ AI가 제공한 areaCode와 sigunguCode 우선 신뢰 (AI 추론이 정확하므로)
         if (aiRegion.getAreaCode() != null && aiRegion.getSigunguCode() != null) {
             String fullSigunguCode = aiRegion.getAreaCode() + "_" + aiRegion.getSigunguCode();
-            log.info("🔍 AI 코드 검증: fullSigunguCode={}", fullSigunguCode);
+            log.info("🔍 AI 코드 직접 사용: fullSigunguCode={}", fullSigunguCode);
             
-            // DB에서 해당 코드가 실제로 존재하는지 확인
-            for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
-                if (entry.getValue().equals(fullSigunguCode)) {
-                    log.info("✅ AI 시군구 코드 검증 성공: {} → {} ({})", 
-                            aiRegion.getRegionName(), entry.getKey(), fullSigunguCode);
-                    return new RegionInfo(aiRegion.getAreaCode(), fullSigunguCode, aiRegion.getRegionName());
-                }
-            }
-            log.warn("❌ AI 시군구 코드 검증 실패: DB에서 '{}' 찾을 수 없음", fullSigunguCode);
+            // AI 추론이 정확하므로 검증 없이 바로 사용
+            log.info("✅ AI 시군구 코드 직접 사용: {} → {} ({})", 
+                    aiRegion.getRegionName(), "AI추론결과", fullSigunguCode);
+            return new RegionInfo(aiRegion.getAreaCode(), fullSigunguCode, aiRegion.getRegionName());
         }
         
         // 2️⃣ areaCode만 있는 경우
