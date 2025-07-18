@@ -388,7 +388,11 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         // 🤖 AI 기반 지역 추출 시도
         RegionInfo aiRegionInfo = extractRegionWithAI(userMessage, sigunguCodeMapping, areaCodeMapping);
         if (aiRegionInfo != null) {
-            return aiRegionInfo;
+            // AI가 추론한 지역명이 DB 목록과 정확히 매칭되는지 검증
+            RegionInfo validatedRegion = validateAndRefineAIRegion(aiRegionInfo, userMessage, sigunguCodeMapping, areaCodeMapping);
+            if (validatedRegion != null) {
+                return validatedRegion;
+            }
         }
         
         log.warn("⚠️ 지역 매핑 실패 - 전국으로 설정: '{}'", userMessage);
@@ -787,10 +791,19 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             String areaCode = extractJsonValue(jsonStr, "areaCode");
             String sigunguCode = extractJsonValue(jsonStr, "sigunguCode");
             String confidence = extractJsonValue(jsonStr, "confidence");
+            String reasoning = extractJsonValue(jsonStr, "reasoning");
             
             if ("NONE".equals(region) || region == null || region.trim().isEmpty()) {
+                log.info("❌ AI 지역 추론 실패: region이 NONE이거나 비어있음");
                 return null;
             }
+            
+            // 🎯 AI 추론 결과 로깅
+            log.info("🎯 AI 지역 추론 성공: {} → {}(areaCode: {}, sigunguCode: {})", 
+                    reasoning != null ? reasoning : "추론 정보 없음", 
+                    region, 
+                    areaCode != null ? areaCode : "null", 
+                    sigunguCode != null ? sigunguCode : "null");
             
             return new RegionInfo(areaCode, sigunguCode, region);
             
@@ -800,6 +813,120 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         }
     }
     
+    /**
+     * AI가 추론한 지역 정보를 DB 매핑과 검증/정제
+     */
+    private RegionInfo validateAndRefineAIRegion(RegionInfo aiRegion, String userMessage, 
+                                                Map<String, String> sigunguCodeMapping, 
+                                                Map<String, String> areaCodeMapping) {
+        
+        if (aiRegion == null || aiRegion.getRegionName() == null) {
+            return null;
+        }
+        
+        String aiRegionName = aiRegion.getRegionName().trim();
+        
+        // 1️⃣ AI가 제공한 areaCode와 sigunguCode가 유효한지 먼저 확인
+        if (aiRegion.getAreaCode() != null && aiRegion.getSigunguCode() != null) {
+            String aiSigunguCode = aiRegion.getAreaCode() + "_" + aiRegion.getSigunguCode();
+            
+            // DB에서 해당 코드가 실제로 존재하는지 확인
+            for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
+                if (entry.getValue().equals(aiSigunguCode)) {
+                    log.info("✅ AI 추론 지역 검증 성공: {} → {} ({})", 
+                            aiRegionName, entry.getKey(), aiSigunguCode);
+                    return new RegionInfo(aiRegion.getAreaCode(), aiSigunguCode, entry.getKey());
+                }
+            }
+        }
+        
+        // 2️⃣ 시군구 이름으로 정확 매칭 시도
+        List<Map.Entry<String, String>> exactMatches = sigunguCodeMapping.entrySet().stream()
+            .filter(entry -> entry.getKey().contains(aiRegionName) || aiRegionName.contains(entry.getKey()))
+            .collect(Collectors.toList());
+        
+        if (exactMatches.size() == 1) {
+            // 정확히 하나만 매칭되면 사용
+            Map.Entry<String, String> match = exactMatches.get(0);
+            String[] codeParts = match.getValue().split("_");
+            log.info("✅ AI 추론 지역 단일 매칭: {} → {} ({})", 
+                    aiRegionName, match.getKey(), match.getValue());
+            return new RegionInfo(codeParts[0], match.getValue(), match.getKey());
+        }
+        
+        // 3️⃣ 여러 매칭이 있을 경우 문맥으로 판단
+        if (exactMatches.size() > 1) {
+            Map.Entry<String, String> bestMatch = selectBestMatchFromContext(exactMatches, userMessage, aiRegionName);
+            if (bestMatch != null) {
+                String[] codeParts = bestMatch.getValue().split("_");
+                log.info("✅ AI 추론 지역 문맥 매칭: {} → {} ({})", 
+                        aiRegionName, bestMatch.getKey(), bestMatch.getValue());
+                return new RegionInfo(codeParts[0], bestMatch.getValue(), bestMatch.getKey());
+            }
+        }
+        
+        // 4️⃣ 광역시/도 레벨에서 매칭 시도
+        for (Map.Entry<String, String> entry : areaCodeMapping.entrySet()) {
+            if (entry.getKey().contains(aiRegionName) || aiRegionName.contains(entry.getKey())) {
+                log.info("✅ AI 추론 지역 광역 매칭: {} → {} (areaCode: {})", 
+                        aiRegionName, entry.getKey(), entry.getValue());
+                return new RegionInfo(entry.getValue(), null, entry.getKey());
+            }
+        }
+        
+        log.warn("❌ AI 추론 지역 검증 실패: '{}' - DB에서 매칭되는 지역을 찾을 수 없음", aiRegionName);
+        return null;
+    }
+    
+    /**
+     * 여러 매칭 후보 중에서 문맥상 가장 적절한 것 선택
+     */
+    private Map.Entry<String, String> selectBestMatchFromContext(List<Map.Entry<String, String>> matches, 
+                                                               String userMessage, String aiRegionName) {
+        
+        String lowerMessage = userMessage.toLowerCase();
+        
+        // 서울 관련 키워드가 있으면 서울 지역 우선
+        if (lowerMessage.contains("서울") || lowerMessage.contains("seoul") || 
+            lowerMessage.contains("지하철") || lowerMessage.contains("역")) {
+            
+            for (Map.Entry<String, String> match : matches) {
+                if (match.getValue().startsWith("1_")) { // 서울 지역코드
+                    log.info("🎯 문맥 매칭: 서울 관련 키워드 감지 → {}", match.getKey());
+                    return match;
+                }
+            }
+        }
+        
+        // 부산 관련 키워드가 있으면 부산 지역 우선
+        if (lowerMessage.contains("부산") || lowerMessage.contains("busan") || 
+            lowerMessage.contains("해운대") || lowerMessage.contains("광안리")) {
+            
+            for (Map.Entry<String, String> match : matches) {
+                if (match.getValue().startsWith("6_")) { // 부산 지역코드
+                    log.info("🎯 문맥 매칭: 부산 관련 키워드 감지 → {}", match.getKey());
+                    return match;
+                }
+            }
+        }
+        
+        // 대전 관련 키워드가 있으면 대전 지역 우선
+        if (lowerMessage.contains("대전") || lowerMessage.contains("daejeon") || 
+            lowerMessage.contains("kaist") || lowerMessage.contains("유성")) {
+            
+            for (Map.Entry<String, String> match : matches) {
+                if (match.getValue().startsWith("8_")) { // 대전 지역코드
+                    log.info("🎯 문맥 매칭: 대전 관련 키워드 감지 → {}", match.getKey());
+                    return match;
+                }
+            }
+        }
+        
+        // 기본적으로 첫 번째 매칭 반환 (보통 서울이 먼저 나옴)
+        log.info("⚠️ 문맥 판단 불가 - 첫 번째 후보 선택: {}", matches.get(0).getKey());
+        return matches.get(0);
+    }
+
     /**
      * JSON 문자열에서 값 추출 (간단한 파싱)
      */

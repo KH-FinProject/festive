@@ -407,25 +407,51 @@ public class OpenAIServiceImpl implements OpenAIService {
         prompt.append("**가능한 지역 목록**:\n");
         prompt.append(availableRegions).append("\n\n");
         
-        prompt.append("**추출 규칙**:\n");
-        prompt.append("1. 메시지에서 지역명을 찾아서 위 목록에서 정확히 일치하는 것을 선택\n");
-        prompt.append("2. 지역명의 별칭이나 줄임말도 고려 (예: 통영 → 통영시)\n");
-        prompt.append("3. 조사나 어미는 무시 (예: '통영으로' → '통영시')\n");
-        prompt.append("4. 오타나 표기 변형도 고려\n");
-        prompt.append("5. 지역명이 없으면 'NONE' 반환\n\n");
+        prompt.append("**🎯 지능적 지역 추론 규칙**:\n");
+        prompt.append("1. **직접 지역명**: 메시지에서 지역명을 찾아서 위 목록에서 정확히 일치하는 것을 선택\n");
+        prompt.append("2. **지역명 변형**: 별칭이나 줄임말도 고려 (예: 통영 → 통영시, 부산 → 부산광역시)\n");
+        prompt.append("3. **조사/어미 무시**: 조사나 어미는 무시 (예: '통영으로' → '통영시')\n");
+        prompt.append("4. **🚇 지하철역/역사 → 지역 추론**: 당신의 지식을 활용해 지하철역이나 기차역이 어느 지역에 있는지 판단\n");
+        prompt.append("   예) 명동역 → 서울 중구, 홍대입구역 → 서울 마포구, 부산역 → 부산 동구\n");
+        prompt.append("5. **🏛️ 랜드마크/관광지 → 지역 추론**: 유명한 랜드마크나 관광지가 어느 지역에 있는지 판단\n");
+        prompt.append("   예) 경복궁 → 서울 종로구, 해운대 → 부산 해운대구, 제주공항 → 제주 제주시\n");
+        prompt.append("6. **🏫 대학교/기관 → 지역 추론**: 대학교나 주요 기관이 어느 지역에 있는지 판단\n");
+        prompt.append("   예) 서울대 → 서울 관악구, 부산대 → 부산 금정구, KAIST → 대전 유성구\n");
+        prompt.append("7. **🏢 상권/동네 → 지역 추론**: 유명한 상권이나 동네명으로 지역 판단\n");
+        prompt.append("   예) 강남 → 서울 강남구, 명동 → 서울 중구, 센텀시티 → 부산 해운대구\n");
+        prompt.append("8. **일반 지식 활용**: 당신이 알고 있는 한국 지리 지식을 최대한 활용하여 추론\n");
+        prompt.append("9. **추론된 지역을 위 목록과 매칭**: 추론한 지역명을 가능한 지역 목록에서 찾아 정확한 코드 반환\n");
+        prompt.append("10. **region 필드는 원본 표현 유지**: 사용자가 입력한 원래 지역 표현을 그대로 반환 (예: '명동역' → '명동역', '홍대' → '홍대')\n");
+        prompt.append("11. **areaCode와 sigunguCode는 정확한 코드**: DB 목록에서 찾은 정확한 지역코드와 시군구코드 반환\n");
+        prompt.append("12. **지역 정보가 없으면 'NONE' 반환**: 명확한 지역 정보가 없거나 추론이 불가능한 경우\n\n");
         
         prompt.append("**응답 형식** (JSON):\n");
         prompt.append("{\n");
-        prompt.append("  \"region\": \"정확한 지역명\",\n");
+        prompt.append("  \"region\": \"사용자가 입력한 원본 지역 표현\",\n");
         prompt.append("  \"areaCode\": \"지역코드\",\n");
-        prompt.append("  \"sigunguCode\": \"시군구코드\",\n");
-        prompt.append("  \"confidence\": \"HIGH|MEDIUM|LOW\"\n");
+        prompt.append("  \"sigunguCode\": \"시군구코드 (없으면 null)\",\n");
+        prompt.append("  \"confidence\": \"HIGH|MEDIUM|LOW\",\n");
+        prompt.append("  \"reasoning\": \"추론 과정 설명\"\n");
         prompt.append("}\n\n");
         
-        prompt.append("**예시**:\n");
-        prompt.append("- '통영 2박3일 음식점위주로 여행계획 짜줘' → {\"region\": \"통영시\", \"areaCode\": \"36\", \"sigunguCode\": \"17\", \"confidence\": \"HIGH\"}\n");
-        prompt.append("- '부산 여행 가고싶어' → {\"region\": \"부산광역시\", \"areaCode\": \"6\", \"sigunguCode\": null, \"confidence\": \"HIGH\"}\n");
-        prompt.append("- '맛집 추천해줘' → {\"region\": \"NONE\", \"areaCode\": null, \"sigunguCode\": null, \"confidence\": \"LOW\"}\n");
+        prompt.append("**🎯 지능적 추론 예시**:\n");
+        prompt.append("1. 지하철역: '명동역 맛집 추천해줘'\n");
+        prompt.append("   → 명동역이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 매칭된 코드 반환\n");
+        prompt.append("   → {\"region\": \"명동역\", \"areaCode\": \"1\", \"sigunguCode\": \"24\", \"confidence\": \"HIGH\", \"reasoning\": \"명동역은 서울 중구에 위치\"}\n\n");
+        
+        prompt.append("2. 랜드마크: '경복궁 주변 관광지 알려줘'\n");
+        prompt.append("   → 경복궁이 서울 종로구에 있다는 지식 활용 → 목록에서 '종로구' 검색\n");
+        prompt.append("   → {\"region\": \"경복궁\", \"areaCode\": \"1\", \"sigunguCode\": \"25\", \"confidence\": \"HIGH\", \"reasoning\": \"경복궁은 서울 종로구에 위치\"}\n\n");
+        
+        prompt.append("3. 대학교: 'KAIST 근처 맛집 추천'\n");
+        prompt.append("   → KAIST가 대전 유성구에 있다는 지식 활용 → 목록에서 '유성구' 검색\n");
+        prompt.append("   → {\"region\": \"KAIST\", \"areaCode\": \"8\", \"sigunguCode\": \"3\", \"confidence\": \"HIGH\", \"reasoning\": \"KAIST는 대전 유성구에 위치\"}\n\n");
+        
+        prompt.append("4. 직접 지역명: '통영 2박3일 음식점위주로'\n");
+        prompt.append("   → {\"region\": \"통영\", \"areaCode\": \"36\", \"sigunguCode\": \"17\", \"confidence\": \"HIGH\", \"reasoning\": \"직접적인 지역명 통영시\"}\n\n");
+        
+        prompt.append("5. 지역 정보 없음: '맛집 추천해줘'\n");
+        prompt.append("   → {\"region\": \"NONE\", \"areaCode\": null, \"sigunguCode\": null, \"confidence\": \"LOW\", \"reasoning\": \"지역 정보 없음\"}\n");
         
         return callOpenAI(prompt.toString());
     }

@@ -721,6 +721,12 @@ public class AITravelServiceImpl implements AITravelService {
             log.error("TourAPI 데이터 수집 중 오류", e);
         }
         
+        // 🎲 수집된 모든 데이터를 랜덤으로 섞어서 다양성 증대
+        if (!allItems.isEmpty()) {
+            java.util.Collections.shuffle(allItems);
+            log.info("🎲 TourAPI 데이터 랜덤 섞기 완료: {}개", allItems.size());
+        }
+        
         return allItems;
     }
     
@@ -1079,19 +1085,53 @@ public class AITravelServiceImpl implements AITravelService {
             log.info("🎲 일반 요청 감지, 랜덤 선택: {} ({})", randomType, getContentTypeNameByCode(randomType));
             return randomType;
         } else if (detectedTypes.size() == 1) {
-            // 단일 타입 요청
+            // 🎲 단일 타입 요청 + 랜덤 다양성 추가
             String selectedType = detectedTypes.get(0);
-            log.info("🎯 단일 타입 요청: {} ({})", selectedType, getContentTypeNameByCode(selectedType));
-            return selectedType;
-        } else {
-            // 🌈 복합 키워드 요청 - 첫 번째 감지된 타입을 주 타입으로 사용하되, 다른 타입도 수집함을 표시
-            String primaryType = detectedTypes.get(0);
-            log.info("🌈 복합 키워드 요청 감지: {}개 타입, 주타입: {} ({})", 
-                    detectedTypes.size(), primaryType, getContentTypeNameByCode(primaryType));
             
-            // 복합 타입들을 쉼표로 구분하여 저장 (나중에 처리할 수 있도록)
-            String combinedTypes = String.join(",", detectedTypes);
-            log.info("🔗 복합 타입들: {}", combinedTypes);
+            // 30% 확률로 추가 랜덤 타입을 섞어서 다양성 증대
+            if (new java.util.Random().nextDouble() < 0.3) {
+                String[] diversityTypes = {"25", "12", "14", "28", "32", "38", "39"}; // 다양한 타입
+                List<String> finalTypes = new ArrayList<>(detectedTypes);
+                
+                // 감지된 타입과 다른 랜덤 타입 1-2개 추가
+                int additionalCount = new java.util.Random().nextInt(2) + 1; // 1-2개
+                for (int i = 0; i < additionalCount; i++) {
+                    String randomType = diversityTypes[new java.util.Random().nextInt(diversityTypes.length)];
+                    if (!finalTypes.contains(randomType)) {
+                        finalTypes.add(randomType);
+                    }
+                }
+                
+                // 순서도 랜덤으로 섞기
+                java.util.Collections.shuffle(finalTypes);
+                String combinedTypes = String.join(",", finalTypes);
+                log.info("🎲 단일 타입 + 랜덤 다양성: {} → MULTI:{}", selectedType, combinedTypes);
+                return "MULTI:" + combinedTypes;
+            } else {
+                log.info("🎯 단일 타입 요청: {} ({})", selectedType, getContentTypeNameByCode(selectedType));
+                return selectedType;
+            }
+        } else {
+            // 🌈 복합 키워드 요청 - 랜덤으로 순서 섞기
+            List<String> shuffledTypes = new ArrayList<>(detectedTypes);
+            java.util.Collections.shuffle(shuffledTypes);
+            
+            String primaryType = shuffledTypes.get(0);
+            log.info("🌈 복합 키워드 요청 (랜덤 섞기): {}개 타입, 주타입: {} ({})", 
+                    shuffledTypes.size(), primaryType, getContentTypeNameByCode(primaryType));
+            
+            // 40% 확률로 추가 랜덤 타입 1개 더 추가
+            if (new java.util.Random().nextDouble() < 0.4) {
+                String[] extraTypes = {"25", "12", "14", "28", "32", "38", "39"};
+                String extraType = extraTypes[new java.util.Random().nextInt(extraTypes.length)];
+                if (!shuffledTypes.contains(extraType)) {
+                    shuffledTypes.add(extraType);
+                    log.info("🎲 추가 랜덤 타입 혼합: {}", extraType);
+                }
+            }
+            
+            String combinedTypes = String.join(",", shuffledTypes);
+            log.info("🔗 최종 복합 타입들 (랜덤 섞기): {}", combinedTypes);
             
             return "MULTI:" + combinedTypes; // 복합 타입 표시
         }
@@ -2185,20 +2225,35 @@ public class AITravelServiceImpl implements AITravelService {
             return Double.compare(distA, distB);
         });
         
-        // 가까운 순서대로 필요한 만큼 선택 (최대 30km 이내)
+        // 🎲 가까운 장소들 중에서 랜덤 선택으로 다양성 증대 (최대 30km 이내)
         double maxDistance = 30.0; // 30km
+        List<ChatResponse.LocationInfo> nearbyOptions = new ArrayList<>();
+        
+        // 먼저 거리 내 모든 후보 찾기
         for (ChatResponse.LocationInfo candidate : candidates) {
-            if (dayPlaces.size() >= needed) break;
-            
             if (!usedPlaces.contains(candidate.getName())) {
                 double distance = calculateDistance(refLat, refLng, candidate.getLatitude(), candidate.getLongitude());
-                
                 if (distance <= maxDistance) {
-                    dayPlaces.add(candidate);
-                    usedPlaces.add(candidate.getName());
-                    log.info("📍 선택된 장소: {} (거리: {:.1f}km)", candidate.getName(), distance);
+                    nearbyOptions.add(candidate);
                 }
             }
+        }
+        
+        // 🎲 필요한 만큼 랜덤 선택 (가까운 것 위주이지만 완전히 순서대로는 아님)
+        java.util.Random random = new java.util.Random();
+        while (dayPlaces.size() < needed && !nearbyOptions.isEmpty()) {
+            int selectRange = Math.min(nearbyOptions.size(), 3); // 가장 가까운 3개 중에서 랜덤 선택
+            int selectedIndex = random.nextInt(selectRange);
+            
+            ChatResponse.LocationInfo selected = nearbyOptions.get(selectedIndex);
+            double distance = calculateDistance(refLat, refLng, selected.getLatitude(), selected.getLongitude());
+            
+            dayPlaces.add(selected);
+            usedPlaces.add(selected.getName());
+            nearbyOptions.remove(selectedIndex);
+            
+            log.info("🎲 랜덤 선택된 장소: {} (거리: {:.1f}km, {}개 중 {}번째)", 
+                     selected.getName(), distance, selectRange, selectedIndex + 1);
         }
         
         // 선택된 장소들을 candidates에서 제거
