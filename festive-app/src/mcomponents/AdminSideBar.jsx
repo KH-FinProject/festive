@@ -44,6 +44,14 @@ const AdminSidebar = () => {
               <span>관리자 계정생성</span>
             </NavLink>
             <NavLink
+              to="/admin/allMembers"
+              className={({ isActive }) =>
+                `sidebar-item ${isActive ? "active" : "inactive"}`
+              }
+            >
+              <span>전체 회원 관리</span>
+            </NavLink>
+            <NavLink
               to="/admin/users"
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? "active" : "inactive"}`

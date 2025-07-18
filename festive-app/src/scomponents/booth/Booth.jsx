@@ -33,11 +33,11 @@ async function fetchFestivals({ keyword, region, startDate, endDate }) {
     // 종료된 축제 제외
     const filtered = Array.isArray(items)
       ? items.filter((item) => {
-          const start = item.eventstartdate;
-          const end = item.eventenddate;
-          if (getFestivalStatus(start, end) === "종료") return false;
-          return true;
-        })
+        const start = item.eventstartdate;
+        const end = item.eventenddate;
+        if (getFestivalStatus(start, end) === "종료") return false;
+        return true;
+      })
       : [items];
     return filtered.map((item) => {
       const start = item.eventstartdate;
@@ -87,10 +87,10 @@ function FestivalSearchModal({ open, onClose, onSelect, areaOptions }) {
     const safeAreaOptions =
       areaOptions.length > 0
         ? [
-            ...new Map(
-              areaOptions.map((area) => [area.areaName, area])
-            ).values(),
-          ]
+          ...new Map(
+            areaOptions.map((area) => [area.areaName, area])
+          ).values(),
+        ]
         : [{ areaName: "서울", areaCode: "1" }];
     console.log("safeAreaOptions:", safeAreaOptions);
   }, [areaOptions]);

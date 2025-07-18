@@ -20,11 +20,9 @@ const Header = () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
-      const res = await axiosApi.post("/auth/logout");
+      await axiosApi.post("/auth/logout");
       logout();
       navigate("/");
-    } catch (error) {
-      // 에러 핸들링 필요시 추가
     } finally {
       setIsLoggingOut(false);
     }
@@ -100,7 +98,8 @@ const Header = () => {
                 src={
                   member?.profileImage
                     ? `${(
-                        import.meta.env.VITE_API_URL || "http://localhost:8080"
+                        import.meta.env.VITE_API_URL ||
+                        "https://api.festivekorea.site"
                       ).replace(/\/+$/, "")}${
                         member.profileImage.startsWith("/")
                           ? member.profileImage

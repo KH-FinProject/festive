@@ -49,5 +49,18 @@ public interface AdminService {
 	// 선택한 글 삭제
 	int deleteBoard(List<Integer> boardNoList);
 
+	/** 전체 회원 관리
+	 * @return
+	 * @author 미애
+	 */
+	List<MemberDto> selectAllMembers();
+
+	/** 회원 로그인 제재
+	 * @return
+	 * @author 미애
+	 * @param memberNoList 
+	 */
+	int updateMemberDisable(List<Integer> memberNoList);
+
 
 }

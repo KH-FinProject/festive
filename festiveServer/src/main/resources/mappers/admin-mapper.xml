@@ -49,14 +49,22 @@
 	<delete id="deleteWithdrawMember">
 		DELETE FROM MEMBER
 		WHERE MEMBER_NO = #{memberNo}
-		AND
-		MEMBER_DEL_FL = 'Y'
+		<!-- AND MEMBER_DEL_FL = 'Y' -->
 	</delete>
 
+	<!-- 탈퇴 회원 복구 : 미애 -->
+	<update id="updateWithdrawMember">
+		UPDATE MEMBER
+		SET MEMBER_DEL_FL = 'N',
+		WITHDRAW_DATE =
+		NULL
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
 	
 	<!-- 통계 조회: 전체 회원 수 -->
 	<select id="getTotalMembers" resultType="int">
 		SELECT COUNT(*) FROM MEMBER
+		WHERE ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 활동 회원 수 (최근 일주일 내 게시글/댓글 활동이 있는 회원) -->
@@ -68,37 +76,40 @@
 			m.MEMBER_NO IN (
 				SELECT DISTINCT b.MEMBER_NO 
 				FROM BOARD b 
-				WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+				WHERE TRUNC(b.BOARD_CREAT_DATE) &gt;= TRUNC(SYSDATE) - 6
 				AND b.BOARD_DEL_FL = 'N'
 			)
 			OR 
 			m.MEMBER_NO IN (
 				SELECT DISTINCT c.MEMBER_NO 
 				FROM "COMMENT" c 
-				WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+				WHERE TRUNC(c.COMMENT_WRITE_DATE) &gt;= TRUNC(SYSDATE) - 6
 				AND c.COMMENT_DEL_FL = 'N'
 			)
 		)
+		AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 탈퇴 회원 수 -->
 	<select id="getWithdrawMembers" resultType="int">
-		SELECT COUNT(*) FROM MEMBER WHERE MEMBER_DEL_FL = 'Y'
+		SELECT COUNT(*) FROM MEMBER WHERE MEMBER_DEL_FL = 'Y' AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 최근 일주일 신규 회원 수 -->
 	<select id="getWeeklyNewMembers" resultType="int">
 		SELECT COUNT(*) 
 		FROM MEMBER 
-		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+		WHERE TRUNC(ENROLL_DATE) &gt;= TRUNC(SYSDATE) - 6
+		AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 최근 일주일 탈퇴 회원 수 -->
 	<select id="getWeeklyWithdrawMembers" resultType="int">
 		SELECT COUNT(*) 
 		FROM MEMBER 
-		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		WHERE TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6 
 		AND WITHDRAW_DATE IS NOT NULL
+		AND ROLE = 'USER'
 	</select>
 	
 	<!-- 통계 조회: 일반 활성 회원 수 (탈퇴하지 않은 전체 회원) -->
@@ -106,6 +117,16 @@
 		SELECT COUNT(*) 
 		FROM MEMBER 
 		WHERE MEMBER_DEL_FL = 'N'
+		AND ROLE = 'USER'
+	</select>
+	
+	<!-- 통계 조회: 7일 전까지의 기준 회원 수 (누적 계산용) -->
+	<select id="getBaseMembersCount" resultType="int">
+		SELECT COUNT(*) 
+		FROM MEMBER 
+		WHERE TRUNC(ENROLL_DATE) &lt; TRUNC(SYSDATE) - 6
+		AND (MEMBER_DEL_FL = 'N' OR TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6)
+		AND ROLE = 'USER'
 	</select>
 
 	<!-- 통계 조회: 일별 신규 회원 수 -->
@@ -113,7 +134,8 @@
 		SELECT TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD') as ENROLL_DATE_STR,
 			   COUNT(*) as NEW_MEMBERS
 		FROM MEMBER
-		WHERE ENROLL_DATE &gt;= SYSDATE - 7
+		WHERE TRUNC(ENROLL_DATE) &gt;= TRUNC(SYSDATE) - 6
+		AND ROLE = 'USER'
 		GROUP BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
 		ORDER BY TO_CHAR(ENROLL_DATE, 'YYYY-MM-DD')
 	</select>
@@ -123,8 +145,9 @@
 		SELECT TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD') as WITHDRAW_DATE_STR,
 			   COUNT(*) as WITHDRAW_MEMBERS
 		FROM MEMBER
-		WHERE WITHDRAW_DATE &gt;= SYSDATE - 7 
+		WHERE TRUNC(WITHDRAW_DATE) &gt;= TRUNC(SYSDATE) - 6 
 		AND WITHDRAW_DATE IS NOT NULL
+		AND ROLE = 'USER'
 		GROUP BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
 		ORDER BY TO_CHAR(WITHDRAW_DATE, 'YYYY-MM-DD')
 	</select>
@@ -137,7 +160,7 @@
 			SELECT TO_CHAR(b.BOARD_CREAT_DATE, 'YYYY-MM-DD') as activity_date,
 				   b.MEMBER_NO as member_no
 			FROM BOARD b
-			WHERE b.BOARD_CREAT_DATE &gt;= SYSDATE - 7
+			WHERE TRUNC(b.BOARD_CREAT_DATE) &gt;= TRUNC(SYSDATE) - 6
 			AND b.BOARD_DEL_FL = 'N'
 			
 			UNION
@@ -145,23 +168,13 @@
 			SELECT TO_CHAR(c.COMMENT_WRITE_DATE, 'YYYY-MM-DD') as activity_date,
 				   c.MEMBER_NO as member_no
 			FROM "COMMENT" c
-			WHERE c.COMMENT_WRITE_DATE &gt;= SYSDATE - 7
+			WHERE TRUNC(c.COMMENT_WRITE_DATE) &gt;= TRUNC(SYSDATE) - 6
 			AND c.COMMENT_DEL_FL = 'N'
 		)
 		GROUP BY activity_date
 		ORDER BY activity_date
 	</select>
 
-
-  
-	<!-- 탈퇴 회원 복구 : 미애 -->
-	<update id="updateWithdrawMember">
-		UPDATE MEMBER
-		SET MEMBER_DEL_FL = 'N',
-		WITHDRAW_DATE =
-		NULL
-		WHERE MEMBER_NO = #{memberNo}
-	</update>
 
 	<!-- 공지글 작성 : 지현 -->
 	<insert id="insertBoard">
@@ -216,5 +229,27 @@
 	</delete>
 
 
+	<!-- 전체 회원 관리 : 미애 -->
+	<select id="selectAllMembers">
+		SELECT MEMBER_NO, ID, NAME, NICKNAME, SANCTION_COUNT, MEMBER_DEL_FL
+		FROM MEMBER
+		WHERE ROLE = 'USER'
+		ORDER BY NAME
+	</select>
+	
+	
+	<!-- 회원 로그인 제재 -->
+	<update id="updateMemberDisable">
+		UPDATE MEMBER
+		SET SANCTION_COUNT = #{sanctionCount}
+		WHERE MEMBER_NO = #{memberNo}
+	</update>
+	
+	<!-- 회원의 로그인 제재 상태 확인 -->
+	<select id="getSantionCount">
+		SELECT SANCTION_COUNT 
+		FROM MEMBER
+		WHERE MEMBER_NO = #{memberNo}
+	</select>
 
 </mapper>

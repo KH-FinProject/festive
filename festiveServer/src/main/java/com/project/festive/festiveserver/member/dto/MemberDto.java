@@ -40,6 +40,10 @@ public class MemberDto {
   
   private String enrollDate;  // 가입일 추가
   
+  private String memberDelFl; // 탈퇴여부 - 미애 추가
+  
+  private int sanctionCount; // 제재횟수 - 미애 추가
+  
   // 마이페이지 비밀번호 변경 및 확인을 위해 추가함 - 지현
   private String currentPassword;
   

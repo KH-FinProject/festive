@@ -75,9 +75,10 @@ function CommentItem({
           className="comment-avatar"
           src={
             comment.memberProfileImage
-              ? `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${
-                  comment.memberProfileImage
-                }`
+              ? `${
+                  import.meta.env.VITE_API_URL ||
+                  "https://api.festivekorea.site"
+                }${comment.memberProfileImage}`
               : "/logo.png"
           }
           alt="프로필"
@@ -91,7 +92,9 @@ function CommentItem({
             e.target.src = "/logo.png";
           }}
         />
-        <span className="comment-author">{comment.memberNickname ? comment.memberNickname : "알 수 없음"}</span>
+        <span className="comment-author">
+          {comment.memberNickname ? comment.memberNickname : "알 수 없음"}
+        </span>
         <span className="comment-date">
           {formatDate(comment.commentCreateDate)}
         </span>
@@ -184,7 +187,7 @@ function CommentItem({
                     reply.memberProfileImage
                       ? `${(
                           import.meta.env.VITE_API_URL ||
-                          "http://localhost:8080"
+                          "https://api.festivekorea.site"
                         ).replace(/\/+$/, "")}${
                           reply.memberProfileImage.startsWith("/")
                             ? reply.memberProfileImage
@@ -203,7 +206,9 @@ function CommentItem({
                     e.target.src = "/logo.png";
                   }}
                 />
-                <span className="comment-author">{reply.memberNickname ? reply.memberNickname : "알 수 없음"}</span>
+                <span className="comment-author">
+                  {reply.memberNickname ? reply.memberNickname : "알 수 없음"}
+                </span>
                 <span className="comment-date">
                   {formatDate(reply.commentCreateDate)}
                 </span>
@@ -723,7 +728,8 @@ function WagleDetail() {
               src={
                 post.memberProfileImage
                   ? `${(
-                      import.meta.env.VITE_API_URL || "http://localhost:8080"
+                      import.meta.env.VITE_API_URL ||
+                      "https://api.festivekorea.site"
                     ).replace(/\/+$/, "")}${
                       post.memberProfileImage.startsWith("/")
                         ? post.memberProfileImage
@@ -742,7 +748,9 @@ function WagleDetail() {
                 e.target.src = "/logo.png";
               }}
             />
-            <span className="author">{post.author ? post.author : "알 수 없음"}</span>
+            <span className="author">
+              {post.author ? post.author : "알 수 없음"}
+            </span>
             <span className="date">{post.date}</span>
             <span className="views">{post.views}</span>
             {!isNotice && (

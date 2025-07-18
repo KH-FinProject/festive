@@ -4,7 +4,6 @@ import { Map, MapMarker, Polyline, useKakaoLoader } from "react-kakao-maps-sdk";
 import axios from "axios";
 import axiosApi from "../../api/axiosAPI";
 import "./TravelCourseDetail.css";
-import logo from "../../assets/festiveLogo.png";
 
 const TravelCourseDetail = () => {
   const { courseId } = useParams();
@@ -146,12 +145,10 @@ const TravelCourseDetail = () => {
   // 장소의 상세 정보(overview)를 가져오는 함수
   const fetchPlaceOverview = async (contentId, place) => {
     if (!contentId) {
-      console.log("📝 contentId 없음, overview 스킵");
       setPlaceOverview("");
       return;
     }
 
-    console.log("📝 장소 상세 정보 요청 시작:", contentId);
     setLoadingOverview(true);
     try {
       // 📝 장소 상세 정보도 공개 API이므로 인증 없이 요청
@@ -161,35 +158,22 @@ const TravelCourseDetail = () => {
         },
       });
 
-      console.log("📝 API 응답 상태:", response.status);
-      console.log("📝 API 응답 데이터:", response.data);
-
       if (response.status === 200) {
         const data = response.data;
-        console.log("📝 응답 분석:", {
-          success: data.success,
-          overview: data.overview,
-          overviewLength: data.overview ? data.overview.length : 0,
-          overviewTrimmed: data.overview ? data.overview.trim().length : 0,
-        });
 
         // overview가 존재하고 실제 내용이 있는지 확인
         if (data.success && data.overview && data.overview.trim().length > 0) {
-          console.log("✅ TourAPI Overview 설정:", data.overview.trim());
           setPlaceOverview(data.overview.trim());
         } else {
-          console.log("❌ TourAPI Overview 없음, AI 설명 사용");
           // TourAPI에서 overview를 가져오지 못했을 때 AI 설명 생성
           const aiDescription = generateAIDescription(place);
           setPlaceOverview(aiDescription);
         }
       } else {
-        console.log("❌ 응답 상태 오류:", response.status);
         setPlaceOverview("");
       }
     } catch (error) {
-      console.error("❌ 장소 상세 정보 로드 실패:", error);
-      console.error("❌ 에러 응답:", error.response?.data);
+      console.error("장소 상세 정보 로드 실패:", error);
       setPlaceOverview("");
     } finally {
       setLoadingOverview(false);
@@ -469,12 +453,17 @@ const TravelCourseDetail = () => {
 
     // 병렬로 장소 이미지와 상세 정보 가져오기
     if (place.contentId) {
-      const [images] = await Promise.all([
-        fetchPlaceImages(place.contentId),
-        fetchPlaceOverview(place.contentId, place),
-      ]);
-      setPlaceImages(images);
-      // fetchPlaceOverview는 내부에서 setPlaceOverview를 호출하므로 추가 처리 불필요
+      try {
+        const [images] = await Promise.all([
+          fetchPlaceImages(place.contentId),
+          fetchPlaceOverview(place.contentId, place),
+        ]);
+        setPlaceImages(images);
+      } catch (error) {
+        console.error("API 호출 실패:", error);
+        setPlaceImages([]);
+        setPlaceOverview("");
+      }
     } else {
       setPlaceImages([]);
       setPlaceOverview("");
@@ -515,7 +504,7 @@ const TravelCourseDetail = () => {
     // 이미지가 없으면 로고 추가
     if (images.length === 0) {
       images.push({
-        url: logo,
+        url: "/logo.png",
         alt: selectedPlace?.placeName || "기본 이미지",
         type: "default",
       });
@@ -714,11 +703,11 @@ const TravelCourseDetail = () => {
             {/* 작성자 정보 */}
             <div className="travel-detail-author">
               <img
-                src={courseData?.memberProfileImage || logo}
+                src={courseData?.memberProfileImage || "/logo.png"}
                 alt="작성자"
                 className="travel-detail-author-profile"
                 onError={(e) => {
-                  e.target.src = logo;
+                  e.target.src = "/logo.png";
                 }}
               />
               <div className="travel-detail-author-info">
@@ -825,10 +814,10 @@ const TravelCourseDetail = () => {
                   <div className="travel-detail-place-number">{index + 1}</div>
                   <div className="travel-detail-place-image">
                     <img
-                      src={place.placeImage || logo}
+                      src={place.placeImage || "/logo.png"}
                       alt={place.placeName}
                       onError={(e) => {
-                        e.target.src = logo;
+                        e.target.src = "/logo.png";
                       }}
                     />
                   </div>
@@ -885,6 +874,16 @@ const TravelCourseDetail = () => {
             {dayPlaces.map((place, index) => {
               if (!place.latitude || !place.longitude) return null;
 
+              // 🎪 축제공연행사 타입인지 확인
+              const isFestival =
+                place.placeCategory === "축제공연행사" ||
+                place.placeCategory === "축제" ||
+                (place.placeCategory && place.placeCategory.includes("축제"));
+
+              // 축제인 경우 특별한 마커 색상과 아이콘 사용
+              const markerColor = isFestival ? "#FF1493" : "#FF6B6B"; // 축제는 진분홍, 일반은 빨강
+              const markerIcon = isFestival ? "F" : (index + 1).toString(); // 축제는 F, 일반은 숫자
+
               return (
                 <MapMarker
                   key={place.detailNo}
@@ -895,16 +894,18 @@ const TravelCourseDetail = () => {
                   image={{
                     src: `data:image/svg+xml;base64,${btoa(`
                       <svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="#FF6B6B"/>
+                        <path d="M15 0C6.716 0 0 6.716 0 15c0 8.284 15 25 15 25s15-16.716 15-25C30 6.716 23.284 0 15 0z" fill="${markerColor}"/>
                         <circle cx="15" cy="15" r="8" fill="white"/>
-                        <text x="15" y="20" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#FF6B6B">${
-                          index + 1
-                        }</text>
+                        <text x="15" y="20" text-anchor="middle" font-family="Arial" font-size="${
+                          isFestival ? "14" : "12"
+                        }" font-weight="bold" fill="${markerColor}">${markerIcon}</text>
                       </svg>
                     `)}`,
                     size: { width: 30, height: 40 },
                   }}
-                  title={`${index + 1}. ${place.placeName}`}
+                  title={`${isFestival ? "🎪 " : ""}${index + 1}. ${
+                    place.placeName
+                  }`}
                   onClick={() => {
                     setMapCenter({
                       lat: parseFloat(place.latitude),
@@ -974,7 +975,7 @@ const TravelCourseDetail = () => {
               <div className="travel-detail-place-slider">
                 {loadingImages ? (
                   <div className="travel-detail-slider-loading">
-                    <img src={logo} alt="로딩중" />
+                    <img src="/logo.png" alt="로딩중" />
                     <div className="loading-text">이미지를 불러오는 중...</div>
                   </div>
                 ) : (
@@ -995,7 +996,7 @@ const TravelCourseDetail = () => {
                               src={image.url}
                               alt={image.alt}
                               onError={(e) => {
-                                e.target.src = logo;
+                                e.target.src = "/logo.png";
                               }}
                               className="travel-detail-slider-image"
                             />

@@ -3,6 +3,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -158,10 +159,17 @@ public class AdminServiceImpl implements AdminService{
 			List<Map<String, Object>> dailyActiveMembersData = mapper.getDailyActiveMembers();
 			log.info("일별 활동 회원 데이터: {}", dailyActiveMembersData);
 			
+			// 7일 전까지의 기준 회원 수 조회 (누적 계산용)
+			int baseMembersCount = mapper.getBaseMembersCount();
+			log.info("7일 전까지의 기준 회원 수: {}", baseMembersCount);
+			
 			log.info("실제 DB 통계 조회 완료");
 			
 			// 일별 통계 데이터 변환
 			List<AdminStatisticsDto.DailyStatistics> dailyStatistics = new ArrayList<>();
+			
+			// 누적 회원 수 계산을 위한 변수
+			int cumulativeMembersCount = baseMembersCount;
 			
 			// 최근 7일간의 데이터를 생성
 			for (int i = 6; i >= 0; i--) {
@@ -195,6 +203,9 @@ public class AdminServiceImpl implements AdminService{
 					}
 				}
 				
+				// 해당 날짜의 누적 회원 수 계산 (신규 가입자 +, 탈퇴자 -)
+				cumulativeMembersCount += newMembers - withdrawMembersCount;
+				
 				// 실제 날짜 표시 (yyyy-MM-dd 형식)
 				String dayName = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 				
@@ -204,7 +215,7 @@ public class AdminServiceImpl implements AdminService{
 					.newMembers(newMembers)
 					.withdrawMembers(withdrawMembersCount)
 					.activeMembers(activeMembersCount)
-					.returnMembers(returnMembers)
+					.returnMembers(cumulativeMembersCount)  // 누적 회원 수 사용
 					.build();
 				
 				dailyStatistics.add(dailyStat);
@@ -270,6 +281,45 @@ public class AdminServiceImpl implements AdminService{
 		
 		return result;
 
+	}
+
+	// 전체 회원 관리
+	@Override
+	public List<MemberDto> selectAllMembers() {
+		// TODO Auto-generated method stub
+		return mapper.selectAllMembers();
+	}
+
+	// 회원 로그인 제재
+	@Override
+	public int updateMemberDisable(List<Integer> memberNoList) {
+		int result = 0;
+		int updateMember = 0;
+		Map<String, Integer> disableMap = new HashMap<>();
+		
+		for (int memberNo : memberNoList) {
+			// 사용자의 제재 횟수를 불러옴
+			int sactionCount = mapper.getSantionCount(memberNo);
+			disableMap.put("memberNo", memberNo);
+			if(sactionCount<3) {
+				// 제재 횟수가 3보다 작을경우(정상 로그인 가능)
+				// 3을 넣어서 로그인 불가능하도록 함
+				disableMap.put("sanctionCount", 3);
+			} else {
+				// 제재 횟수가 3 이상일 경우 (로그인 제재 상태)
+				// 0으로 변경하여 해당 사용자 로그인 할 수 있게 함
+				disableMap.put("sanctionCount", 0);
+			}
+			updateMember = mapper.updateMemberDisable(disableMap);
+			
+			if(updateMember > 0) {
+				result ++;
+			} else {
+				log.debug("회원 로그인 제재 실패 : " + memberNo);
+			}
+		}
+		
+		return result;
 	}
 
 

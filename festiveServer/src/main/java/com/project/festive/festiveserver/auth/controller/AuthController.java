@@ -196,10 +196,10 @@ public class AuthController {
 
         ResponseCookie expiredAccessToken = ResponseCookie.from("accessToken", "")
             .httpOnly(true).path("/").maxAge(0)
-            .sameSite("Lax").secure(false).build();
+            .sameSite("Lax").secure(true).build();
         ResponseCookie expiredRefreshToken = ResponseCookie.from("refreshToken", "")
             .httpOnly(true).path("/auth").maxAge(0)
-            .sameSite("Lax").secure(false).build();
+            .sameSite("Lax").secure(true).build();
 
         log.info("로그아웃 처리 완료 - memberNo: {}", memberNo);
 
