@@ -440,8 +440,20 @@ public class OpenAIServiceImpl implements OpenAIService {
         
         prompt.append("**🎯 지능적 추론 예시** (정확한 DB 매칭 과정):\n");
         prompt.append("1. 직접 지역명: '서울 드론 축제 알려줘'\n");
-        prompt.append("   → 서울이 광역시라는 지식 활용 → 목록에서 '서울특별시' 검색 → areaCode: 1 매칭\n");
-        prompt.append("   → {\"region\": \"서울\", \"areaCode\": \"1\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"서울은 서울특별시 areaCode 1\"}\n\n");
+        prompt.append("   → 서울이 광역시라는 지식 활용 → 목록에서 '서울특별시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"서울\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"서울은 서울특별시\"}\n\n");
+        
+        prompt.append("1-1. 직접 지역명: '인천 맛집 추천해줘'\n");
+        prompt.append("   → 인천이 광역시라는 지식 활용 → 목록에서 '인천광역시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"인천\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"인천은 인천광역시\"}\n\n");
+        
+        prompt.append("1-2. 직접 지역명: '부산 여행 계획'\n");
+        prompt.append("   → 부산이 광역시라는 지식 활용 → 목록에서 '부산광역시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"부산\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"부산은 부산광역시\"}\n\n");
+        
+        prompt.append("1-3. 직접 지역명: '대구 관광지 추천'\n");
+        prompt.append("   → 대구가 광역시라는 지식 활용 → 목록에서 '대구광역시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"대구\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"대구는 대구광역시\"}\n\n");
         
         prompt.append("2. 지하철역: '명동역 맛집 추천해줘'\n");
         prompt.append("   → 명동역이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 매칭된 코드 반환\n");
