@@ -439,26 +439,30 @@ public class OpenAIServiceImpl implements OpenAIService {
         prompt.append("}\n\n");
         
         prompt.append("**🎯 지능적 추론 예시** (정확한 DB 매칭 과정):\n");
-        prompt.append("1. 지하철역: '명동역 맛집 추천해줘'\n");
+        prompt.append("1. 직접 지역명: '서울 드론 축제 알려줘'\n");
+        prompt.append("   → 서울이 광역시라는 지식 활용 → 목록에서 '서울특별시' 검색 → areaCode: 1 매칭\n");
+        prompt.append("   → {\"region\": \"서울\", \"areaCode\": \"1\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"서울은 서울특별시 areaCode 1\"}\n\n");
+        
+        prompt.append("2. 지하철역: '명동역 맛집 추천해줘'\n");
         prompt.append("   → 명동역이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 매칭된 코드 반환\n");
         prompt.append("   → {\"region\": \"명동역\", \"areaCode\": \"1\", \"sigunguCode\": \"24\", \"confidence\": \"HIGH\", \"reasoning\": \"명동역은 서울 중구에 위치\"}\n\n");
         
-        prompt.append("2. 🔥 랜드마크: '남대문 근처 맛집 추천해줘'\n");
+        prompt.append("3. 🔥 랜드마크: '남대문 근처 맛집 추천해줘'\n");
         prompt.append("   → 남대문이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 1_24 코드 확인\n");
         prompt.append("   → {\"region\": \"남대문\", \"areaCode\": \"1\", \"sigunguCode\": \"24\", \"confidence\": \"HIGH\", \"reasoning\": \"남대문은 서울 중구에 위치한 유명한 명소\"}\n\n");
         
-        prompt.append("3. 랜드마크: '경복궁 주변 관광지 알려줘'\n");
+        prompt.append("4. 랜드마크: '경복궁 주변 관광지 알려줘'\n");
         prompt.append("   → 경복궁이 서울 종로구에 있다는 지식 활용 → 목록에서 '종로구' 검색\n");
         prompt.append("   → {\"region\": \"경복궁\", \"areaCode\": \"1\", \"sigunguCode\": \"25\", \"confidence\": \"HIGH\", \"reasoning\": \"경복궁은 서울 종로구에 위치\"}\n\n");
         
-        prompt.append("4. 대학교: 'KAIST 근처 맛집 추천'\n");
+        prompt.append("5. 대학교: 'KAIST 근처 맛집 추천'\n");
         prompt.append("   → KAIST가 대전 유성구에 있다는 지식 활용 → 목록에서 '유성구' 검색\n");
         prompt.append("   → {\"region\": \"KAIST\", \"areaCode\": \"8\", \"sigunguCode\": \"3\", \"confidence\": \"HIGH\", \"reasoning\": \"KAIST는 대전 유성구에 위치\"}\n\n");
         
-        prompt.append("4. 직접 지역명: '통영 2박3일 음식점위주로'\n");
+        prompt.append("6. 직접 지역명: '통영 2박3일 음식점위주로'\n");
         prompt.append("   → {\"region\": \"통영\", \"areaCode\": \"36\", \"sigunguCode\": \"17\", \"confidence\": \"HIGH\", \"reasoning\": \"직접적인 지역명 통영시\"}\n\n");
         
-        prompt.append("5. 지역 정보 없음: '맛집 추천해줘'\n");
+        prompt.append("7. 지역 정보 없음: '맛집 추천해줘'\n");
         prompt.append("   → {\"region\": \"NONE\", \"areaCode\": null, \"sigunguCode\": null, \"confidence\": \"LOW\", \"reasoning\": \"지역 정보 없음\"}\n");
         
         return callOpenAI(prompt.toString());
