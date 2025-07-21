@@ -16,6 +16,7 @@ import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
 import com.project.festive.festiveserver.common.filter.JwtFilter;
 import com.project.festive.festiveserver.common.util.JwtUtil;
+import com.project.festive.festiveserver.auth.handler.CustomOAuth2FailureHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -25,12 +26,14 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
     private final JwtUtil jwtUtil;
+    private final CustomOAuth2FailureHandler customOAuth2FailureHandler;
     
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JwtUtil jwtUtil) {
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JwtUtil jwtUtil, CustomOAuth2FailureHandler customOAuth2FailureHandler) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.jwtUtil = jwtUtil;
+        this.customOAuth2FailureHandler = customOAuth2FailureHandler;
     }
     
     @Bean
@@ -69,7 +72,8 @@ public class SecurityConfig {
         .oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
                 .userService(customOAuth2UserService))
-            .successHandler(customSuccessHandler))
+            .successHandler(customSuccessHandler)
+            .failureHandler(customOAuth2FailureHandler))
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth

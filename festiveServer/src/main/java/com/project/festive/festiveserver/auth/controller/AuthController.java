@@ -382,17 +382,26 @@ public class AuthController {
         } else if ("tel".equals(authMethod)) {
             result = authService.findIdSocialByTel(name, tel, authKey);
         }
-        String userId = result != null ? (String) result.get("ID") : null;
-        String socialId = result != null ? (String) result.get("SOCIAL_ID") : null;
+        String userId = null;
+        String socialId = null;
+        
+        if(result != null) {
+            userId = (String) result.get("ID");
+        }
+        if(result != null) {
+            socialId = (String) result.get("SOCIAL_ID");
+        }
         log.debug("userId: {}", userId);
-
+        
+        // 소셜 회원 여부 확인
+        if (socialId != null) {
+            responseBody.put("success", false);
+            responseBody.put("message", "소셜 회원은 소셜 로그인으로만 이용 가능합니다.");
+            return ResponseEntity.ok(responseBody);
+        }
+        
+        // 회원 존재 여부 확인
         if (userId == null) {
-            // 소셜 회원 여부 확인
-            if (socialId != null) {
-                responseBody.put("success", false);
-                responseBody.put("message", "소셜 회원은 소셜 로그인으로만 이용 가능합니다.");
-                return ResponseEntity.ok(responseBody);
-            }
             responseBody.put("success", false);
             responseBody.put("message", "일치하는 회원이 없습니다.");
             return ResponseEntity.ok(responseBody);
