@@ -394,35 +394,45 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         // 🎯 3가지 기능 명확 구분
         
-        // 1️⃣ 축제 기반 여행코스 추천 (festival_travel)
-        // - "축제" + ("여행코스", "일정", "계획", "추천", "박", "일")
+        // 🎪 축제 키워드 감지 (공백 제거 전 원본 메시지로도 체크)
+        String originalLower = message.toLowerCase();
         boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("페스티벌") || 
-                                   lowerMessage.contains("행사") || lowerMessage.contains("이벤트");
+                                   lowerMessage.contains("행사") || lowerMessage.contains("이벤트") ||
+                                   originalLower.contains("축제") || originalLower.contains("페스티벌") || 
+                                   originalLower.contains("행사") || originalLower.contains("이벤트");
         
+        // 📋 정보 요청 키워드 감지 (공백 제거 전후 모두 체크)
+        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("정보") || 
+                                      lowerMessage.contains("찾아줘") || lowerMessage.contains("검색") || 
+                                      lowerMessage.contains("뭐있어") || lowerMessage.contains("목록") ||
+                                      lowerMessage.contains("리스트") || lowerMessage.contains("소개") ||
+                                      lowerMessage.contains("있나") || lowerMessage.contains("있어") ||
+                                      originalLower.contains("알려줘") || originalLower.contains("정보") || 
+                                      originalLower.contains("찾아줘") || originalLower.contains("검색") || 
+                                      originalLower.contains("뭐 있어") || originalLower.contains("목록");
+        
+        // 🚀 여행 계획 키워드 감지
         boolean hasTravelPlanKeyword = lowerMessage.contains("여행코스") || lowerMessage.contains("여행계획") || 
                                      lowerMessage.contains("일정") || lowerMessage.contains("코스") || 
                                      lowerMessage.contains("루트") || lowerMessage.contains("동선") ||
                                      lowerMessage.contains("박") || 
-                                     (lowerMessage.contains("추천") && (lowerMessage.contains("여행") || lowerMessage.contains("계획")));
+                                     (lowerMessage.contains("추천") && (lowerMessage.contains("여행") || lowerMessage.contains("계획"))) ||
+                                     originalLower.contains("여행 코스") || originalLower.contains("여행 계획") || 
+                                     originalLower.contains("일정") || originalLower.contains("코스") || 
+                                     originalLower.contains("루트") || originalLower.contains("동선") ||
+                                     (originalLower.contains("추천") && (originalLower.contains("여행") || originalLower.contains("계획")));
         
+        // 1️⃣ 축제 기반 여행코스 추천 (festival_travel)
         if (hasFestivalKeyword && hasTravelPlanKeyword) {
             log.info("🎪✈️ 축제 기반 여행코스 추천 감지 → festival_travel");
             return "festival_travel";
         }
         
-        // 2️⃣ 순수 축제 검색 (festival_info)
-        // - "축제" + ("알려줘", "정보", "찾아줘", "검색", "뭐있어", "목록") 
-        // - 또는 특정 키워드 + ("알려줘", "정보") (예: "드론 알려줘")
-        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("정보") || 
-                                      lowerMessage.contains("찾아줘") || lowerMessage.contains("검색") || 
-                                      lowerMessage.contains("뭐있어") || lowerMessage.contains("목록") ||
-                                      lowerMessage.contains("리스트") || lowerMessage.contains("소개") ||
-                                      lowerMessage.contains("있나") || lowerMessage.contains("있어");
-        
+        // 2️⃣ 순수 축제 검색 (festival_info) - 우선순위 높임
         // 특정 키워드 감지 (드론, 벚꽃 등)
         boolean hasSpecificKeyword = hasSpecificFestivalKeyword(message);
         
-        // 🎯 축제 정보 검색 우선 판별
+        // 🎯 축제 정보 검색 우선 판별 (조건 강화)
         if (hasFestivalKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
             log.info("🎪📋 축제 정보 검색 감지 (축제+정보요청) → festival_info");
             return "festival_info";
@@ -440,10 +450,10 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "festival_info";
         }
         
-        // 🎯 축제 키워드만 있고 명확한 지시어가 없는 경우도 축제 정보 검색
-        if (hasFestivalKeyword && !hasTravelPlanKeyword && !hasInfoRequestKeyword) {
-            // 단순히 "서울 축제" 같은 요청도 축제 정보 검색으로 처리
-            log.info("🎪❓ 축제 키워드만 있음 → festival_info (기본값)");
+        // 🎯 축제 키워드만 있고 명확한 지시어가 없는 경우도 축제 정보 검색 (강화)
+        if (hasFestivalKeyword && !hasTravelPlanKeyword) {
+            // 단순히 "서울 축제", "인천 축제" 같은 요청도 축제 정보 검색으로 처리
+            log.info("🎪❓ 축제 키워드 감지 → festival_info (기본값)");
             return "festival_info";
         }
         
