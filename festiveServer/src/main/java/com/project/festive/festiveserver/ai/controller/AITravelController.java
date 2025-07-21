@@ -87,16 +87,10 @@ public class AITravelController {
     @GetMapping(value = "/place-overview/{contentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> getPlaceOverview(@PathVariable String contentId) {
         try {
-            
             // detailCommon2 API 호출
             var detailInfo = tourAPIService.fetchDetailCommon2(contentId);
             
             Map<String, Object> response = new HashMap<>();
-            
-            // 상세 로그 추가
-            if (detailInfo != null) {
-                // 로그 제거됨
-            }
             
             if (detailInfo != null && detailInfo.getOverview() != null && 
                 !detailInfo.getOverview().trim().isEmpty()) {
@@ -112,7 +106,7 @@ public class AITravelController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            log.error("❌ 장소 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage(), e);
+            log.error("❌ 장소 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage());
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);

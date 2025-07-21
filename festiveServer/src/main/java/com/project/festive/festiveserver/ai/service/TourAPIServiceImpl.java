@@ -277,16 +277,10 @@ public class TourAPIServiceImpl implements TourAPIService {
             
             url += "&serviceKey=" + tourApiServiceKey;
             
-            log.info("🔍 detailCommon2 실제 호출 URL: {}", url);
-            
             ResponseEntity<String> response = restTemplate.getForEntity(
                 java.net.URI.create(url), 
                 String.class
             );
-            
-            log.info("📥 detailCommon2 응답 상태: {}, 응답 데이터 시작 50자: {}", 
-                    response.getStatusCode(), 
-                    response.getBody() != null ? response.getBody().substring(0, Math.min(50, response.getBody().length())) : "null");
             
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 List<AITravelServiceImpl.TourAPIResponse.Item> items = parseDetailCommon2Response(response.getBody());
@@ -295,7 +289,7 @@ public class TourAPIServiceImpl implements TourAPIService {
                 }
             }
         } catch (Exception e) {
-            log.error("❌ 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage(), e);
+            log.error("❌ 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage());
         }
         
         return null;
@@ -364,13 +358,11 @@ public class TourAPIServiceImpl implements TourAPIService {
         // 응답 형식 자동 감지 (XML vs JSON)
         String trimmedResponse = response.trim();
         if (trimmedResponse.startsWith("<")) {
-            log.info("🔍 TourAPI XML 응답 감지 - XML 파싱 시도");
             return parseXMLResponse(response);
         } else if (trimmedResponse.startsWith("{") || trimmedResponse.startsWith("[")) {
-            log.info("🔍 TourAPI JSON 응답 감지 - JSON 파싱 시도");
             return parseJSONResponse(response);
         } else {
-            log.warn("❌ 알 수 없는 TourAPI 응답 형식: {}", trimmedResponse.substring(0, Math.min(50, trimmedResponse.length())));
+            log.warn("❌ 알 수 없는 TourAPI 응답 형식");
             return new ArrayList<>();
         }
     }
@@ -400,8 +392,6 @@ public class TourAPIServiceImpl implements TourAPIService {
                     }
                 }
             }
-            
-            log.info("✅ XML 파싱 성공 - 아이템 {}개 추출", items.size());
             
         } catch (Exception e) {
             log.error("❌ XML 응답 파싱 실패", e);
