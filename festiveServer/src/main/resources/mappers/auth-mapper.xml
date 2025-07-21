@@ -78,43 +78,27 @@
     SELECT ID, SOCIAL_ID
     FROM MEMBER
     WHERE NAME = #{name}
-      AND EMAIL = (
-        SELECT EMAIL FROM EMAIL_AUTH_KEY
-        WHERE EMAIL = #{email}
-          AND AUTH_KEY = #{authKey}
-      )
+      AND EMAIL #{email}
   </select>
 
   <select id="findIdSocialByTel" resultType="map">
     SELECT ID, SOCIAL_ID
     FROM MEMBER
     WHERE NAME = #{name}
-      AND TEL = (
-        SELECT TEL FROM TEL_AUTH_KEY
-        WHERE TEL = #{tel}
-          AND AUTH_KEY = #{authKey}
-      )
+      AND TEL = #{tel}
   </select>
 
   <select id="findPwSocialByEmail" resultType="int">
     SELECT COUNT(*)
     FROM MEMBER
     WHERE ID = #{userId}
-      AND EMAIL = (
-        SELECT EMAIL FROM EMAIL_AUTH_KEY
-        WHERE EMAIL = #{email}
-          AND AUTH_KEY = #{authKey}
-      )
+      AND EMAIL = #{email}
   </select>
 
   <select id="findPwSocialByTel" resultType="int">
     SELECT COUNT(*)
     FROM MEMBER
     WHERE ID = #{userId}
-      AND TEL = (
-        SELECT TEL FROM TEL_AUTH_KEY
-        WHERE TEL = #{tel}
-          AND AUTH_KEY = #{authKey}
-      )
+      AND TEL = #{tel}
   </select>
 </mapper>
