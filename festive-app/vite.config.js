@@ -5,9 +5,9 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    https: false,
+    https: true,
     host: true,
-    port: 5173,
+    port: 443,
     proxy: {
       // '/profile-images'로 시작하는 모든 요청을 프록시
       "/profile-images": {
