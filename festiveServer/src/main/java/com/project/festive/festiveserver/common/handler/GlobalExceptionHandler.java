@@ -48,13 +48,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * OAuth2 예외 처리
+     */
+    @ExceptionHandler(OAuth2AuthenticationException.class)
+    ResponseEntity<Map<String, Object>> handleException(OAuth2AuthenticationException e) {
+        throw (OAuth2AuthenticationException) e;
+    }
+
+    /**
      * 기타 예외 처리
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception e) {
-        if (e instanceof OAuth2AuthenticationException) {
-            throw (OAuth2AuthenticationException) e;
-        }
         log.error("예상치 못한 오류가 발생했습니다: {}", e.getMessage(), e);
         
         Map<String, Object> response = new HashMap<>();
