@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,7 +93,8 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
             } else {
                 if (existingMember.getMemberDelFl().equals("Y")) {
                     log.warn("탈퇴한 회원의 소셜 로그인 시도: {}", socialId);
-                    throw new OAuth2AuthenticationException("WITHDRAWN_MEMBER");
+                    OAuth2Error oauth2Error = new OAuth2Error("WITHDRAWN_MEMBER", "탈퇴한 회원입니다.", null);
+                    throw new OAuth2AuthenticationException(oauth2Error, "탈퇴한 회원입니다.");
                 }
                 
                 existingMember.setName(oAuth2Response.getName());
