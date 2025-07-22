@@ -18,6 +18,7 @@ const CustomerCenter = () => {
   const navigate = useNavigate();
 
   const handlePageChange = (pageNumber) => {
+    window.scrollTo(0, 0);
     setCurrentPage(pageNumber);
   };
 

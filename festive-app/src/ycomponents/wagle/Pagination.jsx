@@ -30,10 +30,7 @@ export const usePagination = ({
       setCurrentPage(page);
 
       setTimeout(() => {
-        const list = document.querySelector(".paginated-list");
-        if (list) {
-          list.scrollIntoView({ behavior: "auto", block: "start" });
-        }
+        window.scrollTo(0, 0);
       }, 0);
     },
     [totalPages]

@@ -108,6 +108,7 @@ function GeneralBoard({ hideWriteBtn }) {
 
   // 페이지 변경
   const goToPage = (page) => {
+    window.scrollTo(0, 0);
     fetchPosts(page, searchType, searchKeyword);
   };
 

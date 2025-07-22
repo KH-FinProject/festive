@@ -236,6 +236,7 @@ const AITravelCourse = () => {
   };
 
   const handleCourseClick = (courseId) => {
+    window.scrollTo(0, 0);
     navigate(`/course/${courseId}`);
   };
 
