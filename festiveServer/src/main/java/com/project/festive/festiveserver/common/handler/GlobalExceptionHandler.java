@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 
 @Slf4j
 @RestControllerAdvice
@@ -51,6 +52,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception e) {
+        if (e instanceof OAuth2AuthenticationException) {
+            throw (OAuth2AuthenticationException) e;
+        }
         log.error("예상치 못한 오류가 발생했습니다: {}", e.getMessage(), e);
         
         Map<String, Object> response = new HashMap<>();
