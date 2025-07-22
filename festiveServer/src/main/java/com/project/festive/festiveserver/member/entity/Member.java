@@ -54,7 +54,7 @@ public class Member {
 	@Column(name = "ID", nullable = true) // OAuth2 사용자의 경우 ID가 없을 수 있음
 	private String id;
 
-	@Column(name = "NICKNAME", nullable = false)
+	@Column(name = "NICKNAME", nullable = true)
 	private String nickname;
 
 	@Column(name = "NAME", nullable = true)
