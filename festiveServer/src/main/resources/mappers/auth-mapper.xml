@@ -55,11 +55,7 @@
     SELECT COUNT(*)
     FROM MEMBER
     WHERE ID = #{userId}
-      AND EMAIL = (
-        SELECT EMAIL FROM EMAIL_AUTH_KEY
-        WHERE EMAIL = #{email}
-          AND AUTH_KEY = #{authKey}
-      )
+      AND EMAIL = #{email}
   </select>
 
   <!-- 비밀번호 찾기 - 아이디+전화번호+인증번호 모두 일치 확인 (AUTH_KEY 테이블에서 먼저 인증번호 확인) -->
@@ -67,18 +63,14 @@
     SELECT COUNT(*)
     FROM MEMBER
     WHERE ID = #{userId}
-      AND TEL = (
-        SELECT TEL FROM TEL_AUTH_KEY
-        WHERE TEL = #{tel}
-          AND AUTH_KEY = #{authKey}
-      )
+      AND TEL = #{tel}
   </select>
 
   <select id="findIdSocialByEmail" resultType="map">
     SELECT ID, SOCIAL_ID
     FROM MEMBER
     WHERE NAME = #{name}
-      AND EMAIL #{email}
+      AND EMAIL = #{email}
   </select>
 
   <select id="findIdSocialByTel" resultType="map">
