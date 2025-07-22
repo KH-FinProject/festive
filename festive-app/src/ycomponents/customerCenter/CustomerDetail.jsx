@@ -63,7 +63,6 @@ function CustomerDetail() {
                 })
                 .replace(/\. /g, ".")
                 .replace(".", ".")
-                .slice(0, -1)
             : null,
           priority: data.priority || "일반",
           category: data.category || "기타",
@@ -383,9 +382,10 @@ function CustomerDetail() {
                       lineHeight: "1.6",
                       color: "#2c3e50",
                     }}
-                  >
-                    {post.answerContent}
-                  </div>
+                    dangerouslySetInnerHTML={{
+                      __html: renderMarkdownImages(post.answerContent),
+                    }}
+                  />
                 </div>
                 <div
                   style={{
