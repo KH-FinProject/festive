@@ -642,7 +642,10 @@ const TravelCourseDetail = () => {
         <div className="travel-detail-header">
           <button
             className="travel-detail-back-btn"
-            onClick={() => navigate("/ai-travel")}
+            onClick={() => {
+              window.scrollTo(0, 0);
+              navigate("/ai-travel");
+            }}
           >
             ← 뒤로가기
           </button>

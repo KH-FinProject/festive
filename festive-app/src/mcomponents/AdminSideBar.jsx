@@ -16,6 +16,10 @@ const AdminSidebar = () => {
     location.pathname.startsWith("/admin/customer") ||
     location.pathname.startsWith("/admin/reply");
 
+  const handleNavClick = () => {
+    window.scrollTo(0, 0);
+  };
+
   return (
     <div className="admin-management-container">
       <div className="management-content">
@@ -28,6 +32,7 @@ const AdminSidebar = () => {
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? "active" : "inactive"}`
               }
+              onClick={handleNavClick}
             >
               <span>메인 대시보드</span>
             </NavLink>
@@ -40,6 +45,7 @@ const AdminSidebar = () => {
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? "active" : "inactive"}`
               }
+              onClick={handleNavClick}
             >
               <span>관리자 계정생성</span>
             </NavLink>
@@ -48,6 +54,7 @@ const AdminSidebar = () => {
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? "active" : "inactive"}`
               }
+              onClick={handleNavClick}
             >
               <span>전체 회원 관리</span>
             </NavLink>
@@ -56,6 +63,7 @@ const AdminSidebar = () => {
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? "active" : "inactive"}`
               }
+              onClick={handleNavClick}
             >
               <span>회원 탈퇴 및 삭제</span>
             </NavLink>
@@ -68,6 +76,7 @@ const AdminSidebar = () => {
               className={({ isActive }) =>
                 `sidebar-item ${isActive ? "active" : "inactive"}`
               }
+              onClick={handleNavClick}
             >
               <span>게시물 관리</span>
             </NavLink>
@@ -82,6 +91,7 @@ const AdminSidebar = () => {
                   ? "sidebar-item active"
                   : "sidebar-item inactive"
               }
+              onClick={handleNavClick}
             >
               <span>고객센터 관리</span>
               {(hasNewReport || hasNewInquiry) && (
@@ -113,6 +123,7 @@ const AdminSidebar = () => {
                   ? "sidebar-item active"
                   : "sidebar-item inactive"
               }
+              onClick={handleNavClick}
             >
               <span>신청 현황</span>
               {hasNewBooth && (

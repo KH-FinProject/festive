@@ -5,6 +5,10 @@ import trip from "../assets/trip.png";
 import "./HeaderFooter.css";
 
 function Footer() {
+  const handleLinkClick = () => {
+    window.scrollTo(0, 0);
+  };
+
   return (
     <footer className="footer">
       <div className="footerfooter-left">
@@ -17,9 +21,15 @@ function Footer() {
 
       <div className="footerfooter-center">
         <div className="footerfooter-links">
-          <Link to="/company">회사소개</Link>
-          <Link to="/privacy">개인정보처리방침</Link>
-          <Link to="/terms">이용약관</Link>
+          <Link to="/company" onClick={handleLinkClick}>
+            회사소개
+          </Link>
+          <Link to="/privacy" onClick={handleLinkClick}>
+            개인정보처리방침
+          </Link>
+          <Link to="/terms" onClick={handleLinkClick}>
+            이용약관
+          </Link>
         </div>
         <div className="footerapi-images">
           <a>
@@ -37,8 +47,12 @@ function Footer() {
           09:00 ~ 18:00(토요일, 공휴일 휴무)
         </div>
         <div className="footerfooter-links">
-          <a href="/customer-center">문의하기</a>
-          <a href="#">자주 묻는 질문</a>
+          <a href="/customer-center" onClick={handleLinkClick}>
+            문의하기
+          </a>
+          <a href="#" onClick={handleLinkClick}>
+            자주 묻는 질문
+          </a>
         </div>
         <div className="footerfooter-copy">
           Copyright MEDIA DESIGHNER ALL RIGHTS RESERVED
