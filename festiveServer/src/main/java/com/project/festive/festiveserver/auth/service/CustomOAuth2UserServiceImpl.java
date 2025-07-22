@@ -92,7 +92,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
             } else {
                 if (existingMember.getMemberDelFl().equals("Y")) {
                     log.warn("탈퇴한 회원의 소셜 로그인 시도: {}", socialId);
-                    throw new OAuth2AuthenticationException("탈퇴한 회원입니다. 관리자에게 문의하세요.");
+                    throw new OAuth2AuthenticationException("WITHDRAWN_MEMBER");
                 }
                 
                 existingMember.setName(oAuth2Response.getName());

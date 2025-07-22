@@ -14,17 +14,20 @@ const LoginForm = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [oauthError, setOauthError] = useState("");
 
   // OAuth 에러 확인
   useEffect(() => {
     const error = searchParams.get("error");
     if (error === "oauth_failed") {
-      setOauthError("소셜 로그인에 실패했습니다. 다시 시도해주세요.");
+      alert("소셜 로그인에 실패했습니다. 다시 시도해주세요.");
+      // URL에서 error 파라미터 제거
+      navigate("/signin", { replace: true });
     } else if (error === "withdrawn") {
-      setOauthError("탈퇴한 회원입니다. 관리자에게 문의하세요.");
+      alert("탈퇴한 계정입니다. 관리자에게 문의 바랍니다.");
+      // URL에서 error 파라미터 제거
+      navigate("/signin", { replace: true });
     }
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,24 +95,6 @@ const LoginForm = () => {
 
           {/* 로그인 폼 */}
           <div className="login-form">
-            {/* OAuth 에러 메시지 */}
-            {oauthError && (
-              <div
-                className="oauth-error-message"
-                style={{
-                  color: "#ff6b6b",
-                  backgroundColor: "#fff5f5",
-                  padding: "10px",
-                  borderRadius: "4px",
-                  marginBottom: "20px",
-                  border: "1px solid #ffebee",
-                  fontSize: "14px",
-                }}
-              >
-                {oauthError}
-              </div>
-            )}
-
             {/* ID 입력 필드 */}
             <div className="info-input-group">
               <label htmlFor="id" className="login-input-label">
