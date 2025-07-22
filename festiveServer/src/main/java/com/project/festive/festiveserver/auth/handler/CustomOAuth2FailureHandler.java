@@ -14,9 +14,9 @@ public class CustomOAuth2FailureHandler implements AuthenticationFailureHandler 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         String errorMessage = exception.getMessage();
-        String redirectUrl = "/signin?error=oauth_failed";
+        String redirectUrl = "https://festivekorea.site/signin?error=oauth_failed";
         if (errorMessage != null && errorMessage.contains("WITHDRAWN_MEMBER")) {
-            redirectUrl = "/signin?error=withdrawn";
+            redirectUrl = "https://festivekorea.site/signin?error=withdrawn";
         }
         response.sendRedirect(redirectUrl);
     }
