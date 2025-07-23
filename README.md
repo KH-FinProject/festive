@@ -80,7 +80,7 @@ if (trimmedResponse.startsWith("<")) {
 - **Spring Boot 3.x** - 엔터프라이즈 백엔드
 - **Spring Security** - 인증/인가
 - **MyBatis** - SQL 매퍼
-- **MySQL** - 관계형 데이터베이스
+- **Oracle DB** - 관계형 데이터베이스
 - **JWT** - 토큰 기반 인증
 
 ### **External APIs**
@@ -165,7 +165,7 @@ if (trimmedResponse.startsWith("<")) {
 ## 🔗 배포 및 링크
 
 - **🌐 Live Demo**: [https://festivekorea.site](https://festivekorea.site)
-- **📱 반응형**: 모바일/태블릿/PC 모든 환경 지원
+- **📱 반응형**: 모바일/태블릿/PC 모든 환경 지원 
 - **⚡ 성능**: Lighthouse 성능 점수 90+ 달성
 
 ---
@@ -175,7 +175,7 @@ if (trimmedResponse.startsWith("<")) {
 ### 필수 요구사항
 - Node.js 18+
 - Java 17+
-- MySQL 8.0+
+- Oracle Database 11g+
 
 ### 설치 및 실행
 
@@ -204,7 +204,7 @@ VITE_TOURAPI_KEY=your_tour_api_key
 VITE_PUBLIC_CARPARK_API=your_parking_api_key
 
 # application.properties (백엔드)
-spring.datasource.url=jdbc:mysql://localhost:3306/festive
+spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 openai.api.key=your_openai_key
