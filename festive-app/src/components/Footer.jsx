@@ -52,7 +52,7 @@ function Footer() {
           </a>
         </div>
         <div className="footerfooter-copy">
-          Copyright MEDIA DESIGHNER ALL RIGHTS RESERVED
+          Copyright FESTIVE DESIGHNER ALL RIGHTS RESERVED
         </div>
       </div>
     </footer>
