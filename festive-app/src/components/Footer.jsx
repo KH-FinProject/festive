@@ -50,9 +50,6 @@ function Footer() {
           <a href="/customer-center" onClick={handleLinkClick}>
             문의하기
           </a>
-          <a href="#" onClick={handleLinkClick}>
-            자주 묻는 질문
-          </a>
         </div>
         <div className="footerfooter-copy">
           Copyright MEDIA DESIGHNER ALL RIGHTS RESERVED
