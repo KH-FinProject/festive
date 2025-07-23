@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "./Pagination";
 import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 import axiosApi from "../../api/axiosAPI";
+import useAuthStore from "../../store/useAuthStore";
 
 const PAGE_SIZE = 7;
 
@@ -18,9 +19,18 @@ function GeneralBoard({ hideWriteBtn }) {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+  const { member, isLoggedIn } = useAuthStore();
 
   // 글쓰기 버튼 클릭 핸들러
   const handleWriteClick = async () => {
+    // 로그인 체크
+    if (!isLoggedIn || !member) {
+      alert("로그인이 필요한 서비스입니다.\n로그인 후 글을 작성해보세요!");
+      navigate("/signin");
+      return;
+    }
+
+    // 닉네임 체크 (소셜 사용자용)
     const canProceed = await checkNicknameForSocialUser(navigate);
     if (canProceed) {
       navigate("/wagle/write");
