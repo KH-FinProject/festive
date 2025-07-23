@@ -4,13 +4,13 @@ import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSideBar";
 import axiosApi from "../api/axiosAPI";
-import { useAdminNotification } from "./AdminNotificationContext.jsx";
+import { useAdminNotifications } from "./AdminNotificationContext.jsx";
 
 const AdminApplicationStatus = () => {
   const [applications, setApplications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const { setHasNewBooth } = useAdminNotification();
+  const { setHasNewBooth } = useAdminNotifications();
 
   useEffect(() => {
     async function fetchApplications() {

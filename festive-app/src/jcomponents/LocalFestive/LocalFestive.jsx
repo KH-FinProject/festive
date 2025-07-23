@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import ScrollToTop from "../../scomponents/monthFestive/ScrollToTop.jsx";
 import { useNavigate } from "react-router-dom";
 import axiosApi from "../../api/axiosAPI";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 
 const LocalFestive = () => {
   // 축제 목록 상태
@@ -13,6 +15,7 @@ const LocalFestive = () => {
   );
   const [searchEndDate, setSearchEndDate] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [userLocation, setUserLocation] = useState(null); // 사용자 위치
   const [areaOptions, setAreaOptions] = useState([]);
   const navigate = useNavigate();
@@ -20,13 +23,18 @@ const LocalFestive = () => {
   // 무한 스크롤을 위한 상태
   const [page, setPage] = useState(1); // 현재 페이지
   const [hasMore, setHasMore] = useState(true); // 더 많은 데이터 존재 여부
-  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
+  const [isInitialLoading, setIsInitialLoading] = useState(false); // 최초 전체 로딩
+  const [isMoreLoading, setIsMoreLoading] = useState(false); // 추가(무한 스크롤) 로딩
   const [displayedFestivals, setDisplayedFestivals] = useState([]); // 화면에 표시할 축제
-  const [pageSize] = useState(25); // 한 번에 로드할 개수
+  const [pageSize] = useState(12); // 한 번에 로드할 개수
 
   // Intersection Observer 관련 ref
   const observerRef = useRef();
   const loadingRef = useRef();
+  const isMounted = useRef(false);
+
+  // 축제 검색 상태
+  const [isKeywordSearch, setIsKeywordSearch] = useState(false);
 
   // 사용자 위치 가져오기
   const getUserLocation = () => {
@@ -90,7 +98,14 @@ const LocalFestive = () => {
   // 초기 축제 데이터 로드
   useEffect(() => {
     fetchInitialFestivals();
+    isMounted.current = true;
   }, []);
+
+  // 축제 검색시(시작/끝 날짜, 지역 수정시) 데이터 로드
+  useEffect(() => {
+    if (!isMounted.current) return;
+    searchFestivals();
+  }, [searchStartDate, searchEndDate, searchLocation]);
 
   // 축제 데이터 가져오기 함수
   const fetchFestivalData = async () => {
@@ -104,7 +119,7 @@ const LocalFestive = () => {
       _type: "json",
       eventStartDate: yyyyMMdd,
       arrange: "A",
-      numOfRows: "100",
+      numOfRows: "1000",
       pageNo: "1",
     });
 
@@ -141,7 +156,7 @@ const LocalFestive = () => {
 
   // 초기 데이터 로드
   const fetchInitialFestivals = async () => {
-    setIsLoading(true);
+    setIsInitialLoading(true);
 
     try {
       const data = await fetchFestivalData();
@@ -152,13 +167,14 @@ const LocalFestive = () => {
     } catch (error) {
       console.error("초기 축제 로드 실패:", error);
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false);
     }
   };
 
   // 검색 함수
   const searchFestivals = async () => {
-    setIsLoading(true);
+    setIsKeywordSearch(false);
+    setIsMoreLoading(true);
     setPage(1);
     setHasMore(true);
 
@@ -173,7 +189,7 @@ const LocalFestive = () => {
         eventStartDate: formatDate(searchStartDate),
         eventEndDate: formatDate(searchEndDate),
         arrange: "A",
-        numOfRows: "100",
+        numOfRows: "1000",
         pageNo: "1",
       });
 
@@ -248,7 +264,72 @@ const LocalFestive = () => {
     } catch (error) {
       console.error("축제 검색 실패:", error);
     } finally {
-      setIsLoading(false);
+      setIsMoreLoading(false);
+    }
+  };
+
+  // 키워드를 포함하는 축제 데이터 가져오기 함수
+  const keywordSearchFestivals = async (e) => {
+    setIsKeywordSearch(true);
+    setIsMoreLoading(true);
+    setPage(1);
+    setHasMore(true);
+    setSortType("distance"); // 거리순으로 고정
+
+    try {
+      const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
+      const params = new URLSearchParams({
+        MobileOS: "WEB",
+        MobileApp: "Festive",
+        _type: "json",
+        arrange: "A",
+        numOfRows: "10000",
+        pageNo: "1",
+        contentTypeId: "15",
+        keyword: searchKeyword,
+      });
+
+      const url = `https://apis.data.go.kr/B551011/KorService2/searchKeyword2?serviceKey=${serviceKey}&${params.toString()}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const items = data?.response?.body?.items?.item;
+
+      if (!items || !Array.isArray(items)) {
+        setFestivals([]);
+        setDisplayedFestivals([]);
+        setHasMore(false);
+        return;
+      }
+
+      // 매핑 (날짜 정보 없음)
+      let mapped = items.map((item) => ({
+        id: item.contentid,
+        title: item.title,
+        location: item.addr1 || "장소 미제공",
+        date: "날짜 정보 없음",
+        image: item.firstimage || "/logo.png",
+        startDate: null,
+        status: "미제공",
+        mapx: item.mapx,
+        mapy: item.mapy,
+      }));
+
+      // 거리순 정렬만 적용
+      const festivalsWithDistance = await addDistanceToFestivals(mapped);
+      mapped = festivalsWithDistance.sort((a, b) => {
+        if (a.distance == null && b.distance == null) return 0;
+        if (a.distance == null) return 1;
+        if (b.distance == null) return -1;
+        return a.distance - b.distance;
+      });
+
+      setFestivals(mapped);
+      setDisplayedFestivals(mapped.slice(0, pageSize));
+      setHasMore(mapped.length > pageSize);
+    } catch (error) {
+      console.error("축제 검색 실패:", error);
+    } finally {
+      setIsMoreLoading(false);
     }
   };
 
@@ -305,9 +386,24 @@ const LocalFestive = () => {
     }
   };
 
-  // 검색 핸들러
-  const handleSearch = () => {
-    searchFestivals();
+  // 키워드 검색 핸들러
+  const handleKeywordSearch = () => {
+    if (!searchKeyword.trim()) {
+      alert("키워드를 입력해 주세요.");
+      return;
+    }
+    setIsKeywordSearch(true);
+    keywordSearchFestivals();
+  };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (!searchKeyword.trim()) {
+        alert("키워드를 입력해 주세요.");
+        return;
+      }
+      setIsKeywordSearch(true);
+      keywordSearchFestivals();
+    }
   };
 
   // 축제 클릭 핸들러
@@ -378,8 +474,8 @@ const LocalFestive = () => {
 
   // 무한 스크롤은 클라이언트에서 slice로만 처리 (추가 API 호출 없음)
   const loadMoreFestivals = useCallback(() => {
-    if (isLoading || !hasMore) return;
-    setIsLoading(true);
+    if (isMoreLoading || !hasMore) return;
+    setIsMoreLoading(true);
 
     setTimeout(() => {
       const nextPage = page + 1;
@@ -388,9 +484,9 @@ const LocalFestive = () => {
       setDisplayedFestivals(newDisplayed);
       setPage(nextPage);
       setHasMore(newDisplayed.length < festivals.length);
-      setIsLoading(false);
+      setIsMoreLoading(false);
     }, 400); // 0.4초 뒤에 로딩 되도록 설정
-  }, [page, pageSize, isLoading, hasMore, festivals]);
+  }, [page, pageSize, isMoreLoading, hasMore, festivals]);
 
   // Intersection Observer 설정
   useEffect(() => {
@@ -399,7 +495,7 @@ const LocalFestive = () => {
       (entries) => {
         const target = entries[0];
         // 2. 타겟이 화면에 보이고, 더 불러올 데이터가 있고, 로딩 중이 아닐 때만 loadMoreFestivals 실행
-        if (target.isIntersecting && hasMore && !isLoading) {
+        if (target.isIntersecting && hasMore && !isMoreLoading) {
           loadMoreFestivals();
         }
       },
@@ -423,7 +519,7 @@ const LocalFestive = () => {
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, isLoading, loadMoreFestivals]);
+  }, [hasMore, isMoreLoading, loadMoreFestivals]);
 
   return (
     <>
@@ -454,7 +550,7 @@ const LocalFestive = () => {
               </div>
               <span className="date-range-tilde">~</span>
               <div className="input-block">
-                <span className="input-label">끝 날짜</span>
+                <span className="input-label">종료 날짜</span>
                 <input
                   id="searchEndDate"
                   type="date"
@@ -479,33 +575,57 @@ const LocalFestive = () => {
                   ))}
                 </select>
               </div>
-              <button className="search-button" onClick={handleSearch}>
-                검색
-              </button>
+              <div className="input-block">
+                <span className="input-label">축제명</span>
+                <div
+                  className="keyword-input-icon-wrapper"
+                  style={{ position: "relative" }}
+                >
+                  <input
+                    type="text"
+                    className="search-input keyword-input"
+                    placeholder="축제명으로 검색"
+                    value={searchKeyword || ""}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e)}
+                  />
+                  <span
+                    className="keyword-search-icon"
+                    onClick={handleKeywordSearch}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="검색"
+                    style={{
+                      position: "absolute",
+                      right: "16px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      cursor: "pointer",
+                      fontSize: "22px",
+                      color: "#60a5fa",
+                      zIndex: 2,
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faMagnifyingGlass} />
+                  </span>
+                </div>
+              </div>
             </div>
+          </div>
+
+          {/* 안내 메시지 영역: 항상 고정 */}
+          <div className="keyword-info-message-area">
+            {searchKeyword && (
+              <div className="keyword-info-message">
+                축제명 검색은 날짜 정보가 제공되지 않습니다.
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* 새로운 축제 갤러리 섹션 */}
-      <div className="festival-gallery-section">
-        {/* 정렬 옵션 */}
-        <div className="sort-options">
-          <span
-            className={`sort-option ${sortType === "date" ? "active" : ""}`}
-            onClick={() => handleSortChange("date")}
-          >
-            축제일순
-          </span>
-          <span className="divider">|</span>
-          <span
-            className={`sort-option ${sortType === "distance" ? "active" : ""}`}
-            onClick={() => handleSortChange("distance")}
-          >
-            거리순
-          </span>
-        </div>
-
+      {/* <div className="festival-gallery-section">
         <div className="gallery-grid">
           {displayedFestivals.slice(0, 9).map((festival, index) => (
             <div
@@ -550,105 +670,149 @@ const LocalFestive = () => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       <div className="festival-main">
         {/* 축제 목록 섹션 */}
         <section className="festivals-section">
-          {/* 축제 그리드 */}
-          <div className="festivals-grid">
-            {displayedFestivals.slice(9).map((festival) => (
-              <div
-                key={festival.id}
-                className="festival-card"
-                onClick={() => handleFestivalClick(festival.id)}
+          {/* 정렬 옵션 */}
+          {isKeywordSearch ? (
+            <div className="sort-options">
+              <span className="sort-option active">거리순</span>
+            </div>
+          ) : (
+            <div className="sort-options">
+              <span
+                className={`sort-option ${sortType === "date" ? "active" : ""}`}
+                onClick={() => handleSortChange("date")}
               >
-                <div className="festival-image-container">
-                  <img
-                    src={festival.image}
-                    alt={festival.title}
-                    className="festival-image"
-                  />
-                  <div
-                    className={`festival-status ${
-                      festival.status === "진행중" ? "active" : "upcoming"
-                    }`}
-                  >
-                    {festival.status}
-                  </div>
-                </div>
+                축제일순
+              </span>
+              <span className="divider">|</span>
+              <span
+                className={`sort-option ${
+                  sortType === "distance" ? "active" : ""
+                }`}
+                onClick={() => handleSortChange("distance")}
+              >
+                거리순
+              </span>
+            </div>
+          )}
 
-                <div className="festival-info">
-                  <h3 className="festival-title">{festival.title}</h3>
-                  <p className="festival-location">
-                    <svg
-                      className="icon"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {festival.location}
-                    {sortType === "distance" && festival.distance && (
-                      <span
-                        style={{
-                          color: "#60a5fa",
-                          marginLeft: "8px",
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        ({festival.distance.toFixed(1)}km)
-                      </span>
-                    )}
-                  </p>
-                  <p className="festival-date">
-                    <svg
-                      className="icon"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {festival.date}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* 로딩 인디케이터 */}
-          {isLoading && (
+          {/* 최초 전체 로딩 인디케이터 */}
+          {isInitialLoading ? (
             <div className="loading-indicator">
               <div className="spinner"></div>
               <p>축제를 불러오는 중...</p>
             </div>
-          )}
+          ) : (
+            <>
+              {/* 축제 그리드 */}
+              <div className="festivals-grid">
+                {displayedFestivals.map((festival) => (
+                  <div
+                    key={festival.id}
+                    className="festival-card"
+                    onClick={() => handleFestivalClick(festival.id)}
+                  >
+                    <div className="festival-image-container">
+                      <img
+                        src={festival.image}
+                        alt={festival.title}
+                        className="festival-image"
+                      />
+                      <div
+                        className={`festival-status ${
+                          festival.status === "진행중" ? "active" : "upcoming"
+                        }`}
+                      >
+                        {festival.status}
+                      </div>
+                    </div>
 
-          {/* Intersection Observer 타겟 */}
-          {hasMore && (
-            <div
-              ref={loadingRef}
-              className="observer-target"
-              style={{ height: "20px" }}
-            />
-          )}
+                    <div className="festival-info">
+                      <h3 className="festival-title">{festival.title}</h3>
+                      <p className="festival-location">
+                        <svg
+                          className="icon"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {festival.location}
+                        {sortType === "distance" && festival.distance && (
+                          <span
+                            style={{
+                              color: "#60a5fa",
+                              marginLeft: "8px",
+                              fontSize: "0.8rem",
+                            }}
+                          >
+                            ({festival.distance.toFixed(1)}km)
+                          </span>
+                        )}
+                      </p>
+                      <p className="festival-date">
+                        <svg
+                          className="icon"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {festival.date && festival.date !== "날짜 미제공"
+                          ? festival.date
+                          : "날짜 정보 없음"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          {/* 더 이상 데이터가 없을 때 */}
-          {!hasMore && displayedFestivals.length > 0 && (
-            <div className="no-more-data">
-              <p>모든 축제를 불러왔습니다.</p>
-            </div>
-          )}
+              {/* 검색 결과 없음 메시지 */}
+              {isKeywordSearch && (!festivals || festivals.length === 0) && (
+                <div className="keyword-info-message">
+                  검색 결과가 없습니다.
+                </div>
+              )}
 
-          <ScrollToTop />
+              {/* 추가(무한 스크롤) 로딩 인디케이터 */}
+              {isMoreLoading && (
+                <div className="loading-indicator small">
+                  <div className="spinner"></div>
+                  <p>더 불러오는 중...</p>
+                </div>
+              )}
+
+              {/* Intersection Observer 타겟 */}
+              {hasMore && (
+                <div
+                  ref={loadingRef}
+                  className="observer-target"
+                  style={{ height: "20px" }}
+                />
+              )}
+
+              {/* 더 이상 데이터가 없을 때 */}
+              {!hasMore && displayedFestivals.length > 0 && (
+                <div className="no-more-data">
+                  <p>모든 축제를 불러왔습니다.</p>
+                </div>
+              )}
+
+              <ScrollToTop />
+            </>
+          )}
         </section>
       </div>
     </>

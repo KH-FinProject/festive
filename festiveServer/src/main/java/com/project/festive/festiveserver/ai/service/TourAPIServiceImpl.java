@@ -10,6 +10,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -177,6 +185,51 @@ public class TourAPIServiceImpl implements TourAPIService {
     }
 
     @Override
+    public AITravelServiceImpl.TourAPIResponse.Item fetchDetailIntro2(String contentId, String contentTypeId) {
+        try {
+            log.info("🔍 detailIntro2 API 호출 시작 - contentId: {}, contentTypeId: {}", contentId, contentTypeId);
+            
+            String url = UriComponentsBuilder.fromHttpUrl("https://apis.data.go.kr/B551011/KorService2/detailIntro2")
+                    .queryParam("MobileOS", "ETC")
+                    .queryParam("MobileApp", "festive")
+                    .queryParam("_type", "json")
+                    .queryParam("contentTypeId", contentTypeId)
+                    .queryParam("contentId", contentId)
+                    .build(false)
+                    .toUriString() + "&serviceKey=" + tourApiServiceKey;
+            
+            log.info("📡 detailIntro2 요청 URL: {}", url);
+            
+            ResponseEntity<String> response = restTemplate.getForEntity(java.net.URI.create(url), String.class);
+            
+            log.info("📥 detailIntro2 응답 상태: {}", response.getStatusCode());
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String responseBody = response.getBody();
+                // JSON 응답 파싱
+                List<AITravelServiceImpl.TourAPIResponse.Item> items = parseDetailIntro2Response(responseBody);
+                
+                if (!items.isEmpty()) {
+                    AITravelServiceImpl.TourAPIResponse.Item item = items.get(0);
+                    log.debug("detailIntro2 정보 조회 성공 - contentId: {}, 시작:{}, 종료:{}", 
+                            contentId, item.getEventStartDate(), item.getEventEndDate());
+                    return item;
+                } else {
+                    log.warn("detailIntro2 응답에서 데이터를 찾을 수 없음 - contentId: {}", contentId);
+                }
+            } else {
+                log.warn("detailIntro2 API 호출 실패 - contentId: {}, 상태코드: {}", 
+                        contentId, response.getStatusCode());
+            }
+            
+        } catch (Exception e) {
+            log.error("❌ detailIntro2 API 호출 중 오류 발생 - contentId: {}: {}", contentId, e.getMessage(), e);
+        }
+        
+        return null;
+    }
+
+    @Override
     public List<Map<String, Object>> getPlaceImages(String contentId) {
         
         List<Map<String, Object>> images = new ArrayList<>();
@@ -236,7 +289,7 @@ public class TourAPIServiceImpl implements TourAPIService {
                 }
             }
         } catch (Exception e) {
-            log.error("❌ 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage(), e);
+            log.error("❌ 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage());
         }
         
         return null;
@@ -302,12 +355,147 @@ public class TourAPIServiceImpl implements TourAPIService {
             return new ArrayList<>();
         }
         
-        // JSON 전용 파싱
-        return parseJSONResponse(response);
+        // 응답 형식 자동 감지 (XML vs JSON)
+        String trimmedResponse = response.trim();
+        if (trimmedResponse.startsWith("<")) {
+            return parseXMLResponse(response);
+        } else if (trimmedResponse.startsWith("{") || trimmedResponse.startsWith("[")) {
+            return parseJSONResponse(response);
+        } else {
+            log.warn("❌ 알 수 없는 TourAPI 응답 형식");
+            return new ArrayList<>();
+        }
     }
     
     // Private helper methods
     
+    /**
+     * XML 응답 파싱 (TourAPI가 XML로 응답하는 경우)
+     */
+    private List<AITravelServiceImpl.TourAPIResponse.Item> parseXMLResponse(String response) {
+        List<AITravelServiceImpl.TourAPIResponse.Item> items = new ArrayList<>();
+        
+        try {
+            // XML 파싱 로직
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new InputSource(new StringReader(response)));
+            
+            NodeList itemNodes = doc.getElementsByTagName("item");
+            
+            for (int i = 0; i < itemNodes.getLength(); i++) {
+                Node itemNode = itemNodes.item(i);
+                if (itemNode.getNodeType() == Node.ELEMENT_NODE) {
+                    AITravelServiceImpl.TourAPIResponse.Item item = parseXMLItemNode((Element) itemNode);
+                    if (item != null) {
+                        items.add(item);
+                    }
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("❌ XML 응답 파싱 실패", e);
+        }
+        
+        return items;
+    }
+    
+    /**
+     * XML 개별 아이템 노드 파싱
+     */
+    private AITravelServiceImpl.TourAPIResponse.Item parseXMLItemNode(Element itemElement) {
+        try {
+            AITravelServiceImpl.TourAPIResponse.Item item = new AITravelServiceImpl.TourAPIResponse.Item();
+            
+            item.setTitle(getXMLElementValue(itemElement, "title"));
+            item.setAddr1(getXMLElementValue(itemElement, "addr1"));
+            item.setMapX(getXMLElementValue(itemElement, "mapx"));
+            item.setMapY(getXMLElementValue(itemElement, "mapy"));
+            item.setContentTypeId(getXMLElementValue(itemElement, "contenttypeid"));
+            item.setFirstImage(getXMLElementValue(itemElement, "firstimage"));
+            item.setTel(getXMLElementValue(itemElement, "tel"));
+            item.setContentId(getXMLElementValue(itemElement, "contentid"));
+            item.setEventStartDate(getXMLElementValue(itemElement, "eventstartdate"));
+            item.setEventEndDate(getXMLElementValue(itemElement, "eventenddate"));
+            
+            // overview 정보 처리 (HTML 태그 제거)
+            String overview = getXMLElementValue(itemElement, "overview");
+            if (overview != null && !overview.trim().isEmpty()) {
+                overview = overview.replaceAll("<[^>]*>", "") // HTML 태그 제거
+                        .replace("&lt;", "<")
+                        .replace("&gt;", ">")
+                        .replace("&amp;", "&")
+                        .replace("&quot;", "\"")
+                        .replace("&#39;", "'")
+                        .replace("&nbsp;", " ")
+                        .trim();
+            }
+            item.setOverview(overview);
+            
+            return item;
+            
+        } catch (Exception e) {
+            log.debug("XML 아이템 노드 파싱 실패: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * XML 엘리먼트에서 특정 태그 값 추출
+     */
+    private String getXMLElementValue(Element parent, String tagName) {
+        try {
+            NodeList nodeList = parent.getElementsByTagName(tagName);
+            if (nodeList.getLength() > 0) {
+                Node node = nodeList.item(0);
+                if (node != null && node.getFirstChild() != null) {
+                    String value = node.getFirstChild().getNodeValue();
+                    return (value != null && !value.trim().isEmpty()) ? value.trim() : null;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("XML 값 추출 실패: {}", tagName, e);
+        }
+        return null;
+    }
+    
+    /**
+     * JSON 응답 파싱
+     */
+    private List<AITravelServiceImpl.TourAPIResponse.Item> parseJSONResponse(String jsonResponse) {
+        List<AITravelServiceImpl.TourAPIResponse.Item> items = new ArrayList<>();
+        
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(jsonResponse);
+            JsonNode body = root.path("response").path("body");
+            JsonNode itemsNode = body.path("items");
+            JsonNode itemNode = itemsNode.path("item");
+            
+            if (itemNode.isArray() && itemNode.size() > 0) {
+                for (JsonNode singleItem : itemNode) {
+                    AITravelServiceImpl.TourAPIResponse.Item item = parseJsonNodeToItem(singleItem);
+                    if (item != null) {
+                        items.add(item);
+                    }
+                }
+            } else if (itemNode.isObject()) {
+                AITravelServiceImpl.TourAPIResponse.Item item = parseJsonNodeToItem(itemNode);
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("❌ JSON 응답 파싱 실패: {}", e.getMessage(), e);
+        }
+        
+        return items;
+    }
+    
+    /**
+     * 이미지 응답 파싱
+     */
     private List<Map<String, Object>> parseDetailImageResponse(String response) {
         List<Map<String, Object>> images = new ArrayList<>();
         
@@ -362,36 +550,6 @@ public class TourAPIServiceImpl implements TourAPIService {
         return parseTourAPIResponse(response);
     }
     
-    private List<AITravelServiceImpl.TourAPIResponse.Item> parseJSONResponse(String jsonResponse) {
-        List<AITravelServiceImpl.TourAPIResponse.Item> items = new ArrayList<>();
-        
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(jsonResponse);
-            
-            JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
-            
-            if (itemsNode.isArray()) {
-                for (JsonNode itemNode : itemsNode) {
-                    AITravelServiceImpl.TourAPIResponse.Item item = parseJsonNodeToItem(itemNode);
-                    if (item != null) {
-                        items.add(item);
-                    }
-                }
-            } else if (!itemsNode.isMissingNode()) {
-                AITravelServiceImpl.TourAPIResponse.Item item = parseJsonNodeToItem(itemsNode);
-                if (item != null) {
-                    items.add(item);
-                }
-            }
-            
-        } catch (Exception e) {
-            log.error("❌ JSON 응답 파싱 실패: {}", e.getMessage(), e);
-        }
-        
-        return items;
-    }
-    
     private AITravelServiceImpl.TourAPIResponse.Item parseJsonNodeToItem(JsonNode itemNode) {
         try {
             AITravelServiceImpl.TourAPIResponse.Item item = new AITravelServiceImpl.TourAPIResponse.Item();
@@ -437,6 +595,69 @@ public class TourAPIServiceImpl implements TourAPIService {
             case "38": return "쇼핑";
             case "39": return "음식점";
             default: return "기타";
+        }
+    }
+    
+    /**
+     * detailIntro2 JSON 응답 파싱
+     */
+    private List<AITravelServiceImpl.TourAPIResponse.Item> parseDetailIntro2Response(String response) {
+        List<AITravelServiceImpl.TourAPIResponse.Item> items = new ArrayList<>();
+        
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response);
+            JsonNode body = root.path("response").path("body");
+            JsonNode itemsNode = body.path("items");
+            JsonNode itemNode = itemsNode.path("item");
+            
+            if (itemNode.isArray() && itemNode.size() > 0) {
+                for (JsonNode singleItem : itemNode) {
+                    AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(singleItem);
+                    if (item != null) {
+                        items.add(item);
+                    }
+                }
+            } else if (itemNode.isObject()) {
+                AITravelServiceImpl.TourAPIResponse.Item item = parseDetailIntro2Item(itemNode);
+                if (item != null) {
+                    items.add(item);
+                }
+            }
+            
+        } catch (Exception e) {
+            log.error("detailIntro2 JSON 응답 파싱 실패", e);
+        }
+        
+        return items;
+    }
+    
+    /**
+     * detailIntro2 개별 JSON 아이템 파싱
+     */
+    private AITravelServiceImpl.TourAPIResponse.Item parseDetailIntro2Item(JsonNode itemNode) {
+        try {
+            AITravelServiceImpl.TourAPIResponse.Item item = new AITravelServiceImpl.TourAPIResponse.Item();
+            
+            // 축제 날짜 정보 추출
+            String eventStartDate = getJsonNodeValue(itemNode, "eventstartdate");
+            String eventEndDate = getJsonNodeValue(itemNode, "eventenddate");
+            
+            item.setEventStartDate(eventStartDate);
+            item.setEventEndDate(eventEndDate);
+            
+            // contentId 추출
+            String contentId = getJsonNodeValue(itemNode, "contentid");
+            item.setContentId(contentId);
+            
+            log.debug("✅ detailIntro2 JSON 아이템 파싱 완료 - contentId: {}, 시작:{}, 종료:{}", 
+                    contentId, eventStartDate, eventEndDate);
+            
+            return item;
+            
+        } catch (Exception e) {
+            log.error("detailIntro2 JSON 아이템 파싱 실패", e);
+            return null;
         }
     }
 

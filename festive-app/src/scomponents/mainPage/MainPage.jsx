@@ -6,17 +6,20 @@ import { useNavigate } from "react-router-dom";
 
 function MainPage() {
   const [festivals, setFestivals] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // 로딩 상태 추가
   const navigate = useNavigate();
 
   // 현재 진행중인 축제 리스트를 외부 투어API에서 한 번에 불러오고, 각 축제의 좋아요 수를 조회해 정렬
   useEffect(() => {
     const fetchCurrentFestivals = async () => {
       try {
+        setIsLoading(true); // 로딩 시작
+
         // 1. 외부 투어API에서 현재 진행중인 축제 리스트 불러오기
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
         const today = new Date();
         const yyyyMMdd = today.toISOString().slice(0, 10).replace(/-/g, "");
-        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=WEB&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=50&pageNo=1`;
+        const url = `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=WEB&MobileApp=Festive&_type=json&eventStartDate=${yyyyMMdd}&arrange=A&numOfRows=10000&pageNo=1`;
         const res = await fetch(url);
         const data = await res.json();
         const items = data?.response?.body?.items?.item || [];
@@ -61,6 +64,8 @@ function MainPage() {
         setFestivals(sorted);
       } catch (err) {
         console.error("진행중인 축제 불러오기 실패:", err);
+      } finally {
+        setIsLoading(false); // 로딩 종료
       }
     };
     fetchCurrentFestivals();
@@ -94,46 +99,54 @@ function MainPage() {
           🔥 인기 축제 TOP 7
         </h1>
         <div className="festival-gallery-section">
-          <div className="gallery-grid">
-            {festivals.map((festival, index) => (
-              <div
-                key={festival.id}
-                className={`gallery-card ${index === 0 ? "large-card" : ""}`}
-                onClick={() => handleFestivalClick(festival.id)}
-              >
-                <div className="gallery-image-container">
-                  <img
-                    src={festival.image}
-                    alt={festival.title}
-                    className="gallery-image"
-                  />
-                  <div className="gallery-overlay">
-                    <div className="gallery-content">
-                      <h3 className="gallery-title">{festival.title}</h3>
-                      <p className="gallery-date">{festival.date}</p>
-                      <p className="gallery-location">{festival.location}</p>
-                    </div>
-                    <div
-                      className={`gallery-status ${
-                        festival.status === "진행중" ? "active" : "upcoming"
-                      }`}
-                    >
-                      {festival.status}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: "8px",
-                        color: "#ff4757",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      좋아요 {festival.likeCount}
+          {/* 로딩 상태 표시 */}
+          {isLoading ? (
+            <div className="mainpage-loading-indicator">
+              <div className="mainpage-spinner"></div>
+              <p>인기 축제를 불러오는 중...</p>
+            </div>
+          ) : (
+            <div className="gallery-grid">
+              {festivals.map((festival, index) => (
+                <div
+                  key={festival.id}
+                  className={`gallery-card ${index === 0 ? "large-card" : ""}`}
+                  onClick={() => handleFestivalClick(festival.id)}
+                >
+                  <div className="gallery-image-container">
+                    <img
+                      src={festival.image}
+                      alt={festival.title}
+                      className="gallery-image"
+                    />
+                    <div className="gallery-overlay">
+                      <div className="gallery-content">
+                        <h3 className="gallery-title">{festival.title}</h3>
+                        <p className="gallery-date">{festival.date}</p>
+                        <p className="gallery-location">{festival.location}</p>
+                      </div>
+                      <div
+                        className={`gallery-status ${
+                          festival.status === "진행중" ? "active" : "upcoming"
+                        }`}
+                      >
+                        {festival.status}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: "8px",
+                          color: "#ff4757",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        좋아요 {festival.likeCount}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

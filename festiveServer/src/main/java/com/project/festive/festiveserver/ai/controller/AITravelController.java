@@ -27,7 +27,7 @@ public class AITravelController {
     /**
      * AI 여행 추천 채팅 (일반 응답)
      */
-    @PostMapping("/chat")
+    @PostMapping(value = "/chat", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ChatResponse> generateTravelRecommendation(@RequestBody ChatRequest request) {
         
         try {
@@ -39,24 +39,14 @@ public class AITravelController {
         }
     }
     
-    /**
-     * AI 여행 추천 채팅 (스트리밍 응답) - 임시 비활성화
-     */
-    /*
-    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> generateTravelRecommendationStream(@RequestBody ChatRequest request) {
-        
-        return aiTravelService.generateTravelRecommendationStream(request)
-                .onErrorReturn("죄송합니다. 서비스에 일시적인 문제가 발생했습니다.");
-    }
-    */
+    // SSE 스트리밍 기능은 제거됨
     
     // TourAPI 관련 엔드포인트 제거 - 프론트엔드에서 직접 처리
     
     /**
      * 상태 확인
      */
-    @GetMapping("/health")
+    @GetMapping(value = "/health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("AI Travel Service is running!");
     }
@@ -66,7 +56,7 @@ public class AITravelController {
     /**
      * 장소의 상세 이미지들을 가져오는 API
      */
-    @GetMapping("/place-images/{contentId}")
+    @GetMapping(value = "/place-images/{contentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> getPlaceImages(@PathVariable String contentId) {
         try {
             
@@ -94,19 +84,13 @@ public class AITravelController {
     /**
      * 장소의 상세 정보(overview)를 가져오는 API
      */
-    @GetMapping("/place-overview/{contentId}")
+    @GetMapping(value = "/place-overview/{contentId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> getPlaceOverview(@PathVariable String contentId) {
         try {
-            
             // detailCommon2 API 호출
             var detailInfo = tourAPIService.fetchDetailCommon2(contentId);
             
             Map<String, Object> response = new HashMap<>();
-            
-            // 상세 로그 추가
-            if (detailInfo != null) {
-                // 로그 제거됨
-            }
             
             if (detailInfo != null && detailInfo.getOverview() != null && 
                 !detailInfo.getOverview().trim().isEmpty()) {
@@ -122,7 +106,7 @@ public class AITravelController {
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
-            log.error("❌ 장소 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage(), e);
+            log.error("❌ 장소 상세 정보 조회 실패 - contentId: {}, error: {}", contentId, e.getMessage());
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);

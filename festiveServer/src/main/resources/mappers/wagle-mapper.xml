@@ -24,8 +24,8 @@
                     (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
                     (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
                 FROM BOARD b
-                JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
-                JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
+                LEFT JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+                LEFT JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
                 WHERE b.BOARD_DEL_FL = 'N'
                 <if test="boardTypeNo != null">
                     AND b.BOARD_CODE = #{boardTypeNo}
@@ -53,7 +53,8 @@
     <select id="selectBoardCount" resultType="int">
         SELECT COUNT(*)
         FROM BOARD b
-        JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+        LEFT JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+        LEFT JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
         WHERE b.BOARD_DEL_FL = 'N'
         <if test="boardTypeNo != null">
             AND b.BOARD_CODE = #{boardTypeNo}
@@ -92,8 +93,8 @@
             (SELECT COUNT(*) FROM "COMMENT" c WHERE c.BOARD_NO = b.BOARD_NO AND c.COMMENT_DEL_FL = 'N') as boardCommentCount,
             (SELECT COUNT(*) FROM "LIKE" l WHERE l.BOARD_NO = b.BOARD_NO) as boardLikeCount
         FROM BOARD b
-        JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
-        JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
+        LEFT JOIN MEMBER m ON b.MEMBER_NO = m.MEMBER_NO
+        LEFT JOIN BOARD_TYPE bt ON b.BOARD_CODE = bt.BOARD_CODE
         WHERE b.BOARD_NO = #{boardNo} AND b.BOARD_DEL_FL = 'N'
     </select>
 
@@ -132,6 +133,13 @@
     <update id="deleteBoardLogical">
         UPDATE BOARD 
         SET BOARD_DEL_FL = 'Y' 
+        WHERE BOARD_NO = #{boardNo}
+    </update>
+
+    <!-- 게시글 복구 (논리삭제 복구) -->
+    <update id="updateBoardDelFlN">
+        UPDATE BOARD 
+        SET BOARD_DEL_FL = 'N' 
         WHERE BOARD_NO = #{boardNo}
     </update>
 
@@ -205,23 +213,11 @@
         WHERE COMMENT_NO = #{commentNo}
     </update>
 
-    <!-- 게시글 이미지 저장 -->
-    <insert id="insertBoardImg">
-        INSERT INTO BOARD_IMG (
-            BOARD_IMG_NO, BOARD_NO, BOARD_IMG_ORIGINAL, 
-            BOARD_IMG_RENAME, BOARD_IMG_PATH, BOARD_IMG_LEVEL
-        ) VALUES (
-            SEQ_BOARD_IMG_NO.NEXTVAL, #{boardNo}, #{originalName}, 
-            #{renameName}, #{imagePath}, #{level}
-        )
-    </insert>
-
-    <!-- 게시글 이미지 조회 -->
-    <select id="selectBoardImages" resultType="string">
-        SELECT IMG_PATH
-        FROM BOARD_IMG
-        WHERE BOARD_NO = #{boardNo}
-        ORDER BY IMG_ORDER ASC
-    </select>
+    <!-- 댓글 복구 (논리삭제 복구) -->
+    <update id="updateCommentDelFlN">
+        UPDATE "COMMENT" 
+        SET COMMENT_DEL_FL = 'N' 
+        WHERE COMMENT_NO = #{commentNo}
+    </update>
 
 </mapper> 

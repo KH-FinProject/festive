@@ -80,8 +80,8 @@
             TO_CHAR(c.COMMENT_WRITE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS commentWriteDate
         FROM report r
         LEFT JOIN member m ON r.member_no = m.member_no
-        LEFT JOIN board b ON r.report_board_no = b.board_no
-        LEFT JOIN "COMMENT" c ON r.report_type = 1 AND c.board_no = b.board_no AND c.comment_no = r.report_board_no
+        LEFT JOIN "COMMENT" c ON r.report_type = 1 AND c.comment_no = r.report_board_no
+        LEFT JOIN board b ON (r.report_type = 0 AND r.report_board_no = b.board_no) OR (r.report_type = 1 AND c.board_no = b.board_no)
         WHERE r.report_no = #{reportNo}
     </select>
 

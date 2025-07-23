@@ -35,13 +35,21 @@ public interface OpenAIService {
     String createStructuredResponseMessage(TravelAnalysis analysis, List<AITravelServiceImpl.TourAPIResponse.Item> tourAPIData);
     
     /**
-     * TourAPI 우선 추천 메시지 생성
+     * AI 여행 코스 추천 생성 (TourAPI 데이터 우선)
      */
     String createTourAPIFirstRecommendation(List<Map<String, Object>> travelCourses, 
                                            List<Map<String, Object>> otherSpots, 
                                            String originalMessage, 
                                            String keyword);
-    
+
+    /**
+     * 축제 검색 전용 AI 응답 생성
+     */
+    String createFestivalSearchResponse(List<Map<String, Object>> festivalData, 
+                                       String originalMessage, 
+                                       String keyword, 
+                                       String region);
+
     /**
      * 이모지 제거
      */
@@ -61,4 +69,9 @@ public interface OpenAIService {
      * AI 기반 지역 추출
      */
     String extractRegionWithAI(String userMessage, String availableRegions);
+    
+    /**
+     * AI 키워드 추출
+     */
+    String extractKeywordWithAI(String userMessage);
 } 

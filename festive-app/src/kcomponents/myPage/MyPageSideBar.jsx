@@ -8,7 +8,7 @@ const MyPageSideBar = () => {
   let profileImageUrl = member?.profileImage;
   if (profileImageUrl) {
     const baseUrl = (
-      import.meta.env.VITE_API_URL || "http://localhost:8080"
+      import.meta.env.VITE_API_URL || "https://api.festivekorea.site"
     ).replace(/\/+$/, "");
     const imagePath = profileImageUrl.startsWith("/")
       ? profileImageUrl
@@ -16,6 +16,10 @@ const MyPageSideBar = () => {
     profileImageUrl = `${baseUrl}${imagePath}`;
   }
   const location = useLocation();
+
+  const handleNavClick = () => {
+    window.scrollTo(0, 0);
+  };
 
   return (
     <aside className="mypage-sidebar">
@@ -38,6 +42,7 @@ const MyPageSideBar = () => {
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }
+          onClick={handleNavClick}
         >
           <span>프로필 수정</span>
         </NavLink>
@@ -47,6 +52,7 @@ const MyPageSideBar = () => {
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }
+          onClick={handleNavClick}
         >
           <span>개인정보 수정</span>
         </NavLink>
@@ -58,6 +64,7 @@ const MyPageSideBar = () => {
             className={({ isActive }) =>
               `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
             }
+            onClick={handleNavClick}
           >
             <span>비밀번호 수정</span>
           </NavLink>
@@ -68,6 +75,7 @@ const MyPageSideBar = () => {
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }
+          onClick={handleNavClick}
         >
           <span>내가 찜한 축제</span>
         </NavLink>
@@ -80,6 +88,7 @@ const MyPageSideBar = () => {
               ? "mypage-sidebar-item active"
               : "mypage-sidebar-item inactive"
           }
+          onClick={handleNavClick}
         >
           <span>내가 쓴 게시글 및 댓글</span>
         </NavLink>
@@ -89,6 +98,7 @@ const MyPageSideBar = () => {
           className={({ isActive }) =>
             `mypage-sidebar-item ${isActive ? "active" : "inactive"}`
           }
+          onClick={handleNavClick}
         >
           <span>회원 탈퇴</span>
         </NavLink>

@@ -34,6 +34,11 @@ public interface TourAPIService {
     AITravelServiceImpl.TourAPIResponse.Item fetchDetailCommon2(String contentId);
     
     /**
+     * detailIntro2 API로 축제 날짜 정보 조회
+     */
+    AITravelServiceImpl.TourAPIResponse.Item fetchDetailIntro2(String contentId, String contentTypeId);
+    
+    /**
      * TourAPI 아이템을 Map으로 변환 (overview 포함)
      */
     Map<String, Object> convertToMap(AITravelServiceImpl.TourAPIResponse.Item item);

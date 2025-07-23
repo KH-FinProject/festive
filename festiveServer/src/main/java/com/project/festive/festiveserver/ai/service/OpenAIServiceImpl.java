@@ -53,7 +53,7 @@ public class OpenAIServiceImpl implements OpenAIService {
             // 요청 바디 구성
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-4o-mini");
-            requestBody.put("max_tokens", 1500);
+            requestBody.put("max_tokens", 4000); // 1500 → 4000으로 대폭 증가
             requestBody.put("temperature", 0.7);
 
             Map<String, Object> message = new HashMap<>();
@@ -248,10 +248,115 @@ public class OpenAIServiceImpl implements OpenAIService {
         }
         
         // 마무리 멘트
-        recommendation.append("\n 각 장소를 클릭하면 더 자세한 정보를 확인할 수 있어요!");
-        recommendation.append("\n 지도에서 위치도 함께 확인해보세요!");
+        recommendation.append("\n즐거운 여행 되세요! 🎉");
         
         return recommendation.toString();
+    }
+
+    @Override
+    public String createFestivalSearchResponse(List<Map<String, Object>> festivalData, 
+                                             String originalMessage, 
+                                             String keyword, 
+                                             String region) {
+        StringBuilder response = new StringBuilder();
+        
+        // 🎪 축제 검색 전용 인사말
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            response.append(String.format("🎪 **%s** 관련 축제 정보를 찾아드렸어요!\n\n", keyword));
+        } else {
+            String regionText = (region != null && !region.equals("한국")) ? region + " " : "";
+            response.append(String.format("🎪 %s축제 정보를 찾아드렸어요!\n\n", regionText));
+        }
+        
+        if (festivalData.isEmpty()) {
+            // 축제 데이터가 없는 경우
+            response.append("죄송합니다. 현재 진행 중이거나 예정된 축제가 없습니다. 😔\n\n");
+            response.append("💡 **다른 검색 키워드를 시도해보세요:**\n");
+            response.append("• 벚꽃축제, 불꽃축제, 음식축제, 문화축제\n");
+            response.append("• 드론축제, 로봇축제, K-POP 페스티벌\n");
+            response.append("• 다른 지역의 축제도 검색해보세요!\n");
+        } else {
+            // 축제 데이터가 있는 경우 - 축제별 상세 정보 제공
+            response.append(String.format("총 **%d개**의 축제를 찾았습니다! 🎉\n\n", festivalData.size()));
+            
+            // 축제 목록 표시 (최대 10개)
+            for (int i = 0; i < Math.min(10, festivalData.size()); i++) {
+                Map<String, Object> festival = festivalData.get(i);
+                
+                String title = getString(festival, "title");
+                String addr = getString(festival, "addr1");
+                String eventStartDate = getString(festival, "eventstartdate");
+                String eventEndDate = getString(festival, "eventenddate");
+                String tel = getString(festival, "tel");
+                
+                response.append(String.format("🎭 **%s**\n", title));
+                
+                // 축제 일정
+                if (eventStartDate != null && !eventStartDate.isEmpty()) {
+                    if (eventEndDate != null && !eventEndDate.isEmpty() && !eventStartDate.equals(eventEndDate)) {
+                        response.append(String.format("📅 **일정**: %s ~ %s\n", 
+                            formatDate(eventStartDate), formatDate(eventEndDate)));
+                    } else {
+                        response.append(String.format("📅 **일정**: %s\n", formatDate(eventStartDate)));
+                    }
+                }
+                
+                // 축제 장소
+                if (addr != null && !addr.isEmpty()) {
+                    String shortAddr = addr.length() > 40 ? addr.substring(0, 40) + "..." : addr;
+                    response.append(String.format("📍 **장소**: %s\n", shortAddr));
+                }
+                
+                // 문의전화
+                if (tel != null && !tel.isEmpty() && !tel.equals("null")) {
+                    response.append(String.format("📞 **문의**: %s\n", tel));
+                }
+                
+                response.append("\n");
+            }
+            
+            // 축제 팁 및 안내
+            response.append("💡 **축제 관람 팁**:\n");
+            response.append("• 축제 일정은 변경될 수 있으니 사전에 확인해주세요\n");
+            response.append("• 주차 공간이 부족할 수 있으니 대중교통을 이용하세요\n");
+            response.append("• 날씨에 따라 행사가 변경될 수 있습니다\n\n");
+            
+            if (festivalData.size() > 10) {
+                response.append(String.format("✨ 더 많은 축제(%d개)는 갤러리에서 확인하실 수 있습니다!", 
+                    festivalData.size() - 10));
+            }
+        }
+        
+        return response.toString();
+    }
+    
+    /**
+     * 안전한 문자열 추출
+     */
+    private String getString(Map<String, Object> map, String key) {
+        Object value = map.get(key);
+        if (value == null || "null".equals(String.valueOf(value))) {
+            return null;
+        }
+        return String.valueOf(value).trim();
+    }
+    
+    /**
+     * 날짜 포맷팅 (YYYYMMDD → YYYY.MM.DD)
+     */
+    private String formatDate(String dateString) {
+        if (dateString == null || dateString.length() != 8) {
+            return dateString;
+        }
+        
+        try {
+            String year = dateString.substring(0, 4);
+            String month = dateString.substring(4, 6);
+            String day = dateString.substring(6, 8);
+            return String.format("%s.%s.%s", year, month, day);
+        } catch (Exception e) {
+            return dateString;
+        }
     }
 
     @Override
@@ -302,26 +407,324 @@ public class OpenAIServiceImpl implements OpenAIService {
         prompt.append("**가능한 지역 목록**:\n");
         prompt.append(availableRegions).append("\n\n");
         
-        prompt.append("**추출 규칙**:\n");
-        prompt.append("1. 메시지에서 지역명을 찾아서 위 목록에서 정확히 일치하는 것을 선택\n");
-        prompt.append("2. 지역명의 별칭이나 줄임말도 고려 (예: 통영 → 통영시)\n");
-        prompt.append("3. 조사나 어미는 무시 (예: '통영으로' → '통영시')\n");
-        prompt.append("4. 오타나 표기 변형도 고려\n");
-        prompt.append("5. 지역명이 없으면 'NONE' 반환\n\n");
+        prompt.append("**🎯 지능적 지역 추론 규칙**:\n");
+        prompt.append("1. **직접 지역명**: 메시지에서 지역명을 찾아서 위 목록에서 정확히 일치하는 것을 선택\n");
+        prompt.append("2. **지역명 변형**: 별칭이나 줄임말도 고려 (예: 통영 → 통영시, 부산 → 부산광역시)\n");
+        prompt.append("3. **조사/어미 무시**: 조사나 어미는 무시 (예: '통영으로' → '통영시')\n");
+        prompt.append("4. **🚇 지하철역/역사 → 지역 추론**: 당신의 지식을 활용해 지하철역이나 기차역이 어느 지역에 있는지 정확히 판단\n");
+        prompt.append("   ⚠️ 중요: 명동역, 홍대입구역 등 서울 지하철역은 반드시 서울 지역으로 매핑\n");
+        prompt.append("   예) 명동역 → 서울 중구, 홍대입구역 → 서울 마포구, 강남역 → 서울 강남구, 부산역 → 부산 동구\n");
+        prompt.append("5. **🏛️ 랜드마크/관광지 → 지역 추론**: 유명한 랜드마크나 관광지가 어느 지역에 있는지 판단\n");
+        prompt.append("   예) 경복궁 → 서울 종로구, 해운대 → 부산 해운대구, 제주공항 → 제주 제주시\n");
+        prompt.append("6. **🏫 대학교/기관 → 지역 추론**: 대학교나 주요 기관이 어느 지역에 있는지 판단\n");
+        prompt.append("   예) 서울대 → 서울 관악구, 부산대 → 부산 금정구, KAIST → 대전 유성구\n");
+        prompt.append("7. **🏢 상권/동네 → 지역 추론**: 유명한 상권이나 동네명으로 지역 판단\n");
+        prompt.append("   예) 강남 → 서울 강남구, 명동 → 서울 중구, 센텀시티 → 부산 해운대구\n");
+        prompt.append("8. **일반 지식 활용**: 당신이 알고 있는 한국 지리 지식을 최대한 활용하여 추론\n");
+        prompt.append("9. **⚠️ 중요: 반드시 DB 목록에서 정확히 찾기**: 추론한 지역명을 위 목록에서 **정확히** 찾아서 코드 반환\n");
+        prompt.append("   - 지역명 추론 후 반드시 위 목록에서 해당 지역을 검색\n");
+        prompt.append("   - 목록에 없는 코드는 절대 사용 금지\n");
+        prompt.append("   - 예: 남대문 → 서울 중구 → 목록에서 '중구' 검색 → 1_24 코드 사용\n");
+        prompt.append("10. **region 필드는 원본 표현 유지**: 사용자가 입력한 원래 지역 표현을 그대로 반환 (예: '명동역' → '명동역', '홍대' → '홍대')\n");
+        prompt.append("11. **areaCode와 sigunguCode는 정확한 코드**: DB 목록에서 찾은 정확한 지역코드와 시군구코드 반환\n");
+        prompt.append("12. **지역 정보가 없으면 'NONE' 반환**: 명확한 지역 정보가 없거나 추론이 불가능한 경우\n\n");
         
         prompt.append("**응답 형식** (JSON):\n");
         prompt.append("{\n");
-        prompt.append("  \"region\": \"정확한 지역명\",\n");
+        prompt.append("  \"region\": \"사용자가 입력한 원본 지역 표현\",\n");
         prompt.append("  \"areaCode\": \"지역코드\",\n");
-        prompt.append("  \"sigunguCode\": \"시군구코드\",\n");
-        prompt.append("  \"confidence\": \"HIGH|MEDIUM|LOW\"\n");
+        prompt.append("  \"sigunguCode\": \"시군구코드 (없으면 null)\",\n");
+        prompt.append("  \"confidence\": \"HIGH|MEDIUM|LOW\",\n");
+        prompt.append("  \"reasoning\": \"추론 과정 설명\"\n");
         prompt.append("}\n\n");
         
-        prompt.append("**예시**:\n");
-        prompt.append("- '통영 2박3일 음식점위주로 여행계획 짜줘' → {\"region\": \"통영시\", \"areaCode\": \"36\", \"sigunguCode\": \"17\", \"confidence\": \"HIGH\"}\n");
-        prompt.append("- '부산 여행 가고싶어' → {\"region\": \"부산광역시\", \"areaCode\": \"6\", \"sigunguCode\": null, \"confidence\": \"HIGH\"}\n");
-        prompt.append("- '맛집 추천해줘' → {\"region\": \"NONE\", \"areaCode\": null, \"sigunguCode\": null, \"confidence\": \"LOW\"}\n");
+        prompt.append("**🎯 지능적 추론 예시** (정확한 DB 매칭 과정):\n");
+        prompt.append("1. 직접 지역명: '서울 드론 축제 알려줘'\n");
+        prompt.append("   → 서울이 광역시라는 지식 활용 → 목록에서 '서울특별시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"서울\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"서울은 서울특별시\"}\n\n");
+        
+        prompt.append("1-1. 직접 지역명: '인천 맛집 추천해줘'\n");
+        prompt.append("   → 인천이 광역시라는 지식 활용 → 목록에서 '인천광역시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"인천\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"인천은 인천광역시\"}\n\n");
+        
+        prompt.append("1-2. 직접 지역명: '부산 여행 계획'\n");
+        prompt.append("   → 부산이 광역시라는 지식 활용 → 목록에서 '부산광역시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"부산\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"부산은 부산광역시\"}\n\n");
+        
+        prompt.append("1-3. 직접 지역명: '대구 관광지 추천'\n");
+        prompt.append("   → 대구가 광역시라는 지식 활용 → 목록에서 '대구광역시' 검색 → 매칭된 areaCode 반환\n");
+        prompt.append("   → {\"region\": \"대구\", \"areaCode\": \"DB에서찾은코드\", \"sigunguCode\": null, \"confidence\": \"HIGH\", \"reasoning\": \"대구는 대구광역시\"}\n\n");
+        
+        prompt.append("2. 지하철역: '명동역 맛집 추천해줘'\n");
+        prompt.append("   → 명동역이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 매칭된 코드 반환\n");
+        prompt.append("   → {\"region\": \"명동역\", \"areaCode\": \"1\", \"sigunguCode\": \"24\", \"confidence\": \"HIGH\", \"reasoning\": \"명동역은 서울 중구에 위치\"}\n\n");
+        
+        prompt.append("3. 🔥 랜드마크: '남대문 근처 맛집 추천해줘'\n");
+        prompt.append("   → 남대문이 서울 중구에 있다는 지식 활용 → 목록에서 '중구' 검색 → 1_24 코드 확인\n");
+        prompt.append("   → {\"region\": \"남대문\", \"areaCode\": \"1\", \"sigunguCode\": \"24\", \"confidence\": \"HIGH\", \"reasoning\": \"남대문은 서울 중구에 위치한 유명한 명소\"}\n\n");
+        
+        prompt.append("4. 랜드마크: '경복궁 주변 관광지 알려줘'\n");
+        prompt.append("   → 경복궁이 서울 종로구에 있다는 지식 활용 → 목록에서 '종로구' 검색\n");
+        prompt.append("   → {\"region\": \"경복궁\", \"areaCode\": \"1\", \"sigunguCode\": \"25\", \"confidence\": \"HIGH\", \"reasoning\": \"경복궁은 서울 종로구에 위치\"}\n\n");
+        
+        prompt.append("5. 대학교: 'KAIST 근처 맛집 추천'\n");
+        prompt.append("   → KAIST가 대전 유성구에 있다는 지식 활용 → 목록에서 '유성구' 검색\n");
+        prompt.append("   → {\"region\": \"KAIST\", \"areaCode\": \"8\", \"sigunguCode\": \"3\", \"confidence\": \"HIGH\", \"reasoning\": \"KAIST는 대전 유성구에 위치\"}\n\n");
+        
+        prompt.append("6. 직접 지역명: '통영 2박3일 음식점위주로'\n");
+        prompt.append("   → {\"region\": \"통영\", \"areaCode\": \"36\", \"sigunguCode\": \"17\", \"confidence\": \"HIGH\", \"reasoning\": \"직접적인 지역명 통영시\"}\n\n");
+        
+        prompt.append("7. 지역 정보 없음: '맛집 추천해줘'\n");
+        prompt.append("   → {\"region\": \"NONE\", \"areaCode\": null, \"sigunguCode\": null, \"confidence\": \"LOW\", \"reasoning\": \"지역 정보 없음\"}\n");
         
         return callOpenAI(prompt.toString());
+    }
+    
+    @Override
+    public String extractKeywordWithAI(String userMessage) {
+        try {
+            // 🎯 1단계: 매우 엄격한 AI 프롬프트
+            String firstResponse = callStrictKeywordExtractionAI(userMessage);
+            if (isValidSpecificKeyword(firstResponse)) {
+                log.info("✅ 1단계 AI 키워드 추출 성공: '{}' → '{}'", userMessage, firstResponse);
+                return firstResponse;
+            }
+            
+            // 🎯 2단계: 더 엄격한 경고 포함 프롬프트
+            log.info("⚠️ 1단계 실패, 2단계 시도");
+            String secondResponse = callUltraStrictKeywordExtractionAI(userMessage);
+            if (isValidSpecificKeyword(secondResponse)) {
+                log.info("✅ 2단계 AI 키워드 추출 성공: '{}' → '{}'", userMessage, secondResponse);
+                return secondResponse;
+            }
+            
+            // 🎯 3단계: 완전 실패 시 빈 문자열 반환
+            log.info("❌ AI 키워드 추출 완전 실패 - 구체적 키워드 없음: '{}'", userMessage);
+            return "";
+            
+        } catch (Exception e) {
+            log.error("❌ AI 키워드 추출 오류: {}", e.getMessage());
+            return "";
+        }
+    }
+    
+    /**
+     * 🎯 1단계: 엄격한 AI 키워드 추출
+     */
+    private String callStrictKeywordExtractionAI(String userMessage) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("다음 문장에서 구체적인 키워드만 찾아주세요.\n\n");
+        prompt.append("문장: \"").append(userMessage).append("\"\n\n");
+        
+        prompt.append("⚠️ 절대 반환하면 안 되는 단어들:\n");
+        prompt.append("축제, 행사, 이벤트, 페스티벌, 여행, 정보, 알려줘, 추천, 계획, 코스, 일정\n");
+        prompt.append("서울, 부산, 대구, 인천, 광주, 대전, 울산, 강원, 경기, 충북, 전남 등 지역명\n\n");
+        
+        prompt.append("✅ 반환해야 할 구체적 키워드 예시:\n");
+        prompt.append("벚꽃, 드론, 로봇, K-POP, 음식, 맥주, 와인, 자동차, 게임, AI, VR\n\n");
+        
+        prompt.append("예시:\n");
+        prompt.append("\"서울 벚꽃축제 알려줘\" → 벚꽃\n");
+        prompt.append("\"부산 드론 행사 정보\" → 드론\n");
+        prompt.append("\"대구 K-POP 페스티벌\" → K-POP\n");
+        prompt.append("\"인천 축제 리스트\" → (빈 답변)\n");
+        prompt.append("\"서울 여행 추천\" → (빈 답변)\n\n");
+        
+        prompt.append("답변 (구체적 키워드만, 없으면 빈 답변):");
+        
+        String response = callOpenAI(prompt.toString());
+        return cleanAndValidateResponse(response);
+    }
+    
+    /**
+     * 🎯 2단계: 매우 엄격한 AI 키워드 추출
+     */
+    private String callUltraStrictKeywordExtractionAI(String userMessage) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("🚨 경고: 이전 시도가 실패했습니다. 매우 구체적인 키워드만 찾아주세요!\n\n");
+        prompt.append("문장: \"").append(userMessage).append("\"\n\n");
+        
+        prompt.append("🚫 절대 금지 단어 (반환하면 실패):\n");
+        prompt.append("축제, 행사, 이벤트, 페스티벌, 대회, 박람회, 컨벤션, 쇼\n");
+        prompt.append("여행, 정보, 알려줘, 추천, 계획, 코스, 일정, 루트\n");
+        prompt.append("서울, 부산, 대구, 인천, 광주, 대전, 울산, 세종\n");
+        prompt.append("경기, 강원, 충북, 충남, 전북, 전남, 경북, 경남, 제주\n\n");
+        
+        prompt.append("✅ 허용되는 구체적 키워드만:\n");
+        prompt.append("- 꽃/식물: 벚꽃, 장미, 튤립, 유채, 해바라기, 코스모스\n");
+        prompt.append("- 기술: 드론, 로봇, AI, VR, 게임, IT\n");
+        prompt.append("- 문화: K-POP, 재즈, 클래식, 미술, 사진, 영화\n");
+        prompt.append("- 음식: 김치, 치킨, 맥주, 와인, 커피\n");
+        prompt.append("- 기타: 자동차, 패션, 스포츠\n\n");
+        
+        prompt.append("구체적 키워드가 없으면 반드시 빈 답변하세요!\n\n");
+        prompt.append("답변:");
+        
+        String response = callOpenAI(prompt.toString());
+        return cleanAndValidateResponse(response);
+    }
+    
+    /**
+     * 응답 정리 및 검증
+     */
+    private String cleanAndValidateResponse(String response) {
+        if (response == null) return "";
+        
+        response = response.trim()
+            .replaceAll("\\n+", "")
+            .replaceAll("\\s+", " ")
+            .replaceAll("[^가-힣a-zA-Z0-9\\s-]", "")
+            .trim();
+        
+        // 길이 체크
+        if (response.length() > 15 || response.length() < 2) {
+            return "";
+        }
+        
+        return response;
+    }
+    
+    /**
+     * 구체적이고 유효한 키워드인지 검증
+     */
+    private boolean isValidSpecificKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return false;
+        }
+        
+        keyword = keyword.toLowerCase().trim();
+        
+        // 금지 단어 체크 (더 엄격)
+        if (isStrictCommonWord(keyword)) {
+            return false;
+        }
+        
+        // 구체적인 키워드 화이트리스트 체크
+        String[] allowedKeywords = {
+            // 자연/식물
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "ai", "vr", "게임", "it", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술
+            "k-pop", "kpop", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
+        };
+        
+        for (String allowed : allowedKeywords) {
+            if (keyword.equals(allowed.toLowerCase()) || 
+                keyword.contains(allowed.toLowerCase()) ||
+                allowed.toLowerCase().contains(keyword)) {
+                log.info("✅ 유효한 구체적 키워드 발견: '{}'", keyword);
+                return true;
+            }
+        }
+        
+        // 화이트리스트에 없는 경우 추가 검증
+        // 2글자 이상이고 일반적이지 않은 단어면 허용
+        if (keyword.length() >= 2 && !isCommonWord(keyword)) {
+            log.info("✅ 일반적이지 않은 키워드로 허용: '{}'", keyword);
+            return true;
+        }
+        
+        log.warn("❌ 구체적이지 않은 키워드 거부: '{}'", keyword);
+        return false;
+    }
+    
+    /**
+     * 일반적인 단어인지 체크 (키워드로 부적절한 단어들)
+     */
+    private boolean isCommonWord(String word) {
+        if (word == null || word.trim().isEmpty()) {
+            return true;
+        }
+        
+        String lowerWord = word.toLowerCase().trim();
+        
+        // 일반적인 단어들 (키워드로 부적절)
+        String[] commonWords = {
+            "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "컨벤션", "쇼",
+            "여행", "계획", "일정", "코스", "루트", "추천", "정보", "리스트", "목록",
+            "알려줘", "찾아줘", "보여줘", "검색", "소개", "설명", "말해줘",
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+            "관련", "위한", "같은", "느낌", "스타일", "테마", "컨셉", "좋은", "괜찮은",
+            "추천", "정보", "알려", "찾아", "보여", "말해", "하는", "있는", "되는"
+        };
+        
+        for (String common : commonWords) {
+            if (lowerWord.equals(common.toLowerCase()) || 
+                lowerWord.contains(common.toLowerCase()) ||
+                common.toLowerCase().contains(lowerWord)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 엄격한 접미사 제거
+     */
+    private String removeUnnecessarySuffixesStrict(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return "";
+        }
+        
+        String[] suffixes = {
+            "관련", "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션",
+            "정보", "리스트", "목록", "검색", "추천", "여행", "계획", "일정", "코스", "루트"
+        };
+        
+        String result = keyword;
+        
+        // 여러 접미사가 붙은 경우를 처리하기 위해 반복 제거
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (String suffix : suffixes) {
+                if (result.endsWith(suffix)) {
+                    String base = result.substring(0, result.length() - suffix.length()).trim();
+                    if (base.length() >= 2) { // 최소 2글자 이상이어야 의미있는 키워드
+                        result = base;
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 엄격한 일반 단어 체크 (AI 결과 검증용)
+     */
+    private boolean isStrictCommonWord(String word) {
+        if (word == null || word.trim().isEmpty()) {
+            return true;
+        }
+        
+        String lowerWord = word.toLowerCase().trim();
+        
+        // 🚫 절대 허용하지 않을 단어들
+        String[] strictlyForbidden = {
+            "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션",
+            "여행", "계획", "일정", "코스", "루트", "추천", "정보", "리스트", "목록",
+            "알려줘", "찾아줘", "보여줘", "검색", "소개", "설명", "말해줘",
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+            "관련", "위한", "같은", "느낌", "스타일", "테마", "컨셉"
+        };
+        
+        for (String forbidden : strictlyForbidden) {
+            if (lowerWord.equals(forbidden.toLowerCase())) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 } 

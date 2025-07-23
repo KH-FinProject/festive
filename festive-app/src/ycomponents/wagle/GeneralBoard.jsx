@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "./Pagination";
 import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 import axiosApi from "../../api/axiosAPI";
+import useAuthStore from "../../store/useAuthStore";
 
 const PAGE_SIZE = 7;
 
@@ -18,9 +19,18 @@ function GeneralBoard({ hideWriteBtn }) {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
+  const { member, isLoggedIn } = useAuthStore();
 
   // 글쓰기 버튼 클릭 핸들러
   const handleWriteClick = async () => {
+    // 로그인 체크
+    if (!isLoggedIn || !member) {
+      alert("로그인이 필요한 서비스입니다.\n로그인 후 글을 작성해보세요!");
+      navigate("/signin");
+      return;
+    }
+
+    // 닉네임 체크 (소셜 사용자용)
     const canProceed = await checkNicknameForSocialUser(navigate);
     if (canProceed) {
       navigate("/wagle/write");
@@ -108,6 +118,7 @@ function GeneralBoard({ hideWriteBtn }) {
 
   // 페이지 변경
   const goToPage = (page) => {
+    window.scrollTo(0, 0);
     fetchPosts(page, searchType, searchKeyword);
   };
 
@@ -192,7 +203,7 @@ function GeneralBoard({ hideWriteBtn }) {
                       post.memberProfileImage
                         ? `${
                             import.meta.env.VITE_API_URL ||
-                            "http://localhost:8080"
+                            "https://api.festivekorea.site"
                           }${post.memberProfileImage}`
                         : "/logo.png"
                     }
@@ -205,7 +216,7 @@ function GeneralBoard({ hideWriteBtn }) {
                   {/* <img
                     src={
                       post.memberProfileImage
-                        ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${post.memberProfileImage.startsWith('/') ? post.memberProfileImage : `/${post.memberProfileImage}`}`
+                        ? `${(import.meta.env.VITE_API_URL || "https://api.festivekorea.site").replace(/\/+$/, '')}${post.memberProfileImage.startsWith('/') ? post.memberProfileImage : `/${post.memberProfileImage}`}`
                         : "/logo.png"
                     }
                     alt="프로필"
@@ -220,7 +231,9 @@ function GeneralBoard({ hideWriteBtn }) {
                       e.target.src = "/logo.png";
                     }}
                   /> */}
-                  <span className="general-board-author">{post.author}</span>
+                  <span className="general-board-author">
+                    {post.author ? post.author : "알 수 없음"}
+                  </span>
                   <span className="general-board-date">{post.date}</span>
                   <span className="general-board-likes">
                     <FontAwesomeIcon icon={faThumbsUp} /> {post.likes}

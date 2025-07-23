@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +57,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
 
             String socialId = oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId();
             Member existingMember = memberRepository.findBySocialId(socialId);
-
+            
             if(existingMember == null) {
                 String profileImageUrl = oAuth2Response.getProfileImage();
                 String profileImagePath = null;
@@ -80,7 +81,7 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
                     .build();
                 
                 if(registrationId.equals("naver"))
-                    newMember.setTel(oAuth2Response.getTel().replaceAll("-", ""));
+                    newMember.setTel(oAuth2Response.getTel().replace("-", ""));
                 else
                     newMember.setTel(oAuth2Response.getTel());
 
@@ -90,6 +91,12 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
                 return new CustomUserDetails(MemberConverter.toDto(savedMember));
 
             } else {
+                if (existingMember.getMemberDelFl().equals("Y")) {
+                    log.warn("탈퇴한 회원의 소셜 로그인 시도: {}", socialId);
+                    OAuth2Error oauth2Error = new OAuth2Error("WITHDRAWN_MEMBER", "탈퇴한 회원입니다.", null);
+                    throw new OAuth2AuthenticationException(oauth2Error, "탈퇴한 회원입니다.");
+                }
+                
                 existingMember.setName(oAuth2Response.getName());
                 existingMember.setEmail(oAuth2Response.getEmail());
                 // existingMember.setNickname(oAuth2Response.getNickname()); // 소셜 로그인 시 닉네임 변경을 위한 주석처리
@@ -101,6 +108,10 @@ public class CustomOAuth2UserServiceImpl extends DefaultOAuth2UserService implem
 
                 return new CustomUserDetails(MemberConverter.toDto(existingMember));
             }
+            
+        } catch (OAuth2AuthenticationException e) {
+            log.error("OAuth2 사용자 로드 중 오류 발생", e);
+            throw e;
             
         } catch (Exception e) {
             log.error("OAuth2 사용자 로드 중 오류 발생", e);

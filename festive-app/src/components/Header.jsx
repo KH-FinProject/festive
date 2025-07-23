@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import mainLogo from "../assets/festiveLogo.png";
 import useAuthStore from "../store/useAuthStore";
-import { useAdminNotification } from "../mcomponents/AdminNotificationContext.jsx";
+import { useAdminNotifications } from "../mcomponents/AdminNotificationContext.jsx";
 import Weather from "../scomponents/weatherAPI/WeatherAPI.jsx";
 import axiosApi from "../api/axiosAPI.js";
 import "./HeaderFooter.css";
 
 const Header = () => {
   const { member, logout, isLoggedIn } = useAuthStore();
-  const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotification();
+  const { hasNewReport, hasNewBooth, hasNewInquiry } = useAdminNotifications();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,11 +20,9 @@ const Header = () => {
     if (isLoggingOut) return;
     setIsLoggingOut(true);
     try {
-      const res = await axiosApi.post("/auth/logout");
+      await axiosApi.post("/auth/logout");
       logout();
       navigate("/");
-    } catch (error) {
-      // 에러 핸들링 필요시 추가
     } finally {
       setIsLoggingOut(false);
     }
@@ -41,9 +39,9 @@ const Header = () => {
   return (
     <header className="header">
       <div className="headerlogo">
-        <a href="/">
+        <div onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
           <img src={mainLogo} alt="festive logo" />
-        </a>
+        </div>
       </div>
       <nav className="headernav">
         {[
@@ -99,7 +97,14 @@ const Header = () => {
               <img
                 src={
                   member?.profileImage
-                    ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${member.profileImage.startsWith('/') ? member.profileImage : `/${member.profileImage}`}`
+                    ? `${(
+                        import.meta.env.VITE_API_URL ||
+                        "https://api.festivekorea.site"
+                      ).replace(/\/+$/, "")}${
+                        member.profileImage.startsWith("/")
+                          ? member.profileImage
+                          : `/${member.profileImage}`
+                      }`
                     : "/logo.png"
                 }
                 alt="프로필"

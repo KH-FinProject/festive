@@ -386,6 +386,10 @@ const Find = () => {
           {currentView === 'find' && (
             <form 
               className="find-form" 
+              onSubmit={(e) => {
+                e.preventDefault(); // 기본 form 제출 방지
+                activeTab === 'id' ? handleIdSubmit(e) : handlePwSubmit(e);
+              }}
             >
               {/* id/pw에 따라 입력 필드 변경 */}
               <div className="find-input-group">

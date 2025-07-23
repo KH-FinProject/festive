@@ -32,13 +32,13 @@ public class KakaoResponse implements OAuth2Response {
     
     @Override
     public String getName() {
-        return null;
+        Object value = profile.get("nickname");
+        return value != null ? value.toString() : "";
     }
 
     @Override
     public String getNickname() {
-        Object value = profile.get("nickname");
-        return value != null ? value.toString() : "";
+        return null;
     }
 
     @Override

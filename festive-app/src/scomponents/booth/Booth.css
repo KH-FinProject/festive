@@ -177,7 +177,8 @@
   background-color: #f0f9ff;
 }
 
-.booth-file-upload:has(.booth-file-input:not([value=""])) .booth-file-upload-text {
+.booth-file-upload:has(.booth-file-input:not([value=""]))
+  .booth-file-upload-text {
   color: #60a5fa;
   font-weight: 500;
 }
@@ -201,12 +202,27 @@
 }
 
 .booth-submit-button:hover {
-  background-color: #2563eb;
+  background-color: #7bb0f7;
 }
 
 .booth-submit-button:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.festival-search-btn {
+  background-color: #60a5fa;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.festival-search-btn:hover {
+  background-color: #7bb0f7;
 }
 
 /* 반응형 디자인 */

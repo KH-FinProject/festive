@@ -565,6 +565,7 @@ const MyPageEditInfo = () => {
                     type="text"
                     className="form-input"
                     value={memberInfo.address.zipcode}
+                    placeholder="우편번호"
                     readOnly
                   />
                   <button
@@ -579,6 +580,7 @@ const MyPageEditInfo = () => {
                   <input
                     type="text"
                     className="form-input full-width"
+                    placeholder="주소"
                     value={memberInfo.address.detail}
                     readOnly
                   />

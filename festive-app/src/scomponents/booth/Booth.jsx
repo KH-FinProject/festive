@@ -17,7 +17,7 @@ async function fetchFestivals({ keyword, region, startDate, endDate }) {
     MobileApp: "Festive",
     _type: "json",
     arrange: "A",
-    numOfRows: "100",
+    numOfRows: "10000",
     pageNo: "1",
   });
   if (startDate) params.append("eventStartDate", formatDate(startDate));
@@ -33,11 +33,11 @@ async function fetchFestivals({ keyword, region, startDate, endDate }) {
     // 종료된 축제 제외
     const filtered = Array.isArray(items)
       ? items.filter((item) => {
-          const start = item.eventstartdate;
-          const end = item.eventenddate;
-          if (getFestivalStatus(start, end) === "종료") return false;
-          return true;
-        })
+        const start = item.eventstartdate;
+        const end = item.eventenddate;
+        if (getFestivalStatus(start, end) === "종료") return false;
+        return true;
+      })
       : [items];
     return filtered.map((item) => {
       const start = item.eventstartdate;
@@ -79,37 +79,30 @@ function getFestivalStatus(start, end) {
 
 // 축제 검색 모달 컴포넌트
 function FestivalSearchModal({ open, onClose, onSelect, areaOptions }) {
-  const [region, setRegion] = useState(""); // 초기값은 빈 문자열
+  const [region, setRegion] = useState(""); // 초기값은 전체(빈 문자열)
 
-  // areaOptions가 들어오면 region이 빈값이면 '서울'의 areaCode로 최초 1회만 세팅
+  // areaOptions와 safeAreaOptions 콘솔 출력 (필요시 유지)
   useEffect(() => {
-    if (areaOptions.length > 0 && !region) {
-      const seoul = areaOptions.find((area) => area.areaName === "서울");
-      if (seoul) setRegion(seoul.areaCode);
-      else setRegion(areaOptions[0].areaCode); // 서울이 없으면 첫번째 지역
-    }
-    // areaOptions와 safeAreaOptions 콘솔 출력
     console.log("areaOptions:", areaOptions);
     const safeAreaOptions =
       areaOptions.length > 0
         ? [
-            ...new Map(
-              areaOptions.map((area) => [area.areaName, area])
-            ).values(),
-          ]
+          ...new Map(
+            areaOptions.map((area) => [area.areaName, area])
+          ).values(),
+        ]
         : [{ areaName: "서울", areaCode: "1" }];
     console.log("safeAreaOptions:", safeAreaOptions);
   }, [areaOptions]);
 
-  const safeAreaOptions =
-    areaOptions.length > 0
+  // safeAreaOptions에 '전체' 옵션을 항상 첫 번째로 추가
+  const safeAreaOptions = [
+    { areaName: "전체", areaCode: "" },
+    ...(areaOptions.length > 0
       ? [...new Map(areaOptions.map((area) => [area.areaName, area])).values()]
-      : [{ areaName: "서울", areaCode: "1" }];
+      : [{ areaName: "서울", areaCode: "1" }]),
+  ];
 
-  const getSeoulAreaCode = () => {
-    const seoul = safeAreaOptions.find((area) => area.areaName === "서울");
-    return seoul ? seoul.areaCode : "";
-  };
   const [query, setQuery] = useState("");
   const [startDate, setStartDate] = useState(
     new Date().toISOString().slice(0, 10)
@@ -149,16 +142,16 @@ function FestivalSearchModal({ open, onClose, onSelect, areaOptions }) {
     };
   }, [query, region, startDate, endDate, open]);
 
-  // areaOptions가 바뀌면 region이 빈값이거나 유효하지 않으면 무조건 '서울'로 세팅
-  useEffect(() => {
-    if (
-      (!region || !safeAreaOptions.some((a) => a.areaCode === region)) &&
-      safeAreaOptions.length > 0
-    ) {
-      const seoulCode = getSeoulAreaCode();
-      if (seoulCode) setRegion(seoulCode);
-    }
-  }, [areaOptions]);
+  // (삭제) areaOptions가 바뀌어도 region을 강제로 '서울'로 세팅하지 않음
+  // useEffect(() => {
+  //   if (
+  //     (!region || !safeAreaOptions.some((a) => a.areaCode === region)) &&
+  //     safeAreaOptions.length > 0
+  //   ) {
+  //     const seoulCode = getSeoulAreaCode();
+  //     if (seoulCode) setRegion(seoulCode);
+  //   }
+  // }, [areaOptions]);
 
   if (!open) return null;
   const handleBackdropClick = (e) => {
@@ -414,6 +407,7 @@ const FleaMarketForm = ({ areaOptions, contentId, contentTitle }) => {
             />
             <button
               type="button"
+              className="festival-search-btn"
               onClick={() => setShowFestivalModal(true)}
               style={{ padding: "0 12px" }}
             >
@@ -693,6 +687,7 @@ const FoodTruckForm = ({ areaOptions, contentId, contentTitle }) => {
             />
             <button
               type="button"
+              className="festival-search-btn"
               onClick={() => setShowFestivalModal(true)}
               style={{ padding: "0 12px" }}
             >

@@ -6,6 +6,19 @@ import AdminSidebar from "./AdminSideBar";
 import axiosApi from "../api/axiosAPI";
 import "./AdminCustomerService.css";
 
+// 마크다운 이미지 태그를 <img>로 변환하는 함수
+function renderMarkdownImages(text) {
+  if (!text) return "";
+  // 정규식: ![alt text](URL)
+  const markdownImageRegex = /!\[(.*?)\]\((.*?)\)/g;
+  let processedText = text.replace(
+    markdownImageRegex,
+    '<img src="$2" alt="$1" style="max-width:100%;" />'
+  );
+  processedText = processedText.replace(/\n/g, "<br>");
+  return processedText;
+}
+
 const AdminCustomerReply = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -17,9 +30,7 @@ const AdminCustomerReply = () => {
   useEffect(() => {
     const fetchInquiryDetail = async (boardNo) => {
       try {
-        const res = await axiosApi.get(
-          `/api/customer/boards/${boardNo}`
-        );
+        const res = await axiosApi.get(`/api/customer/boards/${boardNo}`);
         setInquiry(res.data);
       } catch {
         navigate("/admin/customer");
@@ -59,7 +70,6 @@ const AdminCustomerReply = () => {
       const replyData = {
         boardNo: inquiry.boardNo,
         commentContent: replyContent.trim(),
-        memberNo: 46, // TODO: 실제 관리자 memberNo로 변경
       };
       let response;
       if (inquiry.answerCommentNo) {
@@ -158,10 +168,11 @@ const AdminCustomerReply = () => {
                 </span>
                 <div className="inquiry-badges">
                   <span
-                    className={`status-badge ${(inquiry?.inquiryStatus || "대기중") === "답변완료"
-                      ? "completed"
-                      : "waiting"
-                      }`}
+                    className={`status-badge ${
+                      (inquiry?.inquiryStatus || "대기중") === "답변완료"
+                        ? "completed"
+                        : "waiting"
+                    }`}
                   >
                     {inquiry?.inquiryStatus || "대기중"}
                   </span>
@@ -181,10 +192,7 @@ const AdminCustomerReply = () => {
                 <div
                   className="inquiry-text"
                   dangerouslySetInnerHTML={{
-                    __html: (inquiry?.boardContent || "").replace(
-                      /\n/g,
-                      "<br>"
-                    ),
+                    __html: renderMarkdownImages(inquiry?.boardContent || ""),
                   }}
                 />
               </div>

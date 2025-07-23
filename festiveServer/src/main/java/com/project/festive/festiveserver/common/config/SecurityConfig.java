@@ -16,6 +16,7 @@ import com.project.festive.festiveserver.auth.handler.CustomSuccessHandler;
 import com.project.festive.festiveserver.auth.service.CustomOAuth2UserService;
 import com.project.festive.festiveserver.common.filter.JwtFilter;
 import com.project.festive.festiveserver.common.util.JwtUtil;
+import com.project.festive.festiveserver.auth.handler.CustomOAuth2FailureHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -25,12 +26,14 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
     private final JwtUtil jwtUtil;
+    private final CustomOAuth2FailureHandler customOAuth2FailureHandler;
     
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JwtUtil jwtUtil) {
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JwtUtil jwtUtil, CustomOAuth2FailureHandler customOAuth2FailureHandler) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.jwtUtil = jwtUtil;
+        this.customOAuth2FailureHandler = customOAuth2FailureHandler;
     }
     
     @Bean
@@ -41,6 +44,9 @@ public class SecurityConfig {
 
         // CSRF(Cross-Site Request Forgery) 보호를 비활성화 (JWT 사용 시)
         .csrf(auth -> auth.disable())
+        
+        // X-Frame-Options 헤더 설정 (iframe 허용)
+        .headers(headers -> headers.frameOptions().sameOrigin())
         
         // formLogin 비활성화 (사용자 지정 로그인 사용)
         .formLogin(auth -> auth.disable())
@@ -66,7 +72,8 @@ public class SecurityConfig {
         .oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
                 .userService(customOAuth2UserService))
-            .successHandler(customSuccessHandler))
+            .successHandler(customSuccessHandler)
+            .failureHandler(customOAuth2FailureHandler))
         
         //경로별 인가 작업
         .authorizeHttpRequests(auth -> auth
@@ -118,6 +125,12 @@ public class SecurityConfig {
 
             // 프로필 이미지
             .requestMatchers("/profile-images/**").permitAll()
+            
+            // 게시글 이미지
+            .requestMatchers("/board-images/**").permitAll()
+            
+            // 부스 이미지
+            .requestMatchers("/upload/festive/booth/**").permitAll()
 
             // 정적 리소스/시스템 경로 - Spring Security 권장 방식
             .requestMatchers("/static/**", "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()

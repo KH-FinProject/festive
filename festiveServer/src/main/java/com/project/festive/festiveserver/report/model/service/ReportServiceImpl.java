@@ -12,6 +12,7 @@ import com.project.festive.festiveserver.member.mapper.MemberMapper;
 import com.project.festive.festiveserver.report.model.dto.Report;
 import com.project.festive.festiveserver.report.model.dto.ReportAlert;
 import com.project.festive.festiveserver.report.model.mapper.ReportMapper;
+import com.project.festive.festiveserver.wagle.mapper.WagleMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,6 +28,9 @@ public class ReportServiceImpl implements ReportService {
    
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private WagleMapper wagleMapper;
 
     @Override
     public int createReport(Report report) {
@@ -49,7 +53,31 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public int updateReportStatus(int reportNo, int status) {
-        return reportMapper.updateReportStatus(reportNo, status);
+        // 신고 상태 업데이트
+        int result = reportMapper.updateReportStatus(reportNo, status);
+        // 게시글/댓글 논리삭제 또는 복구 처리 추가
+        Report report = reportMapper.selectReportDetail(reportNo);
+        if (report != null) {
+            // 처리완료(1)면 삭제, 대기(0)면 복구
+            if (status == 1) {
+                if (report.getReportType() == 0) {
+                    // 게시글
+                    wagleMapper.deleteBoardLogical((long) report.getReportBoardNo());
+                } else if (report.getReportType() == 1) {
+                    // 댓글
+                    wagleMapper.deleteCommentLogical((long) report.getReportBoardNo());
+                }
+            } else if (status == 0) {
+                if (report.getReportType() == 0) {
+                    // 게시글 복구
+                    wagleMapper.updateBoardDelFlN((long) report.getReportBoardNo());
+                } else if (report.getReportType() == 1) {
+                    // 댓글 복구
+                    wagleMapper.updateCommentDelFlN((long) report.getReportBoardNo());
+                }
+            }
+        }
+        return result;
     }
 
     @Override

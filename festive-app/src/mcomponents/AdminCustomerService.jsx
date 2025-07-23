@@ -4,7 +4,7 @@ import "./AdminCommon.css";
 import { useNavigate } from "react-router-dom";
 import AdminSidebar from "./AdminSideBar";
 import Pagination, { usePagination } from "./Pagination";
-import { useAdminNotification } from "./AdminNotificationContext.jsx";
+import { useAdminNotifications } from "./AdminNotificationContext.jsx";
 import axiosApi from "../api/axiosAPI";
 
 const AdminCustomerService = () => {
@@ -15,8 +15,7 @@ const AdminCustomerService = () => {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
-  const { setHasNewReport } = useAdminNotification();
-  const { setHasNewInquiry } = useAdminNotification();
+  const { setHasNewReport, setHasNewInquiry } = useAdminNotifications();
 
   // 문의내역 페이지네이션 설정
   const inquiryPagination = usePagination({
@@ -38,15 +37,12 @@ const AdminCustomerService = () => {
       setInquiryLoading(true);
       setError(null);
 
-      const response = await axiosApi.get(
-        "/api/customer/boards",
-        {
-          params: {
-            page: 1,
-            size: 100, // 충분한 데이터를 가져오기 위해 큰 값 설정
-          },
-        }
-      );
+      const response = await axiosApi.get("/api/customer/boards", {
+        params: {
+          page: 1,
+          size: 100, // 충분한 데이터를 가져오기 위해 큰 값 설정
+        },
+      });
 
       if (response.status === 200) {
         const data = response.data;
@@ -120,9 +116,9 @@ const AdminCustomerService = () => {
 
     if (confirmDelete) {
       try {
-              const response = await axiosApi.delete(
-        `/api/customer/boards/${inquiry.boardNo}`
-      );
+        const response = await axiosApi.delete(
+          `/api/customer/boards/${inquiry.boardNo}`
+        );
         if (response.status === 200) {
           alert("문의글이 삭제되었습니다.");
           fetchInquiries(); // 목록 새로고침
@@ -294,7 +290,11 @@ const AdminCustomerService = () => {
                           </div>
                           <div className="inquiry-meta">
                             <span className="inquiry-author">
-                              신고자: {report.reporterNo}
+                              신고자:{" "}
+                              {report.reporterNickname
+                                ? report.reporterNickname
+                                : "알 수 없음"}{" "}
+                              (No.{report.reporterNo})
                             </span>
                             <span className="inquiry-date">
                               {report.reportTime}

@@ -45,6 +45,12 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             // 선호 콘텐츠 타입 감지
             String preferredContentType = detectPreferredContentType(userMessage);
             
+            // 🚀 모든 요청에 대해 기간이 없으면 당일치기로 기본 설정
+            if (duration == null || duration.trim().isEmpty()) {
+                duration = "당일치기";
+                log.info("📅 기간 정보 없음 - 기본값 설정: 당일치기");
+            }
+            
             TravelAnalysis analysis = new TravelAnalysis(requestType, region, keyword, duration, intent, areaCode, sigunguCode);
             analysis.setPreferredContentType(preferredContentType);
             
@@ -86,9 +92,10 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "15"; // 축제공연행사
         }
         
-        // 음식 관련 키워드
+        // 🍽️ 음식 관련 키워드 (모든 맛집 요청을 39로 처리)
         if (lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
             lowerMessage.contains("식당") || lowerMessage.contains("먹거리")) {
+            log.info("🍽️ 맛집 키워드 감지 → preferredContentType: 39 (음식점)");
             return "39"; // 음식점
         }
         
@@ -205,6 +212,21 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         
         String lowerMessage = message.toLowerCase();
         
+        // 🍽️ 단순 맛집 추천인 경우 기간 설정하지 않음
+        boolean hasSimpleFoodRequest = (lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
+                                       lowerMessage.contains("식당") || lowerMessage.contains("먹거리")) &&
+                                      (lowerMessage.contains("추천") || lowerMessage.contains("알려") || 
+                                       lowerMessage.contains("찾아"));
+        
+        boolean hasTravelContext = lowerMessage.contains("여행") || lowerMessage.contains("코스") ||
+                                 lowerMessage.contains("일정") || lowerMessage.contains("루트") ||
+                                 lowerMessage.contains("박") || lowerMessage.contains("당일");
+        
+        if (hasSimpleFoodRequest && !hasTravelContext) {
+            log.info("🍽️ 단순 맛집 추천 - 기간 설정하지 않음");
+            return null; // 기간 없음
+        }
+        
         // 패턴 매칭으로 기간 추출
         Pattern[] patterns = {
             Pattern.compile("(\\d+)박\\s*(\\d+)일"), // "2박3일"
@@ -290,105 +312,44 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return new RegionInfo(null, null, "한국");
         }
         
+        // DB 기반 매핑 정보 가져오기
+        Map<String, String> sigunguCodeMapping = areaService.getSigunguCodeMapping();
+        Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
+        
+        // 🤖 AI 기반 지역 추론을 우선적으로 시도
+        RegionInfo aiRegionInfo = extractRegionWithAI(userMessage, sigunguCodeMapping, areaCodeMapping);
+        if (aiRegionInfo != null) {
+            // AI가 제공한 코드가 유효한지 검증
+            RegionInfo validatedRegion = validateAIRegionCodes(aiRegionInfo, sigunguCodeMapping, areaCodeMapping);
+            if (validatedRegion != null) {
+                return validatedRegion;
+            }
+        }
+        
+        // AI 추론 실패 시 폴백: 간단한 키워드 매칭
         String message = userMessage.toLowerCase().trim();
         
-        // DB 기반 시군구 매핑 사용
-        Map<String, String> sigunguCodeMapping = areaService.getSigunguCodeMapping();
-        
-
-        
-        // 🚫 일반적인 조사/어미 제외 리스트 (대폭 강화)
-        String[] excludedWords = {
-            "로", "에", "으로", "에서", "까지", "부터", "와", "과", "을", "를", "이", "가", "의", "도", "만", "라서", "라고",
-            "고", "구", "동", "면", "리", "번지", "호", "층", "가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"
-        };
-        
-        // 시군구 코드 먼저 확인 (더 구체적이므로) - 길이 순으로 정렬하여 긴 이름부터 매칭
-        List<Map.Entry<String, String>> sortedEntries = sigunguCodeMapping.entrySet().stream()
-            .sorted((a, b) -> Integer.compare(b.getKey().length(), a.getKey().length())) // 길이 내림차순
-            .collect(Collectors.toList());
-        
-        for (Map.Entry<String, String> entry : sortedEntries) {
+        // 시군구 매칭 시도
+        for (Map.Entry<String, String> entry : sigunguCodeMapping.entrySet()) {
             String cityName = entry.getKey();
-            String normalizedCityName = cityName.toLowerCase().trim();
-            
-            // 🚫 너무 짧거나 일반적인 조사/어미는 제외 (최소 3글자 이상)
-            if (cityName.length() <= 2) {
-                log.debug("🚫 너무 짧은 지역명 스킵: '{}'", cityName);
-                continue; // 2글자 이하는 제외
-            }
-            
-            boolean isExcluded = false;
-            for (String excluded : excludedWords) {
-                if (cityName.equals(excluded)) {
-                    log.debug("🚫 제외된 단어로 인한 매칭 스킵: '{}'", cityName);
-                    isExcluded = true;
-                    break;
-                }
-            }
-            if (isExcluded) continue;
-            
-            // 🚫 의미 있는 지역명인지 추가 검증
-            if (!isValidRegionName(cityName)) {
-                log.debug("🚫 유효하지 않은 지역명 스킵: '{}'", cityName);
-                continue;
-            }
-            
-
-            
-            // 더 정확한 매칭을 위한 다양한 패턴 체크
-            boolean isMatched = false;
-            String matchType = "";
-            
-            // 1. 정확한 매칭 (통영시 -> 통영시)
-            if (message.contains(normalizedCityName)) {
-                isMatched = true;
-                matchType = "정확한 매칭";
-            }
-            // 2. 시/군/구 제거 매칭 (통영시 -> 통영)
-            else if (normalizedCityName.endsWith("시") || normalizedCityName.endsWith("군") || normalizedCityName.endsWith("구")) {
-                String baseCity = normalizedCityName.substring(0, normalizedCityName.length() - 1);
-                if (baseCity.length() >= 2 && message.contains(baseCity)) { // 최소 2글자 이상
-                    isMatched = true;
-                    matchType = "시/군/구 제거 매칭";
-                }
-            }
-            // 3. 반대 매칭 (통영 -> 통영시) - 단, 충분히 긴 이름만
-            else if (cityName.length() > 2) {
-                String baseCityName = cityName.substring(0, cityName.length() - 1);
-                if (baseCityName.length() >= 2 && message.contains(baseCityName.toLowerCase())) {
-                    isMatched = true;
-                    matchType = "반대 매칭";
-                }
-            }
-            
-            if (isMatched) {
+            if (message.contains(cityName.toLowerCase())) {
                 String sigunguCode = entry.getValue();
                 String[] parts = sigunguCode.split("_");
                 String areaCode = parts[0];
                 String regionName = findRegionNameByAreaCode(areaCode) + " " + cityName;
-                
-
-                
+                log.info("✅ 폴백 시군구 매칭: {} → {} ({})", userMessage, regionName, sigunguCode);
                 return new RegionInfo(areaCode, sigunguCode, regionName);
             }
         }
         
-        // DB 기반 지역 매핑 사용 (광역시/도)
-        Map<String, String> areaCodeMapping = areaService.getAreaCodeMapping();
-        
+        // 광역시/도 매칭 시도
         for (Map.Entry<String, String> entry : areaCodeMapping.entrySet()) {
             String regionName = entry.getKey();
             if (message.contains(regionName.toLowerCase())) {
                 String areaCode = entry.getValue();
+                log.info("✅ 폴백 광역 매칭: {} → {} (areaCode: {})", userMessage, regionName, areaCode);
                 return new RegionInfo(areaCode, null, regionName);
             }
-        }
-        
-        // 🤖 AI 기반 지역 추출 시도
-        RegionInfo aiRegionInfo = extractRegionWithAI(userMessage, sigunguCodeMapping, areaCodeMapping);
-        if (aiRegionInfo != null) {
-            return aiRegionInfo;
         }
         
         log.warn("⚠️ 지역 매핑 실패 - 전국으로 설정: '{}'", userMessage);
@@ -412,55 +373,162 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
 
     @Override
     public String determineRequestType(String message) {
-        String lowerMessage = message.toLowerCase();
+        String lowerMessage = message.toLowerCase().replace(" ", "");
         
-        // 0. 먼저 여행/축제 관련성 체크
+        log.info("🔍 요청 타입 분석 시작: '{}'", message);
+        
+        // 🍽️ 맛집 요청은 모두 travel_only로 처리 (preferredContentType: 39로 설정)
+        boolean hasFoodRequest = lowerMessage.contains("맛집") || lowerMessage.contains("음식") || 
+                                lowerMessage.contains("식당") || lowerMessage.contains("먹거리");
+        
+        if (hasFoodRequest) {
+            log.info("🍽️ 맛집 요청 감지 → travel_only (음식점 위주)로 처리");
+            // 나중에 analysis에서 preferredContentType을 "39"로 설정할 예정
+        }
+        
+        // 1. 여행/축제 관련성 체크
         if (!isTravelOrFestivalRelated(message)) {
+            log.info("❌ 여행/축제 관련 없음 → unclear_request");
             return "unclear_request";
         }
         
-        // 1. 축제 관련 키워드 확인
-        boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("행사") || 
-                                   lowerMessage.contains("이벤트") || lowerMessage.contains("페스티벌");
+        // 🎯 3가지 기능 명확 구분
         
-        // 2. 여행 계획 관련 키워드 확인
-        boolean hasTravelPlanKeyword = lowerMessage.contains("계획") || lowerMessage.contains("일정") || 
-                                     lowerMessage.contains("코스") || lowerMessage.contains("여행") || 
+        // 🎪 축제 키워드 감지 (공백 제거 전 원본 메시지로도 체크)
+        String originalLower = message.toLowerCase();
+        boolean hasFestivalKeyword = lowerMessage.contains("축제") || lowerMessage.contains("페스티벌") || 
+                                   lowerMessage.contains("행사") || lowerMessage.contains("이벤트") ||
+                                   originalLower.contains("축제") || originalLower.contains("페스티벌") || 
+                                   originalLower.contains("행사") || originalLower.contains("이벤트");
+        
+        // 📋 정보 요청 키워드 감지 (공백 제거 전후 모두 체크)
+        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("정보") || 
+                                      lowerMessage.contains("찾아줘") || lowerMessage.contains("검색") || 
+                                      lowerMessage.contains("뭐있어") || lowerMessage.contains("목록") ||
+                                      lowerMessage.contains("리스트") || lowerMessage.contains("소개") ||
+                                      lowerMessage.contains("있나") || lowerMessage.contains("있어") ||
+                                      originalLower.contains("알려줘") || originalLower.contains("정보") || 
+                                      originalLower.contains("찾아줘") || originalLower.contains("검색") || 
+                                      originalLower.contains("뭐 있어") || originalLower.contains("목록");
+        
+        // 🚀 여행 계획 키워드 감지
+        boolean hasTravelPlanKeyword = lowerMessage.contains("여행코스") || lowerMessage.contains("여행계획") || 
+                                     lowerMessage.contains("일정") || lowerMessage.contains("코스") || 
                                      lowerMessage.contains("루트") || lowerMessage.contains("동선") ||
-                                     lowerMessage.contains("짜") || lowerMessage.contains("추천") ||
-                                     lowerMessage.contains("박") || lowerMessage.contains("일");
+                                     lowerMessage.contains("박") || 
+                                     (lowerMessage.contains("추천") && (lowerMessage.contains("여행") || lowerMessage.contains("계획"))) ||
+                                     originalLower.contains("여행 코스") || originalLower.contains("여행 계획") || 
+                                     originalLower.contains("일정") || originalLower.contains("코스") || 
+                                     originalLower.contains("루트") || originalLower.contains("동선") ||
+                                     (originalLower.contains("추천") && (originalLower.contains("여행") || originalLower.contains("계획")));
         
-        // 3. 단순 정보 요청 키워드 확인
-        boolean hasInfoRequestKeyword = lowerMessage.contains("알려줘") || lowerMessage.contains("소개") || 
-                                      lowerMessage.contains("정보") || lowerMessage.contains("뭐가") ||
-                                      lowerMessage.contains("어떤") || lowerMessage.contains("찾아줘") ||
-                                      lowerMessage.contains("검색") || lowerMessage.contains("리스트") ||
-                                      lowerMessage.contains("목록");
-        
-        String requestType;
-        
+        // 1️⃣ 축제 기반 여행코스 추천 (festival_travel)
         if (hasFestivalKeyword && hasTravelPlanKeyword) {
-            // 축제 + 여행 계획 키워드 = 축제 기반 여행 계획
-            requestType = "festival_travel";
-        } else if (hasFestivalKeyword && hasInfoRequestKeyword) {
-            // 축제 + 정보 요청 키워드 = 단순 축제 정보 요청
-            requestType = "festival_info";
-        } else if (hasFestivalKeyword) {
-            // 축제 키워드만 있는 경우 - 문맥에 따라 판단
-            if (lowerMessage.contains("위주") || lowerMessage.contains("중심") || lowerMessage.contains("기반")) {
-                requestType = "festival_travel";
-            } else {
-                requestType = "festival_info";
-            }
-        } else if (hasTravelPlanKeyword) {
-            // 여행 계획 키워드만 있는 경우 = 일반 여행 계획
-            requestType = "travel_only";
-        } else {
-            // 기본값
-            requestType = "travel_only";
+            log.info("🎪✈️ 축제 기반 여행코스 추천 감지 → festival_travel");
+            return "festival_travel";
         }
         
-        return requestType;
+        // 2️⃣ 순수 축제 검색 (festival_info) - 우선순위 높임
+        // 특정 키워드 감지 (드론, 벚꽃 등)
+        boolean hasSpecificKeyword = hasSpecificFestivalKeyword(message);
+        
+        // 🎯 축제 정보 검색 우선 판별 (조건 강화)
+        if (hasFestivalKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
+            log.info("🎪📋 축제 정보 검색 감지 (축제+정보요청) → festival_info");
+            return "festival_info";
+        }
+        
+        // 🎯 특정 키워드 기반 축제 검색
+        if (hasSpecificKeyword && hasInfoRequestKeyword && !hasTravelPlanKeyword) {
+            log.info("🎯📋 키워드 기반 축제 검색 감지 → festival_info");
+            return "festival_info";
+        }
+        
+        // 🎯 특정 키워드만 있는 경우도 축제 검색으로 처리 (예: "서울 벚꽃축제")
+        if (hasSpecificKeyword && !hasTravelPlanKeyword) {
+            log.info("🌸 특정 키워드 기반 축제 검색 → festival_info");
+            return "festival_info";
+        }
+        
+        // 🎯 축제 키워드만 있고 명확한 지시어가 없는 경우도 축제 정보 검색 (강화)
+        if (hasFestivalKeyword && !hasTravelPlanKeyword) {
+            // 단순히 "서울 축제", "인천 축제" 같은 요청도 축제 정보 검색으로 처리
+            log.info("🎪❓ 축제 키워드 감지 → festival_info (기본값)");
+            return "festival_info";
+        }
+        
+        // 3️⃣ 일반 여행코스 추천 (travel_only)
+        // - 축제 키워드 없이 여행 관련 키워드만 있는 경우
+        if (hasTravelPlanKeyword && !hasFestivalKeyword) {
+            log.info("✈️ 일반 여행코스 추천 감지 → travel_only");
+            return "travel_only";
+        }
+        
+        // 🏠 기본값: 일반 여행 추천
+        log.info("🔄 기본값 적용 → travel_only");
+        return "travel_only";
+    }
+    
+    /**
+     * 구체적인 축제 키워드 감지 (드론, 벚꽃, K-POP 등)
+     */
+    private boolean hasSpecificFestivalKeyword(String message) {
+        String lowerMessage = message.toLowerCase();
+        
+        // 🎯 구체적인 축제 관련 키워드들
+        String[] specificKeywords = {
+            // 자연/식물
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "AI", "VR", "게임", "IT", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술
+            "K-POP", "KPOP", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
+        };
+        
+        for (String keyword : specificKeywords) {
+            if (lowerMessage.contains(keyword)) {
+                log.debug("🎯 구체적 키워드 발견: '{}'", keyword);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 간단한 키워드 감지 (순환 호출 방지)
+     */
+    private boolean hasSimpleKeyword(String message) {
+        String[] words = message.split("\\s+");
+        for (String word : words) {
+            word = word.replaceAll("[^가-힣a-zA-Z]", "").toLowerCase();
+            if (word.length() >= 2 && !isSimpleCommonWord(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * 간단한 공통 단어 체크 (순환 호출 방지용)
+     */
+    private boolean isSimpleCommonWord(String word) {
+        String[] commonWords = {
+            "알려줘", "추천", "정보", "축제", "행사", "이벤트", "여행", "계획", "일정", "코스",
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원",
+            "충북", "충남", "전북", "전남", "경북", "경남", "제주"
+        };
+        
+        for (String common : commonWords) {
+            if (word.equals(common)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -469,76 +537,142 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             return "";
         }
         
+        log.info("🤖 키워드 추출 시작: '{}'", message);
+        
+        try {
+            // 🤖 1단계: AI를 활용한 스마트 키워드 추출
+            String aiKeyword = openAIService.extractKeywordWithAI(message);
+            
+            if (aiKeyword != null && !aiKeyword.trim().isEmpty()) {
+                log.info("✅ AI 키워드 추출 성공: '{}' → '{}'", message, aiKeyword);
+                return aiKeyword.trim();
+            } else {
+                log.info("⚠️ AI 키워드 추출 실패, 폴백 방식 사용");
+            }
+            
+        } catch (Exception e) {
+            log.warn("❌ AI 키워드 추출 오류, 폴백 방식 사용: {}", e.getMessage());
+        }
+        
+        // 🛡️ 2단계: 강화된 폴백 - 구체적인 키워드 직접 매칭
+        log.info("🔄 강화된 폴백 키워드 추출 시작");
+        
         String lowerMessage = message.toLowerCase();
         
-        // 특정 키워드 패턴 추출
-        String[] keywordPatterns = {
-            "맛집", "음식", "카페", "디저트",
-            "박물관", "미술관", "전시", "문화",
-            "해변", "바다", "산", "강", "호수",
-            "온천", "스파", "휴양",
-            "쇼핑", "시장", "백화점",
-            "체험", "액티비티", "레저",
-            "역사", "유적", "문화재",
-            "자연", "경치", "풍경",
-            "여행", "계획", "코스", "일정", "루트", "축제", "페스티벌", "행사"
+        // 🎯 구체적인 키워드들을 직접 매칭 (우선순위 순)
+        String[] specificKeywords = {
+            // 자연/꽃
+            "벚꽃", "장미", "튤립", "유채", "해바라기", "코스모스", "단풍", "꽃", "불꽃",
+            // 기술/현대
+            "드론", "로봇", "AI", "VR", "게임", "IT", "핸드폰", "컴퓨터", "기술",
+            // 문화/예술  
+            "K-POP", "KPOP", "케이팝", "재즈", "클래식", "미술", "사진", "영화", "음악",
+            // 음식
+            "김치", "치킨", "맥주", "와인", "커피", "디저트", "음식", "먹거리",
+            // 기타
+            "자동차", "패션", "뷰티", "스포츠", "문화", "전통", "역사"
         };
         
-        for (String pattern : keywordPatterns) {
-            if (lowerMessage.contains(pattern)) {
-                return pattern;
+        for (String keyword : specificKeywords) {
+            if (lowerMessage.contains(keyword.toLowerCase())) {
+                log.info("🎯 직접 매칭 성공: '{}' → '{}'", message, keyword);
+                return keyword;
             }
         }
         
-        // 간단한 키워드 추출 (공백으로 분리해서 의미있는 단어 찾기)
+        // 🔍 3단계: 단어 분해 후 키워드 검색
         String[] words = message.split("\\s+");
+        
         for (String word : words) {
-            if (word.length() >= 2 && !word.matches("\\d+")) {
-                // 특수문자 제거
-                word = word.replaceAll("[^가-힣a-zA-Z]", "");
-                if (word.length() >= 2) {
-                    return word;
+            // 특수문자 제거하고 정리
+            String cleanWord = word.replaceAll("[^가-힣a-zA-Z0-9]", "").toLowerCase();
+            
+            if (cleanWord.length() >= 2) {
+                // 구체적인 키워드인지 체크
+                for (String keyword : specificKeywords) {
+                    if (cleanWord.equals(keyword.toLowerCase()) || 
+                        cleanWord.contains(keyword.toLowerCase()) ||
+                        keyword.toLowerCase().contains(cleanWord)) {
+                        log.info("🔍 단어 분해 매칭 성공: '{}' → '{}'", message, keyword);
+                        return keyword;
+                    }
+                }
+                
+                // 일반 단어가 아닌 경우 키워드로 사용
+                if (!isCommonWord(cleanWord)) {
+                    log.info("📝 일반 키워드 추출: '{}' → '{}'", message, cleanWord);
+                    return cleanWord;
                 }
             }
         }
         
+        log.info("ℹ️ 키워드 추출 결과 없음: '{}' - TourAPI가 전체 검색을 처리합니다", message);
         return "";
     }
     
     /**
-     * 유효한 지역명인지 검증
+     * 일반적인 단어인지 체크 (키워드로 부적절한 단어들)
      */
-    private boolean isValidRegionName(String regionName) {
-        if (regionName == null || regionName.trim().isEmpty()) {
-            return false;
+    private boolean isCommonWord(String word) {
+        if (word == null || word.trim().isEmpty()) {
+            return true;
         }
         
-        // 🚫 일반적인 조사/어미/단어는 지역명이 아님
-        String[] invalidWords = {
-            "로", "에", "으로", "에서", "까지", "부터", "와", "과", "을", "를", "이", "가", "의", "도", "만", "라서", "라고",
-            "고", "구", "동", "면", "리", "번지", "호", "층", "가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"
+        String lowerWord = word.toLowerCase().trim();
+        
+        // 🚫 일반적인 동사/형용사/부사 (키워드가 될 수 없는 것들)
+        String[] verbs = {
+            "알려줘", "추천", "가자", "가고", "보자", "좋은", "괜찮은", "예쁜", "멋진", "재미있는",
+            "찾아줘", "검색", "보여줘", "설명", "소개", "말해줘", "하자", "해줘", "주세요"
         };
         
-        for (String invalid : invalidWords) {
-            if (regionName.equals(invalid)) {
-                return false;
+        // 🗺️ 주요 지역명 (키워드가 아닌 지역 정보)
+        String[] regions = {
+            "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", 
+            "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
+            "경기도", "강원도", "충청북도", "충청남도", "전라북도", "전라남도", 
+            "경상북도", "경상남도", "제주도"
+        };
+        
+        // ⏰ 시간/기간 관련 (키워드가 아닌 일정 정보)
+        String[] timeWords = {
+            "당일", "박", "일", "하루", "이틀", "사흘", "나흘", "일주일", "주말", 
+            "오전", "오후", "저녁", "아침", "점심", "밤", "새벽", "시간", "분"
+        };
+        
+        // 🎯 일반적인 여행 용어 (너무 포괄적이어서 키워드로 부적절)
+        String[] genericTerms = {
+            "여행", "계획", "일정", "코스", "루트", "추천", "정보", "리스트", "목록"
+        };
+        
+        // 🏷️ 수식어/접미사 (키워드에서 제외해야 할 불필요한 단어들)
+        String[] modifiers = {
+            "관련", "축제", "행사", "이벤트", "페스티벌", "대회", "박람회", "쇼", "전시회", "컨벤션",
+            "관련된", "위한", "같은", "느낌", "스타일", "테마", "컨셉"
+        };
+        
+        // 🔍 모든 카테고리 체크
+        String[][] allCommonWords = {verbs, regions, timeWords, genericTerms, modifiers};
+        
+        for (String[] category : allCommonWords) {
+            for (String common : category) {
+                if (lowerWord.equals(common.toLowerCase()) || 
+                    lowerWord.contains(common.toLowerCase()) || 
+                    common.toLowerCase().contains(lowerWord)) {
+                    return true;
+                }
             }
         }
         
-        // ✅ 의미 있는 지역명 패턴 검증
-        // 시/군/구/도/특별시/광역시 등이 포함된 경우는 유효
-        if (regionName.endsWith("시") || regionName.endsWith("군") || regionName.endsWith("구") || 
-            regionName.endsWith("도") || regionName.contains("특별시") || regionName.contains("광역시")) {
+        // 📏 너무 짧은 단어 (의미가 애매함)
+        if (lowerWord.length() <= 1) {
             return true;
         }
         
-        // 3글자 이상이고 한글로만 구성된 경우는 유효할 가능성 높음
-        if (regionName.length() >= 3 && regionName.matches("[가-힣]+")) {
-            return true;
-        }
-        
+        // ✅ 나머지는 모두 유효한 키워드로 허용
         return false;
     }
+
     
     /**
      * AI 기반 지역 추출
@@ -599,10 +733,19 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
             String areaCode = extractJsonValue(jsonStr, "areaCode");
             String sigunguCode = extractJsonValue(jsonStr, "sigunguCode");
             String confidence = extractJsonValue(jsonStr, "confidence");
+            String reasoning = extractJsonValue(jsonStr, "reasoning");
             
             if ("NONE".equals(region) || region == null || region.trim().isEmpty()) {
+                log.info("❌ AI 지역 추론 실패: region이 NONE이거나 비어있음");
                 return null;
             }
+            
+            // 🎯 AI 추론 결과 로깅
+            log.info("🎯 AI 지역 추론 성공: {} → {}(areaCode: {}, sigunguCode: {})", 
+                    reasoning != null ? reasoning : "추론 정보 없음", 
+                    region, 
+                    areaCode != null ? areaCode : "null", 
+                    sigunguCode != null ? sigunguCode : "null");
             
             return new RegionInfo(areaCode, sigunguCode, region);
             
@@ -612,6 +755,46 @@ public class TravelAnalysisServiceImpl implements TravelAnalysisService {
         }
     }
     
+    /**
+     * AI 코드 신뢰 기반 검증 (개선된 AI 프롬프트 활용)
+     */
+    private RegionInfo validateAIRegionCodes(RegionInfo aiRegion, 
+                                           Map<String, String> sigunguCodeMapping, 
+                                           Map<String, String> areaCodeMapping) {
+        
+        if (aiRegion == null) {
+            return null;
+        }
+        
+        // 1️⃣ AI가 제공한 areaCode와 sigunguCode 우선 신뢰 (AI 추론이 정확하므로)
+        if (aiRegion.getAreaCode() != null && aiRegion.getSigunguCode() != null) {
+            String fullSigunguCode = aiRegion.getAreaCode() + "_" + aiRegion.getSigunguCode();
+            log.info("🔍 AI 코드 직접 사용: fullSigunguCode={}", fullSigunguCode);
+            
+            // AI 추론이 정확하므로 검증 없이 바로 사용
+            log.info("✅ AI 시군구 코드 직접 사용: {} → {} ({})", 
+                    aiRegion.getRegionName(), "AI추론결과", fullSigunguCode);
+            return new RegionInfo(aiRegion.getAreaCode(), fullSigunguCode, aiRegion.getRegionName());
+        }
+        
+        // 2️⃣ areaCode만 있는 경우
+        if (aiRegion.getAreaCode() != null) {
+            for (Map.Entry<String, String> entry : areaCodeMapping.entrySet()) {
+                if (entry.getValue().equals(aiRegion.getAreaCode())) {
+                    log.info("✅ AI 광역코드 검증 성공: {} → {} (areaCode: {})", 
+                            aiRegion.getRegionName(), entry.getKey(), aiRegion.getAreaCode());
+                    return new RegionInfo(aiRegion.getAreaCode(), null, aiRegion.getRegionName());
+                }
+            }
+        }
+        
+        log.warn("❌ AI 검증 실패: regionName={}, areaCode={}, sigunguCode={}", 
+                aiRegion.getRegionName(), aiRegion.getAreaCode(), aiRegion.getSigunguCode());
+        return null;
+    }
+
+
+
     /**
      * JSON 문자열에서 값 추출 (간단한 파싱)
      */

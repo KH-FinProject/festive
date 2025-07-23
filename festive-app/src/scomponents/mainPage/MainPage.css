@@ -78,3 +78,40 @@
     height: 150px;
   }
 }
+
+/* 메인페이지 로딩 인디케이터 */
+.mainpage-loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+  min-height: 400px; /* 갤러리 영역과 비슷한 높이 유지 */
+}
+
+.mainpage-loading-indicator .mainpage-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #60a5fa;
+  border-radius: 50%;
+  animation: mainpage-spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.mainpage-loading-indicator p {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* 메인페이지 스피너 애니메이션 */
+@keyframes mainpage-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -25,6 +25,7 @@ const FestiveCalendar = () => {
     const [selectedDateFestivals, setSelectedDateFestivals] = useState([]);
     const [clickedDate, setClickedDate] = useState(() => getTodayStr());
     const [currentPage, setCurrentPage] = useState(1);
+    const [isLoading, setIsLoading] = useState(true);
 
     const navigate = useNavigate();
 
@@ -48,8 +49,9 @@ const FestiveCalendar = () => {
     async function fetchFestivalEventsByDate(dateStr, filterDate) {
         const serviceKey = import.meta.env.VITE_TOURAPI_KEY;
         try {
+            setIsLoading(true); // 로딩 시작
             const response = await fetch(
-                `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=19960205&arrange=A&numOfRows=10000&pageNo=1`
+                `https://apis.data.go.kr/B551011/KorService2/searchFestival2?serviceKey=${serviceKey}&MobileOS=ETC&MobileApp=Festive&_type=json&eventStartDate=20210101&arrange=A&numOfRows=1700&pageNo=1`
             );
             const result = await response.json();
             const items = result.response.body.items.item || [];
@@ -111,6 +113,8 @@ const FestiveCalendar = () => {
             setCurrentPage(1); // 날짜 바뀌면 1페이지로 초기화
         } catch (error) {
             console.error('축제 데이터 로딩 실패:', error);
+        } finally {
+            setIsLoading(false); // 로딩 끝
         }
     }
 
@@ -281,41 +285,48 @@ const FestiveCalendar = () => {
 
                     <div>
                         <div className="calendar-festivals-grid">
-                            {currentFestivals.map((festival) => (
-                                <div
-                                    key={festival.id}
-                                    className="calendar-festival-card"
-                                    onClick={() => handleFestivalClick(festival.id)}
-                                >
-                                    <div className="calendar-festival-image-container">
-                                        <img
-                                            src={festival.image}
-                                            alt={festival.title}
-                                            className="calendar-festival-image"
-                                        />
-                                        <div className={`calendar-festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
-                                            {festival.status}
+                            {/* 로딩 중일 때 "로딩 중..." 메시지 표시 */}
+                            {isLoading ? (
+                                <div className="loading-message">
+                                    로딩 중
+                                </div>
+                            ) : (
+                                currentFestivals.map((festival) => (
+                                    <div
+                                        key={festival.id}
+                                        className="calendar-festival-card"
+                                        onClick={() => handleFestivalClick(festival.id)}
+                                    >
+                                        <div className="calendar-festival-image-container">
+                                            <img
+                                                src={festival.image}
+                                                alt={festival.title}
+                                                className="calendar-festival-image"
+                                            />
+                                            <div className={`calendar-festival-status ${festival.status === '진행중' ? 'active' : 'upcoming'}`}>
+                                                {festival.status}
+                                            </div>
+                                        </div>
+                                        <div className="calendar-festival-info">
+                                            <h3 className="calendar-festival-title">{festival.title}</h3>
+                                            <p className="calendar-festival-location">
+                                                <span className="icon-wrapper">
+                                                    <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                                <span className="location-text">{festival.location}</span>
+                                            </p>
+                                            <p className="calendar-festival-date">
+                                                <svg className="calendar-icon" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                                </svg>
+                                                {festival.date}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div className="calendar-festival-info">
-                                        <h3 className="calendar-festival-title">{festival.title}</h3>
-                                        <p className="calendar-festival-location">
-                                            <span className="icon-wrapper">
-                                                <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                                </svg>
-                                            </span>
-                                            <span className="location-text">{festival.location}</span>
-                                        </p>
-                                        <p className="calendar-festival-date">
-                                            <svg className="calendar-icon" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                                            </svg>
-                                            {festival.date}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
 
                         {selectedDateFestivals.length > 0 && totalPages > 1 && (

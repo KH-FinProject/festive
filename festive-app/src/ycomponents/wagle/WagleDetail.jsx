@@ -75,9 +75,10 @@ function CommentItem({
           className="comment-avatar"
           src={
             comment.memberProfileImage
-              ? `${import.meta.env.VITE_API_URL || "http://localhost:8080"}${
-                  comment.memberProfileImage
-                }`
+              ? `${
+                  import.meta.env.VITE_API_URL ||
+                  "https://api.festivekorea.site"
+                }${comment.memberProfileImage}`
               : "/logo.png"
           }
           alt="프로필"
@@ -91,7 +92,9 @@ function CommentItem({
             e.target.src = "/logo.png";
           }}
         />
-        <span className="comment-author">{comment.memberNickname}</span>
+        <span className="comment-author">
+          {comment.memberNickname ? comment.memberNickname : "알 수 없음"}
+        </span>
         <span className="comment-date">
           {formatDate(comment.commentCreateDate)}
         </span>
@@ -182,7 +185,14 @@ function CommentItem({
                   className="comment-avatar"
                   src={
                     reply.memberProfileImage
-                                                  ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${reply.memberProfileImage.startsWith('/') ? reply.memberProfileImage : `/${reply.memberProfileImage}`}`
+                      ? `${(
+                          import.meta.env.VITE_API_URL ||
+                          "https://api.festivekorea.site"
+                        ).replace(/\/+$/, "")}${
+                          reply.memberProfileImage.startsWith("/")
+                            ? reply.memberProfileImage
+                            : `/${reply.memberProfileImage}`
+                        }`
                       : "/logo.png"
                   }
                   alt="프로필"
@@ -196,7 +206,9 @@ function CommentItem({
                     e.target.src = "/logo.png";
                   }}
                 />
-                <span className="comment-author">{reply.memberNickname}</span>
+                <span className="comment-author">
+                  {reply.memberNickname ? reply.memberNickname : "알 수 없음"}
+                </span>
                 <span className="comment-date">
                   {formatDate(reply.commentCreateDate)}
                 </span>
@@ -382,7 +394,7 @@ function WagleDetail() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [currentReportData, setCurrentReportData] = useState(null);
   const [newComment, setNewComment] = useState("");
-  const { member } = useAuthStore();
+  const { member, isLoggedIn } = useAuthStore();
 
   // 게시글 상세 정보 가져오기
   const fetchPostDetail = async () => {
@@ -411,7 +423,7 @@ function WagleDetail() {
           views: data.boardViewCount,
           likes: data.boardLikeCount,
           commentCount: data.boardCommentCount,
-          images: data.boardImages || [],
+
           memberNo: data.memberNo,
           memberProfileImage: data.memberProfileImage,
         };
@@ -493,6 +505,10 @@ function WagleDetail() {
       navigate("/signin");
       return;
     }
+
+    // 닉네임 체크
+    const canProceed = await checkNicknameForSocialUser(navigate);
+    if (!canProceed) return;
 
     try {
       const response = await axiosApi.post(`/api/wagle/boards/${id}/comments`, {
@@ -621,6 +637,13 @@ function WagleDetail() {
   const flatComments = flattenComments(comments);
 
   const handleReport = (reportData) => {
+    // 로그인 체크
+    if (!isLoggedIn || !member) {
+      alert("로그인이 필요한 서비스입니다.\n로그인 후 신고해주세요!");
+      navigate("/signin");
+      return;
+    }
+
     setCurrentReportData(reportData);
     setIsReportModalOpen(true);
   };
@@ -711,7 +734,14 @@ function WagleDetail() {
               className="wagle-profile-img"
               src={
                 post.memberProfileImage
-                                        ? `${(import.meta.env.VITE_API_URL || "http://localhost:8080").replace(/\/+$/, '')}${post.memberProfileImage.startsWith('/') ? post.memberProfileImage : `/${post.memberProfileImage}`}`
+                  ? `${(
+                      import.meta.env.VITE_API_URL ||
+                      "https://api.festivekorea.site"
+                    ).replace(/\/+$/, "")}${
+                      post.memberProfileImage.startsWith("/")
+                        ? post.memberProfileImage
+                        : `/${post.memberProfileImage}`
+                    }`
                   : "/logo.png"
               }
               alt="프로필"
@@ -725,7 +755,9 @@ function WagleDetail() {
                 e.target.src = "/logo.png";
               }}
             />
-            <span className="author">{post.author}</span>
+            <span className="author">
+              {post.author ? post.author : "알 수 없음"}
+            </span>
             <span className="date">{post.date}</span>
             <span className="views">{post.views}</span>
             {!isNotice && (
@@ -755,12 +787,6 @@ function WagleDetail() {
           </div>
           <div className="wagle-detail-content">
             <Viewer initialValue={post?.content || ""} />
-          </div>
-          <div className="wagle-detail-images">
-            {post.images &&
-              post.images.map((img, idx) => (
-                <img src={img} alt={`user-upload-${idx}`} key={idx} />
-              ))}
           </div>
           <div className="wagle-detail-actions-bar">
             <div className="wagle-detail-actions">

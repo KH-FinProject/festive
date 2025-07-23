@@ -38,6 +38,9 @@ public interface WagleMapper {
     
     // 게시글 삭제 (논리삭제)
     int deleteBoardLogical(@Param("boardNo") Long boardNo);
+
+    // 게시글 복구 (논리삭제 복구)
+    int updateBoardDelFlN(@Param("boardNo") Long boardNo);
     
     // 게시글 좋아요 추가
     int insertBoardLike(@Param("boardNo") Long boardNo, @Param("memberNo") Long memberNo);
@@ -62,17 +65,10 @@ public interface WagleMapper {
     
     // 댓글 삭제 (논리삭제)
     int deleteCommentLogical(@Param("commentNo") Long commentNo);
+
+    // 댓글 복구 (논리삭제 복구)
+    int updateCommentDelFlN(@Param("commentNo") Long commentNo);
     
     // 게시글 댓글 수 업데이트
     void updateBoardCommentCount(@Param("boardNo") Long boardNo);
-    
-    // 게시글 이미지 저장
-    int insertBoardImg(@Param("boardNo") Long boardNo, 
-                       @Param("originalName") String originalName,
-                       @Param("renameName") String renameName,
-                       @Param("imagePath") String imagePath,
-                       @Param("level") Integer level);
-    
-    // 게시글 이미지 조회
-    List<String> selectBoardImages(@Param("boardNo") Long boardNo);
 } 

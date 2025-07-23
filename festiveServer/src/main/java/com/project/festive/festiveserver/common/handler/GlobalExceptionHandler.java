@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 
 @Slf4j
 @RestControllerAdvice
@@ -44,6 +45,14 @@ public class GlobalExceptionHandler {
         response.put("error", "AUTHENTICATION_FAILED");
         
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    /**
+     * OAuth2 예외 처리
+     */
+    @ExceptionHandler(OAuth2AuthenticationException.class)
+    ResponseEntity<Map<String, Object>> handleException(OAuth2AuthenticationException e) {
+        throw (OAuth2AuthenticationException) e;
     }
 
     /**

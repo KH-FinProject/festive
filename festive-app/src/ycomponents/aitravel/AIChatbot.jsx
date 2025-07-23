@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import axiosApi from "../../api/axiosAPI";
 import "./AIChatbot.css";
@@ -6,9 +7,12 @@ import AItitle from "./AItitle";
 import TravelCourseSaveModal from "./TravelCourseSaveModal";
 import ScrollToTop from "./ScrollToTop";
 import useAuthStore from "../../store/useAuthStore";
+import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
 
 // 백엔드 API 기본 URL
-const API_BASE_URL = `${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api`;
+const API_BASE_URL = `${
+  import.meta.env.VITE_API_URL || "https://api.festivekorea.site"
+}/api`;
 
 const DEFAULT_RESPONSE = `안녕하세요! 한국 여행 전문 AI 어시스턴트입니다.
 
@@ -253,6 +257,7 @@ const createMarkerContent = (day, index) => {
 
 // React 컴포넌트
 const AIChatbot = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -330,7 +335,13 @@ const AIChatbot = () => {
 
   // 마커 표시
   useEffect(() => {
-    if (!mapRef.current || locations.length === 0) return;
+    if (!mapRef.current) return;
+
+    // 축제 데이터와 여행지 데이터 모두 없으면 return
+    const hasFestivals =
+      travelInfo.festivals && travelInfo.festivals.length > 0;
+    const hasLocations = locations.length > 0;
+    if (!hasFestivals && !hasLocations) return;
 
     const map = mapRef.current;
 
@@ -350,8 +361,20 @@ const AIChatbot = () => {
     const isFestivalOnly = travelInfo.requestType === "festival_info";
 
     if (isFestivalOnly) {
-      // 🎪 축제 검색: 단순한 마커만 표시 (연결선 없음, 거리 표시 없음)
-      locations.forEach((location, index) => {
+      // 🎪 축제 검색: 마커만 단순하게 표시
+      const festivalLocations = travelInfo.festivals.map((festival) => ({
+        name: festival.title,
+        latitude: parseFloat(festival.mapY),
+        longitude: parseFloat(festival.mapX),
+        image: festival.image,
+        category: "축제",
+        description: festival.tel || festival.addr,
+      }));
+
+      const allFestivalData =
+        locations.length > 0 ? locations : festivalLocations;
+
+      allFestivalData.forEach((location, index) => {
         const lat = location.latitude || location.lat;
         const lng = location.longitude || location.lng;
 
@@ -361,19 +384,19 @@ const AIChatbot = () => {
 
         const markerPosition = new window.kakao.maps.LatLng(lat, lng);
 
-        // 축제 전용 마커 (빨간색 축제 아이콘)
+        // 축제 마커 (간단한 빨간색 원형)
         const festivalMarker = new window.kakao.maps.CustomOverlay({
           position: markerPosition,
           content: `<div style="
             background: #FF6B6B;
             color: white;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 12px;
             font-weight: bold;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             border: 2px solid white;
@@ -384,35 +407,6 @@ const AIChatbot = () => {
 
         festivalMarker.setMap(map);
         map._markers.push(festivalMarker);
-
-        // 축제 인포윈도우
-        const imageContent = location.image
-          ? `<img src="${location.image}" alt="${location.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
-          : "";
-
-        const infowindow = new window.kakao.maps.InfoWindow({
-          content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
-            ${imageContent}
-            <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 ${
-              location.category || "축제"
-            }</div>
-            <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
-              location.name
-            }</div>
-            <div style="color:#666;font-size:11px;">${
-              location.description || ""
-            }</div>
-          </div>`,
-        });
-
-        // 클릭 이벤트
-        window.kakao.maps.event.addListener(festivalMarker, "click", () => {
-          if (map._currentInfoWindow) {
-            map._currentInfoWindow.close();
-          }
-          infowindow.open(map, festivalMarker);
-          map._currentInfoWindow = infowindow;
-        });
 
         bounds.extend(markerPosition);
       });
@@ -451,35 +445,6 @@ const AIChatbot = () => {
           travelMarker.setMap(map);
           map._markers.push(travelMarker);
 
-          // 장소명 라벨 추가 (마커 위에)
-          const labelPosition = new window.kakao.maps.LatLng(
-            lat + 0.001, // 마커보다 약간 위에 위치
-            lng
-          );
-
-          const labelOverlay = new window.kakao.maps.CustomOverlay({
-            position: labelPosition,
-            content: `<div style="
-              background: rgba(255,255,255,0.95);
-              border: 1px solid ${dayColor};
-              border-radius: 8px;
-              padding: 4px 8px;
-              font-size: 11px;
-              font-weight: bold;
-              color: #333;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-              text-align: center;
-              white-space: nowrap;
-              max-width: 150px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            ">${location.name}</div>`,
-            yAnchor: 1,
-          });
-
-          labelOverlay.setMap(map);
-          map._markers.push(labelOverlay);
-
           // 여행지 인포윈도우
           const imageContent = location.image
             ? `<img src="${location.image}" alt="${location.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
@@ -489,10 +454,10 @@ const AIChatbot = () => {
             content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
               ${imageContent}
               <div style="color:${dayColor};font-weight:bold;margin-bottom:4px;">Day ${
-              location.day
+              location.day || 1
             }</div>
               <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
-                location.name
+                location.name || "장소명 없음"
               }</div>
               <span style="background:${dayColor};color:white;padding:2px 6px;border-radius:12px;font-size:10px;">${
               location.category || "관광지"
@@ -526,45 +491,6 @@ const AIChatbot = () => {
 
           polyline.setMap(map);
           map._polylines.push(polyline);
-
-          // 각 선분마다 거리 표기 추가
-          for (let i = 0; i < polylinePath.length - 1; i++) {
-            const startPos = polylinePath[i];
-            const endPos = polylinePath[i + 1];
-
-            // 거리 계산 (km)
-            const distance = calculateDistance(
-              startPos.getLat(),
-              startPos.getLng(),
-              endPos.getLat(),
-              endPos.getLng()
-            );
-
-            // 선분 중간 지점 계산
-            const midLat = (startPos.getLat() + endPos.getLat()) / 2;
-            const midLng = (startPos.getLng() + endPos.getLng()) / 2;
-            const midPosition = new window.kakao.maps.LatLng(midLat, midLng);
-
-            // 거리 라벨 표시
-            const distanceOverlay = new window.kakao.maps.CustomOverlay({
-              position: midPosition,
-              content: `<div style="
-                background: ${dayColor};
-                color: white;
-                border-radius: 12px;
-                padding: 3px 8px;
-                font-size: 10px;
-                font-weight: bold;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-                text-align: center;
-                white-space: nowrap;
-              ">${distance.toFixed(1)}km</div>`,
-              yAnchor: 0.5,
-            });
-
-            distanceOverlay.setMap(map);
-            map._markers.push(distanceOverlay);
-          }
         }
       });
     }
@@ -573,7 +499,7 @@ const AIChatbot = () => {
     if (locations.length > 0) {
       map.setBounds(bounds);
     }
-  }, [locations, travelInfo.requestType]);
+  }, [locations, travelInfo.requestType, travelInfo.festivals]);
 
   // 스크롤 자동 조정
   useEffect(() => {
@@ -811,6 +737,8 @@ const AIChatbot = () => {
           } 여행코스가 성공적으로 저장되었습니다!`
         );
         setIsSaveModalOpen(false);
+        // ✅ 저장 성공 시 AI 여행코스 페이지로 이동
+        navigate("/ai-travel");
       } else {
         throw new Error(result.message || "저장에 실패했습니다.");
       }
@@ -1024,7 +952,13 @@ const AIChatbot = () => {
           travelInfo.requestType !== "general_chat" &&
           travelInfo.requestType !== "help_shown" &&
           travelInfo.requestType !== "unclear_request" &&
-          !travelInfo.isRejected && (
+          !travelInfo.isRejected &&
+          // 실제로 표시할 콘텐츠가 있을 때만 렌더링
+          ((travelInfo.requestType === "festival_info" &&
+            travelInfo.festivals &&
+            travelInfo.festivals.length > 0) ||
+            (travelInfo.requestType !== "festival_info" &&
+              locations.length > 0)) && (
             <div className="ai-chatbot-travel-summary">
               <div className="ai-chatbot-travel-info-grid">
                 {/* 축제 정보 섹션 - festival_info일 때만 표시 */}
@@ -1042,98 +976,159 @@ const AIChatbot = () => {
                           paddingBottom: "10px",
                         }}
                       >
-                        {travelInfo.festivals.map((festival, index) => (
-                          <div
-                            key={index}
-                            className="ai-chatbot-festival-card"
-                            style={{
-                              minWidth: "300px",
-                              maxWidth: "350px",
-                              flex: "0 0 auto",
-                              background: "white",
-                              borderRadius: "12px",
-                              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                              overflow: "hidden",
-                              cursor: "pointer",
-                              transition: "transform 0.2s ease",
-                            }}
-                            onClick={() => {
-                              // 🎪 축제 클릭 시 해당 마커로 이동
-                              if (
-                                mapRef.current &&
-                                festival.mapY &&
-                                festival.mapX
-                              ) {
-                                const moveLatLon = new window.kakao.maps.LatLng(
-                                  parseFloat(festival.mapY),
-                                  parseFloat(festival.mapX)
-                                );
-                                mapRef.current.setCenter(moveLatLon);
-                                mapRef.current.setLevel(3);
-                              }
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform =
-                                "translateY(-4px)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = "translateY(0)";
-                            }}
-                          >
-                            {festival.image && (
-                              <div className="ai-chatbot-festival-image-container">
-                                <img
-                                  src={festival.image}
-                                  alt={festival.name}
+                        {travelInfo.festivals
+                          .filter((festival) => {
+                            // ✅ 축제 데이터 유효성 검사 - 이름이 없거나 undefined인 경우 필터링
+                            const isValidName =
+                              festival.name &&
+                              festival.name !== "undefined" &&
+                              festival.name.trim() !== "";
+
+                            if (!isValidName) {
+                              console.log(
+                                "🚫 불완전한 축제 데이터로 인한 목록 렌더링 스킵:",
+                                festival
+                              );
+                            }
+
+                            return isValidName;
+                          })
+                          .map((festival, index) => (
+                            <div
+                              key={index}
+                              className="ai-chatbot-festival-card"
+                              style={{
+                                minWidth: "300px",
+                                maxWidth: "350px",
+                                flex: "0 0 auto",
+                                background: "white",
+                                borderRadius: "12px",
+                                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                                overflow: "hidden",
+                                cursor: "pointer",
+                                transition: "transform 0.2s ease",
+                              }}
+                              onClick={() => {
+                                // 🎪 축제 클릭 시 해당 마커로 이동 및 인포윈도우 열기
+                                if (
+                                  mapRef.current &&
+                                  festival.mapY &&
+                                  festival.mapX
+                                ) {
+                                  const moveLatLon =
+                                    new window.kakao.maps.LatLng(
+                                      parseFloat(festival.mapY),
+                                      parseFloat(festival.mapX)
+                                    );
+                                  mapRef.current.setCenter(moveLatLon);
+                                  mapRef.current.setLevel(3);
+
+                                  // 해당 축제의 마커를 찾아서 인포윈도우 열기
+                                  if (mapRef.current._markers) {
+                                    const map = mapRef.current;
+
+                                    // 기존 인포윈도우 닫기
+                                    if (map._currentInfoWindow) {
+                                      map._currentInfoWindow.close();
+                                    }
+
+                                    // 축제 데이터를 locations 형태로 변환하여 해당 축제 찾기
+                                    const festivalLocations =
+                                      travelInfo.festivals.map((f) => ({
+                                        name: f.title,
+                                        latitude: parseFloat(f.mapY),
+                                        longitude: parseFloat(f.mapX),
+                                        image: f.image,
+                                        category: "축제",
+                                        description: f.tel || f.addr,
+                                      }));
+
+                                    const targetFestival =
+                                      festivalLocations[index];
+
+                                    // ✅ 축제 데이터 유효성 검사 - 이름이 없거나 undefined인 경우 카드 렌더링 안함
+                                    if (
+                                      !targetFestival.name ||
+                                      targetFestival.name === "undefined" ||
+                                      targetFestival.name.trim() === ""
+                                    ) {
+                                      console.log(
+                                        "🚫 불완전한 축제 데이터로 인한 카드 렌더링 스킵:",
+                                        targetFestival
+                                      );
+                                      return; // 카드 생성하지 않고 종료
+                                    }
+
+                                    // 축제 인포윈도우 생성 및 열기
+                                    const imageContent = targetFestival.image
+                                      ? `<img src="${targetFestival.image}" alt="${targetFestival.name}" style="width:200px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'"/>`
+                                      : "";
+
+                                    const infowindow =
+                                      new window.kakao.maps.InfoWindow({
+                                        content: `<div style="padding:12px;font-size:13px;max-width:220px;text-align:center;line-height:1.4;">
+                                      ${imageContent}
+                                      <div style="color:#FF6B6B;font-weight:bold;margin-bottom:4px;">🎪 ${
+                                        targetFestival.category || "축제"
+                                      }</div>
+                                      <div style="color:#333;font-weight:600;font-size:14px;margin-bottom:6px;">${
+                                        targetFestival.name
+                                      }</div>
+                                      <div style="color:#666;font-size:11px;">${
+                                        targetFestival.description || ""
+                                      }</div>
+                                    </div>`,
+                                      });
+
+                                    // 해당 위치에 임시 마커 생성하여 인포윈도우 열기
+                                    const tempMarker =
+                                      new window.kakao.maps.Marker({
+                                        position: moveLatLon,
+                                      });
+
+                                    infowindow.open(map, tempMarker);
+                                    map._currentInfoWindow = infowindow;
+                                  }
+                                }
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform =
+                                  "translateY(-4px)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform =
+                                  "translateY(0)";
+                              }}
+                            >
+                              {festival.image && (
+                                <div className="ai-chatbot-festival-image-container">
+                                  <img
+                                    src={festival.image}
+                                    alt={festival.name}
+                                    style={{
+                                      width: "100%",
+                                      height: "200px",
+                                      objectFit: "cover",
+                                    }}
+                                    onError={(e) => {
+                                      e.target.parentElement.style.display =
+                                        "none";
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <div style={{ padding: "16px" }}>
+                                <h4
                                   style={{
-                                    width: "100%",
-                                    height: "200px",
-                                    objectFit: "cover",
+                                    margin: "0 0 12px 0",
+                                    fontSize: "16px",
+                                    color: "#1e40af",
+                                    fontWeight: "600",
+                                    lineHeight: "1.3",
                                   }}
-                                  onError={(e) => {
-                                    e.target.parentElement.style.display =
-                                      "none";
-                                  }}
-                                />
-                              </div>
-                            )}
-                            <div style={{ padding: "16px" }}>
-                              <h4
-                                style={{
-                                  margin: "0 0 12px 0",
-                                  fontSize: "16px",
-                                  color: "#1e40af",
-                                  fontWeight: "600",
-                                  lineHeight: "1.3",
-                                }}
-                              >
-                                {festival.name}
-                              </h4>
-                              <p
-                                style={{
-                                  margin: "6px 0",
-                                  color: "#64748b",
-                                  fontSize: "13px",
-                                }}
-                              >
-                                <strong style={{ color: "#374151" }}>
-                                  기간:
-                                </strong>{" "}
-                                {festival.period}
-                              </p>
-                              <p
-                                style={{
-                                  margin: "6px 0",
-                                  color: "#64748b",
-                                  fontSize: "13px",
-                                }}
-                              >
-                                <strong style={{ color: "#374151" }}>
-                                  장소:
-                                </strong>{" "}
-                                {festival.location}
-                              </p>
-                              {festival.tel && festival.tel !== "정보 없음" && (
+                                >
+                                  {festival.name}
+                                </h4>
                                 <p
                                   style={{
                                     margin: "6px 0",
@@ -1142,26 +1137,52 @@ const AIChatbot = () => {
                                   }}
                                 >
                                   <strong style={{ color: "#374151" }}>
-                                    연락처:
+                                    기간:
                                   </strong>{" "}
-                                  {festival.tel}
+                                  {festival.period}
                                 </p>
-                              )}
-                              {festival.description && (
                                 <p
                                   style={{
-                                    margin: "12px 0 0 0",
-                                    lineHeight: "1.5",
-                                    color: "#4b5563",
+                                    margin: "6px 0",
+                                    color: "#64748b",
                                     fontSize: "13px",
                                   }}
                                 >
-                                  {festival.description}
+                                  <strong style={{ color: "#374151" }}>
+                                    장소:
+                                  </strong>{" "}
+                                  {festival.location}
                                 </p>
-                              )}
+                                {festival.tel &&
+                                  festival.tel !== "정보 없음" && (
+                                    <p
+                                      style={{
+                                        margin: "6px 0",
+                                        color: "#64748b",
+                                        fontSize: "13px",
+                                      }}
+                                    >
+                                      <strong style={{ color: "#374151" }}>
+                                        연락처:
+                                      </strong>{" "}
+                                      {festival.tel}
+                                    </p>
+                                  )}
+                                {festival.description && (
+                                  <p
+                                    style={{
+                                      margin: "12px 0 0 0",
+                                      lineHeight: "1.5",
+                                      color: "#4b5563",
+                                      fontSize: "13px",
+                                    }}
+                                  >
+                                    {festival.description}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   )}

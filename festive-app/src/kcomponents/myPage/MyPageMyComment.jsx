@@ -90,9 +90,6 @@ const MyPageMyComment = () => {
                       <p className="mypage-comment-text">
                         {comment.commentContent}
                       </p>
-                      <div className="mypage-comment-actions">
-                        <span className="likes">❤ {comment.likes}</span>
-                      </div>
                     </div>
                   </div>
                 </div>
