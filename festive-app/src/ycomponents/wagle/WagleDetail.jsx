@@ -394,7 +394,7 @@ function WagleDetail() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [currentReportData, setCurrentReportData] = useState(null);
   const [newComment, setNewComment] = useState("");
-  const { member } = useAuthStore();
+  const { member, isLoggedIn } = useAuthStore();
 
   // 게시글 상세 정보 가져오기
   const fetchPostDetail = async () => {
@@ -637,6 +637,13 @@ function WagleDetail() {
   const flatComments = flattenComments(comments);
 
   const handleReport = (reportData) => {
+    // 로그인 체크
+    if (!isLoggedIn || !member) {
+      alert("로그인이 필요한 서비스입니다.\n로그인 후 신고해주세요!");
+      navigate("/signin");
+      return;
+    }
+
     setCurrentReportData(reportData);
     setIsReportModalOpen(true);
   };
