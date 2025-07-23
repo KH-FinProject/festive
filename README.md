@@ -215,7 +215,7 @@ openai.api.key=your_openai_key
 ## 📞 연락처
 
 - **GitHub**: [@dudals3530](https://github.com/dudals3530)
-- **Email**: rlawlgh246@gmail.com
+- **Email**: dudals3530@naver.com
 - **Portfolio**: [프로젝트 상세 설명](https://festivekorea.site)
 
 ---
