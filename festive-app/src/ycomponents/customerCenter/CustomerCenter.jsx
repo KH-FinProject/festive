@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { checkNicknameForSocialUser } from "../../utils/nicknameCheck";
+import useAuthStore from "../../store/useAuthStore";
 
 const CustomerCenter = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,6 +17,7 @@ const CustomerCenter = () => {
   const [actualSearchType, setActualSearchType] = useState("");
   const [actualSearchQuery, setActualSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { member, isLoggedIn } = useAuthStore();
 
   const handlePageChange = (pageNumber) => {
     window.scrollTo(0, 0);
@@ -28,6 +30,14 @@ const CustomerCenter = () => {
 
   // 글쓰기 버튼 클릭 핸들러
   const handleWriteClick = async () => {
+    // 로그인 체크
+    if (!isLoggedIn || !member) {
+      alert("로그인이 필요한 서비스입니다.\n로그인 후 문의사항을 작성해보세요!");
+      navigate("/signin");
+      return;
+    }
+
+    // 닉네임 체크 (소셜 사용자용)
     const canProceed = await checkNicknameForSocialUser(navigate);
     if (canProceed) {
       navigate("/customer-center/write");
