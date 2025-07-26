@@ -127,19 +127,21 @@ openai.api.key=your_openai_key
 
 - **Live Demo:** [https://festivekorea.site](https://festivekorea.site)
 
-|        메인 페이지        | AI 추천 |
-|:--------------------:|:---:|
-| ![](assets/main.png) | ![](assets/main_light.png) |
+|                       메인 페이지                        |                   AI 추천                   |
+|:---------------------------------------------------:|:-----------------------------------------:|
+| ![main.png](festive-app/src/assets/readme/main.png) | ![ai.png](festive-app/src/assets/readme/ai.png) |
 
 <details>
 <summary>🖼️ <b>추가 스크린샷</b></summary>
 
 - 축제 상세
-
-- 커뮤니티
-
+  ![detail.png](festive-app/src/assets/readme/detail.png)
+- 커뮤니티(와글와글)
+  ![wagle.png](festive-app/src/assets/readme/wagle.png)
+- 커뮤니티(고객센터)
+  ![custom.png](festive-app/src/assets/readme/custom.png)
 - 관리자
-
+  ![authorize.png](festive-app/src/assets/readme/authorize.png)
 
 </details>
 
