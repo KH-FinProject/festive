@@ -2,15 +2,14 @@
 
 [![Vercel](https://img.shields.io/badge/Vercel-Live-brightgreen?style=flat-square&logo=vercel)](https://festivekorea.site)
 [![React](https://img.shields.io/badge/React-18-blue?style=flat-square&logo=react)](https://reactjs.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green?style=flat-square&logo=spring)](https://spring.io/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-green?style=flat-square&logo=spring)](https://spring.io/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-orange?style=flat-square&logo=openai)](https://openai.com/)
-[![License](https://img.shields.io/badge/license-Portfolio-lightgrey?style=flat-square)](#%EF%B8%8F-라이선스)
 
 #### _Festive - 한국관광공사 TourAPI와 OpenAI를 활용한 **종합 축제 정보 서비스**_
 
 ---
 
-## 📑 목차 (Table of Contents)
+### 📑 목차 (Table of Contents)
 - [프로젝트 소개](#-프로젝트-소개)
 - [기술 스택 및 아키텍처](#-기술-스택-및-아키텍처)
 - [주요 기능](#-주요-기능)
@@ -18,11 +17,10 @@
 - [라이브 데모 및 스크린샷](#-라이브-데모-및-스크린샷)
 - [기여 가이드라인](#-기여-가이드라인)
 - [커뮤니티 및 지원](#-커뮤니티-및-지원)
-- [라이선스](#-라이선스)
 
 ---
 
-## 🏆 프로젝트 소개
+### 🏆 프로젝트 소개
 
 > **FESTIVE**는 공공데이터 기반의 신뢰도 높은 축제 정보와 OpenAI를 활용한 AI 맞춤형 여행 코스 제공하고, 커뮤니티를 통해 경험과 후기를 자유롭게 공유할 수 있는 종합 플랫폼입니다.
 
@@ -46,11 +44,11 @@
 
 ---
 
-## 🛠️ 기술 스택 및 아키텍처
+### 🛠 기술 스택 및 아키텍처
 
-| 프론트엔드 | 백엔드 | 데이터베이스 | 외부 API | 배포/DevOps |
-|:---:|:---:|:---:|:---:|:---:|
-| React 18, Vite, Zustand, React Router, Axios, Kakao Map API | Spring Boot 3.x, Spring Security, MyBatis | Oracle DB | OpenAI GPT-4, TourAPI, 공공데이터포털, OAuth2 | Vercel, AWS EC2 |
+| 프론트엔드 |                    백엔드                    | 데이터베이스 | 외부 API | 배포/DevOps |
+|:---:|:-----------------------------------------:|:---:|:---:|:---:|
+| React 18, Vite, Zustand, React Router, Axios, Kakao Map API | Spring Boot 3.5, Spring Security, MyBatis | Oracle DB | OpenAI GPT-4, TourAPI, 공공데이터포털, OAuth2 | Vercel, AWS EC2 |
 
 - **인증/보안:** JWT, BCrypt, OAuth2 (Google/Naver/Kakao)
 - **환경 분리:** 개발/운영 환경 분리, 환경변수 관리
@@ -64,7 +62,7 @@
 
 ---
 
-## ✨ 주요 기능
+### ✨ 주요 기능
 
 | 기능 |               설명                |
 |:---:|:-------------------------------:|
@@ -75,14 +73,14 @@
 
 ---
 
-## 🏗️ 설치 및 실행 가이드
+### 🏗 설치 및 실행 가이드
 
-### 필수 요구사항
+#### 필수 요구사항
 - Node.js 22+
 - Java 21+
 - Oracle Database 18+
 
-### 설치 및 실행
+#### 설치 및 실행
 ```bash
 # 저장소 클론
 git clone https://github.com/KH-FinProject/festive.git
@@ -98,7 +96,7 @@ cd festiveServer
 ./gradlew bootRun
 ```
 
-### 환경변수 예시
+#### 환경변수 예시
 ```
 # .env (프론트엔드)
 VITE_API_URL=http://localhost:8080
@@ -123,31 +121,30 @@ openai.api.key=your_openai_key
 
 ---
 
-## 🌐 라이브 데모 및 스크린샷
+### 🌐 라이브 데모 및 스크린샷
 
 - **Live Demo:** [https://festivekorea.site](https://festivekorea.site)
 
-|                       메인 페이지                        |                   AI 추천                   |
-|:---------------------------------------------------:|:-----------------------------------------:|
+|                       메인 페이지                     |                      AI 추천                     |
+|:---------------------------------------------------:|:-----------------------------------------------:|
 | ![main.png](festive-app/src/assets/readme/main.png) | ![ai.png](festive-app/src/assets/readme/ai.png) |
 
 <details>
 <summary>🖼️ <b>추가 스크린샷</b></summary>
 
-- 축제 상세
-  ![detail.png](festive-app/src/assets/readme/detail.png)
-- 커뮤니티(와글와글)
-  ![wagle.png](festive-app/src/assets/readme/wagle.png)
-- 커뮤니티(고객센터)
-  ![custom.png](festive-app/src/assets/readme/custom.png)
-- 관리자
-  ![authorize.png](festive-app/src/assets/readme/authorize.png)
+|                           축제 상세                        |                           축제 상세                         |
+|:---------------------------------------------------------:|:---------------------------------------------------------:|
+| ![detail1.png](festive-app/src/assets/readme/detail1.png) | ![detail2.png](festive-app/src/assets/readme/detail2.png) |
+
+|                      커뮤니티(와글와글)                  |                          커뮤니티(고객센터)                      |                              관리자                            |
+|:-----------------------------------------------------:|:-------------------------------------------------------------:|:-------------------------------------------------------------:|
+| ![wagle.png](festive-app/src/assets/readme/wagle.png) |    ![custom.png](festive-app/src/assets/readme/custom.png)    | ![authorize.png](festive-app/src/assets/readme/authorize.png) |
 
 </details>
 
 ---
 
-## 🤝 기여 가이드라인
+### 🤝 기여 가이드라인
 
 - **기여 방법:** 버그 리포트, 기능 제안, 코드/문서 기여 모두 환영합니다.
 - **버그 리포트:** [GitHub Issues](https://github.com/KH-FinProject/festive/issues)에 상세히 작성해 주세요.
@@ -156,12 +153,12 @@ openai.api.key=your_openai_key
 
 ---
 
-## 🧑‍💻 커뮤니티 및 지원
+### 🧑‍💻 커뮤니티 및 지원
 
 - **GitHub Issues:** [바로가기](https://github.com/KH-FinProject/festive/issues)
 - **GitHub Discussions:** [바로가기](https://github.com/KH-FinProject/festive/discussions)
 - **이메일:** s413625@gmail.com
-- **포트폴리오:** [프로젝트 상세 설명](https://festivekorea.site)
+- **포트폴리오:** [프로젝트 상세 설명](https://coqute.notion.site/Festive-20eb4a3a1fba8070a307c664cc34e3b2)
 
 <details>
 <summary>❓ <b>FAQ (자주 묻는 질문)</b></summary>
@@ -174,12 +171,6 @@ openai.api.key=your_openai_key
   - A: OpenAI API Key가 올바른지 확인하세요.
 
 </details>
-
----
-
-## 📄 라이선스
-
-이 프로젝트는 포트폴리오 목적으로 제작되었으며, 상업적 이용은 제한됩니다.
 
 ---
 
